@@ -1,0 +1,40 @@
+name: Docs
+
+# The Markdown lint alone: a prose-only commit needs nothing else, and one
+# short job bills a sixth of what ci.yml would. The paths are wider than those
+# ci.yml ignores: Markdown lives under tests/ too, and a lint config change
+# re-lints everything. Written twice: Actions does not resolve YAML anchors.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.md'
+      - '.markdownlint-cli2.jsonc'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - '**.md'
+      - '.markdownlint-cli2.jsonc'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/docs.yml'
+
+concurrency:
+  group: docs-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint:md

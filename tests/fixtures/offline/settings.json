@@ -1,0 +1,39 @@
+{
+  "models": {
+    "test_api": {
+      "access": "api",
+      "key_env": "RAW2MD_TEST_KEY",
+      "model": "test-vision-model",
+      "rpm": 5,
+      "tpm": 100000,
+      "rpd": 100
+    },
+    "test_cli": {
+      "access": "cli",
+      "command": "raw2md-test-cli",
+      "model": "test-text-model"
+    }
+  },
+  "operations": {
+    "ocr": {
+      "allowed": [
+        "test_api"
+      ]
+    },
+    "inspection": {
+      "allowed": [
+        "test_api"
+      ]
+    },
+    "post": {
+      "allowed": [
+        "test_cli",
+        "test_api"
+      ]
+    }
+  },
+  "marker": {
+    "recognition_batch_size": 8
+  },
+  "log_file": false
+}

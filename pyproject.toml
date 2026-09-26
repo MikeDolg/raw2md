@@ -1,0 +1,170 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "raw2md"
+version = "0.1.0"
+description = "Convert raw documents (PDF, DOCX, DjVu) into cleaned Markdown."
+# quickjs-rs sets the floor at 3.11, one step above marker's own 3.10. marker
+# sets the ceiling, one step removed: the 1.x line caps pillow below 11, and
+# pillow 10.x ships no wheel for 3.14, so the stack builds Pillow from source
+# there and fails without the system jpeg headers. Lift the ceiling together
+# with the marker-pdf cap below.
+requires-python = ">=3.11,<3.14"
+# Upper bounds guard `uv tool install`, which never reads uv.lock and could
+# pick an incompatible future release. tzdata and wasmtime carry none; the
+# reasons are next to them.
+dependencies = [
+    "pyyaml>=6.0,<7",
+    # Mirrors marker's own cap on this package; lift together with the
+    # marker-pdf cap below.
+    "pillow>=10.0,<11",
+    # 1.24.3 brought the top-level `pymupdf` name; earlier releases ship only
+    # `fitz`. The cap at the next major guards against another rename.
+    "pymupdf>=1.24.3,<2",
+    "tqdm>=4.0,<5",
+    # Capped below 2.0: the 2.0.0 line is out but unstable.
+    "marker-pdf>=1.10,<2",
+    # A 0.x line, where a minor bump may break: the ceiling sits one minor past
+    # the tested release.
+    "img2pdf>=0.5,<0.7",
+    # torch is marker's backend; raw2md ships the CUDA build (see tool.uv.sources).
+    "torch>=2.0,<3",
+    # Imported directly by raw2md.llm.gemini; the range mirrors marker-pdf's.
+    "google-genai>=1.0,<2",
+    # Windows has no system IANA zone database for the daily quota reset, and a
+    # minimal Linux image may lack one too. No upper bound: releases are
+    # calendar-dated data with no API to break.
+    "tzdata>=2023.3",
+    # Runs the bundled katex.min.js, the judge of formula validity, without
+    # Node and identically on every machine. Costs the 3.11 floor and ~23 MB.
+    "quickjs-rs>=0.2.5,<0.3",
+    # raw2md.katex catches its abort by type. Unpinned: the quickjs-rs pin
+    # decides which build installs.
+    "wasmtime",
+]
+
+[project.scripts]
+raw2md = "raw2md.cli:main"
+
+[tool.uv]
+package = true
+
+# The CUDA 13.0 build of torch on 64-bit x86 only; the explicit index serves
+# torch alone. Linux says `x86_64`, Windows `AMD64`. ARM targets carry no
+# NVIDIA GPU and take the default wheel.
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu130", marker = "(sys_platform == 'linux' and platform_machine == 'x86_64') or (sys_platform == 'win32' and platform_machine == 'AMD64')" },
+]
+
+[dependency-groups]
+# pikepdf ships with img2pdf, but the scan generator imports it directly.
+dev = ["ruff", "mypy", "pytest", "types-pyyaml", "pikepdf"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+# Every stable rule, minus the exclusions below: an explicit list would skip
+# new rules. ruff changes version only on an intentional `uv lock` update.
+select = ["ALL"]
+ignore = [
+    "D", "DOC", # docstring length and presence follow the project's own comment policy, not pydocstyle/pydoclint
+    "COM812", "ISC001", # both fight the formatter's own choices
+    "ANN", # strict mypy already checks every annotation
+    "TC", "EM", "TRY003", # import placement and exception-message style with no behavior gain
+    "PLR2004", # flags a length comparison against 2 along with a real magic number
+    "PLC0415", # lazy imports of heavy engines (marker, torch) are deliberate
+    "S603", "S607", "S404", # calling pandoc, djvulibre, and claude by external process is the design
+    "TD002", "TD003", "FIX002", # the project's TODO form is `# TODO: remove after <condition>`, no author or issue link
+    "S101", # assert narrows types for mypy, in src/ as well as tests/
+    "FBT", # deferred until a decision on boolean-argument signatures
+    "CPY", # deferred until a licensing decision
+]
+
+# Complexity ceilings sit at the largest function kept whole without a noqa;
+# a function past one takes a noqa with its reason or a cut that keeps the
+# order of its passes visible.
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.lint.pylint]
+max-args = 10
+max-branches = 13
+max-returns = 10
+max-statements = 60
+
+[tool.ruff.lint.per-file-ignores]
+# Private access, unused fixture args, namespace packages, and literal
+# joins are normal in test code.
+"tests/**" = ["SLF001", "ARG", "INP001", "FLY002"]
+# The stand-in genai client matches the SDK's own constructor signature.
+"conftest.py" = ["ARG"]
+# print() is the intended output of scripts and the CLI modules. These four
+# are argparse entry points kept under tests/ for imports.
+"tests/synthesis/generate.py" = ["T201"]
+"tests/synthesis/roundtrip.py" = ["T201"]
+"tests/synthesis/runner.py" = ["T201"]
+"tests/synthesis/gen_smoke.py" = ["T201"]
+"src/raw2md/cli.py" = ["T201"]
+"src/raw2md/doctor.py" = ["T201"]
+"src/raw2md/init.py" = ["T201"]
+"src/raw2md/keywords.py" = ["T201"]
+"src/raw2md/prompts.py" = ["T201"]
+"src/raw2md/service.py" = ["T201"]
+"src/raw2md/settings.py" = ["T201"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "roundtrip: heavy format generation and end-to-end conversion tests (pandoc, xelatex, djvu, marker); run explicitly with -m roundtrip",
+    "concurrency: deliberate multi-process lock checks (cross-process mutual exclusion, crash recovery); run explicitly with -m concurrency",
+    "llm_live: end-to-end round-trip tests with real LLM providers (Gemini API, Claude CLI); opt-in, requires GOOGLE_API_KEY and claude in PATH; run explicitly with -m llm_live",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+# follow_imports=skip covers .pyi stubs too, so numpy stubs with 3.12-only
+# syntax are not parsed under the 3.11 target.
+follow_imports_for_stubs = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+# Engines and SDKs without stubs. follow_imports=skip keeps mypy out of their
+# dependency trees. torch is here so the lazy imports type-check without the
+# CUDA wheel installed.
+module = [
+    "pymupdf",
+    "marker.*",
+    "img2pdf",
+    "PIL",
+    "PIL.*",
+    "google",
+    "google.*",
+    "torch",
+]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+# numpy stubs use PEP 695 syntax, invalid under the 3.11 target; it is only a
+# transitive dependency.
+module = ["numpy"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = ["tqdm"]
+ignore_missing_imports = true

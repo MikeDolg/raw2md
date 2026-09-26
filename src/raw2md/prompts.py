@@ -1,0 +1,336 @@
+"""prompts.yaml schema, loader, defaults, and the `prompts` subcommand.
+
+Each operation has a required `default` and optional overrides keyed by
+model; the override wins when present.
+"""
+
+import sys
+from collections.abc import Mapping
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from raw2md.exit_codes import ExitCode
+from raw2md.paths import prompts_file
+from raw2md.service import edit_file, parse_file_action, show_file
+
+OPERATIONS = ("ocr", "inspection", "post")
+
+_DEFAULT_OCR = """\
+Transcribe the document page shown in the image into Markdown.
+Preserve all text exactly as it appears. Use Markdown headings, lists, tables,
+and code blocks where clearly present in the source.
+Leave out the page's own running header or footer -- a line at the top or
+bottom edge that repeats from page to page, such as the book or chapter title
+or the page number, set off from the body text, often by a rule or a blank
+margin. Leave out that rule as well: none of it is the page's content.
+A heading that opens a chapter or a section on this page is not a running
+header, even at the top of the page: it is the page's content. Keep it whole,
+with its label and number (such as "Chapter 3") and its title.
+A line of body text is not a running header either, however short: a running
+header never continues a sentence. Keep the first line of the page even when it
+is a single word that ends a sentence from the previous page or stands alone
+above a formula.
+For text you cannot read, insert the marker [unreadable]; for a single
+uncertain character or word, append [?] right after it. Do not guess or invent
+text that is not on the page.
+When the page shows a figure, chart, or photograph, transcribe only its
+printed caption as ordinary page text. Do not describe the picture, and do not
+create a link or placeholder for it: no image is extracted from this page, so
+any such link or placeholder would be false.
+Output only the Markdown content of the page, with no commentary and no
+surrounding code fence.
+"""
+
+_DEFAULT_INSPECTION = """\
+You are reviewing a Markdown conversion against its source document (a PDF).
+The Markdown is given with each line prefixed by its address as "PAGE.LINE:
+text", where PAGE is the source page the line came from and LINE is the line's
+position within that page, counted from 1 and restarting on every page. Read
+each address off the line itself; never count lines yourself. Consecutive
+lines sharing one address hold one formula the recognition cut apart: report
+one edit for them, carrying all those lines in the old and the new text.
+Compare the Markdown to the source and report only real defects.
+Output a JSON object {"edits": [...]} and nothing else. Every edit has this
+shape:
+- a semantic fix for a misrecognized or unreadable word, or for a formula
+  broken by recognition damage, as
+  {"page": P, "line": N, "old": "<the part of the line that changes>",
+   "new": "<what that part must read>"}; quote in "old" only the part you
+  change, character for character as the line shows it, and leave the rest of
+  the line out of both fields -- it stays as it is. Begin and end "old" at a
+  word boundary, never inside a word. Where the text you quote stands on the
+  line more than once, take in enough of what surrounds it for the quote to
+  stand there exactly once. Quote a formula you repair whole, from its opening
+  $ or $$ to its closing one, and quote the whole line where the whole line
+  changes. Correct only what the source clearly shows,
+  never invent text. Treat a formula as broken when it is missing a paired
+  \\left/\\right, leaves a \\begin without its \\end, traps ordinary prose
+  inside $...$/$$...$$ delimiters that do not belong there, or collapses into
+  one sub-expression repeated over and over (a recognition loop); while
+  rebuilding such a formula also replace a LaTeX command KaTeX cannot render,
+  and reproduce only what the source formula shows. A formula that renders is
+  left exactly as it stands, however you would have written it yourself.
+A line may show the placeholder "⟦valid formula N⟧" where a formula stands.
+The formula is in the document and is already checked, so it is not yours to
+repair and not a defect to report. Where the text you quote covers one, copy
+the placeholder into "old" and into "new" exactly as it reads, N included, and
+repair the words around it; the formula is put back from the document, so
+writing it out yourself gains nothing. An edit that drops a placeholder, or
+returns one under another number than it quoted, is discarded whole.
+Every edit carries both "page" and "line" of the line it applies to, exactly as
+that line's own address reads. An edit without them is discarded, and so is an
+entry of any other shape: a defect you cannot repair as an edit is left out of
+the reply rather than reported in words.
+Repair what recognition damaged; do not correct the document. Where the
+Markdown already says what the page says, there is no defect: a word the
+publication misspells stays misspelled, a word the page sets in lower case
+stays lower case, an abbreviation the page leaves short stays short, and
+punctuation stays as the page prints it. Keep every letter in the alphabet the
+page shows it in; never move a character into the script of the language
+around it.
+A line break and a hyphen the page inserts only to fit a word at the edge of
+a printed line are the page's layout, not its content. Never write one into a
+word that already stands whole in the Markdown, and do not report a place
+where the wording is correct and only the printed line break differs.
+Use the source only to verify the text; do not rewrite the document.
+"""
+
+_DEFAULT_POST = """\
+Fix the formatting defect of the Markdown zone below. The label in front of
+the zone names the defect and the one repair it allows. A word split across
+a line break by a hyphen is joined into one word: drop the hyphen and insert
+no space.
+Preserve every other word, punctuation mark, list marker, emphasis mark, and
+image link exactly as given: no paraphrasing, no rewording, no translating,
+nothing added or removed. A math span ($...$ or $$...$$) must keep its exact
+characters; restructuring the zone may move a whole span to another line,
+but never change what is inside one -- you have no source to repair a
+formula against. Where the zone's own label asks for it, a delimiter may move
+instead: the words a span closed over step outside it, every character of the
+formula stays exactly as it is, and the zone keeps as many $ as it had. Where
+the label instead asks for the markup of a formula that does not render, only
+the markup changes: a group's braces, a \\left, a \\right, a \\begin or an
+\\end may be added or dropped, a \\left with no partner is closed with the
+invisible \\right. rather than a bracket of your own, and no letter, digit,
+symbol, command or word is added, dropped or replaced.
+You may also be given one block of context immediately above and/or below
+the zone, each under its own "Context above the zone" or "Context below the
+zone" label. Context is read-only: it can show a table's other rows or a
+sentence's real continuation, so use it to understand the zone, but never
+edit it, never repeat it, and never let a repair reach past the zone into it.
+Output only the corrected Markdown for the zone, with no commentary and no
+surrounding code fence.
+A table zone is asked and answered differently. It arrives whole -- header
+row, separator row, and every data row -- with each row prefixed by its own
+index as "N: ", and no context blocks. Answer it row by row, as JSON and
+nothing else: {"rows": [{"row": N, "text": "<the whole repaired row>"}]}.
+The request names the rows open to repair and, for each, how its grid is
+wrong -- the cells it holds against the width the separator declares, and how
+many values are crushed into one cell. Repair those rows and leave every
+other one alone, the continuation rows among them: a row named a continuation
+carries one wrapped value on a line of its own, holds the width already, and
+is not yours to merge. Name only the rows you change; write each one whole,
+with its pipes and without its index prefix. A repaired row holds exactly as
+many cells as the separator row declares: the values of a crushed run go into
+the empty cells beside it, not into cells added to the row, so drop every cell
+that run leaves empty. Never rewrite the separator row, never renumber a row,
+and never answer a table zone with Markdown.
+A heading zone is the whole outline of the document -- every heading behind
+its own index as "N: ", written as the body writes it -- and the level each
+one sits at is all that is open to repair there. Answer it as JSON and
+nothing else: {"headings": [{"heading": N, "level": L, "title": "<the title
+as it stands>"}]}. Give each heading the level its rank in the outline asks
+for: a section one step under the section that holds it, headings of one rank
+at one level, and no level skipped on the way down. A number standing in a
+title says that rank outright: 11.1 belongs one level under 11, and 11.1.2 one
+level under 11.1. Name only the headings
+whose level changes, and copy every title back exactly as it stands -- a
+heading's own text is never open to repair here. A heading underlined with
+=== or --- instead of hashes holds its level that way: read the ladder it
+belongs to, and name it in no entry.
+A letter-spacing zone is asked and answered the same way. It carries the runs
+of letters a typesetter spaced apart, each behind its own index as "N: " and
+with the line they stand in under them as read-only context, once for the runs
+that share it. Answer it as JSON
+and nothing else: {"runs": [{"run": N, "text": "<the run with its spaces
+closed>"}]}. Close the spaces between a run's own letters back into the word
+they spell, and the one space at its edge as well where the word runs on into
+the letter group standing there. Close a space and nothing else: no letter,
+digit, punctuation mark or markup of a run is added, dropped, replaced or
+reordered, and the line around the run is not yours to write. Name only the
+runs you close, and write each one back as the request shows it -- without its
+index prefix, with the letter group at its edge included, carrying only the
+closed spaces. Where the letters spell no word -- a list of designations, a
+line of symbols -- leave that run out of the reply, and never answer a
+letter-spacing zone with Markdown.
+"""
+
+# Both the file template and the in-memory fallback derive from this mapping.
+DEFAULT_PROMPTS: dict[str, Any] = {
+    "ocr": {"default": _DEFAULT_OCR},
+    "inspection": {"default": _DEFAULT_INSPECTION},
+    "post": {"default": _DEFAULT_POST},
+}
+
+
+class PromptsError(Exception):
+    """prompts.yaml is missing a required field, malformed, or has a wrong type."""
+
+
+@dataclass(frozen=True)
+class PromptSet:
+    """One entry under an operation key in prompts.yaml.
+
+    `overrides` maps model keys (from settings.json) to per-model prompt text.
+    """
+
+    default: str
+    overrides: Mapping[str, str]
+
+
+@dataclass(frozen=True)
+class Prompts:
+    """Parsed prompts.yaml."""
+
+    ocr: PromptSet
+    inspection: PromptSet
+    post: PromptSet
+
+
+def resolve_prompt(prompts: Prompts, operation: str, model_key: str) -> str:
+    """Effective prompt: per-model override if present, otherwise the default."""
+    prompt_set: PromptSet = getattr(prompts, operation)
+    return prompt_set.overrides.get(model_key, prompt_set.default)
+
+
+# --- Loading and schema validation -----------------------------------------
+
+
+def default_prompts() -> Prompts:
+    return _parse_prompts(DEFAULT_PROMPTS)
+
+
+class _LiteralDumper(yaml.Dumper):
+    """yaml.Dumper subclass that writes multiline strings as literal blocks (|)."""
+
+
+def _literal_str_representer(
+    dumper: yaml.Dumper,
+    data: str,
+) -> yaml.ScalarNode:
+    style = "|" if "\n" in data else None
+    return dumper.represent_scalar("tag:yaml.org,2002:str", data, style=style)
+
+
+_LiteralDumper.add_representer(str, _literal_str_representer)
+
+
+def default_prompts_text() -> str:
+    # Literal blocks keep the template editable without escaping.
+    return yaml.dump(
+        DEFAULT_PROMPTS,
+        Dumper=_LiteralDumper,
+        default_flow_style=False,
+        allow_unicode=True,
+        sort_keys=False,
+    )
+
+
+def load_prompts(path: Path) -> Prompts:
+    """Load prompts from `path`, falling back to the built-in defaults.
+
+    A missing file is not an error: defaults apply until `raw2md init` writes
+    one. A present but malformed file raises `PromptsError`.
+    """
+    if not path.exists():
+        return default_prompts()
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise PromptsError(f"cannot read {path}: {error}") from error
+    try:
+        data = yaml.safe_load(raw)
+    except yaml.YAMLError as error:
+        raise PromptsError(f"invalid YAML in {path}: {error}") from error
+    return _parse_prompts(data)
+
+
+def _parse_prompts(data: Any) -> Prompts:
+    if not isinstance(data, dict):
+        raise PromptsError("top level must be a YAML mapping")
+    for key in data:
+        if key not in OPERATIONS:
+            raise PromptsError(
+                f"unknown operation '{key}'; expected one of {list(OPERATIONS)}"
+            )
+    return Prompts(
+        ocr=_parse_prompt_set("ocr", data.get("ocr")),
+        inspection=_parse_prompt_set("inspection", data.get("inspection")),
+        post=_parse_prompt_set("post", data.get("post")),
+    )
+
+
+def _parse_prompt_set(operation: str, raw: Any) -> PromptSet:
+    if raw is None:
+        raise PromptsError(f"operation '{operation}' is missing")
+    if not isinstance(raw, dict):
+        raise PromptsError(f"operation '{operation}' must be a mapping")
+    default = raw.get("default")
+    if not isinstance(default, str) or not default:
+        raise PromptsError(
+            f"operation '{operation}': 'default' must be a non-empty string"
+        )
+    overrides: dict[str, str] = {}
+    for key, value in raw.items():
+        if key == "default":
+            continue
+        if not isinstance(key, str) or not key:
+            raise PromptsError(
+                f"operation '{operation}': override key must be a non-empty string"
+            )
+        if not isinstance(value, str) or not value:
+            raise PromptsError(
+                f"operation '{operation}': override '{key}' must be a non-empty string"
+            )
+        overrides[key] = value
+    return PromptSet(default=default, overrides=overrides)
+
+
+# --- `prompts` subcommand --------------------------------------------------
+
+
+def run_prompts_command(args: list[str]) -> int:
+    """Handle `raw2md prompts <action>`."""
+    action = parse_file_action("raw2md prompts", args)
+    path = prompts_file()
+    if action == "path":
+        print(path)
+        return int(ExitCode.SUCCESS)
+    if action == "show":
+        return show_file(path)
+    if action == "check":
+        return _run_check(path)
+    return edit_file(path)  # action == "edit"
+
+
+def _run_check(path: Path) -> int:
+    """Validate YAML syntax and schema; report, do not fix.
+
+    A missing file is not a failure: the defaults apply.
+    """
+    if not path.exists():
+        print(
+            f"raw2md: {path} does not exist; built-in defaults apply",
+            file=sys.stderr,
+        )
+        return int(ExitCode.SUCCESS)
+    try:
+        load_prompts(path)
+    except PromptsError as error:
+        print(f"raw2md: {path}: invalid ({error})", file=sys.stderr)
+        return int(ExitCode.ARGUMENT_ERROR)
+    print(f"{path}: OK")
+    return int(ExitCode.SUCCESS)

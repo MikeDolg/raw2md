@@ -1,0 +1,11 @@
+ocr:
+  default: |
+    TEST ocr default prompt: transcribe the page into Markdown.
+inspection:
+  default: |
+    TEST inspection default prompt: report defects as JSON.
+post:
+  default: |
+    TEST post default prompt: fix only the damaged zones.
+  test_cli: |
+    TEST post override for test_cli: fix only the damaged zones.

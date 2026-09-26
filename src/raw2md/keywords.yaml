@@ -1,0 +1,111 @@
+# raw2md keywords: the words the cleaning rules look for in a document.
+#
+# Each section is a list of records for one rule. Case is ignored; write
+# the plain lowercase form. A record takes one of three forms:
+#
+#   word     the whole word
+#   word*    the start of a word
+#   word.    an abbreviation with its dot
+#
+# A record may hold several words.
+
+# The heading of a printed table of contents. Write it without accents.
+contents_heading:
+  - table of contents
+  - contents
+  - table des matieres
+  - sommaire
+  - inhaltsverzeichnis
+  - inhalt
+  - indice
+  - indice generale
+  - sommario
+  - contenido
+  - tabla de contenido
+  - содержание
+  - оглавление
+  - 目录
+  - 目錄
+
+# The word a table of contents prints before a page number or over the
+# page-number column. Write it without accents and without a dot.
+contents_page_label:
+  - page
+  - pag
+  - pagina
+  - seite
+  - стр
+  - 页
+
+# Headings that are always top level. A heading matches when it starts with
+# one of these records.
+top_level_sections:
+  - appendix*
+  - приложени*
+  - references
+  - bibliography
+  - список литературы
+  - литература
+  - библиография
+
+# Short words that a Title Case heading keeps lowercase.
+heading_minor_words:
+  - a
+  - an
+  - the
+  - of
+  - for
+  - and
+  - or
+  - to
+  - in
+  - on
+  - at
+  - by
+  - with
+  - from
+  - as
+  - и
+  - в
+  - на
+  - для
+  - от
+  - до
+  - по
+  - из
+  - о
+  - об
+  - к
+  - с
+  - у
+
+# The word a caption starts with.
+caption_labels:
+  - table
+  - tab
+  - figure
+  - fig
+  - chart
+  - scheme
+  - plate
+  - appendix
+  - таблиц*
+  - табл.
+  - рисун*
+  - рис.
+  - схем*
+  - приложени*
+
+# Words that mark a bracketed line as the note a recognition model writes in
+# place of a picture. The tool deletes such a line.
+image_placeholders:
+  - изображен*
+  - рисун*
+  - рис.
+  - штамп*
+  - фото*
+  - image*
+  - picture*
+  - figure*
+  - photo*
+  - illustration*
