@@ -1,0 +1,24 @@
+{
+  // Markdownlint config for raw2md docs.
+  "config": {
+    "default": true,
+    // Line length is enforced by review, not the linter: a path, a command,
+    // and a table need a long line.
+    "MD013": false,
+    // Allow repeated headings as long as they are not siblings.
+    "MD024": { "siblings_only": true },
+    // Files may start with a comment or frontmatter rather than a heading.
+    "MD041": false,
+    // Table pipe spacing is a free formatting choice (the test corpus uses
+    // compact tables on purpose; table reformatting is not a defect).
+    "MD060": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": [
+    "node_modules/**",
+    "**/.venv/**",
+    ".git/**",
+    ".pytest_cache/**",
+    "tests/synthesis/generated/**"
+  ]
+}

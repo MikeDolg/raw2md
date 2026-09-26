@@ -8,8 +8,8 @@ from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
-
 from conftest import make_run_config
+
 from raw2md.cleaning import DEFAULT_WITNESS_MIN
 from raw2md.config import RunConfig
 from raw2md.engines import (

@@ -1,0 +1,32 @@
+# Normalize line endings: LF in the repository and in the working tree on every
+# platform. Gives deterministic, cross-platform checkouts (Windows + Linux) and
+# silences the "LF will be replaced by CRLF" warning.
+* text=auto eol=lf
+
+# Scripts that must keep CRLF to run correctly on Windows.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Scripts that must stay LF to run on Linux.
+*.sh text eol=lf
+
+# The vendored KaTeX bundle is minified onto a single 270 KB line: a text diff
+# of it prints the whole file and says nothing.
+src/raw2md/katex.min.js -diff
+
+# Binary files: never normalize line endings, never diff as text.
+*.pdf  binary
+*.docx binary
+*.doc  binary
+*.djvu binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.bmp  binary
+*.tif  binary
+*.tiff binary
+*.ico  binary
+*.zip  binary
+*.gz   binary
+*.7z   binary

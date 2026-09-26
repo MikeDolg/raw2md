@@ -106,8 +106,6 @@ max-statements = 60
 # Private access, unused fixture args, namespace packages, and literal
 # joins are normal in test code.
 "tests/**" = ["SLF001", "ARG", "INP001", "FLY002"]
-# The stand-in genai client matches the SDK's own constructor signature.
-"conftest.py" = ["ARG"]
 # print() is the intended output of scripts and the CLI modules. These four
 # are argparse entry points kept under tests/ for imports.
 "tests/synthesis/generate.py" = ["T201"]

@@ -11,8 +11,8 @@ from typing import TextIO
 
 import pymupdf
 import pytest
-
 from conftest import make_run_config
+
 from raw2md.cleaner import CleanOptions, CleanResult, clean_with_report
 from raw2md.config import RunConfig
 from raw2md.engines import (

@@ -7,8 +7,8 @@ import json
 from pathlib import Path
 
 import pytest
-
 from conftest import make_run_config
+
 from raw2md.header import (
     ResultHeader,
     ResultStatus,
