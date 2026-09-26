@@ -1,24 +1,29 @@
 name: CI
 
 on:
-  # No test reads these paths, and docs.yml lints them. Each job bills at
-  # least a minute, Windows at twice the rate. tests/corpus/ Markdown is
-  # absent on purpose: the fast layer reads it. The list is written twice:
-  # GitHub Actions does not resolve YAML anchors.
+  # No test reads these paths, and docs.yml lints the Markdown. Each job bills
+  # at least a minute, Windows at twice the rate. tests/corpus/ Markdown is
+  # absent on purpose: the fast layer reads it. A new top-level folder joins
+  # the list only if no test reads it. The list is written twice: GitHub
+  # Actions does not resolve YAML anchors.
   push:
     branches: [main]
     paths-ignore:
       - 'docs/**'
-      - '.claude/**'
+      - 'examples/**'
       - 'README.md'
+      - 'LICENSE'
+      - 'THIRD_PARTY_NOTICES.md'
       - '.markdownlint-cli2.jsonc'
       - 'package.json'
       - 'package-lock.json'
   pull_request:
     paths-ignore:
       - 'docs/**'
-      - '.claude/**'
+      - 'examples/**'
       - 'README.md'
+      - 'LICENSE'
+      - 'THIRD_PARTY_NOTICES.md'
       - '.markdownlint-cli2.jsonc'
       - 'package.json'
       - 'package-lock.json'
@@ -32,7 +37,7 @@ jobs:
     # Python versions fan out on cheap Linux jobs, from the floor to the
     # ceiling in pyproject.toml. One Windows job, billed double, runs the tests
     # for the OS-specific behavior (the lock, the temp root, paths). The
-    # linters run once.
+    # linters and the coverage report run once.
     strategy:
       fail-fast: false
       matrix:
@@ -91,4 +96,14 @@ jobs:
       - if: matrix.lint
         run: uv run mypy
 
-      - run: uv run pytest
+      - if: ${{ !matrix.lint }}
+        run: uv run pytest
+
+      - if: matrix.lint
+        run: uv run pytest --cov --cov-report=
+      - if: matrix.lint
+        run: uv run coverage report --format=markdown --skip-covered >> "$GITHUB_STEP_SUMMARY"
+
+      # Opt-in locally, but seconds long, and the lock is OS-specific: every
+      # job runs it as a step of its own rather than a job billed separately.
+      - run: uv run pytest -m concurrency

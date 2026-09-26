@@ -156,6 +156,11 @@ markers = [
     "llm_live: end-to-end round-trip tests with real LLM providers (Gemini API, Claude CLI); opt-in, requires GOOGLE_API_KEY and claude in PATH; run explicitly with -m llm_live",
 ]
 
+[tool.coverage.run]
+# The package only: tests and the synthesis harness would inflate the number.
+source = ["raw2md"]
+branch = true
+
 [tool.mypy]
 python_version = "3.11"
 strict = true

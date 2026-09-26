@@ -1,0 +1,12 @@
+{
+  "name": "raw2md-docs",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Dev tooling for raw2md documentation (markdownlint).",
+  "scripts": {
+    "lint:md": "markdownlint-cli2"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.22.1"
+  }
+}
