@@ -30,3 +30,5 @@ src/raw2md/katex.min.js -diff
 *.zip  binary
 *.gz   binary
 *.7z   binary
+*.ttf  binary
+*.otf  binary

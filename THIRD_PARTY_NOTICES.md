@@ -1,8 +1,9 @@
 # Third-party notices
 
 The MIT license in `LICENSE` covers the raw2md source code only. This file
-lists the third-party material that raw2md bundles, and the licenses of the
-software and the models that an installation of raw2md runs.
+lists the third-party material that raw2md bundles or keeps in its test
+assets, and the licenses of the software and the models that an installation
+of raw2md runs.
 
 ## Bundled material
 
@@ -32,6 +33,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Test assets
+
+The repository keeps one third-party file outside the package:
+`tests/corpus/assets/fonts/Caveat-Regular.ttf`, the Caveat font, unmodified.
+The round-trip tests use it to render a handwritten page. The font is
+Copyright 2014 The Caveat Project Authors
+(<https://github.com/googlefonts/caveat>) and is licensed under the SIL Open
+Font License 1.1. The license text is in
+`tests/corpus/assets/fonts/OFL.txt`, next to the font.
 
 ## Dependencies that raw2md does not bundle
 
