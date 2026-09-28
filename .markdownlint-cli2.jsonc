@@ -19,6 +19,10 @@
     "**/.venv/**",
     ".git/**",
     ".pytest_cache/**",
-    "tests/synthesis/generated/**"
+    "tests/synthesis/generated/**",
+    // Conversion results shown as they came out of raw2md, not authored text.
+    "examples/book.md",
+    "examples/thesis.md",
+    "examples/report.md"
   ]
 }
