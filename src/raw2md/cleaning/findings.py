@@ -15,6 +15,7 @@ shape in the markdown. `drop_image_links` is shared with the pipeline.
 
 from __future__ import annotations
 
+import html
 import re
 from bisect import bisect_right
 from collections.abc import Callable, Sequence
@@ -48,7 +49,12 @@ from raw2md.cleaning.segments import (
 )
 from raw2md.mdtext.formulas import is_broken_math_span, math_unclosed_environment
 from raw2md.mdtext.lines import is_thematic_break
-from raw2md.mdtext.links import IMAGE_RE, is_local_target, local_image_path
+from raw2md.mdtext.links import (
+    HTML_IMG_RE,
+    IMAGE_RE,
+    is_local_target,
+    local_image_path,
+)
 from raw2md.mdtext.loops import collapse_repetition_loops, math_repetition_loop
 from raw2md.mdtext.math_spans import RAW_LATEX_SPAN_RE, math_span_ranges
 from raw2md.mdtext.tables import broken_table_details, has_cell_separator
@@ -65,6 +71,11 @@ _HYPHEN_END_RE = re.compile(r"[^\W\d_]-\Z")
 # fragment reaches it; measured, intact one-line blocks sit below it and
 # crushed rows above.
 _CRUSHED_LINE_MIN_CHARS = 4 * FLATTEN_MAX_CHARS
+
+# pandoc writes a sized docx image as a raw `<img>` tag. Removing only its
+# `src` would leave the other attributes behind as text.
+_HTML_IMG_TAG_RE = re.compile(r"<img\b[^>]*>", re.IGNORECASE)
+_HTML_ALT_ATTR_RE = re.compile(r'\salt="([^"]*)"', re.IGNORECASE)
 
 # Mirrors `mdtext.math_spans._DISPLAY_MATH_RE`; DOTALL to cross a multi-line formula.
 _DISPLAY_MATH_RE = re.compile(r"(?<!\\)\$\$(.+?)(?<!\\)\$\$", re.DOTALL)
@@ -572,14 +583,14 @@ def _is_missing_local_image(base_dir: Path, target: str) -> bool:
 
 
 def _missing_images(line: str, base_dir: Path | None) -> list[re.Match[str]]:
-    """Image-link matches whose local target is missing; none without `base_dir`."""
+    """Image matches, markdown or `<img>`, whose local target is missing.
+
+    None without `base_dir`. Group 2 is the target in both forms.
+    """
     if base_dir is None:
         return []
-    return [
-        m
-        for m in IMAGE_RE.finditer(line)
-        if _is_missing_local_image(base_dir, m.group(2))
-    ]
+    matches = [*IMAGE_RE.finditer(line), *HTML_IMG_RE.finditer(line)]
+    return [m for m in matches if _is_missing_local_image(base_dir, m.group(2))]
 
 
 def _strip_missing_images(line: str, base_dir: Path | None) -> list[str]:
@@ -594,20 +605,34 @@ def _strip_missing_images(line: str, base_dir: Path | None) -> list[str]:
 def drop_image_links(line: str, is_dropped: Callable[[str], bool]) -> list[str]:
     """Replace `line`, dropping an image link whose target `is_dropped` accepts.
 
-    An alt caption with an alphanumeric character becomes its own paragraph;
-    an empty one goes with the link.
+    A markdown link and a whole `<img>` tag both go. An alt caption with an
+    alphanumeric character becomes its own paragraph; an empty one goes with
+    the link.
     """
     captions: list[str] = []
 
-    def replace(match: re.Match[str]) -> str:
-        if not is_dropped(match.group(2)):
-            return match.group(0)
-        alt = match.group(1).strip()
+    def keep_caption(alt: str) -> None:
+        alt = alt.strip()
         if any(ch.isalnum() for ch in alt):
             captions.append(alt)
+
+    def replace_markdown(match: re.Match[str]) -> str:
+        if not is_dropped(match.group(2)):
+            return match.group(0)
+        keep_caption(match.group(1))
         return ""
 
-    remainder = IMAGE_RE.sub(replace, line).strip()
+    def replace_html(match: re.Match[str]) -> str:
+        src = HTML_IMG_RE.search(match.group(0))
+        if src is None or not is_dropped(src.group(2)):
+            return match.group(0)
+        alt = _HTML_ALT_ATTR_RE.search(match.group(0))
+        keep_caption(html.unescape(alt.group(1)) if alt else "")
+        return ""
+
+    remainder = _HTML_IMG_TAG_RE.sub(
+        replace_html, IMAGE_RE.sub(replace_markdown, line)
+    ).strip()
     out: list[str] = []
     if any(ch.isalnum() for ch in remainder):
         out.append(remainder)

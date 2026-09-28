@@ -931,6 +931,42 @@ def test_encoded_existing_image_kept_under_disable_flag(tmp_path: Path) -> None:
     assert _reported("![](x%20y.png)\n", options) == "![](x%20y.png)\n"
 
 
+def test_missing_html_image_removed_whole_when_extraction_disabled(
+    tmp_path: Path,
+) -> None:
+    options = CleanOptions(base_dir=tmp_path, disable_image_extraction=True)
+    img = '<img src="media/x.png" style="width:5.7in;height:2.4in" />'
+    text = f"before\n\n{img}\n\nafter\n"
+    assert _reported(text, options) == "before\n\nafter\n"
+
+
+def test_html_image_inside_text_leaves_the_text(tmp_path: Path) -> None:
+    options = CleanOptions(base_dir=tmp_path, disable_image_extraction=True)
+    text = '<img src="media/x.png" style="width:5in" />Figure 1 Site map\n'
+    assert _reported(text, options) == "Figure 1 Site map\n"
+
+
+def test_html_image_alt_becomes_a_paragraph(tmp_path: Path) -> None:
+    options = CleanOptions(base_dir=tmp_path, disable_image_extraction=True)
+    text = '<img src="media/x.png" alt="Flow &amp; stock" style="width:5in" />\n'
+    assert _reported(text, options) == "Flow & stock\n"
+
+
+def test_existing_html_image_kept_under_disable_flag(tmp_path: Path) -> None:
+    (tmp_path / "x.png").write_bytes(b"data")
+    options = CleanOptions(base_dir=tmp_path, disable_image_extraction=True)
+    text = '<img src="x.png" style="width:5in" />\n'
+    assert _reported(text, options) == text
+
+
+def test_missing_html_image_is_anchored(tmp_path: Path) -> None:
+    options = CleanOptions(base_dir=tmp_path)
+    text = '<img src="media/x.png" style="width:5in" />\n'
+    assert _reported(text, options) == (
+        f"<!-- finding broken-image src=media/x.png -->\n{text}"
+    )
+
+
 # ---- the shape an anchor type names ------------------------------------------
 
 CRUSHED_INDEX = (
