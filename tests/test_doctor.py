@@ -305,6 +305,7 @@ def test_report_points_a_cpu_build_to_a_reinstall(
     run_doctor()
     out = capsys.readouterr().out
     assert "torch is a CPU build" in out
+    assert "For an install from PyPI" in out
     assert "--torch-backend cu130" in out
     assert "driver" not in out
 

@@ -160,9 +160,11 @@ def _cuda_line(status: _CudaStatus) -> str:
     if status.cuda_build is None:
         return (
             "CUDA: not available (torch is a CPU build; falls back to CPU). "
-            "Reinstall with the CUDA build: "
+            "For an install from PyPI, reinstall with the CUDA build: "
             "`uv tool install raw2md --torch-backend cu130 --reinstall`, or for "
-            "pip `--extra-index-url https://download.pytorch.org/whl/cu130`"
+            "pip `--extra-index-url https://download.pytorch.org/whl/cu130`. "
+            "An install from the project source pins the CUDA build only on "
+            "64-bit Intel and AMD machines"
         )
     return (
         f"CUDA: not available (torch is a CUDA {status.cuda_build} build, but "
