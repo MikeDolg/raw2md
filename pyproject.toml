@@ -8,8 +8,6 @@ name = "raw2md"
 version = "0.1.0"
 description = "Convert raw documents (PDF, DOCX, DjVu) into cleaned Markdown."
 readme = "README.md"
-# The MIT license covers raw2md's own code; THIRD_PARTY_NOTICES.md carries the
-# bundled KaTeX license and the terms of the dependencies and model weights.
 license = "MIT"
 license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 authors = [{ name = "MikeDolg" }]
@@ -49,10 +47,9 @@ dependencies = [
     "tqdm>=4.0,<5",
     # Capped below 2.0: the 2.0.0 line is out but unstable.
     "marker-pdf>=1.10,<2",
-    # A 0.x line, where a minor bump may break: the ceiling sits one minor past
-    # the tested release.
     "img2pdf>=0.5,<0.7",
-    # torch is marker's backend; raw2md ships the CUDA build (see tool.uv.sources).
+    # Listed directly although marker pulls it in: tool.uv.sources applies to
+    # direct dependencies only, and the CUDA index needs that entry.
     "torch>=2.0,<3",
     # Imported directly by raw2md.llm.gemini; the range mirrors marker-pdf's.
     "google-genai>=1.0,<2",
@@ -79,9 +76,8 @@ Issues = "https://github.com/MikeDolg/raw2md/issues"
 [tool.uv]
 package = true
 
-# The CUDA 13.0 build of torch on 64-bit x86 only; the explicit index serves
-# torch alone. Linux says `x86_64`, Windows `AMD64`. ARM targets carry no
-# NVIDIA GPU and take the default wheel.
+# The CUDA 13.0 build of torch on 64-bit x86 only. Linux says `x86_64`,
+# Windows `AMD64`. ARM targets carry no NVIDIA GPU and take the default wheel.
 [[tool.uv.index]]
 name = "pytorch-cu130"
 url = "https://download.pytorch.org/whl/cu130"
