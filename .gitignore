@@ -30,3 +30,8 @@ dist/
 
 # Round-trip generated formats (reproducible from fixtures + seed, never committed)
 tests/synthesis/generated/
+
+# Default download, run, and scorer folders of the benchmark runner
+mpdocbench-data/
+mpdocbench-run/
+mpdocbench-scorer/

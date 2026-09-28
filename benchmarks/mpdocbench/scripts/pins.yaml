@@ -1,0 +1,66 @@
+# Everything a run of the benchmark depends on outside this repository. A result
+# is reproducible when these values and the version of raw2md are the same.
+
+upstream:
+  repo: https://github.com/Tongyi-Zhiwen/Qwen-Doc
+  commit: 4e5aee32280febb7b0844237ba087f837e3c8905
+  folder: MPDocBench              # the benchmark sits in this subfolder
+  annotation: MPDocBench.json     # 420 documents, one entry each
+  license: Apache-2.0
+
+# The page images, from the release of the authors. The revision in the URL is
+# a commit of the ModelScope repository, so the bytes behind it do not move;
+# the hash checks that.
+dataset:
+  url: https://www.modelscope.cn/datasets/zhoubb/MPDocBench/resolve/3feeb1a0f2589f3b65c3f87246dad40014968ab1/MPDocBench_data.zip
+  sha256: 212d3af3ecea9a095ba61234f58a8c3e99a2ab3bdda6757d71121c6eaedf254d
+  documents: 420
+  # A page the archive names otherwise than the annotation does.
+  renames:
+    magazine_chn_3b0b9920/paeg_1.jpg: magazine_chn_3b0b9920/page_1.jpg
+
+# The documents that the archive does not carry. They come from SlideVQA, a
+# gated dataset on the Hugging Face Hub: the account must accept its terms, and
+# the token of that account is read from HF_TOKEN or the local Hub login.
+slidevqa:
+  repo: NTT-hil-insight/SlideVQA
+  revision: e780ea258d734958befbfaed19fa059584642ca8
+  files: data/test-*.parquet      # the decks sit in the test split, 1.39 GB of 10.9 GB
+  # A deck is matched by its URL, because SlideVQA names it otherwise.
+  decks:
+    pptSlides_eng_26f4ebca: https://www.slideshare.net/zschwarz/vertical-apis-as-core-product
+    pptSlides_eng_5bb58cde: https://www.slideshare.net/mirantis/openstack-architecture-43160012
+    pptSlides_eng_bd47b74b: https://www.slideshare.net/PhilippeJulio/big-data-architecture
+    pptSlides_eng_24541ef2: https://www.slideshare.net/dev9105/biochemical-plant-defences
+    pptSlides_eng_6d3fdf72: https://www.slideshare.net/mpattani/basic-chemistry-52406403
+    pptSlides_eng_a04b6aef: https://www.slideshare.net/mpattani/chapter-7-the-nervous-system
+    pptSlides_eng_52c9fd59: https://www.slideshare.net/SurenderRawat3/dna-sequencing-41318444
+    pptSlides_eng_82a06813: https://www.slideshare.net/RodKing/the-dramatic-s
+    pptSlides_eng_1e8e2f71: https://www.slideshare.net/saiprasadbagrecha/sap-fibank
+    pptSlides_eng_312b78ba: https://www.slideshare.net/PatHarlow/regional-key-account-strategy-loral
+    pptSlides_eng_f280f799: https://www.slideshare.net/ReutersInstitute/tracking-the-future-of-news
+
+# What the scorer is asked for. `headline` is the one number of a metric that a
+# result carries; the full aggregate stays in the run folder.
+metrics:
+  text_block: [Edit_dist]
+  merged_text_block: [Edit_dist]
+  table: [TEDS]
+  merged_table: [TEDS]
+  text_relation: [Relation_F1]
+  reading_order: [Edit_dist]
+  head: [HeadTEDS]
+  display_formula: [CDM]
+headline:
+  Edit_dist: edit_whole
+  TEDS: all
+  Relation_F1: micro_f1
+  HeadTEDS: all
+  CDM: all
+lower_is_better: [Edit_dist]
+match_method: quick_match
+
+# Metrics of the benchmark that no run of raw2md can score, and why.
+metrics_off:
+  figure.FigureF1: the metric reads a figure box out of the image file name, which raw2md does not write
+  table_relation.Relation_F1: the metric reads a merged table out of the HTML tables of a prediction, and raw2md writes a table as Markdown

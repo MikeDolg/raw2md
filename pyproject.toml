@@ -143,9 +143,13 @@ max-statements = 60
 "src/raw2md/prompts.py" = ["T201"]
 "src/raw2md/service.py" = ["T201"]
 "src/raw2md/settings.py" = ["T201"]
+# The benchmark runner is a flat script with its own package beside it.
+"benchmarks/**" = ["T201", "INP001"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# The benchmark runner is not installed, so its tests import it from here.
+pythonpath = ["benchmarks/mpdocbench/scripts"]
 markers = [
     "roundtrip: heavy format generation and end-to-end conversion tests (pandoc, xelatex, djvu, marker); run explicitly with -m roundtrip",
     "concurrency: deliberate multi-process lock checks (cross-process mutual exclusion, crash recovery); run explicitly with -m concurrency",
@@ -166,7 +170,10 @@ warn_unused_ignores = true
 # follow_imports=skip covers .pyi stubs too, so numpy stubs with 3.12-only
 # syntax are not parsed under the 3.11 target.
 follow_imports_for_stubs = true
-files = ["src", "tests"]
+files = ["src", "tests", "benchmarks"]
+# The benchmark runner is not installed; the package is read from src/,
+# ahead of its editable install, which carries no py.typed.
+mypy_path = ["src", "benchmarks/mpdocbench/scripts"]
 
 [[tool.mypy.overrides]]
 # Engines and SDKs without stubs. follow_imports=skip keeps mypy out of their
@@ -181,6 +188,7 @@ module = [
     "google",
     "google.*",
     "torch",
+    "torch.*",
 ]
 ignore_missing_imports = true
 follow_imports = "skip"
@@ -195,3 +203,10 @@ follow_imports = "skip"
 [[tool.mypy.overrides]]
 module = ["tqdm"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Not a dependency: the benchmark reads the SlideVQA pages with
+# `uv run --with pyarrow`.
+module = ["pyarrow"]
+ignore_missing_imports = true
+follow_imports = "skip"
