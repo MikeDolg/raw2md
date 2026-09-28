@@ -58,8 +58,11 @@ jobs:
           pandoc --version | head -1
 
       - name: Install raw2md the way a user does
+        # The project pins the CUDA build of torch on x64, and the pin wins
+        # over --torch-backend; --no-sources drops it, as a wheel install has
+        # no pin either.
         run: |
-          uv tool install . --torch-backend cpu
+          uv tool install . --no-sources --torch-backend cpu
           echo "$(uv tool dir --bin)" >> "$GITHUB_PATH"
 
       - run: raw2md --version
@@ -107,8 +110,11 @@ jobs:
           key: datalab-models-${{ runner.os }}-v1
 
       - name: Install raw2md the way a user does
+        # The project pins the CUDA build of torch on x64, and the pin wins
+        # over --torch-backend; --no-sources drops it, as a wheel install has
+        # no pin either.
         run: |
-          uv tool install . --torch-backend cpu
+          uv tool install . --no-sources --torch-backend cpu
           echo "$(uv tool dir --bin)" >> "$GITHUB_PATH"
 
       - name: Convert a one-page PDF without a GPU

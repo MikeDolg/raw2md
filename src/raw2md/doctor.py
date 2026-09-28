@@ -4,7 +4,7 @@ The exit code sums up four reports:
 
 - engines: a missing marker is a missing dependency (exit 3); pandoc and the
   djvu chain are optional and only disable their format;
-- the GPU and `recognition_batch_size`: informational only;
+- the torch build, the GPU, and `recognition_batch_size`: informational only;
 - `zoneinfo`: required, because the daily quota boundary needs an IANA zone
   and Windows has no system zone database;
 - settings.json: a schema error, an unknown model, or a vision operation on
@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Sequence
+from typing import NamedTuple
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from raw2md.engines import DjvuEngine, MarkerEngine, PandocEngine
@@ -119,21 +120,55 @@ def _report_tzdata() -> int:
     return 1
 
 
-def _cuda_status() -> tuple[bool, int | None]:
-    """Whether CUDA is available and, if so, the VRAM of device 0 in MB.
+class _CudaStatus(NamedTuple):
+    torch_importable: bool
+    # torch.version.cuda: None for a CPU build of torch.
+    cuda_build: str | None
+    # VRAM of device 0 in MB; None when no GPU is visible.
+    vram_mb: int | None
+
+
+def _cuda_status() -> _CudaStatus:
+    """Probe the torch build and the GPU it sees.
 
     The import is guarded: the CI install of the fast test layer has no torch,
     and a broken install (a mismatched CUDA DLL) raises OSError or
-    RuntimeError. Both read as "no CUDA" in this informational probe.
+    RuntimeError. Both read as "no torch" in this informational probe.
     """
     try:
         import torch
     except (ImportError, OSError, RuntimeError):
-        return False, None
-    if not torch.cuda.is_available():
-        return False, None
+        return _CudaStatus(torch_importable=False, cuda_build=None, vram_mb=None)
+    cuda_build = torch.version.cuda
+    if cuda_build is None or not torch.cuda.is_available():
+        return _CudaStatus(torch_importable=True, cuda_build=cuda_build, vram_mb=None)
     total_mb = int(torch.cuda.get_device_properties(0).total_memory // (1024 * 1024))
-    return True, total_mb
+    return _CudaStatus(torch_importable=True, cuda_build=cuda_build, vram_mb=total_mb)
+
+
+def _cuda_line(status: _CudaStatus) -> str:
+    """Describe CUDA readiness, with the fix for each way it is missing.
+
+    A CPU build and a missing driver look the same to marker, which silently
+    runs on CPU, but they need different fixes: a reinstall of torch or a
+    driver install.
+    """
+    if status.vram_mb is not None:
+        return f"CUDA: available ({status.vram_mb} MB VRAM)"
+    if not status.torch_importable:
+        return "CUDA: not available (torch cannot be imported; falls back to CPU)"
+    if status.cuda_build is None:
+        return (
+            "CUDA: not available (torch is a CPU build; falls back to CPU). "
+            "Reinstall with the CUDA build: "
+            "`uv tool install raw2md --torch-backend cu130 --reinstall`, or for "
+            "pip `--extra-index-url https://download.pytorch.org/whl/cu130`"
+        )
+    return (
+        f"CUDA: not available (torch is a CUDA {status.cuda_build} build, but "
+        "it sees no GPU; falls back to CPU). Check that an NVIDIA GPU is "
+        f"present and that its driver supports CUDA {status.cuda_build}"
+    )
 
 
 def _report_marker(settings: Settings) -> None:
@@ -143,16 +178,13 @@ def _report_marker(settings: Settings) -> None:
     GPU's VRAM.
     """
     print("marker:")
-    cuda_available, vram_mb = _cuda_status()
-    if cuda_available:
-        print(f"  CUDA: available ({vram_mb} MB VRAM)")
-    else:
-        print("  CUDA: not available (falls back to CPU)")
+    status = _cuda_status()
+    print(f"  {_cuda_line(status)}")
     batch_size = settings.marker_recognition_batch_size
     if batch_size is None:
         return
     print(f"  recognition_batch_size: {batch_size}")
-    if not cuda_available:
+    if status.vram_mb is None:
         print(
             "  WARNING: recognition_batch_size is set but CUDA is unavailable; "
             "the value was likely tuned against a GPU's VRAM"

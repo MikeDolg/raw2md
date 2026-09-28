@@ -3,17 +3,21 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 from zoneinfo import ZoneInfoNotFoundError
 
 import pytest
 
-from raw2md.doctor import run_doctor
+from raw2md.doctor import _cuda_status, _CudaStatus, run_doctor
 from raw2md.exit_codes import ExitCode
 from raw2md.paths import settings_file
 
 _MISSING_CMD = "definitely-not-a-real-command-xyz"
+_GPU = _CudaStatus(torch_importable=True, cuda_build="13.0", vram_mb=4096)
+_CPU_BUILD = _CudaStatus(torch_importable=True, cuda_build=None, vram_mb=None)
 
 
 def write_settings(data: Any) -> None:
@@ -238,7 +242,7 @@ def test_report_lists_engines(
 def test_report_shows_cuda_available_with_vram(
     home: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: (True, 4096))
+    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: _GPU)
     write_settings(gemini_only())
     run_doctor()
     out = capsys.readouterr().out
@@ -249,16 +253,79 @@ def test_report_shows_cuda_available_with_vram(
 def test_report_shows_cuda_unavailable(
     home: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: (False, None))
+    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: _CPU_BUILD)
     write_settings(gemini_only())
     run_doctor()
     assert "CUDA: not available" in capsys.readouterr().out
 
 
+def _fake_torch(cuda_build: str | None, gpu_visible: bool) -> Any:
+    device = SimpleNamespace(total_memory=4096 * 1024 * 1024)
+    return SimpleNamespace(
+        version=SimpleNamespace(cuda=cuda_build),
+        cuda=SimpleNamespace(
+            is_available=lambda: gpu_visible,
+            get_device_properties=lambda index: device,
+        ),
+    )
+
+
+def test_cuda_status_reads_a_cpu_build(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(sys.modules, "torch", _fake_torch(None, gpu_visible=False))
+    assert _cuda_status() == _CPU_BUILD
+
+
+def test_cuda_status_reads_a_cuda_build_without_a_gpu(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(sys.modules, "torch", _fake_torch("13.0", gpu_visible=False))
+    assert _cuda_status() == _CudaStatus(
+        torch_importable=True, cuda_build="13.0", vram_mb=None
+    )
+
+
+def test_cuda_status_reads_a_visible_gpu(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(sys.modules, "torch", _fake_torch("13.0", gpu_visible=True))
+    assert _cuda_status() == _GPU
+
+
+def test_cuda_status_without_torch(monkeypatch: pytest.MonkeyPatch) -> None:
+    # A None entry makes the import raise ImportError.
+    monkeypatch.setitem(sys.modules, "torch", None)
+    assert _cuda_status() == _CudaStatus(
+        torch_importable=False, cuda_build=None, vram_mb=None
+    )
+
+
+def test_report_points_a_cpu_build_to_a_reinstall(
+    home: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: _CPU_BUILD)
+    write_settings(gemini_only())
+    run_doctor()
+    out = capsys.readouterr().out
+    assert "torch is a CPU build" in out
+    assert "--torch-backend cu130" in out
+    assert "driver" not in out
+
+
+def test_report_points_a_cuda_build_without_a_gpu_to_the_driver(
+    home: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    status = _CudaStatus(torch_importable=True, cuda_build="13.0", vram_mb=None)
+    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: status)
+    write_settings(gemini_only())
+    run_doctor()
+    out = capsys.readouterr().out
+    assert "torch is a CUDA 13.0 build" in out
+    assert "driver supports CUDA 13.0" in out
+    assert "--torch-backend" not in out
+
+
 def test_report_omits_batch_size_line_when_unset(
     home: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: (False, None))
+    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: _CPU_BUILD)
     write_settings(gemini_only())
     run_doctor()
     assert "recognition_batch_size" not in capsys.readouterr().out
@@ -268,7 +335,7 @@ def test_report_warns_batch_size_set_without_cuda(
     home: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     # A batch size tuned for VRAM deserves a flag on a run without CUDA.
-    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: (False, None))
+    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: _CPU_BUILD)
     data = gemini_only()
     data["marker"] = {"recognition_batch_size": 8}
     write_settings(data)
@@ -281,7 +348,7 @@ def test_report_warns_batch_size_set_without_cuda(
 def test_report_no_warning_when_cuda_available_with_batch_size(
     home: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: (True, 4096))
+    monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: _GPU)
     data = gemini_only()
     data["marker"] = {"recognition_batch_size": 8}
     write_settings(data)
