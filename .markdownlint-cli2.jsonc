@@ -9,6 +9,9 @@
     "MD024": { "siblings_only": true },
     // Files may start with a comment or frontmatter rather than a heading.
     "MD041": false,
+    // The README centers the logo and the badges, and Markdown cannot center:
+    // only these tags, with `align`, render on both GitHub and PyPI.
+    "MD033": { "allowed_elements": ["h1", "p", "img", "a"] },
     // Table pipe spacing is a free formatting choice (the test corpus uses
     // compact tables on purpose; table reformatting is not a defect).
     "MD060": false
