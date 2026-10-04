@@ -12,6 +12,14 @@ from raw2md.cleaner import CleanOptions, clean, clean_in_place
 from raw2md.header import ConversionMethod
 from raw2md.mdtext.pages import page_mark, page_mark_number, split_page_marks
 
+
+def _corpus_fixtures() -> list[Path]:
+    # README.md documents the corpus and is not a fixture.
+    return sorted(
+        path for path in Path("tests/corpus").glob("*.md") if path.name != "README.md"
+    )
+
+
 # ---- blank lines -------------------------------------------------------------
 
 
@@ -154,7 +162,7 @@ def test_cleaning_reaches_a_fixed_point_on_every_corpus_fixture() -> None:
     # A rule that reads the whole document decides on what earlier rules left,
     # so leftover work of its own kind would grade a different document on the
     # second call.
-    for path in sorted(Path("tests/corpus").glob("*.md")):
+    for path in _corpus_fixtures():
         for method in (None, ConversionMethod.MARKER, ConversionMethod.PANDOC):
             options = CleanOptions(method=method)
             once = clean(path.read_text(encoding="utf-8"), options)
@@ -188,7 +196,7 @@ def test_page_mark_survives_cleaning() -> None:
 def test_page_marks_do_not_change_what_cleaning_produces() -> None:
     # Marks exist only under inspection, so cleaning must reach the same body
     # either way.
-    for path in sorted(Path("tests/corpus").glob("*.md")):
+    for path in _corpus_fixtures():
         plain = path.read_text(encoding="utf-8")
         lines = plain.split("\n")
         # A mark every eight lines, directly above its line.

@@ -224,11 +224,7 @@ def test_headers_edge_setext_heading_count() -> None:
 
 
 def test_percent_encoded_link_resolves_to_real_asset() -> None:
-    """A percent-encoded target (space, parens) decodes to a real corpus asset.
-
-    A separate snippet: a third image in the images fixture would trip the repeat
-    check on pandoc's `</figure>` lines in the docx round-trip.
-    """
+    """A percent-encoded target (space, parens) decodes to a real corpus asset."""
     target = "assets/diagram%20%28v2%29.png"
     body = f"![Diagram v2]({target})\n"
     counts = count_structure(body)
