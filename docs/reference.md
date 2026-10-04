@@ -156,7 +156,8 @@ post: none
 converted_at: 2026-10-03
 source_hash: 9rZ2...
 status: ok
-issues: [headings]
+issues:
+- headings
 ---
 ```
 
