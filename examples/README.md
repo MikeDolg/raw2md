@@ -53,6 +53,6 @@ Key:
 
 ## License of the results
 
-`book.md` and `thesis.md` are output of the `marker` models by Datalab. The models are licensed under a modified AI Pubs OpenRAIL-M license, and the license applies to their output too. The license text is in [`MODEL_LICENSE`](MODEL_LICENSE). The models are available at <https://github.com/datalab-to/marker>. raw2md cleaned the output of the models and changed the text.
+`book.md` and `thesis.md` are output of the `marker` models by Datalab. The models are licensed under a modified AI Pubs OpenRAIL-M license, and the license applies to their output too. The license text is in [`MODEL_LICENSE`](MODEL_LICENSE). The models are available at <https://github.com/datalab-to/marker/tree/v1.10.2>. raw2md cleaned the output of the models and changed the text.
 
 The `pandoc` converter made `report.md` from the DOCX source. The result is dedicated to the public domain under CC0 1.0, as the source is.

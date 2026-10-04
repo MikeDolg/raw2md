@@ -67,7 +67,10 @@ them.
 `marker` downloads its model weights on the first run. The weights are not
 part of raw2md. They are licensed by Datalab under a modified AI Pubs
 OpenRAIL-M license:
-<https://github.com/datalab-to/marker/blob/master/MODEL_LICENSE>
+<https://github.com/datalab-to/marker/blob/v1.10.2/MODEL_LICENSE>
+
+The link gives the text at `marker` 1.10.2, the version that raw2md installs.
+The terms of later `marker` versions differ.
 
 In short, and the license text governs:
 
