@@ -69,9 +69,11 @@ dependencies = [
 raw2md = "raw2md.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/MikeDolg/raw2md"
+Homepage = "https://raw2md.com"
+Documentation = "https://github.com/MikeDolg/raw2md/blob/main/docs/README.md"
 Source = "https://github.com/MikeDolg/raw2md"
 Issues = "https://github.com/MikeDolg/raw2md/issues"
+Changelog = "https://github.com/MikeDolg/raw2md/releases"
 
 [tool.uv]
 package = true
