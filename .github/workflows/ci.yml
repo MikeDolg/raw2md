@@ -54,6 +54,12 @@ jobs:
           - os: windows-2025
             python: "3.12"
     runs-on: ${{ matrix.os }}
+    # id-token lets the Codecov upload authenticate through OIDC instead of a
+    # repository secret. Permissions are per job, not per matrix entry, so the
+    # entries without coverage hold it too; none of them uses it.
+    permissions:
+      contents: read
+      id-token: write
     env:
       # The fast layer never imports torch, so the multi-GB wheel and its
       # Linux-only CUDA and triton dependencies are skipped below; each is
@@ -102,9 +108,15 @@ jobs:
         run: uv run pytest
 
       - if: matrix.lint
-        run: uv run pytest --cov --cov-report=
+        run: uv run pytest --cov --cov-report=xml
       - if: matrix.lint
         run: uv run coverage report --format=markdown --skip-covered >> "$GITHUB_STEP_SUMMARY"
+      - if: matrix.lint
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          files: coverage.xml
+          disable_search: true
 
       # Opt-in locally, but seconds long, and the lock is OS-specific: every
       # job runs it as a step of its own rather than a job billed separately.

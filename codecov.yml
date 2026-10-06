@@ -1,0 +1,10 @@
+# Coverage has no gate: the statuses report the number and never fail a
+# commit or a pull request.
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true
