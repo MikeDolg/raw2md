@@ -1,11 +1,11 @@
 name: CI
 
 on:
-  # No test reads these paths, and docs.yml lints the Markdown. Each job bills
-  # at least a minute, Windows at twice the rate. tests/corpus/ Markdown is
-  # absent on purpose: the fast layer reads it. A new top-level folder joins
-  # the list only if no test reads it. The list is written twice: GitHub
-  # Actions does not resolve YAML anchors.
+  # No test reads these paths, and docs.yml lints the Markdown. A run holds
+  # four runners for minutes, and the next push queues behind it.
+  # tests/corpus/ Markdown is absent on purpose: the fast layer reads it. A
+  # new top-level folder joins the list only if no test reads it. The list is
+  # written twice: GitHub Actions does not resolve YAML anchors.
   push:
     branches: [main]
     paths-ignore:
@@ -36,22 +36,22 @@ concurrency:
 
 jobs:
   fast:
-    # Python versions fan out on cheap Linux jobs, from the floor to the
-    # ceiling in pyproject.toml. One Windows job, billed double, runs the tests
-    # for the OS-specific behavior (the lock, the temp root, paths). The
-    # linters and the coverage report run once.
+    # Python versions fan out on fast Linux jobs, from the floor to the
+    # ceiling in pyproject.toml. One Windows job, the slowest of the set, runs
+    # the tests for the OS-specific behavior (the lock, the temp root, paths).
+    # The linters and the coverage report run once.
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             python: "3.11"
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             python: "3.12"
             lint: true
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             python: "3.13"
-          - os: windows-latest
+          - os: windows-2025
             python: "3.12"
     runs-on: ${{ matrix.os }}
     env:

@@ -1,10 +1,28 @@
 name: Smoke
 
-# Manual only: it installs the tool as a user does, with CPU torch, and the
-# pdf job downloads marker's models. It runs beside the heavy round-trip, never
-# on a commit.
+# It installs the tool as a user does, with CPU torch. A dependency release
+# breaks it more often than a commit does, hence the weekly run; a push runs it
+# only when the installed code or the smoke itself changes. The release calls
+# it on the wheel it built.
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'pyproject.toml'
+      - '.github/workflows/smoke.yml'
+      - '.github/scripts/**'
+      - 'tests/synthesis/gen_smoke.py'
+  schedule:
+    - cron: '17 5 * * 1'
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      wheel-artifact:
+        # Empty installs the checkout instead.
+        description: Name of the artifact that holds the wheel to install
+        type: string
+        default: ''
 
 concurrency:
   group: smoke-${{ github.workflow }}-${{ github.ref }}
@@ -17,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest]
+        os: [ubuntu-24.04, ubuntu-24.04-arm, windows-2025]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     defaults:
@@ -57,12 +75,24 @@ jobs:
           esac
           pandoc --version | head -1
 
+      - if: inputs.wheel-artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ inputs.wheel-artifact }}
+          path: dist
+
       - name: Install raw2md the way a user does
         # The project pins the CUDA build of torch on x64, and the pin wins
         # over --torch-backend; --no-sources drops it, as a wheel install has
         # no pin either.
+        env:
+          WHEEL_ARTIFACT: ${{ inputs.wheel-artifact }}
         run: |
-          uv tool install . --no-sources --torch-backend cpu
+          if [ -n "$WHEEL_ARTIFACT" ]; then
+            uv tool install dist/*.whl --torch-backend cpu
+          else
+            uv tool install . --no-sources --torch-backend cpu
+          fi
           echo "$(uv tool dir --bin)" >> "$GITHUB_PATH"
 
       - run: raw2md --version
@@ -90,7 +120,7 @@ jobs:
   pdf:
     # marker on a CPU runner, one platform only: gigabytes of models and
     # minutes of inference. Proves the required engine runs without a GPU.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     defaults:
       run:
@@ -109,12 +139,24 @@ jobs:
           path: ~/.cache/datalab
           key: datalab-models-${{ runner.os }}-v1
 
+      - if: inputs.wheel-artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ inputs.wheel-artifact }}
+          path: dist
+
       - name: Install raw2md the way a user does
         # The project pins the CUDA build of torch on x64, and the pin wins
         # over --torch-backend; --no-sources drops it, as a wheel install has
         # no pin either.
+        env:
+          WHEEL_ARTIFACT: ${{ inputs.wheel-artifact }}
         run: |
-          uv tool install . --no-sources --torch-backend cpu
+          if [ -n "$WHEEL_ARTIFACT" ]; then
+            uv tool install dist/*.whl --torch-backend cpu
+          else
+            uv tool install . --no-sources --torch-backend cpu
+          fi
           echo "$(uv tool dir --bin)" >> "$GITHUB_PATH"
 
       - name: Convert a one-page PDF without a GPU
