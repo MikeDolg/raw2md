@@ -189,8 +189,8 @@ def run_roundtrip(
     )
 
 
-def dump_for_analyst(result: RoundtripResult, dest_dir: Path) -> tuple[Path, Path]:
-    """Write the source/output pair side by side for the generation analyst."""
+def dump_pair(result: RoundtripResult, dest_dir: Path) -> tuple[Path, Path]:
+    """Write the source/output pair side by side for a word-level review."""
     dest_dir.mkdir(parents=True, exist_ok=True)
     source = dest_dir / f"{result.fixture.stem}.source.md"
     output = dest_dir / f"{result.fixture.stem}.{result.fmt}.output.md"
@@ -200,7 +200,7 @@ def dump_for_analyst(result: RoundtripResult, dest_dir: Path) -> tuple[Path, Pat
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run one round-trip and report it for manual or agent inspection."""
+    """Run one round-trip and report it for manual inspection."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("fixture", type=Path, help="corpus md fixture to round-trip")
     parser.add_argument("fmt", choices=FORMATS, help="target format")
@@ -224,8 +224,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     if out_counts is not None:
         diffs = compare_structure(result.reference_counts, out_counts)
         print(f"structure diffs: {diffs or 'none'}")
-    source, output = dump_for_analyst(result, work_dir / "analyst")
-    print("analyst pair:")
+    source, output = dump_pair(result, work_dir / "pair")
+    print("comparison pair:")
     print(f"  source: {source}")
     print(f"  output: {output}")
     print(f"  diff:   git diff --no-index {source} {output}")

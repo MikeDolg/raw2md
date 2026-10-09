@@ -7,8 +7,8 @@ branches drive marker. Run explicitly::
     uv run pytest -m roundtrip -k docx         # GPU-free docx only
     uv run pytest -m roundtrip -k pdf          # all born-digital PDF tests
 
-Only the deterministic contract is asserted; the word-level grade stays with
-the generation-analyst agent.
+Only the deterministic contract is asserted; the word-level grade is a review
+of the output against its fixture.
 """
 
 from __future__ import annotations

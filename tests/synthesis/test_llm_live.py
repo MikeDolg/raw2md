@@ -10,7 +10,7 @@ Behind the ``llm_live`` marker; they need ``GOOGLE_API_KEY`` and/or the
     uv run pytest -m llm_live -k ocr            # ocr (vision) tests only
 
 Only the deterministic contract is asserted; word-level quality is graded by
-the ``generation-analyst`` agent.
+a review of the output against its fixture.
 """
 
 from __future__ import annotations

@@ -50,7 +50,7 @@ uv run python -m tests.synthesis.roundtrip tests/corpus/tables.md docx --work-di
 ```
 
 The command prints the exit code, the status, and the structure difference. It
-writes the fixture and the result side by side to `rt/analyst/` and prints the
+writes the fixture and the result side by side to `rt/pair/` and prints the
 `git diff --no-index` command that compares them. Without `--work-dir`, the
 command uses a new temporary folder.
 
