@@ -1,7 +1,8 @@
 name: Release
 
 # A pushed v* tag builds once, smoke-tests the built wheel, uploads to PyPI
-# and then makes the GitHub release, so a failed upload leaves no release. A
+# and then makes the GitHub release, so a failed upload leaves no release.
+# Last, it starts the deploy of the site. A
 # manual run is the dry run: build and smoke only. A manual run on a tag also
 # extracts the release notes, which shows that the annotation reaches the
 # runner.
@@ -121,3 +122,22 @@ jobs:
           --title "$GITHUB_REF_NAME"
           --notes-file notes/notes.md
           --verify-tag
+
+  # The site at raw2md.com shows the release that PyPI serves, so a new
+  # release starts its deploy. A fork has no token: the release then stands
+  # and the job only warns.
+  site:
+    needs: github-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Start the deploy of the site
+        env:
+          GH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::SITE_DISPATCH_TOKEN is not set; the site is not deployed"
+            exit 0
+          fi
+          gh api repos/MikeDolg/raw2md-site/dispatches -f event_type=raw2md-release
