@@ -1,0 +1,18 @@
+name: Task
+description: For the maintainer only, for internal work such as refactoring, CI, dependencies, or benchmarks. To report a problem or to propose a change, use another form.
+labels: [task]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What the work changes, and why.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done criterion
+      description: The check that shows that the work is complete.
+    validations:
+      required: true

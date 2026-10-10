@@ -1,0 +1,16 @@
+# Categories of the generated release notes, one for each issue form label.
+# The catch-all keeps a pull request without a form label in the notes.
+changelog:
+  categories:
+    - title: Bug fixes
+      labels: [bug]
+    - title: Conversion quality
+      labels: [quality]
+    - title: Features
+      labels: [enhancement]
+    - title: Documentation
+      labels: [documentation]
+    - title: Maintenance
+      labels: [task]
+    - title: Other changes
+      labels: ["*"]

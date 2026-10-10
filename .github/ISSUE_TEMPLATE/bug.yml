@@ -1,0 +1,50 @@
+name: Bug
+description: raw2md crashes, prints an error, or exits with a wrong code.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Use this form when the tool fails. If the tool finishes but the
+        Markdown is wrong, use the Conversion quality form.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `raw2md --version`.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      description: For example, Windows 11 or Ubuntu 24.04.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The full command that you ran.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error output
+      description: The error message and the traceback, as the terminal shows them.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of raw2md doctor
+      description: Optional. It shows the tools and the settings that the tool found.
+      render: text
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Optional. Anything else that helps to reproduce the failure.

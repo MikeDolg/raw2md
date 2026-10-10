@@ -82,7 +82,7 @@ Homepage = "https://raw2md.com"
 Documentation = "https://github.com/MikeDolg/raw2md/blob/main/docs/README.md"
 Source = "https://github.com/MikeDolg/raw2md"
 Issues = "https://github.com/MikeDolg/raw2md/issues"
-Changelog = "https://github.com/MikeDolg/raw2md/releases"
+Changelog = "https://github.com/MikeDolg/raw2md/blob/main/CHANGELOG.md"
 
 [tool.uv]
 package = true

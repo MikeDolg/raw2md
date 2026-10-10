@@ -1,0 +1,54 @@
+name: Conversion quality
+description: The conversion finishes, but the Markdown is wrong, for example lost text or a broken table or formula.
+labels: [quality]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Attach only a document that you may share publicly. A short excerpt
+        that shows the defect is enough.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `raw2md --version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: format
+    attributes:
+      label: Source format
+      options:
+        - PDF
+        - DjVu
+        - DOCX
+        - Markdown
+    validations:
+      required: true
+  - type: input
+    id: engine
+    attributes:
+      label: Engine and LLM stages
+      description: The engine (`marker`, `pandoc`, or a model key from `-e`) and the `-i` and `-p` flags, if you used them.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected output
+      description: What the source shows, as text or Markdown.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual output
+      description: What raw2md wrote for the same place.
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Optional. The page number, a screenshot of the source, or a link to the document.
