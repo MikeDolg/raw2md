@@ -1247,6 +1247,24 @@ def test_claude_available_with_command(monkeypatch: pytest.MonkeyPatch) -> None:
     assert build_provider(cli_model()).available().ok is True
 
 
+def test_claude_auth_probe_has_no_isolation_flags(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The probe sends no document to a model, so it needs no isolation.
+    captured: list[list[str]] = []
+
+    def fake(
+        argv: list[str], input_text: str, timeout: float
+    ) -> subprocess.CompletedProcess[str]:
+        captured.append(argv)
+        return _fake_completed(0, stdout=json.dumps({"loggedIn": True}))
+
+    monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
+    monkeypatch.setattr("raw2md.llm.claude._run_with_timeout", fake)
+    assert build_provider(cli_model()).available().ok is True
+    assert captured == [["claude", "auth", "status"]]
+
+
 def test_claude_unavailable_without_command(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: None)
     availability = build_provider(cli_model("ghost")).available()
@@ -1319,7 +1337,17 @@ def test_claude_generate_returns_stdout(monkeypatch: pytest.MonkeyPatch) -> None
     provider = ClaudeCliProvider(cli_model())
     result = provider.generate("instructions", [TextPart("zone")])
     assert result == "fixed text"
-    assert captured["argv"] == ["claude", "-p", "--model", "claude-sonnet-4-6"]
+    assert captured["argv"] == [
+        "claude",
+        "-p",
+        "--model",
+        "claude-sonnet-4-6",
+        "--tools",
+        "",
+        "--safe-mode",
+        "--strict-mcp-config",
+        "--no-session-persistence",
+    ]
     assert "instructions" in captured["input"]
     assert "zone" in captured["input"]
 

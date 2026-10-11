@@ -33,6 +33,17 @@ _RATE_LIMIT_MARKERS = ("rate limit", "rate_limit", "overloaded", "429", "quota")
 # (`claude -p` with no session prints this to stdout, not stderr).
 _AUTH_ERROR_MARKERS = ("not logged in", "please run /login")
 
+# The document goes to the model, so an instruction in it must not reach a
+# tool, an MCP server, a hook, or the user's CLAUDE.md, and no session file
+# may keep a copy of the document.
+_ISOLATION_FLAGS: tuple[str, ...] = (
+    "--tools",
+    "",
+    "--safe-mode",
+    "--strict-mcp-config",
+    "--no-session-persistence",
+)
+
 # A hung CLI would block the batch. 2 minutes covers an ordinary zone; a large
 # one can run past it, so `cli_timeout_s` in settings.json overrides it.
 DEFAULT_CLAUDE_TIMEOUT_S: int = 120
@@ -149,7 +160,13 @@ class ClaudeCliProvider(Provider):
 
     def _request(self, command: str, prompt: str, parts: Sequence[Part]) -> str:
         full = _compose(prompt, parts)
-        argv = [*_resolve_command(command), "-p", "--model", self._model.model]
+        argv = [
+            *_resolve_command(command),
+            "-p",
+            "--model",
+            self._model.model,
+            *_ISOLATION_FLAGS,
+        ]
         self._reserve_rpd()
         timeout = self._model.cli_timeout_s or DEFAULT_CLAUDE_TIMEOUT_S
         try:
