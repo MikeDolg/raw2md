@@ -59,7 +59,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
         "claude_cli": {
             "access": "cli",
             "command": "claude",
-            "model": "claude-sonnet-5",
+            "model": "claude-sonnet-5-5",
             "cli_timeout_s": 120,
         },
     },

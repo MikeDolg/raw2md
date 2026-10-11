@@ -32,6 +32,7 @@ def test_default_settings_parses() -> None:
     assert settings.models["gemini_api"].key_env == "GOOGLE_API_KEY"
     assert settings.models["claude_cli"].access == "cli"
     assert settings.models["claude_cli"].command == "claude"
+    assert settings.models["claude_cli"].model == "claude-sonnet-5-5"
     assert settings.operations["post"] == frozenset({"claude_cli", "gemini_api"})
     assert settings.log_file is True
 
