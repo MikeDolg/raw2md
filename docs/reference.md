@@ -283,6 +283,13 @@ model key can be any name except `none`, `failed`, `partial`, `marker`,
 model with `cli` access does not see images. Therefore it does not fit `ocr`
 and `inspection`.
 
+A model with `cli` access, such as `claude_cli`, runs as
+`COMMAND -p --model MODEL --tools "" --safe-mode --strict-mcp-config --no-session-persistence`.
+The request goes to the standard input. These flags isolate the program: it
+gets no tools, no MCP servers, no hooks, and no user settings or `CLAUDE.md`,
+and it keeps no session file with the document. The `command` must accept these
+flags, as the `claude` command of Claude Code does.
+
 | Model field | Access | What it sets | If not set |
 |---|---|---|---|
 | `access` | all | `api`: requests through an API; `cli`: a call to a program | required |
