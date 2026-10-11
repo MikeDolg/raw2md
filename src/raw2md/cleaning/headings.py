@@ -536,8 +536,16 @@ def _fold_heading_title(title: str) -> str:
     edges go first: a mark set apart after a spaced-out title would otherwise
     close into its word. Punctuation inside the title stays.
     """
-    words = _strip_edge_punctuation(" ".join(title.split()))
-    return _drop_diacritics(_close_letter_spacing(words)).casefold()
+    return _drop_diacritics(_close_letter_spacing(_bare_title(title))).casefold()
+
+
+def _bare_title(title: str) -> str:
+    """`title` with whitespace collapsed and no punctuation at either edge.
+
+    The key of the repeats of one heading. It keeps case: a section and a
+    running label can differ only by case.
+    """
+    return _strip_edge_punctuation(" ".join(title.split()))
 
 
 def _strip_edge_punctuation(text: str) -> str:
@@ -816,7 +824,7 @@ def contents_zones(
             continue
         if opened is None:
             continue
-        if through_running_heads and title in repeated:
+        if through_running_heads and _bare_title(title) in repeated:
             continue
         zones.append((opened, idx))
         opened = None
@@ -831,12 +839,13 @@ def _heading_title(line: str) -> str:
 
 
 def _repeated_heading_titles(seg_list: list[Segment]) -> frozenset[str]:
-    """Titles the body carries at more than one heading, whatever their level.
+    """Bare titles the body carries at more than one heading, at any level.
 
-    The converter guesses a running header's level page by page.
+    The converter guesses a running header's level page by page, and a page
+    can add or lose its closing mark (`_bare_title`).
     """
     counts = Counter(
-        _heading_title(line)
+        _bare_title(_heading_title(line))
         for line, protected in seg_list
         if not protected and _ATX_LEVEL_RE.match(line) is not None
     )
@@ -1646,26 +1655,26 @@ def _repeat_vote_groups(
 ) -> list[list[_HeadingOccurrence]]:
     """The groups of one class prefix that get a level vote of their own.
 
-    A series votes whole; otherwise repeats of one exact title, two or more,
-    vote per title.
+    A series votes whole; otherwise repeats of one bare title (`_bare_title`),
+    two or more, vote per title.
     """
     if _is_numbered_series(occurrences):
         return [occurrences]
     by_title: dict[str, list[_HeadingOccurrence]] = {}
     for occ in occurrences:
-        by_title.setdefault(occ.title, []).append(occ)
+        by_title.setdefault(_bare_title(occ.title), []).append(occ)
     return [group for group in by_title.values() if len(group) >= 2]
 
 
 def _keyed_occurrences(
     occurrences: list[_HeadingOccurrence],
 ) -> list[list[_HeadingOccurrence]]:
-    """`occurrences` gathered by class prefix, or by their own text without one."""
+    """`occurrences` gathered by class prefix, or by their bare title without one."""
     # The flag keeps a title that reads like a folded prefix out of that class.
     keyed: dict[tuple[bool, str], list[_HeadingOccurrence]] = {}
     for occ in occurrences:
         found = heading_class(occ.title)
-        key = (True, found[0]) if found else (False, occ.title)
+        key = (True, found[0]) if found else (False, _bare_title(occ.title))
         keyed.setdefault(key, []).append(occ)
     return list(keyed.values())
 
@@ -1706,7 +1715,7 @@ def _numbered_vote_groups(
 def _repeated_title_groups(
     occurrences: list[_HeadingOccurrence],
 ) -> list[list[_HeadingOccurrence]]:
-    """The copies of one exact unnumbered title, when enough and one is anchored.
+    """The copies of one bare unnumbered title, when enough and one is anchored.
 
     With no anchored copy there is no ancestor to outweigh, and the plain vote
     of `_levels_voted_by_repeat` decides.
@@ -1715,7 +1724,7 @@ def _repeated_title_groups(
     for occ in occurrences:
         if heading_class(occ.title) is not None:
             continue
-        by_title.setdefault(occ.title, []).append(occ)
+        by_title.setdefault(_bare_title(occ.title), []).append(occ)
     return [
         group
         for group in by_title.values()
@@ -1927,7 +1936,7 @@ def normalize_repeated_heading_levels(
     First `_settled_levels` speaks for anchored and unanchored headings alike.
     The residue votes among unanchored headings only: two anchored repeats at
     different levels are explained by different parents. A vote groups repeats
-    of one exact title, or the members of one numbered class
+    of one bare title, or the members of one numbered class
     (`_HEADING_CLASS_RE`), and takes the mode, the shallower on a tie. A title
     past `_HEADING_MAX_LENGTH` does not vote. Only the `#` count changes.
     """

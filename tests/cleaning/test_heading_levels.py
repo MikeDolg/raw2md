@@ -13,7 +13,12 @@ import pytest
 
 from raw2md.cleaner import CleanOptions, clean, clean_in_place
 from raw2md.cleaning import printed_outline
-from raw2md.cleaning.headings import close_section_level_gaps, detect_oversize_headings
+from raw2md.cleaning.headings import (
+    _level_vote_occurrences,
+    _vote_groups,
+    close_section_level_gaps,
+    detect_oversize_headings,
+)
 from raw2md.keywords import default_keywords
 from raw2md.mdtext.zones import segments
 from raw2md.source_outline import SourceOutline
@@ -637,6 +642,44 @@ def test_a_numbered_repeat_split_three_against_two_is_untouched() -> None:
         + [f"## {n} Product {n}\n### Variant\n#### Section 2\n" for n in range(4, 6)]
     )
     assert clean_in_place(text) == text
+
+
+def test_anchored_copies_that_differ_by_a_closing_mark_settle_together() -> None:
+    text = "".join(
+        [f"## {n} Product {n}\n### Technical data.\n" for n in range(1, 4)]
+        + [
+            f"## {n} Product {n}\n### Variant\n#### Technical data\n"
+            for n in range(4, 6)
+        ]
+    )
+    cleaned = clean_in_place(text)
+
+    assert [line for line in cleaned.splitlines() if "Technical data" in line] == [
+        "### Technical data."
+    ] * 3 + ["### Technical data"] * 2
+
+
+def _vote_titles(text: str) -> list[list[str]]:
+    """The titles of each group the level vote reads in `text`."""
+    occurrences = _level_vote_occurrences(segments(text), KEYWORDS, frozenset())
+    return [[occ.title for occ in group] for group in _vote_groups(occurrences)]
+
+
+def test_copies_that_differ_by_a_closing_mark_vote_in_one_group() -> None:
+    text = "# A\n## Overview.\n# B\n## Overview:\n# C\n#### «Overview»\n"
+    assert _vote_titles(text) == [["Overview.", "Overview:", "«Overview»"]]
+
+
+def test_copies_that_differ_by_case_vote_apart() -> None:
+    text = "# A\n## Note\n# B\n## NOTE\n# C\n#### Note:\n"
+    assert _vote_titles(text) == [["Note", "Note:"]]
+
+
+def test_a_contents_entry_with_its_page_number_stays_out_of_the_vote() -> None:
+    text = (
+        "## Introduction\n\nA\n\n### Introduction.\n\nB\n\n#### Introduction 5\n\nC\n"
+    )
+    assert _vote_titles(text) == [["Introduction", "Introduction."]]
 
 
 def test_a_repeated_plate_settles_on_one_level() -> None:
@@ -1950,6 +1993,12 @@ def test_a_repeated_heading_opens_no_contents_zone_of_its_own() -> None:
     text = _contents_cut_by(_RUNNING_HEAD, above=_RUNNING_HEAD, heading="# Overview")
 
     assert printed_outline(segments(text), KEYWORDS).title_count == 0
+
+
+def test_a_running_head_that_lost_its_closing_mark_does_not_close_the_zone() -> None:
+    text = _contents_cut_by("## PREFACE", above="## PREFACE.")
+
+    assert printed_outline(segments(text), KEYWORDS).title_count == 6
 
 
 def test_reading_a_contents_past_its_running_head_is_idempotent() -> None:
