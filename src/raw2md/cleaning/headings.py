@@ -528,9 +528,30 @@ def _heading_identity(line: str) -> _HeadingIdentity:
 
 
 def _fold_heading_title(title: str) -> str:
-    """`title` with letter spacing closed, diacritics dropped, and case folded."""
-    words = " ".join(title.split())
+    """`title` past the spellings that differ between copies of one heading.
+
+    Whitespace collapses, punctuation (Unicode category `P`, which holds the
+    emphasis markers `*` and `_`) leaves both edges, letter spacing closes,
+    diacritics drop, and case folds. A scan adds or loses a closing mark. The
+    edges go first: a mark set apart after a spaced-out title would otherwise
+    close into its word. Punctuation inside the title stays.
+    """
+    words = _strip_edge_punctuation(" ".join(title.split()))
     return _drop_diacritics(_close_letter_spacing(words)).casefold()
+
+
+def _strip_edge_punctuation(text: str) -> str:
+    """`text` without the punctuation and whitespace at either edge."""
+    start, end = 0, len(text)
+    while start < end and _is_edge_filler(text[start]):
+        start += 1
+    while end > start and _is_edge_filler(text[end - 1]):
+        end -= 1
+    return text[start:end]
+
+
+def _is_edge_filler(char: str) -> bool:
+    return char.isspace() or unicodedata.category(char).startswith("P")
 
 
 def drop_running_header_headings(seg_list: list[Segment]) -> list[Segment]:
@@ -539,10 +560,10 @@ def drop_running_header_headings(seg_list: list[Segment]) -> list[Segment]:
     A layout model reads a page's running header as a heading, so one section
     recurs once per page. The match is on identity (level, number, and folded
     title), not on bytes, since pages spell the header with and without its
-    number. Only a repeat of a numbered slot is dropped: a document can repeat
-    an unnumbered heading on purpose. Every heading opens a slot at its level
-    and closes the deeper ones, except a restatement, so a two-line header
-    (title, then subsection number) drops as a pair.
+    number or its closing mark. Only a repeat of a numbered slot is dropped: a
+    document can repeat an unnumbered heading on purpose. Every heading opens a
+    slot at its level and closes the deeper ones, except a restatement, so a
+    two-line header (title, then subsection number) drops as a pair.
 
     Runs after the run-in split, so the first copy is already cut to its bare
     title. Runs before the outline pass, whose `stated` indices would shift, and
@@ -716,10 +737,10 @@ def _numbered_stems(blocks: list[list[_ContentsRecord]]) -> frozenset[int]:
 def _named_ranks(blocks: list[list[_ContentsRecord]]) -> frozenset[str]:
     """The distinct rank words the zone prints in a cell of their own.
 
-    Folded, and without an abbreviation's dot: `Cap.` and `Cap` are one rank.
+    Folded, so the dot of an abbreviation goes: `Cap.` and `Cap` are one rank.
     """
     return frozenset(
-        _fold_heading_title(record.rank_word).rstrip(".")
+        _fold_heading_title(record.rank_word)
         for block in blocks
         for record in block
         if record.rank_word is not None
@@ -838,13 +859,14 @@ def _is_contents_title(title: str, contents: re.Pattern[str]) -> bool:
 
 
 def _fold_contents_word(text: str) -> str:
-    """`text` past a leading number or folio, letter spacing closed, no diacritics.
+    """`text` folded (`_fold_heading_title`) and past a leading number or folio.
 
-    A scanned contents page prints the word spaced out or without accents.
+    The fold comes first, since the folio pattern would read the first letter
+    of a spaced-out word (`C O N T E N T S`) as a roman numeral. The rest is
+    folded again: the number hid its edge and its spaced-out letters.
     """
-    core = _close_letter_spacing(text)
-    core = _CONTENTS_TITLE_NUMBER_RE.sub("", core, count=1).strip()
-    return _drop_diacritics(core).casefold()
+    folded = _fold_heading_title(text)
+    return _fold_heading_title(_CONTENTS_TITLE_NUMBER_RE.sub("", folded, count=1))
 
 
 def _close_letter_spacing(text: str) -> str:

@@ -1,18 +1,26 @@
 """Tests for the heading rules that read one heading's own line.
 
 The missing space after a marker, emphasis around the whole title, a running
-header restated page after page, and a heading run into its paragraph.
+header restated page after page, the punctuation a scan adds to or drops from
+a title's edges, and a heading run into its paragraph.
 """
 
 from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from raw2md.cleaner import CleanOptions, clean, clean_in_place
-from raw2md.keywords import default_keywords
+from raw2md.cleaning import printed_outline
+from raw2md.cleaning.headings import _fold_heading_title
+from raw2md.keywords import default_keywords, word_pattern
+from raw2md.mdtext.zones import segments
 from raw2md.source_text import tokenize
 
 from ._helpers import reported
+
+KEYWORDS = default_keywords()
 
 # ---- heading space -----------------------------------------------------------
 
@@ -437,6 +445,81 @@ def test_running_header_dedup_is_idempotent() -> None:
     text = "### 3.1 Foo\n\nA\n\n### 3.1 Foo\n\nB\n"
     once = clean(text)
     assert clean(once) == once
+
+
+# ---- edge punctuation of a heading title -----------------------------------------
+
+_CONTENTS_TABLE = (
+    "| Section | Title | Page |\n"
+    "|---|---|---|\n"
+    "| Chapter 1 | Introduction | 3 |\n"
+    "|  | § 1. Basic terms | 3 |\n"
+    "|  | § 2. Rules | 5 |\n"
+)
+
+
+def _contents_titles(heading: str) -> int:
+    """How many records the printed contents under `heading` states."""
+    text = f"{heading}\n\n{_CONTENTS_TABLE}"
+    return printed_outline(segments(text), KEYWORDS).title_count
+
+
+@pytest.mark.parametrize(
+    "heading",
+    [
+        "# CONTENTS.",
+        "# Contents:",
+        "# Содержание.",
+        "# «Оглавление»",
+        "# • Contents •",
+        "# C O N T E N T S .",
+        "# 1.2 Contents.",
+        "# II. «Contents»",
+    ],
+)
+def test_a_contents_heading_with_edge_punctuation_opens_the_zone(heading: str) -> None:
+    assert _contents_titles(heading) == 3
+
+
+def test_a_section_named_after_the_contents_word_opens_no_zone_past_its_dot() -> None:
+    assert _contents_titles("# Contents of the kit.") == 0
+
+
+def test_the_fold_keeps_punctuation_inside_a_title() -> None:
+    assert _fold_heading_title("Contents: Part 1") == "contents: part 1"
+
+
+def test_a_crushed_contents_line_still_opens_the_zone_on_its_head() -> None:
+    assert _contents_titles("# Contents: Part 1") == 3
+
+
+@pytest.mark.parametrize("spelling", ["Cap.", "cap", "*Cap*", "(Cap)"])
+def test_the_fold_reads_one_rank_word_past_its_edge_marks(spelling: str) -> None:
+    assert _fold_heading_title(spelling) == "cap"
+
+
+def test_a_running_header_copy_that_lost_its_closing_dot_is_dropped() -> None:
+    text = (
+        "## 1 CONTENTS.\n\nA\n\n## 1 CONTENTS\n\nB\n\n## CONTENTS\n\nC\n\n"
+        "## 1 Contents:\n\nD\n"
+    )
+    assert clean_in_place(text) == "## 1 CONTENTS.\n\nA\n\nB\n\nC\n\nD\n"
+
+
+def test_an_unnumbered_header_that_lost_its_dot_keeps_the_slot_below_it() -> None:
+    # The copy restates the open heading, so it must not close the numbered slot.
+    text = "### Overview.\n\n#### 2.1 Foo\n\nA\n\n### OVERVIEW\n\n#### 2.1 Foo.\n\nB\n"
+    assert clean_in_place(text) == (
+        "### Overview.\n\n#### 2.1 Foo\n\nA\n\n### OVERVIEW\n\nB\n"
+    )
+
+
+@pytest.mark.parametrize("section", ["top_level_sections", "caption_labels"])
+def test_other_dictionary_words_already_match_past_a_closing_dot(section: str) -> None:
+    pattern = word_pattern(getattr(KEYWORDS, section))
+    for record in getattr(KEYWORDS, section):
+        word = record.removesuffix("*").removesuffix(".")
+        assert pattern.match(f"{word}.") is not None, record
 
 
 # ---- run-in heading split ------------------------------------------------------
