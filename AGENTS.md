@@ -112,6 +112,21 @@ Both layers skip a test when its tool or its key is absent.
 - Each `# noqa` and `# type: ignore` names its rule code and gives a reason.
 - Test data is invented. Do not copy text from real documents into tests.
 
+## Issues and pull requests
+
+An agent that files an issue or opens a pull request uses the templates in
+`.github/`. `gh issue create` and `gh pr create` do not apply them, so follow
+them by hand:
+
+- For an issue, select the form in `.github/ISSUE_TEMPLATE/` that matches the
+  problem. Write the `label` of each field of the form as a heading, and fill
+  each field that the form requires. Add the label from the `labels` key of
+  the form.
+- Do not use the `Task` form. It is for the maintainer only.
+- For a pull request, use the headings of
+  `.github/pull_request_template.md`. End the body with `Closes #N`, where `N`
+  is the number of the issue.
+
 ## Licenses
 
 The code is under the MIT license. The results in `examples/` have their own
