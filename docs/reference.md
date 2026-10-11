@@ -261,7 +261,7 @@ priority over a built-in value. This is the template that `init` writes:
     "claude_cli": {
       "access": "cli",
       "command": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "cli_timeout_s": 120
     }
   },
