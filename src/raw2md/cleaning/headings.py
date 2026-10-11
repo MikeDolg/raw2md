@@ -181,6 +181,7 @@ _OUTLINE_SKELETON_MIN_TITLES = 3
 
 # A leading section number (`1.2`) or roman folio (`II`), with an optional
 # trailing dot, that a contents heading carries ahead of its word.
+_NAME_MARKS = frozenset("#")
 _CONTENTS_TITLE_NUMBER_RE = re.compile(
     r"^(?:\d+(?:\.\d+)*"
     r"|m{0,3}(?:cm|cd|d?c{0,3})(?:xc|xl|l?x{0,3})(?:ix|iv|v?i{0,3}))\.?\s+",
@@ -559,6 +560,9 @@ def _strip_edge_punctuation(text: str) -> str:
 
 
 def _is_edge_filler(char: str) -> bool:
+    """True for whitespace and punctuation, except marks that spell a name (`C#`)."""
+    if char in _NAME_MARKS:
+        return False
     return char.isspace() or unicodedata.category(char).startswith("P")
 
 
@@ -859,12 +863,23 @@ def _is_contents_title(title: str, contents: re.Pattern[str]) -> bool:
     section merely named after the word has no such mark.
     """
     stripped = title.strip(" *_")
-    if contents.fullmatch(_fold_contents_word(stripped)) is not None:
+    if _is_contents_word(stripped, contents):
         return True
     head = _CONTENTS_TITLE_HEAD_RE.match(stripped)
-    if head is None:
-        return False
-    return contents.fullmatch(_fold_contents_word(head.group(1))) is not None
+    return head is not None and _is_contents_word(head.group(1), contents)
+
+
+def _is_contents_word(text: str, contents: re.Pattern[str]) -> bool:
+    """True when the folded `text` is a contents word.
+
+    The fold drops edge punctuation, so a record that carries its own (`inh.`,
+    `contents:`) is also tried against the spelling as printed, past a number.
+    """
+    printed = _CONTENTS_TITLE_NUMBER_RE.sub("", " ".join(text.split()), count=1)
+    return any(
+        contents.fullmatch(candidate) is not None
+        for candidate in (_fold_contents_word(text), printed.strip())
+    )
 
 
 def _fold_contents_word(text: str) -> str:

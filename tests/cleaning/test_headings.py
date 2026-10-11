@@ -489,6 +489,24 @@ def test_the_fold_keeps_punctuation_inside_a_title() -> None:
     assert _fold_heading_title("Contents: Part 1") == "contents: part 1"
 
 
+def test_a_dotted_contents_abbreviation_still_opens_the_zone() -> None:
+    keywords = replace(KEYWORDS, contents_heading=("Inh.",))
+    text = f"# Inh.\n\n{_CONTENTS_TABLE}"
+    assert printed_outline(segments(text), keywords).title_count == 3
+
+
+def test_a_punctuated_contents_record_opens_the_zone() -> None:
+    keywords = replace(KEYWORDS, contents_heading=("Table of contents:",))
+    text = f"# Table of contents:\n\n{_CONTENTS_TABLE}"
+    assert printed_outline(segments(text), keywords).title_count == 3
+
+
+def test_a_name_mark_keeps_two_titles_apart() -> None:
+    assert _fold_heading_title("C#") != _fold_heading_title("C")
+    text = "## 1 C\n\nA\n\n## C#\n\nB\n"
+    assert "C#\n\nB" in clean_in_place(text)
+
+
 def test_a_crushed_contents_line_still_opens_the_zone_on_its_head() -> None:
     assert _contents_titles("# Contents: Part 1") == 3
 
