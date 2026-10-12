@@ -27,6 +27,7 @@ of rules lists them. The module paths start at `src/raw2md/`.
 | A numbered heading merged with a paragraph; the title is 60 characters at most, and each word starts with a capital letter | `### 3.1 Problem Statement. The pump runs…` | `### 3.1 Problem Statement`, with the paragraph on its own |
 | A heading longer than 200 characters | `## <long line>` | the same line as a plain paragraph |
 | A running head recognized as a heading: the number and the title repeat while the section is still open | a second `## 5.2 Filters` | deleted; a repeat without the number stays |
+| The heading `Contents` repeated on each page of a table of contents, at any level; only a running head can stand between the copies, and a copy with more text after the word stays | `## Contents`, the rows, `#### CONTENTS.`, the rows | `## Contents`, with all the rows under it |
 | The level does not match the depth of the number | `## 4`, `## 4.1`, `#### 4.3.1` | `# 4`, `## 4.1`, `### 4.3.1` |
 | A lost heading: a separate paragraph with a multi-level number that continues the numbering of the adjacent headings | `4.2 Valves` between `## 4.1` and `## 4.3` | `## 4.2 Valves` |
 | An unnumbered heading at the level of its section or higher | `## Notes` under `## 4.1 Pumps` | `### Notes` |
@@ -133,7 +134,10 @@ the author, not a parsed list.
 | Cells padded with spaces to the column width | cells of different lengths aligned with spaces | a table up to 120 characters wide stays aligned; a wider table gets one space around each value |
 
 The rules for a table of contents work only between the heading `Contents` and
-the next heading. The table rules do not change the values in the cells.
+the next heading. A table of contents that runs over several pages counts as
+one part: cleaning deletes the repeated heading `Contents` first, so the rules
+reach the rows of every page. Another heading between the pages still ends the
+part. The table rules do not change the values in the cells.
 
 | Threshold | Constant | Module |
 |---|---|---|
