@@ -31,6 +31,7 @@ from raw2md.cleaning import (
     defuse_false_math,
     drop_bodyless_table,
     drop_content_free_math_spans,
+    drop_contents_continuation_headings,
     drop_empty_table_columns,
     drop_orphan_sizers,
     drop_page_furniture,
@@ -137,6 +138,10 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     # the level votes.
     seg_list = strip_oversize_heading_markers(seg_list)
     seg_list = drop_running_header_headings(seg_list)
+    # Before the level witness, which reads one contents zone as one ladder,
+    # and before the repeat vote, which would count each copy. Once: the
+    # level rounds move headings but make no copy.
+    seg_list = drop_contents_continuation_headings(seg_list, options.keywords)
     seg_list = drop_page_furniture(seg_list, options.keywords)
     seg_list = _settle_heading_structure(seg_list, options)
     # Before every span-scoped math rule: a glued-shut delimiter pairs with the

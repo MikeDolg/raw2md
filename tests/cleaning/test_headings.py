@@ -2,7 +2,8 @@
 
 The missing space after a marker, emphasis around the whole title, a running
 header restated page after page, the punctuation a scan adds to or drops from
-a title's edges, and a heading run into its paragraph.
+a title's edges, a contents heading restated on each contents page, and a
+heading run into its paragraph.
 """
 
 from __future__ import annotations
@@ -538,6 +539,83 @@ def test_other_dictionary_words_already_match_past_a_closing_dot(section: str) -
     for record in getattr(KEYWORDS, section):
         word = record.removesuffix("*").removesuffix(".")
         assert pattern.match(f"{word}.") is not None, record
+
+
+# ---- a contents heading restated on each contents page ---------------------------
+
+_CONTENTS_PAGES = (
+    "| 1 | Introduction | 3 |\n|---|---|---|\n| 1.1 | Basic terms | 4 |\n",
+    "| 1.2 | Rules | 6 |\n|---|---|---|\n| 2 | Setup | 9 |\n",
+    "| 2.1 | Belt tension | 10 |\n|---|---|---|\n| 3 | Wiring | 14 |\n",
+)
+
+_CONTENTS_RECORDS = ("Basic terms", "Rules", "Setup", "Belt tension", "Wiring")
+
+
+def _paged_contents(*headings: str, between: str = "") -> str:
+    """A contents printed over one page per heading; `between` opens each later page."""
+    pages = [
+        f"{between if idx else ''}{heading}\n\n{_CONTENTS_PAGES[idx]}\n"
+        for idx, heading in enumerate(headings)
+    ]
+    return "".join(pages) + "# 1 Introduction\n\nText.\n"
+
+
+def _contents_heading_lines(text: str) -> list[str]:
+    contents = word_pattern(KEYWORDS.contents_heading)
+    return [
+        line
+        for line in text.split("\n")
+        if line.startswith("#")
+        and contents.fullmatch(_fold_heading_title(line.lstrip("#"))) is not None
+    ]
+
+
+@pytest.mark.parametrize(
+    "headings",
+    [
+        ("# Contents", "#### Contents"),
+        ("## Contents", "#### Contents", "### Contents"),
+        ("## CONTENTS.", "#### CONTENTS", "#### Contents"),
+    ],
+)
+def test_a_contents_heading_restated_on_each_page_is_dropped(
+    headings: tuple[str, ...],
+) -> None:
+    cleaned = clean_in_place(_paged_contents(*headings))
+    assert _contents_heading_lines(cleaned) == [headings[0]]
+    for record in _CONTENTS_RECORDS[: 2 * len(headings) - 1]:
+        assert record in cleaned, record
+
+
+def test_a_contents_copy_past_a_repeated_running_header_is_dropped() -> None:
+    text = _paged_contents(
+        "# Contents", "## Contents", between="## A Field Guide\n\n"
+    ) + ("\n## A Field Guide\n\nMore text.\n")
+    assert _contents_heading_lines(clean_in_place(text)) == ["# Contents"]
+
+
+def test_two_contents_apart_by_another_heading_both_stay() -> None:
+    text = _paged_contents("# Contents", "# Contents", between="# Preface\n\nA.\n\n")
+    assert _contents_heading_lines(clean_in_place(text)) == ["# Contents"] * 2
+
+
+def test_two_contents_words_in_a_row_both_stay() -> None:
+    text = _paged_contents("# Contents", "# Содержание")
+    assert _contents_heading_lines(clean_in_place(text)) == [
+        "# Contents",
+        "# Содержание",
+    ]
+
+
+def test_a_contents_copy_that_carries_more_than_its_word_stays() -> None:
+    cleaned = clean_in_place(_paged_contents("# Contents", "## Contents: Part 2"))
+    assert "## Contents: Part 2" in cleaned.split("\n")
+
+
+def test_the_contents_copy_drop_is_idempotent() -> None:
+    once = clean(_paged_contents("# Contents", "#### Contents", "## Contents"))
+    assert clean(once) == once
 
 
 # ---- run-in heading split ------------------------------------------------------

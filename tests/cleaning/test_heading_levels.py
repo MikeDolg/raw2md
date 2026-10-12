@@ -12,7 +12,7 @@ from dataclasses import replace
 import pytest
 
 from raw2md.cleaner import CleanOptions, clean, clean_in_place
-from raw2md.cleaning import printed_outline
+from raw2md.cleaning import drop_contents_continuation_headings, printed_outline
 from raw2md.cleaning.headings import (
     _level_vote_occurrences,
     _vote_groups,
@@ -1697,6 +1697,29 @@ def test_a_contents_page_printing_one_rank_states_that_rank() -> None:
 
     assert outline.title_count == 5
     assert outline.level_for("1.4 Base loads") == 2
+
+
+def test_a_contents_restated_on_each_page_states_one_ladder() -> None:
+    # Each page of one contents carries its own copy of the heading, at a level
+    # of its own; read alone, a page of sections would put them on level 1.
+    pages = (
+        ("# Оглавление", ("| 1 | Introduction | 3 |", "| 1.1.1 | Terms | 4 |")),
+        ("### Оглавление", ("| 1.2 | Rules | 5 |", "| 1.2.1 | Joints | 6 |")),
+        ("## Оглавление", ("| 1.3 | Base loads | 7 |", "| 1.3.1 | Feed rate | 8 |")),
+    )
+    text = "".join(
+        f"{heading}\n\n| Section | Title | Стр. |\n|---|---|---|\n"
+        + "".join(f"{row}\n" for row in rows)
+        + "\n"
+        for heading, rows in pages
+    )
+    seg_list = drop_contents_continuation_headings(segments(text), KEYWORDS)
+    outline = printed_outline(seg_list, KEYWORDS)
+
+    assert outline.title_count == 6
+    assert outline.level_for("1 Introduction") == 1
+    assert outline.level_for("1.2 Rules") == 2
+    assert outline.level_for("1.3.1 Feed rate") == 3
 
 
 def test_a_numbered_record_does_not_save_a_table_read_upside_down() -> None:

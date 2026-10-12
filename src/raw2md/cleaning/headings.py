@@ -3,12 +3,12 @@
 The coordinator runs them in this order: strip a whole-title emphasis wrap and
 a leading ornament glyph, split a run-in heading from its paragraph, rebuild a
 letter-spaced title, demote an oversize heading, drop a running header
-restated as a heading, take levels from the source outline or the printed
-contents, level by numbering depth and recover headings lost to plain text,
-nest unnumbered headings under their section, level repeats and numbered
-series to one level, and close the gaps in the ladder. Two detectors only
-report: an oversize recovered heading and a run-in heading the strict split
-declines.
+restated as a heading and a contents heading restated on each contents page,
+take levels from the source outline or the printed contents, level by
+numbering depth and recover headings lost to plain text, nest unnumbered
+headings under their section, level repeats and numbered series to one level,
+and close the gaps in the ladder. Two detectors only report: an oversize
+recovered heading and a run-in heading the strict split declines.
 """
 
 from __future__ import annotations
@@ -605,6 +605,36 @@ def drop_running_header_headings(seg_list: list[Segment]) -> list[Segment]:
     return out
 
 
+def drop_contents_continuation_headings(
+    seg_list: list[Segment], keywords: Keywords
+) -> list[Segment]:
+    """Drop a contents heading that a later page of the same contents restates.
+
+    A layout model reads the running header of each contents page as a new
+    contents heading, at whatever level it guesses for that page. A copy that
+    directly follows the zone of a contents heading with the same folded word
+    goes, at any level, and its rows continue the first zone. Only a running
+    header (`contents_zones` under `through_running_heads`) may stand between
+    them. Two words (a title and its translation) are two contents. A copy whose
+    line carries more than its word stays: the drop would lose that text.
+    """
+    contents = word_pattern(keywords.contents_heading)
+    dropped: set[int] = set()
+    open_word: str | None = None
+    open_end = -1
+    for start, end in contents_zones(seg_list, keywords, through_running_heads=True):
+        line = seg_list[start][0]
+        label = _contents_label(_heading_title(line), contents)
+        word = None if label is None else _fold_contents_word(label)
+        bare = label == _heading_text(line).strip(" *_")
+        if start == open_end and word == open_word and bare:
+            dropped.add(start)
+        else:
+            open_word = word
+        open_end = end
+    return [seg for idx, seg in enumerate(seg_list) if idx not in dropped]
+
+
 def split_run_in_headings(seg_list: list[Segment]) -> list[Segment]:
     """Split a numbered heading that runs into its paragraph at the title's full stop.
 
@@ -857,16 +887,23 @@ def _repeated_heading_titles(seg_list: list[Segment]) -> frozenset[str]:
 
 
 def _is_contents_title(title: str, contents: re.Pattern[str]) -> bool:
-    """True when `title` opens the body's printed contents.
+    """True when `title` opens the body's printed contents."""
+    return _contents_label(title, contents) is not None
+
+
+def _contents_label(title: str, contents: re.Pattern[str]) -> str | None:
+    """The part of `title` that names the printed contents, or None.
 
     On a crushed line, the head up to the first closing mark is read as well. A
     section merely named after the word has no such mark.
     """
     stripped = title.strip(" *_")
     if _is_contents_word(stripped, contents):
-        return True
+        return stripped
     head = _CONTENTS_TITLE_HEAD_RE.match(stripped)
-    return head is not None and _is_contents_word(head.group(1), contents)
+    if head is not None and _is_contents_word(head.group(1), contents):
+        return head.group(1)
+    return None
 
 
 def _is_contents_word(text: str, contents: re.Pattern[str]) -> bool:
