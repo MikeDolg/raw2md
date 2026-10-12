@@ -139,8 +139,8 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     seg_list = strip_oversize_heading_markers(seg_list)
     seg_list = drop_running_header_headings(seg_list)
     # Before the level witness, which reads one contents zone as one ladder,
-    # and before the repeat vote, which would count each copy. Once: the
-    # level rounds move headings but make no copy.
+    # and before the repeat vote, which would count each copy. The settle
+    # rounds run it again for the copies that heading recovery makes.
     seg_list = drop_contents_continuation_headings(seg_list, options.keywords)
     seg_list = drop_page_furniture(seg_list, options.keywords)
     seg_list = _settle_heading_structure(seg_list, options)
@@ -239,15 +239,21 @@ def _settle_heading_structure(
 ) -> list[Segment]:
     """Run the heading rules until the structure they decide stops moving.
 
-    A round drops running headers, then settles levels. A later round sees
-    the drop against settled levels instead of the converter's guess. The
-    level witness is read once: the heading that closes the contents zone
-    moves between rounds, and a re-read would state a new ladder each time.
+    A round drops running headers and contents copies, then settles levels.
+    A later round sees the drop against settled levels instead of the
+    converter's guess, and sees the headings that recovery made from bold
+    labels. The level witness is read once: the heading that closes the
+    contents zone moves between rounds, and a re-read would state a new
+    ladder each time.
     """
     outline = _level_witness(seg_list, options)
     for _ in range(_HEADING_STRUCTURE_SETTLE_ROUNDS):
         fixed = _settle_heading_levels(
-            drop_running_header_headings(seg_list), options, outline
+            drop_contents_continuation_headings(
+                drop_running_header_headings(seg_list), options.keywords
+            ),
+            options,
+            outline,
         )
         if fixed == seg_list:
             break

@@ -229,6 +229,26 @@ def test_recovery_is_stable_on_a_second_clean() -> None:
     assert clean_full_text(once) == once
 
 
+def test_recovered_contents_labels_keep_one_heading() -> None:
+    text = body(
+        "**Contents**",
+        "| 1 Alpha | 3 |\n|---|---|\n| 1.1 Beta | 4 |",
+        "**Contents**",
+        "| 1.2 Gamma | 5 |\n|---|---|\n| 1.3 Delta | 6 |",
+        "**1 Alpha**",
+        "Text.",
+        "**1.1 Beta**",
+        "Text.",
+        "**1.2 Gamma**",
+        "Text.",
+        "**1.3 Delta**",
+        "Text.",
+    )
+    once = clean_full_text(text)
+    assert once.count("Contents") == 1
+    assert clean_full_text(once) == once
+
+
 def test_underscore_wrap_is_recovered_too() -> None:
     text = _UNSTYLED_TEXT.replace("**", "__")
     assert clean_text(text) == _UNSTYLED_RECOVERED
