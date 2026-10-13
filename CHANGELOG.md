@@ -3,6 +3,20 @@
 Each section holds the notes of one release, newest first. The GitHub release
 of the version carries the same text.
 
+## v0.1.1 - 2026-10-13
+
+### Bug fixes
+
+- fix(llm): isolate claude_cli and add the security policy ([#4](https://github.com/MikeDolg/raw2md/pull/4))
+- fix(cleaning): fold edge punctuation of heading titles ([#7](https://github.com/MikeDolg/raw2md/pull/7))
+- fix(cleaning): drop contents headings on continuation pages ([#8](https://github.com/MikeDolg/raw2md/pull/8))
+
+### Maintenance
+
+- Default claude_cli model: Sonnet 5.5 ([#2](https://github.com/MikeDolg/raw2md/pull/2))
+
+Full changelog: <https://github.com/MikeDolg/raw2md/compare/v0.1.0...v0.1.1>
+
 ## v0.1.0 - 2026-10-06
 
 raw2md 0.1.0 is the first public release.
