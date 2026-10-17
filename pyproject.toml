@@ -106,6 +106,8 @@ dev = ["ruff", "mypy", "pytest", "pytest-cov", "types-pyyaml", "pikepdf"]
 [tool.ruff]
 target-version = "py311"
 line-length = 88
+# The engine copy is third-party code kept close to its upstream.
+extend-exclude = ["src/raw2md_engine"]
 
 [tool.ruff.lint]
 # Every stable rule, minus the exclusions below: an explicit list would skip
@@ -182,6 +184,8 @@ warn_unused_ignores = true
 # syntax are not parsed under the 3.11 target.
 follow_imports_for_stubs = true
 files = ["src", "tests", "benchmarks"]
+# The engine copy is third-party code kept close to its upstream.
+exclude = ["^src/raw2md_engine/"]
 # The benchmark runner is not installed; the package is read from src/,
 # ahead of its editable install, which carries no py.typed.
 mypy_path = ["src", "benchmarks/mpdocbench/scripts"]
@@ -201,6 +205,12 @@ module = [
     "torch",
     "torch.*",
 ]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+# The engine copy is not checked; the imports of the adapter stop at its edge.
+module = ["raw2md_engine.*"]
 ignore_missing_imports = true
 follow_imports = "skip"
 

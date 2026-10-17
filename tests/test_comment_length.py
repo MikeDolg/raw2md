@@ -15,6 +15,8 @@ import pytest
 
 _ROOT = Path(__file__).resolve().parent.parent
 
+_ENGINE_COPY = _ROOT / "src" / "raw2md_engine"
+
 _CEILINGS = {
     "src": {"module": 18, "class": 11, "function": 14, "block": 9},
     "tests": {"module": 14, "class": 5, "function": 7, "block": 4},
@@ -78,6 +80,8 @@ def _overlong(area: str) -> list[str]:
     ceilings = _CEILINGS[area]
     found: list[str] = []
     for path in sorted((_ROOT / area).rglob("*.py")):
+        if _ENGINE_COPY in path.parents:
+            continue
         text = path.read_text(encoding="utf-8")
         where = path.relative_to(_ROOT).as_posix()
         spans = list(_docstrings(ast.parse(text)))
