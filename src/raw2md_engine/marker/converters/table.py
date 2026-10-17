@@ -5,10 +5,6 @@ from raw2md_engine.marker.builders.line import LineBuilder
 from raw2md_engine.marker.builders.ocr import OcrBuilder
 from raw2md_engine.marker.converters.pdf import PdfConverter
 from raw2md_engine.marker.processors import BaseProcessor
-from raw2md_engine.marker.processors.llm.llm_complex import LLMComplexRegionProcessor
-from raw2md_engine.marker.processors.llm.llm_form import LLMFormProcessor
-from raw2md_engine.marker.processors.llm.llm_table import LLMTableProcessor
-from raw2md_engine.marker.processors.llm.llm_table_merge import LLMTableMergeProcessor
 from raw2md_engine.marker.processors.table import TableProcessor
 from raw2md_engine.marker.providers.registry import provider_from_filepath
 from raw2md_engine.marker.schema import BlockTypes
@@ -17,10 +13,6 @@ from raw2md_engine.marker.schema import BlockTypes
 class TableConverter(PdfConverter):
     default_processors: Tuple[BaseProcessor, ...] = (
         TableProcessor,
-        LLMTableProcessor,
-        LLMTableMergeProcessor,
-        LLMFormProcessor,
-        LLMComplexRegionProcessor,
     )
     converter_block_types: List[BlockTypes] = (
         BlockTypes.Table,

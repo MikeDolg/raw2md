@@ -45,3 +45,16 @@ import path from `marker.`, `surya.`, and `pdftext.` to `raw2md_engine.marker.`,
 `raw2md_engine.surya.`, and `raw2md_engine.pdftext.`. The change also
 rewrites the one module path that `marker/config/parser.py` holds in a
 string. No other line changed.
+
+2026-10-18: `marker/processors/llm/`, `marker/services/`,
+`marker/extractors/`, `marker/scripts/`, `marker/converters/extraction.py`,
+and `marker/renderers/extraction.py` removed. These parts serve the LLM
+pass, the extraction converter, and the command-line applications, and
+raw2md does not call them.
+
+2026-10-18: `marker/converters/__init__.py`, `marker/converters/pdf.py`,
+`marker/converters/table.py`, `marker/config/crawler.py`,
+`marker/config/parser.py`, and `marker/output.py` changed. The change
+removes the imports of the removed modules, the LLM processors in the
+default processor lists, the LLM service of the converter, the
+`--llm_service` option, and the extraction output.

@@ -5,7 +5,6 @@ from bs4 import BeautifulSoup, Tag
 from pydantic import BaseModel
 from PIL import Image
 
-from raw2md_engine.marker.renderers.extraction import ExtractionOutput
 from raw2md_engine.marker.renderers.html import HTMLOutput
 from raw2md_engine.marker.renderers.json import JSONOutput, JSONBlockOutput
 from raw2md_engine.marker.renderers.markdown import MarkdownOutput
@@ -65,8 +64,6 @@ def text_from_rendered(rendered: BaseModel):
         return rendered.model_dump_json(exclude=["metadata"], indent=2), "json", {}
     elif isinstance(rendered, OCRJSONOutput):
         return rendered.model_dump_json(exclude=["metadata"], indent=2), "json", {}
-    elif isinstance(rendered, ExtractionOutput):
-        return rendered.document_json, "json", {}
     else:
         raise ValueError("Invalid output type")
 

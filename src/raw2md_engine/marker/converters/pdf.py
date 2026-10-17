@@ -11,8 +11,6 @@ from contextlib import contextmanager
 import tempfile
 
 from raw2md_engine.marker.processors import BaseProcessor
-from raw2md_engine.marker.services import BaseService
-from raw2md_engine.marker.processors.llm.llm_table_merge import LLMTableMergeProcessor
 from raw2md_engine.marker.providers.registry import provider_from_filepath
 from raw2md_engine.marker.builders.document import DocumentBuilder
 from raw2md_engine.marker.builders.layout import LayoutBuilder
@@ -29,10 +27,6 @@ from raw2md_engine.marker.processors.footnote import FootnoteProcessor
 from raw2md_engine.marker.processors.ignoretext import IgnoreTextProcessor
 from raw2md_engine.marker.processors.line_numbers import LineNumbersProcessor
 from raw2md_engine.marker.processors.list import ListProcessor
-from raw2md_engine.marker.processors.llm.llm_complex import LLMComplexRegionProcessor
-from raw2md_engine.marker.processors.llm.llm_form import LLMFormProcessor
-from raw2md_engine.marker.processors.llm.llm_image_description import LLMImageDescriptionProcessor
-from raw2md_engine.marker.processors.llm.llm_table import LLMTableProcessor
 from raw2md_engine.marker.processors.page_header import PageHeaderProcessor
 from raw2md_engine.marker.processors.reference import ReferenceProcessor
 from raw2md_engine.marker.processors.sectionheader import SectionHeaderProcessor
@@ -40,19 +34,13 @@ from raw2md_engine.marker.processors.table import TableProcessor
 from raw2md_engine.marker.processors.text import TextProcessor
 from raw2md_engine.marker.processors.block_relabel import BlockRelabelProcessor
 from raw2md_engine.marker.processors.blank_page import BlankPageProcessor
-from raw2md_engine.marker.processors.llm.llm_equation import LLMEquationProcessor
 from raw2md_engine.marker.renderers.markdown import MarkdownRenderer
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block
 from raw2md_engine.marker.schema.registry import register_block_class
 from raw2md_engine.marker.util import strings_to_classes
-from raw2md_engine.marker.processors.llm.llm_handwriting import LLMHandwritingProcessor
 from raw2md_engine.marker.processors.order import OrderProcessor
-from raw2md_engine.marker.services.gemini import GoogleGeminiService
 from raw2md_engine.marker.processors.line_merge import LineMergeProcessor
-from raw2md_engine.marker.processors.llm.llm_mathblock import LLMMathBlockProcessor
-from raw2md_engine.marker.processors.llm.llm_page_correction import LLMPageCorrectionProcessor
-from raw2md_engine.marker.processors.llm.llm_sectionheader import LLMSectionHeaderProcessor
 
 
 class PdfConverter(BaseConverter):
@@ -67,10 +55,6 @@ class PdfConverter(BaseConverter):
         "and the values are corresponding `Block` class implementations to use",
         "instead of the defaults.",
     ] = defaultdict()
-    use_llm: Annotated[
-        bool,
-        "Enable higher quality processing with LLMs.",
-    ] = False
     default_processors: Tuple[BaseProcessor, ...] = (
         OrderProcessor,
         BlockRelabelProcessor,
@@ -86,29 +70,17 @@ class PdfConverter(BaseConverter):
         PageHeaderProcessor,
         SectionHeaderProcessor,
         TableProcessor,
-        LLMTableProcessor,
-        LLMTableMergeProcessor,
-        LLMFormProcessor,
         TextProcessor,
-        LLMComplexRegionProcessor,
-        LLMImageDescriptionProcessor,
-        LLMEquationProcessor,
-        LLMHandwritingProcessor,
-        LLMMathBlockProcessor,
-        LLMSectionHeaderProcessor,
-        LLMPageCorrectionProcessor,
         ReferenceProcessor,
         BlankPageProcessor,
         DebugProcessor,
     )
-    default_llm_service: BaseService = GoogleGeminiService
 
     def __init__(
         self,
         artifact_dict: Dict[str, Any],
         processor_list: Optional[List[str]] = None,
         renderer: str | None = None,
-        llm_service: str | None = None,
         config=None,
     ):
         super().__init__(config)
@@ -131,16 +103,6 @@ class PdfConverter(BaseConverter):
 
         # Put here so that resolve_dependencies can access it
         self.artifact_dict = artifact_dict
-
-        if llm_service:
-            llm_service_cls = strings_to_classes([llm_service])[0]
-            llm_service = self.resolve_dependencies(llm_service_cls)
-        elif config.get("use_llm", False):
-            llm_service = self.resolve_dependencies(self.default_llm_service)
-
-        # Inject llm service into artifact_dict so it can be picked up by processors, etc.
-        self.artifact_dict["llm_service"] = llm_service
-        self.llm_service = llm_service
 
         self.renderer = renderer
 

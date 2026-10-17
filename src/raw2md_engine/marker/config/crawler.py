@@ -6,11 +6,9 @@ from typing import Annotated, Dict, Set, Type, get_args, get_origin
 
 from raw2md_engine.marker.builders import BaseBuilder
 from raw2md_engine.marker.converters import BaseConverter
-from raw2md_engine.marker.extractors import BaseExtractor
 from raw2md_engine.marker.processors import BaseProcessor
 from raw2md_engine.marker.providers import BaseProvider
 from raw2md_engine.marker.renderers import BaseRenderer
-from raw2md_engine.marker.services import BaseService
 
 
 class ConfigCrawler:
@@ -22,8 +20,6 @@ class ConfigCrawler:
             BaseConverter,
             BaseProvider,
             BaseRenderer,
-            BaseService,
-            BaseExtractor,
         ),
     ):
         self.base_classes = base_classes

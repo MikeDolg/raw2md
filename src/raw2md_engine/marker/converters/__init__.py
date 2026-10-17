@@ -4,8 +4,6 @@ from typing import Optional, List, Type
 from pydantic import BaseModel
 
 from raw2md_engine.marker.processors import BaseProcessor
-from raw2md_engine.marker.processors.llm import BaseLLMSimpleBlockProcessor
-from raw2md_engine.marker.processors.llm.llm_meta import LLMSimpleBlockMetaProcessor
 from raw2md_engine.marker.util import assign_config, download_font
 
 
@@ -13,7 +11,6 @@ class BaseConverter:
     def __init__(self, config: Optional[BaseModel | dict] = None):
         assign_config(self, config)
         self.config = config
-        self.llm_service = None
 
         # Download render font, needed for some providers
         download_font()
@@ -41,23 +38,4 @@ class BaseConverter:
         return cls(**resolved_kwargs)
 
     def initialize_processors(self, processor_cls_lst: List[Type[BaseProcessor]]) -> List[BaseProcessor]:
-        processors = []
-        for processor_cls in processor_cls_lst:
-            processors.append(self.resolve_dependencies(processor_cls))
-
-        simple_llm_processors = [p for p in processors if issubclass(type(p), BaseLLMSimpleBlockProcessor)]
-        other_processors = [p for p in processors if not issubclass(type(p), BaseLLMSimpleBlockProcessor)]
-
-        if not simple_llm_processors:
-            return processors
-
-        llm_positions = [i for i, p in enumerate(processors) if issubclass(type(p), BaseLLMSimpleBlockProcessor)]
-        insert_position = max(0, llm_positions[-1] - len(simple_llm_processors) + 1)
-
-        meta_processor = LLMSimpleBlockMetaProcessor(
-            processor_lst=simple_llm_processors,
-            llm_service=self.llm_service,
-            config=self.config,
-        )
-        other_processors.insert(insert_position, meta_processor)
-        return other_processors
+        return [self.resolve_dependencies(processor_cls) for processor_cls in processor_cls_lst]

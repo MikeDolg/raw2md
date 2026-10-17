@@ -75,12 +75,6 @@ class ConfigParser:
             default=None,
             help="Converter class to use.  Defaults to PDF converter.",
         )(fn)
-        fn = click.option(
-            "--llm_service",
-            type=str,
-            default=None,
-            help="LLM service to use - should be full import path, like raw2md_engine.marker.services.gemini.GoogleGeminiService",
-        )(fn)
         return fn
 
     def generate_config_dict(self) -> Dict[str, any]:
@@ -113,16 +107,6 @@ class ConfigParser:
             config["gemini_api_key"] = settings.GOOGLE_API_KEY
 
         return config
-
-    def get_llm_service(self):
-        # Only return an LLM service when use_llm is enabled
-        if not self.cli_options.get("use_llm", False):
-            return None
-
-        service_cls = self.cli_options.get("llm_service", None)
-        if service_cls is None:
-            service_cls = "raw2md_engine.marker.services.gemini.GoogleGeminiService"
-        return service_cls
 
     def get_renderer(self):
         match self.cli_options["output_format"]:
