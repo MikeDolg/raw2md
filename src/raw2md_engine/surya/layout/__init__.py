@@ -2,14 +2,14 @@ from typing import List
 
 from PIL import Image
 
-from surya.common.predictor import BasePredictor
-from surya.layout.schema import LayoutBox, LayoutResult
-from surya.settings import settings
-from surya.foundation import FoundationPredictor, TaskNames
-from surya.foundation.util import prediction_to_polygon_batch
-from surya.input.processing import convert_if_not_rgb
-from surya.layout.label import LAYOUT_PRED_RELABEL
-from surya.common.util import clean_boxes
+from raw2md_engine.surya.common.predictor import BasePredictor
+from raw2md_engine.surya.layout.schema import LayoutBox, LayoutResult
+from raw2md_engine.surya.settings import settings
+from raw2md_engine.surya.foundation import FoundationPredictor, TaskNames
+from raw2md_engine.surya.foundation.util import prediction_to_polygon_batch
+from raw2md_engine.surya.input.processing import convert_if_not_rgb
+from raw2md_engine.surya.layout.label import LAYOUT_PRED_RELABEL
+from raw2md_engine.surya.common.util import clean_boxes
 
 
 class LayoutPredictor(BasePredictor):

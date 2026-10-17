@@ -8,11 +8,11 @@ import PIL
 from google import genai
 from google.genai import types
 from google.genai.errors import APIError
-from marker.logger import get_logger
+from raw2md_engine.marker.logger import get_logger
 from pydantic import BaseModel
 
-from marker.schema.blocks import Block
-from marker.services import BaseService
+from raw2md_engine.marker.schema.blocks import Block
+from raw2md_engine.marker.services import BaseService
 
 logger = get_logger()
 

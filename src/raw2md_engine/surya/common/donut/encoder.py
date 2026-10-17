@@ -16,8 +16,8 @@ from transformers.pytorch_utils import (
 from transformers.utils import ModelOutput
 from transformers import DonutSwinConfig
 
-from surya.common.pretrained import SuryaPreTrainedModel
-from surya.common.xla import mark_step
+from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
+from raw2md_engine.surya.common.xla import mark_step
 
 _EXPECTED_OUTPUT_SHAPE = [1, 49, 1024]
 

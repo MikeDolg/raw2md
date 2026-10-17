@@ -4,12 +4,12 @@ import copy
 import json
 from collections import defaultdict
 
-from surya.foundation import FoundationPredictor
-from surya.layout import LayoutPredictor
-from surya.debug.draw import draw_polys_on_image
-from surya.logging import configure_logging, get_logger
-from surya.scripts.config import CLILoader
-from surya.settings import settings
+from raw2md_engine.surya.foundation import FoundationPredictor
+from raw2md_engine.surya.layout import LayoutPredictor
+from raw2md_engine.surya.debug.draw import draw_polys_on_image
+from raw2md_engine.surya.logging import configure_logging, get_logger
+from raw2md_engine.surya.scripts.config import CLILoader
+from raw2md_engine.surya.settings import settings
 import os
 
 configure_logging()

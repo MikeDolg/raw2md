@@ -10,12 +10,12 @@ from transformers import (
     Trainer,
 )
 
-from surya.common.surya import SuryaModel
-from surya.common.surya.processor import SuryaOCRProcessor
-from surya.foundation import FoundationPredictor
-from surya.common.surya.processor.schema import ImageInput, TextInput
-from surya.common.surya.schema import TaskNames
-from surya.common.util import get_top_scripts, SCRIPT_TOKEN_MAPPING
+from raw2md_engine.surya.common.surya import SuryaModel
+from raw2md_engine.surya.common.surya.processor import SuryaOCRProcessor
+from raw2md_engine.surya.foundation import FoundationPredictor
+from raw2md_engine.surya.common.surya.processor.schema import ImageInput, TextInput
+from raw2md_engine.surya.common.surya.schema import TaskNames
+from raw2md_engine.surya.common.util import get_top_scripts, SCRIPT_TOKEN_MAPPING
 
 # Do not change these defaults
 OCR_TASK_NAME = TaskNames.ocr_with_boxes

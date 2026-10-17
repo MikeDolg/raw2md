@@ -2,12 +2,12 @@ from typing import Optional
 
 import torch
 
-from surya.common.load import ModelLoader
-from surya.logging import get_logger
-from surya.ocr_error.model.config import DistilBertConfig
-from surya.ocr_error.model.encoder import DistilBertForSequenceClassification
-from surya.ocr_error.tokenizer import DistilBertTokenizer
-from surya.settings import settings
+from raw2md_engine.surya.common.load import ModelLoader
+from raw2md_engine.surya.logging import get_logger
+from raw2md_engine.surya.ocr_error.model.config import DistilBertConfig
+from raw2md_engine.surya.ocr_error.model.encoder import DistilBertForSequenceClassification
+from raw2md_engine.surya.ocr_error.tokenizer import DistilBertTokenizer
+from raw2md_engine.surya.settings import settings
 
 logger = get_logger()
 

@@ -6,21 +6,21 @@ from collections import Counter
 from PIL import Image
 
 from ftfy import fix_text
-from surya.detection import DetectionPredictor, TextDetectionResult
-from surya.recognition import RecognitionPredictor, TextLine
-from surya.table_rec import TableRecPredictor
-from surya.table_rec.schema import TableResult, TableCell as SuryaTableCell
-from pdftext.extraction import table_output
+from raw2md_engine.surya.detection import DetectionPredictor, TextDetectionResult
+from raw2md_engine.surya.recognition import RecognitionPredictor, TextLine
+from raw2md_engine.surya.table_rec import TableRecPredictor
+from raw2md_engine.surya.table_rec.schema import TableResult, TableCell as SuryaTableCell
+from raw2md_engine.pdftext.extraction import table_output
 
-from marker.processors import BaseProcessor
-from marker.schema import BlockTypes
-from marker.schema.blocks.tablecell import TableCell
-from marker.schema.document import Document
-from marker.schema.polygon import PolygonBox
-from marker.settings import settings
-from marker.util import matrix_intersection_area, unwrap_math
-from marker.utils.image import is_blank_image
-from marker.logger import get_logger
+from raw2md_engine.marker.processors import BaseProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks.tablecell import TableCell
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.polygon import PolygonBox
+from raw2md_engine.marker.settings import settings
+from raw2md_engine.marker.util import matrix_intersection_area, unwrap_math
+from raw2md_engine.marker.utils.image import is_blank_image
+from raw2md_engine.marker.logger import get_logger
 
 logger = get_logger()
 

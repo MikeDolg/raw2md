@@ -4,10 +4,10 @@ import cv2
 import numpy as np
 from PIL import Image
 
-from surya.common.util import clean_boxes
-from surya.detection import TextDetectionResult
-from surya.common.polygon import PolygonBox
-from surya.settings import settings
+from raw2md_engine.surya.common.util import clean_boxes
+from raw2md_engine.surya.detection import TextDetectionResult
+from raw2md_engine.surya.common.polygon import PolygonBox
+from raw2md_engine.surya.settings import settings
 
 
 def get_dynamic_thresholds(linemap, text_threshold, low_text, typical_top10_avg=0.7):

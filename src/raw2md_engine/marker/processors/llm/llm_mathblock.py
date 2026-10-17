@@ -4,13 +4,13 @@ from typing import List, Tuple, Annotated
 from pydantic import BaseModel
 from tqdm import tqdm
 
-from marker.output import json_to_html, unwrap_outer_tag
-from marker.processors.llm import BaseLLMComplexBlockProcessor
+from raw2md_engine.marker.output import json_to_html, unwrap_outer_tag
+from raw2md_engine.marker.processors.llm import BaseLLMComplexBlockProcessor
 
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block, InlineMath
-from marker.schema.document import Document
-from marker.schema.groups import PageGroup
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block, InlineMath
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.groups import PageGroup
 
 
 class LLMMathBlockProcessor(BaseLLMComplexBlockProcessor):

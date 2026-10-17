@@ -2,7 +2,7 @@ from typing import Optional, Any
 
 import torch
 
-from surya.settings import settings
+from raw2md_engine.surya.settings import settings
 
 
 class ModelLoader:

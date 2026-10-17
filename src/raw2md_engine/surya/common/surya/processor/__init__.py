@@ -12,15 +12,15 @@ from transformers.feature_extraction_utils import BatchFeature
 from transformers.processing_utils import ProcessorMixin
 from transformers.tokenization_utils import PreTrainedTokenizer
 
-from surya.common.s3 import S3DownloaderMixin
-from surya.common.surya.processor.schema import (
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.common.surya.processor.schema import (
     TextInput,
     ImageInput,
     ProcessorOutput,
 )
-from surya.common.surya.schema import TaskNames
-from surya.logging import get_logger
-from surya.settings import settings
+from raw2md_engine.surya.common.surya.schema import TaskNames
+from raw2md_engine.surya.logging import get_logger
+from raw2md_engine.surya.settings import settings
 
 logger = get_logger()
 

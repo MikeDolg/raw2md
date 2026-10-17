@@ -1,7 +1,7 @@
 import html
 
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block
 
 
 class Code(Block):

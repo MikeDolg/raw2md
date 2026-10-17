@@ -6,11 +6,11 @@ import PIL
 from PIL import Image
 import anthropic
 from anthropic import RateLimitError, APITimeoutError
-from marker.logger import get_logger
+from raw2md_engine.marker.logger import get_logger
 from pydantic import BaseModel
 
-from marker.schema.blocks import Block
-from marker.services import BaseService
+from raw2md_engine.marker.schema.blocks import Block
+from raw2md_engine.marker.services import BaseService
 
 logger = get_logger()
 

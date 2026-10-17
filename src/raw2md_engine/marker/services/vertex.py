@@ -2,7 +2,7 @@ from typing import Annotated
 
 from google import genai
 
-from marker.services.gemini import BaseGeminiService
+from raw2md_engine.marker.services.gemini import BaseGeminiService
 
 class GoogleVertexService(BaseGeminiService):
     vertex_project_id: Annotated[

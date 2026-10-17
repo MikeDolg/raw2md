@@ -3,12 +3,12 @@ import os
 from typing import Annotated
 
 from PIL import Image, ImageDraw, ImageFont
-from marker.logger import get_logger
+from raw2md_engine.marker.logger import get_logger
 
-from marker.processors import BaseProcessor
-from marker.schema import BlockTypes
-from marker.schema.document import Document
-from marker.settings import settings
+from raw2md_engine.marker.processors import BaseProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.settings import settings
 
 logger = get_logger()
 

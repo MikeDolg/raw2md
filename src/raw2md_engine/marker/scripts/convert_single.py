@@ -9,11 +9,11 @@ os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = (
 import time
 import click
 
-from marker.config.parser import ConfigParser
-from marker.config.printer import CustomClickPrinter
-from marker.logger import configure_logging, get_logger
-from marker.models import create_model_dict
-from marker.output import save_output
+from raw2md_engine.marker.config.parser import ConfigParser
+from raw2md_engine.marker.config.printer import CustomClickPrinter
+from raw2md_engine.marker.logger import configure_logging, get_logger
+from raw2md_engine.marker.models import create_model_dict
+from raw2md_engine.marker.output import save_output
 
 configure_logging()
 logger = get_logger()

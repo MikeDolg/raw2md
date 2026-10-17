@@ -5,8 +5,8 @@ import numpy as np
 import pypdfium2
 from PIL import Image
 
-from surya.logging import get_logger
-from surya.settings import settings
+from raw2md_engine.surya.logging import get_logger
+from raw2md_engine.surya.settings import settings
 
 logger = get_logger()
 

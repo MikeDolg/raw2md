@@ -2,15 +2,15 @@ from typing import Dict
 
 import torch
 
-from surya.common.predictor import BasePredictor
-from surya.detection import DetectionPredictor
-from surya.layout import LayoutPredictor
-from surya.logging import configure_logging
-from surya.ocr_error import OCRErrorPredictor
-from surya.foundation import FoundationPredictor
-from surya.recognition import RecognitionPredictor
-from surya.table_rec import TableRecPredictor
-from surya.settings import settings
+from raw2md_engine.surya.common.predictor import BasePredictor
+from raw2md_engine.surya.detection import DetectionPredictor
+from raw2md_engine.surya.layout import LayoutPredictor
+from raw2md_engine.surya.logging import configure_logging
+from raw2md_engine.surya.ocr_error import OCRErrorPredictor
+from raw2md_engine.surya.foundation import FoundationPredictor
+from raw2md_engine.surya.recognition import RecognitionPredictor
+from raw2md_engine.surya.table_rec import TableRecPredictor
+from raw2md_engine.surya.settings import settings
 
 configure_logging()
 

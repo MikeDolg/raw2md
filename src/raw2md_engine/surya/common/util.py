@@ -5,7 +5,7 @@ from functools import lru_cache
 
 import torch.nn.functional as F
 
-from surya.common.polygon import PolygonBox
+from raw2md_engine.surya.common.polygon import PolygonBox
 
 
 def clean_boxes(boxes: List[PolygonBox]) -> List[PolygonBox]:

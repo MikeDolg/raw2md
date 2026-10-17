@@ -2,7 +2,7 @@ from typing import Optional
 
 import click
 
-from marker.config.crawler import crawler
+from raw2md_engine.marker.config.crawler import crawler
 
 
 class CustomClickPrinter(click.Command):

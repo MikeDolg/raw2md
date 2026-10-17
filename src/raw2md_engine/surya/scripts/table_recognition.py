@@ -4,14 +4,14 @@ import copy
 import json
 from collections import defaultdict
 
-from surya.logging import configure_logging, get_logger
-from surya.scripts.config import CLILoader
-from surya.foundation import FoundationPredictor
-from surya.layout import LayoutPredictor
-from surya.table_rec import TableRecPredictor
-from surya.debug.draw import draw_bboxes_on_image
-from surya.common.util import rescale_bbox, expand_bbox
-from surya.settings import settings
+from raw2md_engine.surya.logging import configure_logging, get_logger
+from raw2md_engine.surya.scripts.config import CLILoader
+from raw2md_engine.surya.foundation import FoundationPredictor
+from raw2md_engine.surya.layout import LayoutPredictor
+from raw2md_engine.surya.table_rec import TableRecPredictor
+from raw2md_engine.surya.debug.draw import draw_bboxes_on_image
+from raw2md_engine.surya.common.util import rescale_bbox, expand_bbox
+from raw2md_engine.surya.settings import settings
 
 configure_logging()
 logger = get_logger()

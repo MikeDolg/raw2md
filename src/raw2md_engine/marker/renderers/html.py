@@ -6,10 +6,10 @@ from typing import Annotated, Tuple
 from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
 from pydantic import BaseModel
 
-from marker.renderers import BaseRenderer
-from marker.schema import BlockTypes
-from marker.schema.blocks import BlockId
-from marker.settings import settings
+from raw2md_engine.marker.renderers import BaseRenderer
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import BlockId
+from raw2md_engine.marker.settings import settings
 
 # Ignore beautifulsoup warnings
 import warnings

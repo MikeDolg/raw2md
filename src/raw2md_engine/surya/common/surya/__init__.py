@@ -9,17 +9,17 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.cache_utils import Cache
 from transformers.modeling_attn_mask_utils import AttentionMaskConverter
 
-from surya.common.pretrained import SuryaPreTrainedModel
-from surya.common.s3 import S3DownloaderMixin
-from surya.common.surya.config import SuryaModelConfig
-from surya.common.surya.decoder import SuryaDecoderModel
-from surya.common.surya.embedder import SimpleTokenEmbedder
-from surya.common.surya.encoder import SuryaEncoderModel
-from surya.common.util import pad_to_batch_size, pad_to_batch_size_repeat
-from surya.common.xla import get_nearest_pad
-from surya.settings import settings
+from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.common.surya.config import SuryaModelConfig
+from raw2md_engine.surya.common.surya.decoder import SuryaDecoderModel
+from raw2md_engine.surya.common.surya.embedder import SimpleTokenEmbedder
+from raw2md_engine.surya.common.surya.encoder import SuryaEncoderModel
+from raw2md_engine.surya.common.util import pad_to_batch_size, pad_to_batch_size_repeat
+from raw2md_engine.surya.common.xla import get_nearest_pad
+from raw2md_engine.surya.settings import settings
 
-from surya.logging import get_logger
+from raw2md_engine.surya.logging import get_logger
 
 logger = get_logger()
 
@@ -445,7 +445,7 @@ class SuryaModel(S3DownloaderMixin, SuryaPreTrainedModel):
         # Skipped during decoding since not required
         if self.decoder.config._attn_implementation == "flash_attention_2" and prefill:
             # Needed for CPU -> GPU
-            from surya.common.surya.flash_attn_utils import _get_unpad_data
+            from raw2md_engine.surya.common.surya.flash_attn_utils import _get_unpad_data
             batch_size, query_length, _ = inputs_embeds.shape
             indices_k, cu_seqlens_k, max_seqlen_in_batch_k = _get_unpad_data(
                 attention_mask

@@ -3,23 +3,23 @@ from typing import Annotated, List
 
 from ftfy import fix_text
 from PIL import Image
-from surya.common.surya.schema import TaskNames
-from surya.recognition import RecognitionPredictor, OCRResult, TextChar
+from raw2md_engine.surya.common.surya.schema import TaskNames
+from raw2md_engine.surya.recognition import RecognitionPredictor, OCRResult, TextChar
 
-from marker.builders import BaseBuilder
-from marker.providers.pdf import PdfProvider
-from marker.schema import BlockTypes
-from marker.schema.blocks import BlockId
-from marker.schema.blocks.base import Block
-from marker.schema.document import Document
-from marker.schema.groups import PageGroup
-from marker.schema.registry import get_block_class
-from marker.schema.text.char import Char
-from marker.schema.text.line import Line
-from marker.schema.text.span import Span
-from marker.settings import settings
-from marker.schema.polygon import PolygonBox
-from marker.util import get_opening_tag_type, get_closing_tag_type
+from raw2md_engine.marker.builders import BaseBuilder
+from raw2md_engine.marker.providers.pdf import PdfProvider
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import BlockId
+from raw2md_engine.marker.schema.blocks.base import Block
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.groups import PageGroup
+from raw2md_engine.marker.schema.registry import get_block_class
+from raw2md_engine.marker.schema.text.char import Char
+from raw2md_engine.marker.schema.text.line import Line
+from raw2md_engine.marker.schema.text.span import Span
+from raw2md_engine.marker.settings import settings
+from raw2md_engine.marker.schema.polygon import PolygonBox
+from raw2md_engine.marker.util import get_opening_tag_type, get_closing_tag_type
 
 
 class OcrBuilder(BaseBuilder):

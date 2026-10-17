@@ -12,20 +12,20 @@ from PIL import Image
 from tqdm import tqdm
 import torch.nn.functional as F
 
-from surya.common.surya import SuryaModelOutput
-from surya.common.xla import mark_step
-from surya.common.predictor import BasePredictor
+from raw2md_engine.surya.common.surya import SuryaModelOutput
+from raw2md_engine.surya.common.xla import mark_step
+from raw2md_engine.surya.common.predictor import BasePredictor
 
-from surya.foundation.loader import FoundationModelLoader
-from surya.foundation.util import (
+from raw2md_engine.surya.foundation.loader import FoundationModelLoader
+from raw2md_engine.surya.foundation.util import (
     detect_repeat_token,
 )
-from surya.common.surya.schema import TaskNames
-from surya.foundation.cache.dynamic_ops import DynamicOpsCache
-from surya.foundation.cache.static_ops import StaticOpsCache
+from raw2md_engine.surya.common.surya.schema import TaskNames
+from raw2md_engine.surya.foundation.cache.dynamic_ops import DynamicOpsCache
+from raw2md_engine.surya.foundation.cache.static_ops import StaticOpsCache
 
-from surya.settings import settings
-from surya.logging import get_logger, configure_logging
+from raw2md_engine.surya.settings import settings
+from raw2md_engine.surya.logging import get_logger, configure_logging
 
 configure_logging()
 logger = get_logger()

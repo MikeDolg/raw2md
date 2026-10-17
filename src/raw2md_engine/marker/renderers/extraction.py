@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-from marker.extractors.document import DocumentExtractionSchema
-from marker.renderers import BaseRenderer
+from raw2md_engine.marker.extractors.document import DocumentExtractionSchema
+from raw2md_engine.marker.renderers import BaseRenderer
 
 
 class ExtractionOutput(BaseModel):

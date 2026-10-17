@@ -5,9 +5,9 @@ import tempfile
 from io import BytesIO
 
 from PIL import Image
-from marker.logger import get_logger
+from raw2md_engine.marker.logger import get_logger
 
-from marker.providers.pdf import PdfProvider
+from raw2md_engine.marker.providers.pdf import PdfProvider
 
 logger = get_logger()
 

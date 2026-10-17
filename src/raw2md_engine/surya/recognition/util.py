@@ -4,8 +4,8 @@ from typing import List, Tuple
 import numpy
 import torch
 
-from surya.common.polygon import PolygonBox
-from surya.recognition.schema import TextLine, TextWord, TextChar
+from raw2md_engine.surya.common.polygon import PolygonBox
+from raw2md_engine.surya.recognition.schema import TextLine, TextWord, TextChar
 
 MATH_SYMBOLS = ["+", "-", "*", "=", "^", "_", "\\", "{", "}"]
 

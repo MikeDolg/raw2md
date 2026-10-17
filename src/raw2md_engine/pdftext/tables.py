@@ -1,8 +1,8 @@
 from typing import List
 import numpy as np
 
-from pdftext.postprocessing import sort_blocks
-from pdftext.schema import Page, Bbox, Tables
+from raw2md_engine.pdftext.postprocessing import sort_blocks
+from raw2md_engine.pdftext.schema import Page, Bbox, Tables
 
 
 def get_dynamic_gap_thresh(page: Page, img_size: list, default_thresh=.01, min_chars=100):

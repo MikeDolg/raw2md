@@ -4,7 +4,7 @@ from typing import Mapping
 from transformers.configuration_utils import PretrainedConfig
 from transformers.onnx import OnnxConfig
 
-from surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
 
 ID2LABEL = {
     0: 'good',

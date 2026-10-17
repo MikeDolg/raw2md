@@ -3,7 +3,7 @@ from typing import Optional, Union, Tuple
 import torch
 import torch.nn as nn
 
-from surya.common.donut.encoder import DonutSwinPreTrainedModel, DonutSwinModelOutput, DonutSwinEmbeddings, DonutSwinEncoder
+from raw2md_engine.surya.common.donut.encoder import DonutSwinPreTrainedModel, DonutSwinModelOutput, DonutSwinEmbeddings, DonutSwinEncoder
 
 
 class DonutSwinModel(DonutSwinPreTrainedModel):

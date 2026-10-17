@@ -1,7 +1,7 @@
 import logging
 import warnings
 
-from marker.settings import settings
+from raw2md_engine.marker.settings import settings
 
 
 def configure_logging():

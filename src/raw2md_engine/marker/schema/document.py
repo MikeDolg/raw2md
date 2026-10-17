@@ -4,9 +4,9 @@ from typing import List, Sequence, Optional
 
 from pydantic import BaseModel
 
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block, BlockId, BlockOutput
-from marker.schema.groups.page import PageGroup
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block, BlockId, BlockOutput
+from raw2md_engine.marker.schema.groups.page import PageGroup
 
 
 class DocumentOutput(BaseModel):

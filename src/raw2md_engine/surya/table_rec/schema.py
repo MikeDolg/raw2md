@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import BaseModel
 
-from surya.common.polygon import PolygonBox
+from raw2md_engine.surya.common.polygon import PolygonBox
 
 
 class TableCell(PolygonBox):

@@ -8,19 +8,19 @@ import torch
 from PIL import Image
 import torch.nn.functional as F
 
-from surya.common.polygon import PolygonBox
-from surya.common.surya.processor import NOMATH_TOKEN
-from surya.common.predictor import BasePredictor
-from surya.detection import DetectionPredictor
-from surya.foundation import FoundationPredictor
+from raw2md_engine.surya.common.polygon import PolygonBox
+from raw2md_engine.surya.common.surya.processor import NOMATH_TOKEN
+from raw2md_engine.surya.common.predictor import BasePredictor
+from raw2md_engine.surya.detection import DetectionPredictor
+from raw2md_engine.surya.foundation import FoundationPredictor
 
-from surya.input.processing import (
+from raw2md_engine.surya.input.processing import (
     convert_if_not_rgb,
     slice_polys_from_image,
     slice_bboxes_from_image,
 )
-from surya.recognition.postprocessing import fix_unbalanced_tags
-from surya.recognition.util import (
+from raw2md_engine.surya.recognition.postprocessing import fix_unbalanced_tags
+from raw2md_engine.surya.recognition.util import (
     sort_text_lines,
     clean_close_polygons,
     unwrap_math,
@@ -28,11 +28,11 @@ from surya.recognition.util import (
     filter_blacklist_tags,
     words_from_chars
 )
-from surya.foundation.util import detect_repeat_token, prediction_to_polygon_batch
-from surya.recognition.schema import TextLine, OCRResult, TextChar
-from surya.common.surya.schema import TaskNames
-from surya.settings import settings
-from surya.logging import get_logger, configure_logging
+from raw2md_engine.surya.foundation.util import detect_repeat_token, prediction_to_polygon_batch
+from raw2md_engine.surya.recognition.schema import TextLine, OCRResult, TextChar
+from raw2md_engine.surya.common.surya.schema import TaskNames
+from raw2md_engine.surya.settings import settings
+from raw2md_engine.surya.logging import get_logger, configure_logging
 
 configure_logging()
 logger = get_logger()

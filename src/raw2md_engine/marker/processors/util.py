@@ -2,10 +2,10 @@ import re
 
 from bs4 import BeautifulSoup
 
-from marker.schema import BlockTypes
-from marker.schema.groups import PageGroup
-from marker.schema.registry import get_block_class
-from marker.schema.text import Line
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.groups import PageGroup
+from raw2md_engine.marker.schema.registry import get_block_class
+from raw2md_engine.marker.schema.text import Line
 
 
 def escape_latex_commands(text: str):

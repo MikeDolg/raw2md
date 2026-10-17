@@ -5,12 +5,12 @@ from pydantic import BaseModel
 from tqdm import tqdm
 from PIL import Image
 
-from marker.output import json_to_html
-from marker.processors.llm import BaseLLMComplexBlockProcessor
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block, TableCell
-from marker.schema.document import Document
-from marker.logger import get_logger
+from raw2md_engine.marker.output import json_to_html
+from raw2md_engine.marker.processors.llm import BaseLLMComplexBlockProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block, TableCell
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.logger import get_logger
 
 logger = get_logger()
 

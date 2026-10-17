@@ -1,4 +1,4 @@
-from marker.utils.gpu import GPUManager
+from raw2md_engine.marker.utils.gpu import GPUManager
 
 
 def get_batch_sizes_worker_counts(gpu_manager: GPUManager, peak_worker_vram: int):

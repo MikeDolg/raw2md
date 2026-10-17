@@ -2,13 +2,13 @@ from typing import Optional
 
 import torch
 
-from surya.common.load import ModelLoader
-from surya.detection.processor import SegformerImageProcessor
+from raw2md_engine.surya.common.load import ModelLoader
+from raw2md_engine.surya.detection.processor import SegformerImageProcessor
 
-from surya.detection.model.config import EfficientViTConfig
-from surya.detection.model.encoderdecoder import EfficientViTForSemanticSegmentation
-from surya.logging import get_logger
-from surya.settings import settings
+from raw2md_engine.surya.detection.model.config import EfficientViTConfig
+from raw2md_engine.surya.detection.model.encoderdecoder import EfficientViTForSemanticSegmentation
+from raw2md_engine.surya.logging import get_logger
+from raw2md_engine.surya.settings import settings
 
 logger = get_logger()
 

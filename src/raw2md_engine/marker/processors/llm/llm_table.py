@@ -2,15 +2,15 @@ from typing import Annotated, List, Tuple
 
 from bs4 import BeautifulSoup
 from PIL import Image
-from marker.logger import get_logger
+from raw2md_engine.marker.logger import get_logger
 from pydantic import BaseModel
 
-from marker.processors.llm import BaseLLMComplexBlockProcessor
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block, TableCell, Table
-from marker.schema.document import Document
-from marker.schema.groups.page import PageGroup
-from marker.schema.polygon import PolygonBox
+from raw2md_engine.marker.processors.llm import BaseLLMComplexBlockProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block, TableCell, Table
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.groups.page import PageGroup
+from raw2md_engine.marker.schema.polygon import PolygonBox
 
 logger = get_logger()
 

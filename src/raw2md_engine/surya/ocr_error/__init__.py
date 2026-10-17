@@ -3,12 +3,12 @@ from typing import List, Optional
 
 from tqdm import tqdm
 
-from surya.common.predictor import BasePredictor
-from surya.ocr_error.loader import OCRErrorModelLoader
-from surya.ocr_error.model.config import ID2LABEL
-from surya.ocr_error.schema import OCRErrorDetectionResult
-from surya.settings import settings
-from surya.common.xla import mark_step
+from raw2md_engine.surya.common.predictor import BasePredictor
+from raw2md_engine.surya.ocr_error.loader import OCRErrorModelLoader
+from raw2md_engine.surya.ocr_error.model.config import ID2LABEL
+from raw2md_engine.surya.ocr_error.schema import OCRErrorDetectionResult
+from raw2md_engine.surya.settings import settings
+from raw2md_engine.surya.common.xla import mark_step
 
 
 class OCRErrorPredictor(BasePredictor):

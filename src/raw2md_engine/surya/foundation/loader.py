@@ -3,15 +3,15 @@ from typing import Optional
 import torch
 from transformers.utils import is_flash_attn_2_available
 
-from surya.common.load import ModelLoader
-from surya.common.surya.config import SuryaModelConfig
-from surya.common.surya import SuryaModel, SuryaXLAModel
-from surya.common.surya.processor import SuryaOCRProcessor
-from surya.common.surya.processor.tokenizer import SuryaOCRTokenizer
-from surya.common.util import is_flash_attn_2_supported
-from surya.common.xla import get_compile_args
-from surya.logging import get_logger
-from surya.settings import settings
+from raw2md_engine.surya.common.load import ModelLoader
+from raw2md_engine.surya.common.surya.config import SuryaModelConfig
+from raw2md_engine.surya.common.surya import SuryaModel, SuryaXLAModel
+from raw2md_engine.surya.common.surya.processor import SuryaOCRProcessor
+from raw2md_engine.surya.common.surya.processor.tokenizer import SuryaOCRTokenizer
+from raw2md_engine.surya.common.util import is_flash_attn_2_supported
+from raw2md_engine.surya.common.xla import get_compile_args
+from raw2md_engine.surya.logging import get_logger
+from raw2md_engine.surya.settings import settings
 
 logger = get_logger()
 

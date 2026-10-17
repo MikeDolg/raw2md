@@ -2,12 +2,12 @@ import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Annotated
 
-from marker.logger import get_logger
-from marker.processors.llm import BaseLLMComplexBlockProcessor
-from marker.schema import BlockTypes
-from marker.schema.blocks import BlockId
-from marker.schema.document import Document
-from marker.schema.groups import PageGroup
+from raw2md_engine.marker.logger import get_logger
+from raw2md_engine.marker.processors.llm import BaseLLMComplexBlockProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import BlockId
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.groups import PageGroup
 from pydantic import BaseModel
 from tqdm import tqdm
 

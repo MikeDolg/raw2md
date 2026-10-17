@@ -7,20 +7,20 @@ from typing import Annotated, Dict, List, Optional, Set
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_c
 from ftfy import fix_text
-from pdftext.extraction import dictionary_output
-from pdftext.schema import Reference
-from pdftext.pdf.utils import flatten as flatten_pdf_page
+from raw2md_engine.pdftext.extraction import dictionary_output
+from raw2md_engine.pdftext.schema import Reference
+from raw2md_engine.pdftext.pdf.utils import flatten as flatten_pdf_page
 
 from PIL import Image
 from pypdfium2 import PdfiumError, PdfDocument
 
-from marker.providers import BaseProvider, ProviderOutput, Char, ProviderPageLines
-from marker.providers.utils import alphanum_ratio
-from marker.schema import BlockTypes
-from marker.schema.polygon import PolygonBox
-from marker.schema.registry import get_block_class
-from marker.schema.text.line import Line
-from marker.schema.text.span import Span
+from raw2md_engine.marker.providers import BaseProvider, ProviderOutput, Char, ProviderPageLines
+from raw2md_engine.marker.providers.utils import alphanum_ratio
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.polygon import PolygonBox
+from raw2md_engine.marker.schema.registry import get_block_class
+from raw2md_engine.marker.schema.text.line import Line
+from raw2md_engine.marker.schema.text.span import Span
 
 # Ignore pypdfium2 warning about form flattening
 logging.getLogger("pypdfium2").setLevel(logging.ERROR)

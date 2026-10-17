@@ -1,9 +1,9 @@
 from typing import Optional
 from transformers import PretrainedConfig
 
-from surya.common.s3 import S3DownloaderMixin
-from surya.common.surya.encoder.config import SuryaEncoderConfig
-from surya.common.surya.decoder.config import SuryaDecoderConfig
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.common.surya.encoder.config import SuryaEncoderConfig
+from raw2md_engine.surya.common.surya.decoder.config import SuryaDecoderConfig
 
 
 class SuryaModelConfig(S3DownloaderMixin, PretrainedConfig):

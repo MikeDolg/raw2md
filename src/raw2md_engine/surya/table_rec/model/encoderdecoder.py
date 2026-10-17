@@ -4,10 +4,10 @@ from typing import Optional, Union, Tuple, Dict
 import torch
 from transformers import PreTrainedModel, VisionEncoderDecoderConfig, PretrainedConfig
 
-from surya.common.pretrained import SuryaPreTrainedModel
-from surya.common.s3 import S3DownloaderMixin
-from surya.table_rec.model.decoder import SuryaTableRecDecoder
-from surya.table_rec.model.encoder import DonutSwinModel
+from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.table_rec.model.decoder import SuryaTableRecDecoder
+from raw2md_engine.surya.table_rec.model.encoder import DonutSwinModel
 from transformers.utils import ModelOutput
 
 

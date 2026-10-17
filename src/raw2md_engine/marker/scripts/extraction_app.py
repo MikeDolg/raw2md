@@ -4,8 +4,8 @@ import os
 from streamlit_ace import st_ace
 from pydantic import BaseModel
 
-from marker.converters.extraction import ExtractionConverter
-from marker.scripts.common import (
+from raw2md_engine.marker.converters.extraction import ExtractionConverter
+from raw2md_engine.marker.scripts.common import (
     parse_args,
     load_models,
     get_page_image,
@@ -23,7 +23,7 @@ from typing import Any, Dict
 
 import streamlit as st
 
-from marker.config.parser import ConfigParser
+from raw2md_engine.marker.config.parser import ConfigParser
 
 
 def extract_data(

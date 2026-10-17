@@ -6,16 +6,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers.activations import ACT2FN
 
-from surya.common.pretrained import SuryaPreTrainedModel
-from surya.common.surya.encoder.config import SuryaEncoderConfig
-from surya.common.xla import get_nearest_pad
-from surya.logging import get_logger
-from surya.settings import settings
+from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
+from raw2md_engine.surya.common.surya.encoder.config import SuryaEncoderConfig
+from raw2md_engine.surya.common.xla import get_nearest_pad
+from raw2md_engine.surya.logging import get_logger
+from raw2md_engine.surya.settings import settings
 
 if settings.FOUNDATION_XLA:
     import torch_xla.experimental.custom_kernel
 
-from surya.logging import get_logger
+from raw2md_engine.surya.logging import get_logger
 logger = get_logger()
 
 

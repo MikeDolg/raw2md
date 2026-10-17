@@ -4,13 +4,13 @@ os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = (
     "1"  # Transformers uses .isin for an op, which is not supported on MPS
 )
 
-from surya.foundation import FoundationPredictor
-from surya.detection import DetectionPredictor
-from surya.layout import LayoutPredictor
-from surya.ocr_error import OCRErrorPredictor
-from surya.recognition import RecognitionPredictor
-from surya.table_rec import TableRecPredictor
-from surya.settings import settings as surya_settings
+from raw2md_engine.surya.foundation import FoundationPredictor
+from raw2md_engine.surya.detection import DetectionPredictor
+from raw2md_engine.surya.layout import LayoutPredictor
+from raw2md_engine.surya.ocr_error import OCRErrorPredictor
+from raw2md_engine.surya.recognition import RecognitionPredictor
+from raw2md_engine.surya.table_rec import TableRecPredictor
+from raw2md_engine.surya.settings import settings as surya_settings
 
 
 def create_model_dict(

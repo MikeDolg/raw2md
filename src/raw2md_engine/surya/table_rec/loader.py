@@ -2,16 +2,16 @@ from typing import Optional
 
 import torch
 
-from surya.common.load import ModelLoader
-from surya.logging import get_logger
-from surya.settings import settings
-from surya.table_rec.model.config import (
+from raw2md_engine.surya.common.load import ModelLoader
+from raw2md_engine.surya.logging import get_logger
+from raw2md_engine.surya.settings import settings
+from raw2md_engine.surya.table_rec.model.config import (
     SuryaTableRecConfig,
     SuryaTableRecDecoderConfig,
     DonutSwinTableRecConfig,
 )
-from surya.table_rec.model.encoderdecoder import TableRecEncoderDecoderModel
-from surya.table_rec.processor import SuryaTableRecProcessor
+from raw2md_engine.surya.table_rec.model.encoderdecoder import TableRecEncoderDecoderModel
+from raw2md_engine.surya.table_rec.processor import SuryaTableRecProcessor
 
 logger = get_logger()
 

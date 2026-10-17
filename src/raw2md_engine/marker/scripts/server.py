@@ -6,8 +6,8 @@ import os
 from pydantic import BaseModel, Field
 from starlette.responses import HTMLResponse
 
-from marker.config.parser import ConfigParser
-from marker.output import text_from_rendered
+from raw2md_engine.marker.config.parser import ConfigParser
+from raw2md_engine.marker.output import text_from_rendered
 
 import base64
 from contextlib import asynccontextmanager
@@ -15,9 +15,9 @@ from typing import Optional, Annotated
 import io
 
 from fastapi import FastAPI, Form, File, UploadFile
-from marker.converters.pdf import PdfConverter
-from marker.models import create_model_dict
-from marker.settings import settings
+from raw2md_engine.marker.converters.pdf import PdfConverter
+from raw2md_engine.marker.models import create_model_dict
+from raw2md_engine.marker.settings import settings
 
 app_data = {}
 

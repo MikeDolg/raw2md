@@ -1,7 +1,7 @@
 from PIL import ImageDraw, ImageFont
 
-from surya.debug.fonts import get_font_path
-from surya.debug.text import get_text_size
+from raw2md_engine.surya.debug.fonts import get_font_path
+from raw2md_engine.surya.debug.text import get_text_size
 
 
 def draw_bboxes_on_image(

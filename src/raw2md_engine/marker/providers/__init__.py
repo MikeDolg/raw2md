@@ -4,15 +4,15 @@ from typing import List, Optional, Dict
 from PIL import Image
 from pydantic import BaseModel
 
-from pdftext.schema import Reference
+from raw2md_engine.pdftext.schema import Reference
 
-from marker.logger import configure_logging
-from marker.schema.polygon import PolygonBox
-from marker.schema.text import Span
-from marker.schema.text.char import Char
-from marker.schema.text.line import Line
-from marker.settings import settings
-from marker.util import assign_config
+from raw2md_engine.marker.logger import configure_logging
+from raw2md_engine.marker.schema.polygon import PolygonBox
+from raw2md_engine.marker.schema.text import Span
+from raw2md_engine.marker.schema.text.char import Char
+from raw2md_engine.marker.schema.text.line import Line
+from raw2md_engine.marker.settings import settings
+from raw2md_engine.marker.util import assign_config
 
 configure_logging()
 

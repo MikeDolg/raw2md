@@ -3,9 +3,9 @@ import json
 from pydantic import BaseModel
 from typing import Annotated, Optional, List
 
-from marker.extractors import BaseExtractor
-from marker.extractors.page import PageExtractionSchema
-from marker.logger import get_logger
+from raw2md_engine.marker.extractors import BaseExtractor
+from raw2md_engine.marker.extractors.page import PageExtractionSchema
+from raw2md_engine.marker.logger import get_logger
 
 logger = get_logger()
 

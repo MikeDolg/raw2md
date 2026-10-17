@@ -6,8 +6,8 @@ from typing import Annotated, Optional, List
 
 from tqdm import tqdm
 
-from marker.extractors import BaseExtractor
-from marker.logger import get_logger
+from raw2md_engine.marker.extractors import BaseExtractor
+from raw2md_engine.marker.logger import get_logger
 
 logger = get_logger()
 

@@ -8,8 +8,8 @@ import numpy as np
 import requests
 from pydantic import BaseModel
 
-from marker.schema.polygon import PolygonBox
-from marker.settings import settings
+from raw2md_engine.marker.schema.polygon import PolygonBox
+from raw2md_engine.marker.settings import settings
 
 OPENING_TAG_REGEX = re.compile(r"<((?:math|i|b))(?:\s+[^>]*)?>")
 CLOSING_TAG_REGEX = re.compile(r"</((?:math|i|b))>")

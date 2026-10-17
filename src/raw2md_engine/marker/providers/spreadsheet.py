@@ -1,7 +1,7 @@
 import os
 import tempfile
 
-from marker.providers.pdf import PdfProvider
+from raw2md_engine.marker.providers.pdf import PdfProvider
 
 css = '''
 @page {

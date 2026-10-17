@@ -5,21 +5,21 @@ import numpy as np
 from PIL import Image
 import cv2
 
-from surya.detection import DetectionPredictor
-from surya.ocr_error import OCRErrorPredictor
+from raw2md_engine.surya.detection import DetectionPredictor
+from raw2md_engine.surya.ocr_error import OCRErrorPredictor
 
-from marker.builders import BaseBuilder
-from marker.providers import ProviderOutput, ProviderPageLines
-from marker.providers.pdf import PdfProvider
-from marker.schema import BlockTypes
-from marker.schema.document import Document
-from marker.schema.groups.page import PageGroup
-from marker.schema.polygon import PolygonBox
-from marker.schema.registry import get_block_class
-from marker.schema.text.line import Line
-from marker.settings import settings
-from marker.util import matrix_intersection_area, sort_text_lines
-from marker.utils.image import is_blank_image
+from raw2md_engine.marker.builders import BaseBuilder
+from raw2md_engine.marker.providers import ProviderOutput, ProviderPageLines
+from raw2md_engine.marker.providers.pdf import PdfProvider
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.groups.page import PageGroup
+from raw2md_engine.marker.schema.polygon import PolygonBox
+from raw2md_engine.marker.schema.registry import get_block_class
+from raw2md_engine.marker.schema.text.line import Line
+from raw2md_engine.marker.settings import settings
+from raw2md_engine.marker.util import matrix_intersection_area, sort_text_lines
+from raw2md_engine.marker.utils.image import is_blank_image
 
 
 class LineBuilder(BaseBuilder):

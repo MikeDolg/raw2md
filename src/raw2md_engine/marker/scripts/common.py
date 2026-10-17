@@ -12,10 +12,10 @@ import streamlit as st
 from pydantic import BaseModel
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
-from marker.config.parser import ConfigParser
-from marker.config.printer import CustomClickPrinter
-from marker.models import create_model_dict
-from marker.settings import settings
+from raw2md_engine.marker.config.parser import ConfigParser
+from raw2md_engine.marker.config.printer import CustomClickPrinter
+from raw2md_engine.marker.models import create_model_dict
+from raw2md_engine.marker.settings import settings
 
 
 @st.cache_data()

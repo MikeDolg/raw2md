@@ -3,10 +3,10 @@ from typing import List
 import markdown2
 from pydantic import BaseModel
 
-from marker.processors.llm import PromptData, BaseLLMSimpleBlockProcessor
+from raw2md_engine.marker.processors.llm import PromptData, BaseLLMSimpleBlockProcessor
 
-from marker.schema import BlockTypes
-from marker.schema.document import Document
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.document import Document
 
 
 class LLMComplexRegionProcessor(BaseLLMSimpleBlockProcessor):

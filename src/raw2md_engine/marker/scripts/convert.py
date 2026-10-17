@@ -5,7 +5,7 @@ import time
 import psutil
 import torch
 
-from marker.utils.batch import get_batch_sizes_worker_counts
+from raw2md_engine.marker.utils.batch import get_batch_sizes_worker_counts
 
 # Ensure threads don't contend
 os.environ["MKL_DYNAMIC"] = "FALSE"
@@ -28,12 +28,12 @@ import torch.multiprocessing as mp
 from tqdm import tqdm
 import gc
 
-from marker.config.parser import ConfigParser
-from marker.config.printer import CustomClickPrinter
-from marker.logger import configure_logging, get_logger
-from marker.models import create_model_dict
-from marker.output import output_exists, save_output
-from marker.utils.gpu import GPUManager
+from raw2md_engine.marker.config.parser import ConfigParser
+from raw2md_engine.marker.config.printer import CustomClickPrinter
+from raw2md_engine.marker.logger import configure_logging, get_logger
+from raw2md_engine.marker.models import create_model_dict
+from raw2md_engine.marker.output import output_exists, save_output
+from raw2md_engine.marker.utils.gpu import GPUManager
 
 configure_logging()
 logger = get_logger()

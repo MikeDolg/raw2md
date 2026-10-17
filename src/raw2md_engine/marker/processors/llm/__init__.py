@@ -7,15 +7,15 @@ from pydantic import BaseModel
 from tqdm import tqdm
 from PIL import Image
 
-from marker.output import json_to_html
-from marker.processors import BaseProcessor
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block, BlockId
-from marker.schema.document import Document
-from marker.schema.groups import PageGroup
-from marker.services import BaseService
-from marker.util import assign_config
-from marker.logger import get_logger
+from raw2md_engine.marker.output import json_to_html
+from raw2md_engine.marker.processors import BaseProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block, BlockId
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.groups import PageGroup
+from raw2md_engine.marker.services import BaseService
+from raw2md_engine.marker.util import assign_config
+from raw2md_engine.marker.logger import get_logger
 
 logger = get_logger()
 

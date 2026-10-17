@@ -8,15 +8,15 @@ import torch.nn.functional as F
 from PIL import Image
 from tqdm import tqdm
 
-from surya.common.predictor import BasePredictor
-from surya.common.xla import mark_step
+from raw2md_engine.surya.common.predictor import BasePredictor
+from raw2md_engine.surya.common.xla import mark_step
 
-from surya.detection.loader import DetectionModelLoader
-from surya.detection.parallel import FakeExecutor
-from surya.detection.util import get_total_splits, split_image
-from surya.detection.schema import TextDetectionResult
-from surya.settings import settings
-from surya.detection.heatmap import parallel_get_boxes
+from raw2md_engine.surya.detection.loader import DetectionModelLoader
+from raw2md_engine.surya.detection.parallel import FakeExecutor
+from raw2md_engine.surya.detection.util import get_total_splits, split_image
+from raw2md_engine.surya.detection.schema import TextDetectionResult
+from raw2md_engine.surya.settings import settings
+from raw2md_engine.surya.detection.heatmap import parallel_get_boxes
 
 
 class DetectionPredictor(BasePredictor):

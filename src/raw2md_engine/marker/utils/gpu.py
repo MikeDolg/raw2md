@@ -2,8 +2,8 @@ import os
 import subprocess
 import torch
 
-from marker.logger import get_logger
-from marker.settings import settings
+from raw2md_engine.marker.logger import get_logger
+from raw2md_engine.marker.settings import settings
 
 logger = get_logger()
 

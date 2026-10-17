@@ -4,8 +4,8 @@ from typing import Literal, List
 
 import regex
 
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block, BlockOutput
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block, BlockOutput
 
 HYPHENS = r"-—¬"
 

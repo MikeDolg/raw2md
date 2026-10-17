@@ -5,8 +5,8 @@ from typing import Dict, List, Optional, Tuple
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_c
 
-from pdftext.pdf.utils import matrix_intersection_area
-from pdftext.schema import Bbox, Link, Page, PageReference, Pages, Span
+from raw2md_engine.pdftext.pdf.utils import matrix_intersection_area
+from raw2md_engine.pdftext.schema import Bbox, Link, Page, PageReference, Pages, Span
 
 
 def _get_dest_position(dest) -> Optional[Tuple[float, float]]:

@@ -4,13 +4,13 @@ import json
 import time
 from collections import defaultdict
 
-from surya.common.surya.schema import TaskNames
-from surya.detection import DetectionPredictor
-from surya.debug.text import draw_text_on_image
-from surya.logging import configure_logging, get_logger
-from surya.foundation import FoundationPredictor
-from surya.recognition import RecognitionPredictor
-from surya.scripts.config import CLILoader
+from raw2md_engine.surya.common.surya.schema import TaskNames
+from raw2md_engine.surya.detection import DetectionPredictor
+from raw2md_engine.surya.debug.text import draw_text_on_image
+from raw2md_engine.surya.logging import configure_logging, get_logger
+from raw2md_engine.surya.foundation import FoundationPredictor
+from raw2md_engine.surya.recognition import RecognitionPredictor
+from raw2md_engine.surya.scripts.config import CLILoader
 
 configure_logging()
 logger = get_logger()

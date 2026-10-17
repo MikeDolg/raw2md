@@ -36,7 +36,7 @@ from transformers.utils import TensorType
 import PIL.Image
 import torch
 
-from surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
 
 
 class SegformerImageProcessor(S3DownloaderMixin, BaseImageProcessor):

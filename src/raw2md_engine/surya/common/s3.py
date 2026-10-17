@@ -9,8 +9,8 @@ from pathlib import Path
 import requests
 from tqdm import tqdm
 
-from surya.logging import get_logger
-from surya.settings import settings
+from raw2md_engine.surya.logging import get_logger
+from raw2md_engine.surya.settings import settings
 
 logger = get_logger()
 

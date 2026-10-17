@@ -5,7 +5,7 @@ from typing import List
 import click
 import pypdfium2 as pdfium
 
-from pdftext.extraction import plain_text_output, dictionary_output
+from raw2md_engine.pdftext.extraction import plain_text_output, dictionary_output
 
 def parse_range_str(range_str: str) -> List[int]:
     range_lst = range_str.split(",")

@@ -3,10 +3,10 @@ from typing import Optional, List, Type
 
 from pydantic import BaseModel
 
-from marker.processors import BaseProcessor
-from marker.processors.llm import BaseLLMSimpleBlockProcessor
-from marker.processors.llm.llm_meta import LLMSimpleBlockMetaProcessor
-from marker.util import assign_config, download_font
+from raw2md_engine.marker.processors import BaseProcessor
+from raw2md_engine.marker.processors.llm import BaseLLMSimpleBlockProcessor
+from raw2md_engine.marker.processors.llm.llm_meta import LLMSimpleBlockMetaProcessor
+from raw2md_engine.marker.util import assign_config, download_font
 
 
 class BaseConverter:

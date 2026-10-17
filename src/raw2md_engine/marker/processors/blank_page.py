@@ -4,12 +4,12 @@ from PIL import Image
 import numpy as np
 import cv2
 
-from marker.processors import BaseProcessor
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block
-from marker.schema.document import Document
+from raw2md_engine.marker.processors import BaseProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block
+from raw2md_engine.marker.schema.document import Document
 
-from marker.logger import get_logger
+from raw2md_engine.marker.logger import get_logger
 
 logger = get_logger()
 

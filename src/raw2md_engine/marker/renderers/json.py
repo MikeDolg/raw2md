@@ -2,11 +2,11 @@ from typing import Annotated, Dict, List, Tuple
 
 from pydantic import BaseModel
 
-from marker.renderers import BaseRenderer
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block, BlockOutput
-from marker.schema.document import Document
-from marker.schema.registry import get_block_class
+from raw2md_engine.marker.renderers import BaseRenderer
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block, BlockOutput
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.registry import get_block_class
 
 
 class JSONBlockOutput(BaseModel):

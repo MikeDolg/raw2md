@@ -4,16 +4,16 @@ import numpy as np
 
 from PIL import Image, ImageDraw
 
-from pdftext.schema import Reference
+from raw2md_engine.pdftext.schema import Reference
 from pydantic import computed_field
 
-from marker.providers import ProviderOutput
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block, BlockId, Text
-from marker.schema.blocks.base import BlockMetadata
-from marker.schema.groups.base import Group
-from marker.schema.polygon import PolygonBox
-from marker.util import matrix_intersection_area, sort_text_lines
+from raw2md_engine.marker.providers import ProviderOutput
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block, BlockId, Text
+from raw2md_engine.marker.schema.blocks.base import BlockMetadata
+from raw2md_engine.marker.schema.groups.base import Group
+from raw2md_engine.marker.schema.polygon import PolygonBox
+from raw2md_engine.marker.util import matrix_intersection_area, sort_text_lines
 
 LINE_MAPPING_TYPE = List[Tuple[int, ProviderOutput]]
 

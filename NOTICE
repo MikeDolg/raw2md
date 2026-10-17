@@ -1,0 +1,47 @@
+raw2md
+Copyright (c) the raw2md authors
+License: GPL-3.0-or-later (see LICENSE)
+
+The package `raw2md_engine` in this distribution is a modified copy of the
+software below. Datalab wrote the original packages. Datalab does not
+endorse or support raw2md.
+
+Original packages
+-----------------
+
+marker-pdf (package `marker`)
+  Author:     Datalab
+  Repository: https://github.com/datalab-to/marker
+  Tag:        v1.10.2
+  Commit:     5a41cdbac6232a10aaf4fad29f8e6c1a0c2a0808
+  License:    GPL-3.0-or-later
+  Copy:       src/raw2md_engine/marker/ (license text in LICENSE there)
+
+surya-ocr (package `surya`)
+  Author:     Datalab
+  Repository: https://github.com/datalab-to/surya
+  Tag:        v0.17.1
+  Commit:     411fb1895a02ed629928d5ae59df96f44ac9dc41
+  License:    GPL-3.0-or-later
+  Copy:       src/raw2md_engine/surya/ (license text in LICENSE there)
+
+pdftext
+  Author:     Datalab
+  Repository: https://github.com/datalab-to/pdftext
+  Tag:        v0.6.3
+  Commit:     d76a57535d33e9467fd92c5d3c42d80d8c84f686
+  License:    Apache-2.0
+  Copy:       src/raw2md_engine/pdftext/ (license text in LICENSE there)
+
+Changes
+-------
+
+Paths below are the paths in the upstream repositories. Each package of the
+copy keeps the layout of its upstream package.
+
+2026-10-17: every Python file in `marker/`, `surya/`, and `pdftext/` that
+imports another module of these three packages. The change rewrites the
+import path from `marker.`, `surya.`, and `pdftext.` to `raw2md_engine.marker.`,
+`raw2md_engine.surya.`, and `raw2md_engine.pdftext.`. The change also
+rewrites the one module path that `marker/config/parser.py` holds in a
+string. No other line changed.

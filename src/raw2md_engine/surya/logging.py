@@ -1,6 +1,6 @@
 import logging
 import warnings
-from surya.settings import settings
+from raw2md_engine.surya.settings import settings
 
 
 def configure_logging():

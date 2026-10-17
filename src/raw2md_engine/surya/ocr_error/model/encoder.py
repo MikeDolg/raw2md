@@ -19,10 +19,10 @@ from transformers.utils import (
     is_flash_attn_greater_or_equal_2_10,
 )
 
-from surya.common.pretrained import SuryaPreTrainedModel
+from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
 
-from surya.common.s3 import S3DownloaderMixin
-from surya.ocr_error.model.config import DistilBertConfig
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.ocr_error.model.config import DistilBertConfig
 
 
 def _get_unpad_data(attention_mask):

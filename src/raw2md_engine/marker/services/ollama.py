@@ -3,11 +3,11 @@ from typing import Annotated, List
 
 import PIL
 import requests
-from marker.logger import get_logger
+from raw2md_engine.marker.logger import get_logger
 from pydantic import BaseModel
 
-from marker.schema.blocks import Block
-from marker.services import BaseService
+from raw2md_engine.marker.schema.blocks import Block
+from raw2md_engine.marker.services import BaseService
 
 logger = get_logger()
 

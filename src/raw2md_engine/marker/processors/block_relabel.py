@@ -1,13 +1,13 @@
 from copy import deepcopy
 from typing import Annotated
 
-from marker.processors import BaseProcessor
-from marker.schema import BlockTypes
-from marker.schema.blocks import BlockId
-from marker.schema.document import Document
-from marker.schema.registry import get_block_class
+from raw2md_engine.marker.processors import BaseProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import BlockId
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.registry import get_block_class
 
-from marker.logger import get_logger
+from raw2md_engine.marker.logger import get_logger
 logger = get_logger()
 
 class BlockRelabelProcessor(BaseProcessor):

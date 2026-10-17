@@ -1,5 +1,5 @@
-from marker.schema import BlockTypes
-from marker.schema.blocks.basetable import BaseTable
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks.basetable import BaseTable
 
 
 class Table(BaseTable):

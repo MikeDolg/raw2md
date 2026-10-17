@@ -1,12 +1,12 @@
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict, Any
 
-from marker.logger import get_logger
+from raw2md_engine.marker.logger import get_logger
 from tqdm import tqdm
 
-from marker.processors.llm import BaseLLMSimpleBlockProcessor, BaseLLMProcessor
-from marker.schema.document import Document
-from marker.services import BaseService
+from raw2md_engine.marker.processors.llm import BaseLLMSimpleBlockProcessor, BaseLLMProcessor
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.services import BaseService
 
 logger = get_logger()
 

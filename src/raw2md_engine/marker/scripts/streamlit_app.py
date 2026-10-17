@@ -1,6 +1,6 @@
 import os
 
-from marker.scripts.common import (
+from raw2md_engine.marker.scripts.common import (
     load_models,
     parse_args,
     img_to_html,
@@ -11,7 +11,7 @@ from marker.scripts.common import (
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 os.environ["IN_STREAMLIT"] = "true"
 
-from marker.settings import settings
+from raw2md_engine.marker.settings import settings
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 import re
@@ -21,9 +21,9 @@ from typing import Any, Dict
 import streamlit as st
 from PIL import Image
 
-from marker.converters.pdf import PdfConverter
-from marker.config.parser import ConfigParser
-from marker.output import text_from_rendered
+from raw2md_engine.marker.converters.pdf import PdfConverter
+from raw2md_engine.marker.config.parser import ConfigParser
+from raw2md_engine.marker.output import text_from_rendered
 
 
 def convert_pdf(fname: str, config_parser: ConfigParser) -> (str, Dict[str, Any], dict):

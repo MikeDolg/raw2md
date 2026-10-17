@@ -9,10 +9,10 @@ import os
 from transformers import PreTrainedTokenizer, Qwen2Tokenizer as Qwen2OriginalTokenizer
 
 
-from surya.common.s3 import S3DownloaderMixin
-from surya.common.surya.schema import TASK_NAMES, TaskNames
-from surya.logging import get_logger
-from surya.settings import settings
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.common.surya.schema import TASK_NAMES, TaskNames
+from raw2md_engine.surya.logging import get_logger
+from raw2md_engine.surya.settings import settings
 
 logger = get_logger()
 

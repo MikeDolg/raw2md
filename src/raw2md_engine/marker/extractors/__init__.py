@@ -1,12 +1,12 @@
 from typing import Annotated, Sequence
 
-from marker.schema import BlockTypes
-from marker.schema.document import Document
-from marker.schema.groups import PageGroup
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.groups import PageGroup
 from PIL import Image
 
-from marker.services import BaseService
-from marker.util import assign_config
+from raw2md_engine.marker.services import BaseService
+from raw2md_engine.marker.util import assign_config
 
 
 class BaseExtractor:

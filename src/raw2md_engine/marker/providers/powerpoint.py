@@ -3,8 +3,8 @@ import os
 import tempfile
 import traceback
 
-from marker.logger import get_logger
-from marker.providers.pdf import PdfProvider
+from raw2md_engine.marker.logger import get_logger
+from raw2md_engine.marker.providers.pdf import PdfProvider
 
 logger = get_logger()
 

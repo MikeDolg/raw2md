@@ -1,7 +1,7 @@
 import re
 from typing import List, Dict
 
-from surya.recognition.schema import TextChar
+from raw2md_engine.surya.recognition.schema import TextChar
 
 
 def truncate_repetitions(text: str, min_len=15):

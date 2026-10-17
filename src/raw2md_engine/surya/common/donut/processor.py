@@ -16,8 +16,8 @@ from PIL import Image
 import PIL
 from transformers.utils import IMAGENET_STANDARD_MEAN, IMAGENET_STANDARD_STD
 
-from surya.common.s3 import S3DownloaderMixin
-from surya.settings import settings
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.settings import settings
 
 
 class SuryaEncoderImageProcessor(S3DownloaderMixin, ImageProcessingMixin):

@@ -3,8 +3,8 @@ import math
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_c
 
-from pdftext.pdf.utils import get_fontname
-from pdftext.schema import Bbox, Char, Chars, Spans, Span
+from raw2md_engine.pdftext.pdf.utils import get_fontname
+from raw2md_engine.pdftext.schema import Bbox, Char, Chars, Spans, Span
 
 
 def get_chars(textpage: pdfium.PdfTextPage, page_bbox: list[float], page_rotation: int, quote_loosebox=True) -> Chars:

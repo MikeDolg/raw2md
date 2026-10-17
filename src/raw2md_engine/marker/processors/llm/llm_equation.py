@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-from marker.processors.llm import BaseLLMSimpleBlockProcessor, PromptData, BlockData
-from marker.schema import BlockTypes
-from marker.schema.document import Document
+from raw2md_engine.marker.processors.llm import BaseLLMSimpleBlockProcessor, PromptData, BlockData
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.document import Document
 
 from typing import Annotated, List
 

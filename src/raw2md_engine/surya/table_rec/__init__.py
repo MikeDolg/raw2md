@@ -7,15 +7,15 @@ import torch
 from PIL import Image
 from tqdm import tqdm
 
-from surya.common.xla import mark_step
-from surya.common.predictor import BasePredictor
-from surya.table_rec.schema import TableCell, TableRow, TableCol, TableResult
-from surya.common.polygon import PolygonBox
-from surya.settings import settings
-from surya.table_rec.loader import TableRecModelLoader
-from surya.table_rec.model.config import BOX_PROPERTIES, SPECIAL_TOKENS, BOX_DIM, CATEGORY_TO_ID, MERGE_KEYS, \
+from raw2md_engine.surya.common.xla import mark_step
+from raw2md_engine.surya.common.predictor import BasePredictor
+from raw2md_engine.surya.table_rec.schema import TableCell, TableRow, TableCol, TableResult
+from raw2md_engine.surya.common.polygon import PolygonBox
+from raw2md_engine.surya.settings import settings
+from raw2md_engine.surya.table_rec.loader import TableRecModelLoader
+from raw2md_engine.surya.table_rec.model.config import BOX_PROPERTIES, SPECIAL_TOKENS, BOX_DIM, CATEGORY_TO_ID, MERGE_KEYS, \
     MERGE_VALUES
-from surya.table_rec.shaper import LabelShaper
+from raw2md_engine.surya.table_rec.shaper import LabelShaper
 
 
 class TableRecPredictor(BasePredictor):

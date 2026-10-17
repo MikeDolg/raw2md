@@ -7,12 +7,12 @@ from typing import List
 
 import pypdfium2 as pdfium
 
-from pdftext.pdf.links import add_links_and_refs
-from pdftext.pdf.pages import get_pages
-from pdftext.postprocessing import handle_hyphens, merge_text, postprocess_text, sort_blocks
-from pdftext.schema import Pages, TableInputs, Tables
-from pdftext.settings import settings
-from pdftext.tables import table_cell_text
+from raw2md_engine.pdftext.pdf.links import add_links_and_refs
+from raw2md_engine.pdftext.pdf.pages import get_pages
+from raw2md_engine.pdftext.postprocessing import handle_hyphens, merge_text, postprocess_text, sort_blocks
+from raw2md_engine.pdftext.schema import Pages, TableInputs, Tables
+from raw2md_engine.pdftext.settings import settings
+from raw2md_engine.pdftext.tables import table_cell_text
 
 
 def _load_pdf(pdf, flatten_pdf):

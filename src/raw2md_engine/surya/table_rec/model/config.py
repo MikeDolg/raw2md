@@ -5,8 +5,8 @@ import torch
 from transformers import PretrainedConfig
 from transformers.utils import ModelOutput
 
-from surya.common.s3 import S3DownloaderMixin
-from surya.settings import settings
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.settings import settings
 
 BOX_DIM = 1024
 SPECIAL_TOKENS = 5

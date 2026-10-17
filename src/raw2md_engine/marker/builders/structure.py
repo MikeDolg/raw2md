@@ -1,12 +1,12 @@
 from typing import Annotated
 
-from marker.builders import BaseBuilder
-from marker.schema import BlockTypes
-from marker.schema.blocks import Text
-from marker.schema.document import Document
-from marker.schema.groups import ListGroup
-from marker.schema.groups.page import PageGroup
-from marker.schema.registry import get_block_class
+from raw2md_engine.marker.builders import BaseBuilder
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Text
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.groups import ListGroup
+from raw2md_engine.marker.schema.groups.page import PageGroup
+from raw2md_engine.marker.schema.registry import get_block_class
 
 
 class StructureBuilder(BaseBuilder):

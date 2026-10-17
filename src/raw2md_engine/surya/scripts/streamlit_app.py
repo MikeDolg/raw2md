@@ -5,19 +5,19 @@ from typing import List
 import pypdfium2
 import streamlit as st
 
-from surya.common.surya.schema import TaskNames
-from surya.models import load_predictors
+from raw2md_engine.surya.common.surya.schema import TaskNames
+from raw2md_engine.surya.models import load_predictors
 
-from surya.debug.draw import draw_polys_on_image, draw_bboxes_on_image
+from raw2md_engine.surya.debug.draw import draw_polys_on_image, draw_bboxes_on_image
 
-from surya.debug.text import draw_text_on_image
+from raw2md_engine.surya.debug.text import draw_text_on_image
 from PIL import Image, ImageDraw
-from surya.table_rec import TableResult
-from surya.detection import TextDetectionResult
-from surya.recognition import OCRResult
-from surya.layout import LayoutResult
-from surya.settings import settings
-from surya.common.util import rescale_bbox, expand_bbox
+from raw2md_engine.surya.table_rec import TableResult
+from raw2md_engine.surya.detection import TextDetectionResult
+from raw2md_engine.surya.recognition import OCRResult
+from raw2md_engine.surya.layout import LayoutResult
+from raw2md_engine.surya.settings import settings
+from raw2md_engine.surya.common.util import rescale_bbox, expand_bbox
 
 
 @st.cache_resource()
@@ -26,7 +26,7 @@ def load_predictors_cached():
 
 
 def ocr_errors(pdf_file, page_count, sample_len=512, max_samples=10, max_pages=15):
-    from pdftext.extraction import plain_text_output
+    from raw2md_engine.pdftext.extraction import plain_text_output
 
     with tempfile.NamedTemporaryFile(suffix=".pdf") as f:
         f.write(pdf_file.getvalue())

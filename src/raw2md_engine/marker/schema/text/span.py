@@ -2,9 +2,9 @@ import html
 import re
 from typing import List, Literal, Optional
 
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block
-from marker.util import unwrap_math
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block
+from raw2md_engine.marker.util import unwrap_math
 
 
 def cleanup_text(full_text):

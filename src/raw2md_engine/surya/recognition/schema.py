@@ -4,7 +4,7 @@ from typing import Optional, List
 
 from pydantic import BaseModel, field_validator
 
-from surya.common.polygon import PolygonBox
+from raw2md_engine.surya.common.polygon import PolygonBox
 
 
 class BaseChar(PolygonBox):

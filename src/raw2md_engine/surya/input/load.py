@@ -1,9 +1,9 @@
 from typing import List
 import PIL
 
-from surya.input.processing import open_pdf, get_page_images
-from surya.logging import get_logger
-from surya.settings import settings
+from raw2md_engine.surya.input.processing import open_pdf, get_page_images
+from raw2md_engine.surya.logging import get_logger
+from raw2md_engine.surya.settings import settings
 import os
 import filetype
 from PIL import Image

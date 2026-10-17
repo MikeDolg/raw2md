@@ -2,7 +2,7 @@ from typing import List, Optional
 import os
 import requests
 
-from surya.settings import settings
+from raw2md_engine.surya.settings import settings
 
 
 def get_font_path(langs: Optional[List[str]] = None) -> str:

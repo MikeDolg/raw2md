@@ -1,8 +1,8 @@
 from typing import List
 
-from marker.schema import BlockTypes
-from marker.schema.blocks import BlockOutput
-from marker.schema.groups.base import Group
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import BlockOutput
+from raw2md_engine.marker.schema.groups.base import Group
 
 
 class TableGroup(Group):

@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Sequence, Tuple
 from pydantic import BaseModel, ConfigDict, field_validator
 from PIL import Image
 
-from marker.schema import BlockTypes
-from marker.schema.polygon import PolygonBox
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.polygon import PolygonBox
 
 if TYPE_CHECKING:
-    from marker.schema.document import Document
-    from marker.schema.groups.page import PageGroup
+    from raw2md_engine.marker.schema.document import Document
+    from raw2md_engine.marker.schema.groups.page import PageGroup
 
 
 class BlockMetadata(BaseModel):
@@ -70,7 +70,7 @@ class BlockId(BaseModel):
     @field_validator("block_type")
     @classmethod
     def validate_block_type(cls, v):
-        from marker.schema import BlockTypes
+        from raw2md_engine.marker.schema import BlockTypes
 
         if v not in BlockTypes:
             raise ValueError(f"Invalid block type: {v}")
@@ -206,9 +206,9 @@ class Block(BaseModel):
             self.structure = [item for item in self.structure if item not in block_ids]
 
     def raw_text(self, document: Document) -> str:
-        from marker.schema.text.line import Line
-        from marker.schema.text.span import Span
-        from marker.schema.blocks.tablecell import TableCell
+        from raw2md_engine.marker.schema.text.line import Line
+        from raw2md_engine.marker.schema.text.span import Span
+        from raw2md_engine.marker.schema.blocks.tablecell import TableCell
 
         if self.structure is None:
             if isinstance(self, (Span, TableCell)):

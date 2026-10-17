@@ -2,8 +2,8 @@ from typing import List
 
 import click
 import os
-from surya.input.load import load_from_folder, load_from_file
-from surya.settings import settings
+from raw2md_engine.surya.input.load import load_from_folder, load_from_file
+from raw2md_engine.surya.settings import settings
 
 
 class CLILoader:

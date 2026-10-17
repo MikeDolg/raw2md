@@ -1,8 +1,8 @@
 from typing import Dict, Type
 from importlib import import_module
 
-from marker.schema import BlockTypes
-from marker.schema.blocks import (
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import (
     Block,
     Caption,
     Code,
@@ -24,16 +24,16 @@ from marker.schema.blocks import (
     TableCell,
     Reference,
 )
-from marker.schema.document import Document
-from marker.schema.groups import (
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.groups import (
     FigureGroup,
     ListGroup,
     PageGroup,
     PictureGroup,
     TableGroup,
 )
-from marker.schema.text import Line, Span
-from marker.schema.text.char import Char
+from raw2md_engine.marker.schema.text import Line, Span
+from raw2md_engine.marker.schema.text.char import Char
 
 BLOCK_REGISTRY: Dict[BlockTypes, str] = {}
 

@@ -4,12 +4,12 @@ import re
 from bs4 import BeautifulSoup
 
 from ftfy import fix_text, TextFixerConfig
-from surya.recognition import RecognitionPredictor, OCRResult
+from raw2md_engine.surya.recognition import RecognitionPredictor, OCRResult
 
-from marker.processors import BaseProcessor
-from marker.schema import BlockTypes
-from marker.schema.document import Document
-from marker.settings import settings
+from raw2md_engine.marker.processors import BaseProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.settings import settings
 
 MATH_TAG_PATTERN = re.compile(r"<math[^>]*>(.*?)</math>")
 

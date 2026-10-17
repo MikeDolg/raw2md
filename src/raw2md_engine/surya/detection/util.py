@@ -1,7 +1,7 @@
 import math
 from PIL import ImageOps
 
-from surya.settings import settings
+from raw2md_engine.surya.settings import settings
 
 
 def get_total_splits(image_size, height):

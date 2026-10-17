@@ -4,8 +4,8 @@ from io import BytesIO
 import PIL
 from pydantic import BaseModel
 
-from marker.schema.blocks import Block
-from marker.util import assign_config, verify_config_keys
+from raw2md_engine.marker.schema.blocks import Block
+from raw2md_engine.marker.util import assign_config, verify_config_keys
 import base64
 
 

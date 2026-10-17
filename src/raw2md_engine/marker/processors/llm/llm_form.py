@@ -2,11 +2,11 @@ from typing import List
 
 from pydantic import BaseModel
 
-from marker.output import json_to_html
-from marker.processors.llm import PromptData, BaseLLMSimpleBlockProcessor, BlockData
+from raw2md_engine.marker.output import json_to_html
+from raw2md_engine.marker.processors.llm import PromptData, BaseLLMSimpleBlockProcessor, BlockData
 
-from marker.schema import BlockTypes
-from marker.schema.document import Document
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.document import Document
 
 
 class LLMFormProcessor(BaseLLMSimpleBlockProcessor):

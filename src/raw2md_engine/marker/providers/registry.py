@@ -3,13 +3,13 @@ import filetype.match as file_match
 from bs4 import BeautifulSoup
 from filetype.types import archive, document, IMAGE
 
-from marker.providers.document import DocumentProvider
-from marker.providers.epub import EpubProvider
-from marker.providers.html import HTMLProvider
-from marker.providers.image import ImageProvider
-from marker.providers.pdf import PdfProvider
-from marker.providers.powerpoint import PowerPointProvider
-from marker.providers.spreadsheet import SpreadSheetProvider
+from raw2md_engine.marker.providers.document import DocumentProvider
+from raw2md_engine.marker.providers.epub import EpubProvider
+from raw2md_engine.marker.providers.html import HTMLProvider
+from raw2md_engine.marker.providers.image import ImageProvider
+from raw2md_engine.marker.providers.pdf import PdfProvider
+from raw2md_engine.marker.providers.powerpoint import PowerPointProvider
+from raw2md_engine.marker.providers.spreadsheet import SpreadSheetProvider
 
 DOCTYPE_MATCHERS = {
     "image": IMAGE,

@@ -3,12 +3,12 @@ from typing import List, Tuple
 
 from tqdm import tqdm
 
-from marker.logger import get_logger
-from marker.processors.llm import BaseLLMComplexBlockProcessor
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block
-from marker.schema.document import Document
-from marker.schema.groups import PageGroup
+from raw2md_engine.marker.logger import get_logger
+from raw2md_engine.marker.processors.llm import BaseLLMComplexBlockProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.groups import PageGroup
 from pydantic import BaseModel
 
 logger = get_logger()

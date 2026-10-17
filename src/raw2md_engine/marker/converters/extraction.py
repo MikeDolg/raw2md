@@ -1,19 +1,19 @@
 import re
 from typing import Annotated
 
-from marker.builders.document import DocumentBuilder
-from marker.builders.line import LineBuilder
-from marker.builders.ocr import OcrBuilder
-from marker.builders.structure import StructureBuilder
-from marker.converters.pdf import PdfConverter
-from marker.extractors.document import DocumentExtractor
-from marker.extractors.page import PageExtractor
-from marker.providers.registry import provider_from_filepath
+from raw2md_engine.marker.builders.document import DocumentBuilder
+from raw2md_engine.marker.builders.line import LineBuilder
+from raw2md_engine.marker.builders.ocr import OcrBuilder
+from raw2md_engine.marker.builders.structure import StructureBuilder
+from raw2md_engine.marker.converters.pdf import PdfConverter
+from raw2md_engine.marker.extractors.document import DocumentExtractor
+from raw2md_engine.marker.extractors.page import PageExtractor
+from raw2md_engine.marker.providers.registry import provider_from_filepath
 
-from marker.renderers.extraction import ExtractionRenderer, ExtractionOutput
-from marker.renderers.markdown import MarkdownRenderer
+from raw2md_engine.marker.renderers.extraction import ExtractionRenderer, ExtractionOutput
+from raw2md_engine.marker.renderers.markdown import MarkdownRenderer
 
-from marker.logger import get_logger
+from raw2md_engine.marker.logger import get_logger
 
 logger = get_logger()
 

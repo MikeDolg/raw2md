@@ -2,8 +2,8 @@ from typing import Optional
 import torch
 import torch.nn.functional as F
 
-from surya.common.load import ModelLoader
-from surya.settings import settings
+from raw2md_engine.surya.common.load import ModelLoader
+from raw2md_engine.surya.settings import settings
 
 
 class BasePredictor:

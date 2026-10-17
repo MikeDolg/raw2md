@@ -1,8 +1,8 @@
 from typing import List
 
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block, BlockOutput
-from marker.schema.blocks.tablecell import TableCell
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block, BlockOutput
+from raw2md_engine.marker.schema.blocks.tablecell import TableCell
 
 
 class BaseTable(Block):

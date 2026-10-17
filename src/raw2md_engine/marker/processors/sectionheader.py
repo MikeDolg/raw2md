@@ -5,9 +5,9 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.exceptions import ConvergenceWarning
 
-from marker.processors import BaseProcessor
-from marker.schema import BlockTypes
-from marker.schema.document import Document
+from raw2md_engine.marker.processors import BaseProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.document import Document
 
 # Ignore sklearn warning about not converging
 warnings.filterwarnings("ignore", category=ConvergenceWarning)

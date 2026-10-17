@@ -3,8 +3,8 @@ from io import BytesIO
 from typing import List, Tuple
 from PIL import Image, ImageDraw, ImageFont
 
-from surya.debug.fonts import get_font_path
-from surya.debug.render_html import render_text_as_html
+from raw2md_engine.surya.debug.fonts import get_font_path
+from raw2md_engine.surya.debug.render_html import render_text_as_html
 
 try:
     from playwright.sync_api import sync_playwright

@@ -1,10 +1,10 @@
 from typing import List, Annotated
 from PIL import Image
 
-from marker.providers import ProviderPageLines, BaseProvider
-from marker.schema.polygon import PolygonBox
-from marker.schema.text import Line
-from pdftext.schema import Reference
+from raw2md_engine.marker.providers import ProviderPageLines, BaseProvider
+from raw2md_engine.marker.schema.polygon import PolygonBox
+from raw2md_engine.marker.schema.text import Line
+from raw2md_engine.pdftext.schema import Reference
 
 
 class ImageProvider(BaseProvider):

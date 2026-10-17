@@ -20,9 +20,9 @@ import torch.nn.functional as F
 
 from transformers.modeling_outputs import SemanticSegmenterOutput
 
-from surya.common.pretrained import SuryaPreTrainedModel
-from surya.common.s3 import S3DownloaderMixin
-from surya.detection.model.config import EfficientViTConfig
+from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.detection.model.config import EfficientViTConfig
 
 
 def val2list(x: Union[List, Tuple, Any], repeat_time=1):

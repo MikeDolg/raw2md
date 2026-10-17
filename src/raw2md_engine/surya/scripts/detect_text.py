@@ -4,10 +4,10 @@ import json
 import time
 from collections import defaultdict
 
-from surya.detection import DetectionPredictor
-from surya.debug.draw import draw_polys_on_image
-from surya.logging import configure_logging, get_logger
-from surya.scripts.config import CLILoader
+from raw2md_engine.surya.detection import DetectionPredictor
+from raw2md_engine.surya.debug.draw import draw_polys_on_image
+from raw2md_engine.surya.logging import configure_logging, get_logger
+from raw2md_engine.surya.scripts.config import CLILoader
 import os
 
 configure_logging()

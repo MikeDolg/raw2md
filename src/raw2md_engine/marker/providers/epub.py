@@ -4,7 +4,7 @@ import tempfile
 
 from bs4 import BeautifulSoup
 
-from marker.providers.pdf import PdfProvider
+from raw2md_engine.marker.providers.pdf import PdfProvider
 
 css = '''
 @page {

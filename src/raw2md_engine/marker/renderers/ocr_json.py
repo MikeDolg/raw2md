@@ -2,9 +2,9 @@ from typing import Annotated, List, Tuple
 
 from pydantic import BaseModel
 
-from marker.renderers import BaseRenderer
-from marker.schema import BlockTypes
-from marker.schema.document import Document
+from raw2md_engine.marker.renderers import BaseRenderer
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.document import Document
 
 
 class OCRJSONCharOutput(BaseModel):

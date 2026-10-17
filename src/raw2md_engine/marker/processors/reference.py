@@ -1,13 +1,13 @@
 import numpy as np
 
-from marker.processors import BaseProcessor
-from marker.schema import BlockTypes
-from marker.schema.blocks import Reference
-from marker.schema.document import Document
-from marker.schema.groups.list import ListGroup
-from marker.schema.groups.table import TableGroup
-from marker.schema.registry import get_block_class
-from marker.schema.groups.figure import FigureGroup
+from raw2md_engine.marker.processors import BaseProcessor
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Reference
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.schema.groups.list import ListGroup
+from raw2md_engine.marker.schema.groups.table import TableGroup
+from raw2md_engine.marker.schema.registry import get_block_class
+from raw2md_engine.marker.schema.groups.figure import FigureGroup
 
 
 class ReferenceProcessor(BaseProcessor):

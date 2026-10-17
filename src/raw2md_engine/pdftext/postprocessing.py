@@ -1,8 +1,8 @@
 import unicodedata
 from typing import List
 
-from pdftext.pdf.utils import LINE_BREAKS, SPACES, TABS, WHITESPACE_CHARS
-from pdftext.schema import Page
+from raw2md_engine.pdftext.pdf.utils import LINE_BREAKS, SPACES, TABS, WHITESPACE_CHARS
+from raw2md_engine.pdftext.schema import Page
 
 LIGATURES = {
     "ﬀ": "ff",

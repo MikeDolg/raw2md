@@ -2,9 +2,9 @@ import os
 import re
 from typing import List
 
-from surya.recognition import RecognitionPredictor
-from surya.foundation import FoundationPredictor
-from surya.common.surya.schema import TaskNames
+from raw2md_engine.surya.recognition import RecognitionPredictor
+from raw2md_engine.surya.foundation import FoundationPredictor
+from raw2md_engine.surya.common.surya.schema import TaskNames
 
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = (
     "1"  # For some reason, transformers decided to use .isin for a simple op, which is not supported on MPS
@@ -18,7 +18,7 @@ from streamlit_drawable_canvas import st_canvas
 import hashlib
 import pypdfium2
 
-from surya.settings import settings
+from raw2md_engine.surya.settings import settings
 from PIL import Image
 
 MAX_WIDTH = 800

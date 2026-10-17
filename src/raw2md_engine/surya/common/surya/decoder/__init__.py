@@ -18,8 +18,8 @@ from transformers.utils import (
     logging,
 )
 
-from surya.common.pretrained import SuryaPreTrainedModel
-from surya.common.surya.decoder.config import SuryaDecoderConfig
+from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
+from raw2md_engine.surya.common.surya.decoder.config import SuryaDecoderConfig
 
 
 logger = logging.get_logger(__name__)
@@ -200,7 +200,7 @@ class Qwen2Attention(nn.Module):
                 )
             elif self.config._attn_implementation == "flash_attention_2":
                 # Needed for CPU -> GPU
-                from surya.common.surya.flash_attn_utils import (
+                from raw2md_engine.surya.common.surya.flash_attn_utils import (
                     flash_attn_decode,
                     flash_attn_prefill,
                 )

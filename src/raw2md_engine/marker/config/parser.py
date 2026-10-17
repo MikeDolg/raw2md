@@ -4,14 +4,14 @@ from typing import Dict
 
 import click
 
-from marker.converters.pdf import PdfConverter
-from marker.logger import get_logger
-from marker.renderers.chunk import ChunkRenderer
-from marker.renderers.html import HTMLRenderer
-from marker.renderers.json import JSONRenderer
-from marker.renderers.markdown import MarkdownRenderer
-from marker.settings import settings
-from marker.util import classes_to_strings, parse_range_str, strings_to_classes
+from raw2md_engine.marker.converters.pdf import PdfConverter
+from raw2md_engine.marker.logger import get_logger
+from raw2md_engine.marker.renderers.chunk import ChunkRenderer
+from raw2md_engine.marker.renderers.html import HTMLRenderer
+from raw2md_engine.marker.renderers.json import JSONRenderer
+from raw2md_engine.marker.renderers.markdown import MarkdownRenderer
+from raw2md_engine.marker.settings import settings
+from raw2md_engine.marker.util import classes_to_strings, parse_range_str, strings_to_classes
 
 logger = get_logger()
 
@@ -79,7 +79,7 @@ class ConfigParser:
             "--llm_service",
             type=str,
             default=None,
-            help="LLM service to use - should be full import path, like marker.services.gemini.GoogleGeminiService",
+            help="LLM service to use - should be full import path, like raw2md_engine.marker.services.gemini.GoogleGeminiService",
         )(fn)
         return fn
 
@@ -121,7 +121,7 @@ class ConfigParser:
 
         service_cls = self.cli_options.get("llm_service", None)
         if service_cls is None:
-            service_cls = "marker.services.gemini.GoogleGeminiService"
+            service_cls = "raw2md_engine.marker.services.gemini.GoogleGeminiService"
         return service_cls
 
     def get_renderer(self):

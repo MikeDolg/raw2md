@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import torch
 from transformers import PretrainedConfig
 
-from surya.foundation.cache.dynamic_ops import DynamicOpsCache
+from raw2md_engine.surya.foundation.cache.dynamic_ops import DynamicOpsCache
 
 """
 Special cache class for the surya foundation model that supports - 

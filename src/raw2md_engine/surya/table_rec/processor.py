@@ -4,11 +4,11 @@ import PIL
 import torch
 from transformers import ProcessorMixin
 
-from surya.common.s3 import S3DownloaderMixin
-from surya.common.donut.processor import SuryaEncoderImageProcessor
-from surya.table_rec.shaper import LabelShaper
-from surya.settings import settings
-from surya.table_rec.model.config import BOX_DIM, SPECIAL_TOKENS
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
+from raw2md_engine.surya.common.donut.processor import SuryaEncoderImageProcessor
+from raw2md_engine.surya.table_rec.shaper import LabelShaper
+from raw2md_engine.surya.settings import settings
+from raw2md_engine.surya.table_rec.model.config import BOX_DIM, SPECIAL_TOKENS
 
 
 class SuryaTableRecProcessor(S3DownloaderMixin, ProcessorMixin):

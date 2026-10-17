@@ -5,13 +5,13 @@ from bs4 import BeautifulSoup, Tag
 from pydantic import BaseModel
 from PIL import Image
 
-from marker.renderers.extraction import ExtractionOutput
-from marker.renderers.html import HTMLOutput
-from marker.renderers.json import JSONOutput, JSONBlockOutput
-from marker.renderers.markdown import MarkdownOutput
-from marker.renderers.ocr_json import OCRJSONOutput
-from marker.schema.blocks import BlockOutput
-from marker.settings import settings
+from raw2md_engine.marker.renderers.extraction import ExtractionOutput
+from raw2md_engine.marker.renderers.html import HTMLOutput
+from raw2md_engine.marker.renderers.json import JSONOutput, JSONBlockOutput
+from raw2md_engine.marker.renderers.markdown import MarkdownOutput
+from raw2md_engine.marker.renderers.ocr_json import OCRJSONOutput
+from raw2md_engine.marker.schema.blocks import BlockOutput
+from raw2md_engine.marker.settings import settings
 
 
 def unwrap_outer_tag(html: str):
@@ -53,7 +53,7 @@ def output_exists(output_dir: str, fname_base: str):
 
 
 def text_from_rendered(rendered: BaseModel):
-    from marker.renderers.chunk import ChunkOutput  # Has an import from this file
+    from raw2md_engine.marker.renderers.chunk import ChunkOutput  # Has an import from this file
 
     if isinstance(rendered, MarkdownOutput):
         return rendered.markdown, "md", rendered.images

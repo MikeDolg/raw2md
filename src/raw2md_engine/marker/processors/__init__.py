@@ -2,9 +2,9 @@ from typing import Optional, Tuple
 
 from pydantic import BaseModel
 
-from marker.schema import BlockTypes
-from marker.schema.document import Document
-from marker.util import assign_config
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.util import assign_config
 
 
 class BaseProcessor:

@@ -1,7 +1,7 @@
 import re
 
-from marker.schema import BlockTypes
-from marker.schema.blocks import Block
+from raw2md_engine.marker.schema import BlockTypes
+from raw2md_engine.marker.schema.blocks import Block
 
 
 def replace_bullets(child_blocks):

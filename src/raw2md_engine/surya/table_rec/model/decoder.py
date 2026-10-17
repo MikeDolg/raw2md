@@ -3,10 +3,10 @@ from typing import Optional, Tuple, Union
 import torch
 from torch import nn
 
-from surya.common.adetr.decoder import SuryaADETRDecoderModel, SuryaADETRDecoderPreTrainedModel
-from surya.table_rec.model.config import TableRecModelOutput
-from surya.table_rec.shaper import LabelShaper
-from surya.settings import settings
+from raw2md_engine.surya.common.adetr.decoder import SuryaADETRDecoderModel, SuryaADETRDecoderPreTrainedModel
+from raw2md_engine.surya.table_rec.model.config import TableRecModelOutput
+from raw2md_engine.surya.table_rec.shaper import LabelShaper
+from raw2md_engine.surya.settings import settings
 
 
 class LabelEmbedding(nn.Module):

@@ -4,8 +4,8 @@ from typing import List, Dict
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
 
-from marker.renderers.json import JSONRenderer, JSONBlockOutput
-from marker.schema.document import Document
+from raw2md_engine.marker.renderers.json import JSONRenderer, JSONBlockOutput
+from raw2md_engine.marker.schema.document import Document
 
 
 class FlatBlockOutput(BaseModel):
