@@ -8,7 +8,7 @@ name = "raw2md"
 version = "0.1.1"
 description = "Convert PDF, DjVu, and DOCX into clean Markdown for RAG and LLM pipelines, with deterministic repair of converter defects."
 readme = "README.md"
-license = "MIT"
+license = "GPL-3.0-or-later"
 license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 authors = [{ name = "MikeDolg" }]
 keywords = [

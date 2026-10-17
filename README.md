@@ -274,7 +274,7 @@ The uninstall leaves `~/.raw2md` and the `marker` weights where they are.
 
 ## License notes
 
-- The raw2md code is released under the [MIT](https://github.com/MikeDolg/raw2md/blob/main/LICENSE) license. The license covers the code only: the raw2md name and logo fall outside it, and you can use them to identify other products only with the author's permission.
+- The raw2md code is released under the [GPL-3.0-or-later](https://github.com/MikeDolg/raw2md/blob/main/LICENSE) license. The license covers the code only: the raw2md name and logo fall outside it, and you can use them to identify other products only with the author's permission. Releases 0.1.0 and 0.1.1 stay under the MIT license.
 - The installed tool uses `PyMuPDF` (AGPL-3.0) and `marker` (GPL-3.0). [THIRD_PARTY_NOTICES.md](https://github.com/MikeDolg/raw2md/blob/main/THIRD_PARTY_NOTICES.md) lists the licenses of all third-party components.
 - The `marker` model weights come under a separate [Datalab license](https://github.com/datalab-to/marker/blob/v1.10.2/MODEL_LICENSE), a modified AI Pubs OpenRAIL-M. It allows commercial use only to organizations whose revenue and funding stay below the threshold set in the license, and it forbids such use to competitors of Datalab. The license also extends to the result of a PDF or DjVu conversion: if you publish one, credit Datalab and include the license text. DOCX conversion through `pandoc` does not use the weights.
 - The LLM stages send the content of the document to the provider: inspection sends the source pages and the recognized text, `-e` sends the page images, and post-processing sends fragments of the text. How the provider stores and uses this data depends on your terms with that provider, so check them with the provider directly.

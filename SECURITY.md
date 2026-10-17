@@ -1,6 +1,7 @@
 # Security
 
-raw2md is provided under the MIT License, without warranty of any kind.
+raw2md is provided under the GPL-3.0-or-later license, without warranty
+of any kind.
 This document describes the principles that guide its development. It
 does not add a warranty or a commitment.
 

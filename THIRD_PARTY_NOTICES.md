@@ -1,6 +1,6 @@
 # Third-party notices
 
-The MIT license in `LICENSE` covers the raw2md source code only. This file
+The GPL-3.0-or-later license in `LICENSE` covers the raw2md source code only. This file
 lists the third-party material that raw2md bundles or keeps in its test
 assets, and the licenses of the software and the models that an installation
 of raw2md runs.
@@ -47,7 +47,7 @@ Font License 1.1. The license text is in
 ## Dependencies that raw2md does not bundle
 
 The package manager installs the dependencies. raw2md does not distribute
-them, and its MIT license does not change their licenses. The installed
+them, and its license does not change their licenses. The installed
 program runs under all of them together. Two are strong copyleft licenses:
 
 - `PyMuPDF` is available under AGPL-3.0, or under a commercial license from

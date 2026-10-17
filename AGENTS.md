@@ -129,6 +129,6 @@ them by hand:
 
 ## Licenses
 
-The code is under the MIT license. The results in `examples/` have their own
+The code is under the GPL-3.0-or-later license. The results in `examples/` have their own
 licenses, which `examples/README.md` lists. Do not copy these results into
 code or tests.
