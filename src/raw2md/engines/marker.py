@@ -1,8 +1,9 @@
 """Marker conversion engine for pdf files.
 
-marker runs as a library: the model dictionary loads once per engine and
-serves the whole queue. Its LLM pass (`use_llm`) stays off. Every marker
-import is lazy, so the fast test layer never loads a model.
+The engine is the copy of marker bundled as `raw2md_engine`. It runs as a
+library: the model dictionary loads once per engine and serves the whole
+queue. Its LLM pass (`use_llm`) stays off. Every marker import is lazy, so the
+fast test layer never loads a model.
 
 Under `mark_pages` the output is paginated and the separators become page
 marks. The marks carry page boundaries through cleaning, which rewrites and
@@ -72,8 +73,8 @@ class MarkerEngine(Engine):
         return frozenset({"pdf"})
 
     def available(self) -> bool:
-        """True when the marker package is importable (no model load here)."""
-        return find_spec("marker") is not None
+        """True when the engine copy is importable (no model load here)."""
+        return find_spec("raw2md_engine") is not None
 
     def convert(
         self, source: Path, media_dir: Path, options: ConvertOptions
@@ -122,7 +123,7 @@ class MarkerEngine(Engine):
         """Load and cache the marker model dictionary (the heavy step)."""
         models = self._models
         if models is None:
-            from marker.models import create_model_dict
+            from raw2md_engine.marker.models import create_model_dict
 
             # device=None lets marker auto-detect the GPU; "cpu" forces CPU.
             device = None if self._cuda else "cpu"
@@ -142,9 +143,9 @@ class MarkerEngine(Engine):
         Options go through marker's `ConfigParser`, which derives the processors
         and the renderer; a raw config dict would silently ignore them.
         """
-        from marker.config.parser import ConfigParser
-        from marker.converters.pdf import PdfConverter
-        from marker.output import text_from_rendered
+        from raw2md_engine.marker.config.parser import ConfigParser
+        from raw2md_engine.marker.converters.pdf import PdfConverter
+        from raw2md_engine.marker.output import text_from_rendered
 
         options: dict[str, Any] = {"output_format": "markdown"}
         if not extract_media:

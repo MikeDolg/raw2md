@@ -70,8 +70,8 @@ def _require_tools(
         font = FONTS_DIR / f"{HANDWRITING_FONT_NAME}{HANDWRITING_FONT_EXT}"
         if not font.is_file():
             pytest.skip("handwriting font asset is absent")
-    if marker and importlib.util.find_spec("marker") is None:
-        pytest.skip("marker is not installed (heavy OCR/GPU dependency)")
+    if marker and importlib.util.find_spec("raw2md_engine") is None:
+        pytest.skip("the engine copy raw2md_engine is not installed")
 
 
 def _assert_wrote_result(result: RoundtripResult) -> None:

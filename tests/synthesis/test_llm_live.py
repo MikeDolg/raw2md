@@ -51,8 +51,8 @@ def _skip_without(*requirements: str) -> None:
             if not os.environ.get("GOOGLE_API_KEY"):
                 pytest.skip("GOOGLE_API_KEY not set in environment")
         elif req == "marker":
-            if importlib.util.find_spec("marker") is None:
-                pytest.skip("marker is not installed (heavy OCR/GPU dependency)")
+            if importlib.util.find_spec("raw2md_engine") is None:
+                pytest.skip("the engine copy raw2md_engine is not installed")
         elif shutil.which(req) is None:
             pytest.skip(f"{req!r} is not in PATH")
 

@@ -1139,20 +1139,22 @@ def _make_fake_marker(
 def _install_fake_marker(fake: SimpleNamespace) -> Iterator[None]:
     """Register fake marker modules so the engine's lazy imports resolve.
 
-    A real `__spec__` keeps `find_spec("marker")` truthy.
+    A real `__spec__` keeps `find_spec("raw2md_engine")` truthy.
     """
-    marker_mod: Any = types.ModuleType("marker")
-    marker_mod.__spec__ = importlib.machinery.ModuleSpec("marker", None)
-    models_mod: Any = types.ModuleType("marker.models")
+    engine_mod: Any = types.ModuleType("raw2md_engine")
+    engine_mod.__spec__ = importlib.machinery.ModuleSpec("raw2md_engine", None)
+    marker_mod: Any = types.ModuleType("raw2md_engine.marker")
+    models_mod: Any = types.ModuleType("raw2md_engine.marker.models")
     models_mod.create_model_dict = fake.create_model_dict
-    converters_mod: Any = types.ModuleType("marker.converters")
-    pdf_mod: Any = types.ModuleType("marker.converters.pdf")
+    converters_mod: Any = types.ModuleType("raw2md_engine.marker.converters")
+    pdf_mod: Any = types.ModuleType("raw2md_engine.marker.converters.pdf")
     pdf_mod.PdfConverter = fake.pdf_converter
-    output_mod: Any = types.ModuleType("marker.output")
+    output_mod: Any = types.ModuleType("raw2md_engine.marker.output")
     output_mod.text_from_rendered = fake.text_from_rendered
-    config_mod: Any = types.ModuleType("marker.config")
-    parser_mod: Any = types.ModuleType("marker.config.parser")
+    config_mod: Any = types.ModuleType("raw2md_engine.marker.config")
+    parser_mod: Any = types.ModuleType("raw2md_engine.marker.config.parser")
     parser_mod.ConfigParser = fake.config_parser
+    engine_mod.marker = marker_mod
     marker_mod.models = models_mod
     marker_mod.converters = converters_mod
     converters_mod.pdf = pdf_mod
@@ -1160,13 +1162,14 @@ def _install_fake_marker(fake: SimpleNamespace) -> Iterator[None]:
     marker_mod.config = config_mod
     config_mod.parser = parser_mod
     modules = {
-        "marker": marker_mod,
-        "marker.models": models_mod,
-        "marker.converters": converters_mod,
-        "marker.converters.pdf": pdf_mod,
-        "marker.output": output_mod,
-        "marker.config": config_mod,
-        "marker.config.parser": parser_mod,
+        "raw2md_engine": engine_mod,
+        "raw2md_engine.marker": marker_mod,
+        "raw2md_engine.marker.models": models_mod,
+        "raw2md_engine.marker.converters": converters_mod,
+        "raw2md_engine.marker.converters.pdf": pdf_mod,
+        "raw2md_engine.marker.output": output_mod,
+        "raw2md_engine.marker.config": config_mod,
+        "raw2md_engine.marker.config.parser": parser_mod,
     }
     with patch.dict(sys.modules, modules):
         yield

@@ -124,8 +124,8 @@ def _check_tools(fmt: str) -> str | None:
     if fmt in ("pdf", "djvu", "scan", "scan_degraded", "handwriting_scan"):
         if shutil.which("xelatex") is None:
             return "xelatex not installed"
-        if importlib.util.find_spec("marker") is None:
-            return "marker not installed"
+        if importlib.util.find_spec("raw2md_engine") is None:
+            return "raw2md_engine not installed"
     if fmt == "djvu":
         for tool in ("c44", "djvm", "ddjvu"):
             if shutil.which(tool) is None:
