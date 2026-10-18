@@ -68,17 +68,19 @@ Font License 1.1. The license text is in
 
 The package manager installs the dependencies. raw2md does not distribute
 them, and its license does not change their licenses. The installed
-program runs under all of them together. One is a strong copyleft license:
-`PyMuPDF` is available under AGPL-3.0, or under a commercial license from
-Artifex.
+program runs under all of them together. No dependency uses a strong
+copyleft license. Apart from the CUDA libraries, the dependencies use
+permissive licenses, such as MIT, BSD, Apache-2.0, HPND, and PSF-2.0, or the
+weak copyleft licenses MPL-2.0 and LGPL-3.0.
 
-If you distribute a program that contains raw2md and `PyMuPDF`, or you let
-users interact over a network with a modified `PyMuPDF`, the terms of the
-AGPL-3.0 apply to you. The other runtime dependencies use permissive or
-weak copyleft licenses: MIT, BSD, Apache-2.0, HPND, MPL-2.0, and LGPL-3.0.
+`pypdfium2` reads the PDF files for raw2md and for `raw2md-engine`. It is
+available under Apache-2.0 or BSD-3-Clause. Its wheel contains the PDFium
+library and the permissive licenses of the PDFium components.
 
-The CUDA libraries come inside the `torch` wheel. raw2md does not distribute
-them.
+The CUDA libraries are under the licenses of NVIDIA. On Windows, they come
+inside the `torch` wheel. On Linux, the package manager installs them as
+dependencies of `torch`: the `nvidia-*` and `cuda-*` packages. raw2md does
+not distribute them.
 
 ## Model weights
 
