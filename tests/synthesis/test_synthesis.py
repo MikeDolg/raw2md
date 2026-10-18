@@ -5,7 +5,7 @@ Behind the ``roundtrip`` marker. Run them explicitly::
     uv run pytest -m roundtrip
 
 Requirements: pandoc, xelatex (MiKTeX/TeX Live), DjVuLibre (c44, djvm),
-img2pdf, PyMuPDF, Pillow.
+img2pdf, pypdfium2, Pillow.
 """
 
 from __future__ import annotations

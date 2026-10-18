@@ -49,17 +49,10 @@ def degrade(
 
 def rasterize_pdf(pdf_path: str | Path, dpi: int = 150) -> list[PILImage]:
     """Render each page of *pdf_path* to an RGB PIL Image at *dpi* resolution."""
-    import pymupdf
-    from PIL import Image
+    import pypdfium2
 
-    doc = pymupdf.open(str(pdf_path))
-    pages: list[PILImage] = []
+    doc = pypdfium2.PdfDocument(str(pdf_path))
     try:
-        mat = pymupdf.Matrix(dpi / 72, dpi / 72)
-        for page in doc:
-            pix = page.get_pixmap(matrix=mat, colorspace=pymupdf.csRGB, alpha=False)
-            img: PILImage = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-            pages.append(img)
+        return [page.render(scale=dpi / 72).to_pil().convert("RGB") for page in doc]
     finally:
         doc.close()
-    return pages

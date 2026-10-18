@@ -12,7 +12,8 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-import pymupdf
+import pypdfium2
+import pypdfium2.raw as pdfium_raw
 import pytest
 import yaml
 from mpdocbench import cli, convert, fetch, pdfs, report, scoring
@@ -246,11 +247,18 @@ def test_collect_decks_stops_at_the_first_empty_page() -> None:
 
 
 def _embedded(pdf_path: Path) -> list[bytes]:
-    with pymupdf.open(pdf_path) as document:
+    document = pypdfium2.PdfDocument(pdf_path)
+    try:
         return [
-            document.extract_image(page.get_images(full=True)[0][0])["image"]
+            bytes(
+                next(page.get_objects(filter=[pdfium_raw.FPDF_PAGEOBJ_IMAGE])).get_data(
+                    decode_simple=False
+                )
+            )
             for page in document
         ]
+    finally:
+        document.close()
 
 
 def test_build_keeps_the_page_bytes_in_annotation_order(tmp_path: Path) -> None:

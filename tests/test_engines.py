@@ -1,4 +1,4 @@
-"""Tests for the conversion engine interface, registry, and PyMuPDF base."""
+"""Tests for the conversion engine interface, registry, and PDF analysis base."""
 
 from __future__ import annotations
 
@@ -15,9 +15,17 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-# Aliased because the engine module under test shares the library's name.
-import pymupdf as pymupdf_lib
+import pikepdf
 import pytest
+from pdf_fixtures import (
+    COVER_RECT,
+    LOGO_RECT,
+    blank_pages,
+    image_pages,
+    pdf_bytes,
+    text_pages,
+    write_pdf,
+)
 from PIL import Image
 from test_weights import FakeHub, fill_weights
 
@@ -85,15 +93,7 @@ class StubEngine(Engine):
 
 def _make_pdf(path: Path, *, pages: int, text: str | None) -> None:
     """Write a minimal PDF with `pages` pages, each carrying `text` if given."""
-    doc = pymupdf_lib.open()
-    try:
-        for _ in range(pages):
-            page = doc.new_page()
-            if text:
-                page.insert_text((72, 72), text)
-        doc.save(str(path))
-    finally:
-        doc.close()
+    write_pdf(path, text_pages([text] * pages))
 
 
 def test_normalize_extension_strips_dot_and_case() -> None:
@@ -286,12 +286,7 @@ def test_check_source_still_reports_a_signature_mismatch(tmp_path: Path) -> None
 
 def test_check_source_rejects_a_password_protected_pdf(tmp_path: Path) -> None:
     source = tmp_path / "secret.pdf"
-    doc = pymupdf_lib.open()
-    try:
-        doc.new_page()
-        doc.save(str(source), encryption=pymupdf_lib.PDF_ENCRYPT_AES_256, user_pw="pw")
-    finally:
-        doc.close()
+    write_pdf(source, blank_pages(1), password="pw")  # noqa: S106 -- throwaway password of a test fixture
 
     with pytest.raises(ConversionError, match="password-protected"):
         check_source(source)
@@ -342,35 +337,19 @@ def _png(color: str) -> bytes:
     return buf.getvalue()
 
 
-_LOGO_RECT = pymupdf_lib.Rect(10, 10, 60, 40)
-
-# The same image bigger and moved: a logo blown up on the cover page.
-_COVER_RECT = pymupdf_lib.Rect(10, 10, 160, 90)
-
-
 def _make_pdf_with_images(
     path: Path,
     pages: list[bytes | None],
     *,
-    rects: list[pymupdf_lib.Rect] | None = None,
+    rects: list[tuple[float, float, float, float]] | None = None,
     rotates: list[int] | None = None,
 ) -> None:
-    """Write a PDF with one page per list entry, each inserting the given PNG.
+    """Write a PDF with one page per list entry, each drawing the given PNG.
 
     Identical bytes on separate pages share one xref, as a reused picture does.
     `rects` and `rotates` place each page's image on its own.
     """
-    doc = pymupdf_lib.open()
-    try:
-        for i, png in enumerate(pages):
-            page = doc.new_page()
-            if png is not None:
-                rect = rects[i] if rects is not None else _LOGO_RECT
-                rotate = rotates[i] if rotates is not None else 0
-                page.insert_image(rect, stream=png, rotate=rotate)
-        doc.save(str(path))
-    finally:
-        doc.close()
+    write_pdf(path, image_pages(pages, rects=rects, rotates=rotates))
 
 
 def test_image_placements_by_page_shares_placement_for_a_reused_image(
@@ -405,7 +384,7 @@ def test_image_placements_by_page_same_image_different_bbox_differs(
     # Same xref, scaled up: a cover blow-up is no duplicate of the logo.
     logo = _png("red")
     source = tmp_path / "doc.pdf"
-    _make_pdf_with_images(source, [logo, logo], rects=[_LOGO_RECT, _COVER_RECT])
+    _make_pdf_with_images(source, [logo, logo], rects=[LOGO_RECT, COVER_RECT])
 
     placements = pymupdf.image_placements_by_page(source)
 
@@ -440,22 +419,17 @@ def test_image_placements_by_page_empty_page_yields_no_placements(
 def _write_pdf_with_inline_image(path: Path) -> None:
     """Write a one-page PDF whose only image is a content-stream inline image.
 
-    PyMuPDF has no API for `BI ... EI`, so the stream is built by hand;
-    `get_image_info` resolves it to xref 0.
+    The PDF writer has no API for `BI ... EI`, so the content stream is
+    replaced by hand.
     """
-    doc = pymupdf_lib.open()
-    try:
-        page = doc.new_page(width=200, height=200)
-        page.draw_rect(pymupdf_lib.Rect(0, 0, 1, 1))  # force a content stream to exist
-        content = (
-            b"q 40 0 0 40 10 10 cm BI /W 2 /H 2 /CS /RGB /BPC 8 ID "
-            + bytes([255, 0, 0] * 4)
-            + b" EI Q"
-        )
-        doc.update_stream(page.get_contents()[0], content)
-        doc.save(str(path))
-    finally:
-        doc.close()
+    content = (
+        b"q 40 0 0 40 10 10 cm BI /W 2 /H 2 /CS /RGB /BPC 8 ID "
+        + bytes([255, 0, 0] * 4)
+        + b" EI Q"
+    )
+    with pikepdf.Pdf.open(io.BytesIO(pdf_bytes(blank_pages(1)))) as pdf:
+        pdf.pages[0].Contents = pdf.make_stream(content)
+        pdf.save(path)
 
 
 def test_image_placements_by_page_drops_unresolvable_inline_images(
@@ -1232,7 +1206,7 @@ def test_bundled_engine_fills_source_pages_from_real_pdf(tmp_path: Path) -> None
 
 def test_bundled_engine_source_pages_none_when_count_fails(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
-    _write_pdf_bytes(source)  # not a real pdf: PyMuPDF cannot open it
+    _write_pdf_bytes(source)  # not a real pdf: no reader can open it
     fake = _make_fake_engine(body="# Title\n")
 
     with _install_fake_engine(fake):

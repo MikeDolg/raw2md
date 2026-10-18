@@ -9,9 +9,9 @@ from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import TextIO
 
-import pymupdf
 import pytest
 from conftest import make_run_config
+from pdf_fixtures import Page, image_pages, text_pages, write_pdf
 
 from raw2md.cleaner import CleanOptions, CleanResult, clean_with_report
 from raw2md.config import RunConfig
@@ -874,13 +874,7 @@ def _capture_clean_options(
 
 
 def _write_text_pdf(path: Path, pages: Sequence[str]) -> None:
-    doc = pymupdf.open()
-    try:
-        for text in pages:
-            doc.new_page().insert_text((72, 72), text)
-        doc.save(str(path))
-    finally:
-        doc.close()
+    write_pdf(path, text_pages(pages))
 
 
 def test_engine_route_hands_the_source_text_to_cleaning(
@@ -935,14 +929,8 @@ def test_md_route_has_no_witness(
 # --- source outline witness ---------------------------------------------------
 
 
-def _write_outlined_pdf(path: Path, toc: Sequence[Sequence[object]]) -> None:
-    doc = pymupdf.open()
-    try:
-        doc.new_page().insert_text((72, 72), "Body text of the only page.")
-        doc.set_toc([list(entry) for entry in toc])
-        doc.save(str(path))
-    finally:
-        doc.close()
+def _write_outlined_pdf(path: Path, toc: Sequence[tuple[int, str, int]]) -> None:
+    write_pdf(path, [Page(text="Body text of the only page.")], outline=toc)
 
 
 def test_engine_route_takes_heading_levels_from_the_source_outline(
@@ -951,7 +939,7 @@ def test_engine_route_takes_heading_levels_from_the_source_outline(
     src = tmp_path / "a.pdf"
     # A pdf outline opens at the first level, so the heading sits under a
     # chapter entry.
-    _write_outlined_pdf(src, [[1, "Section", 1], [2, "Heading", 1]])
+    _write_outlined_pdf(src, [(1, "Section", 1), (2, "Heading", 1)])
     registry = EngineRegistry([StubEngine(extensions=frozenset({"pdf"}))])
     seen = _capture_clean_options(monkeypatch)
 
@@ -1847,15 +1835,7 @@ def _write_pdf_with_images(path: Path, pages: Sequence[bytes | None]) -> None:
     A `None` entry needs no image; the chunked inspection tests below only
     need the page count.
     """
-    doc = pymupdf.open()
-    try:
-        for png in pages:
-            page = doc.new_page()
-            if png is not None:
-                page.insert_image(pymupdf.Rect(10, 10, 60, 40), stream=png)
-        doc.save(str(path))
-    finally:
-        doc.close()
+    write_pdf(path, image_pages(pages))
 
 
 def _chunked_registry() -> EngineRegistry:

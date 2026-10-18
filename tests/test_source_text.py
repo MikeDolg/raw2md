@@ -6,8 +6,8 @@ import logging
 from pathlib import Path
 from unittest.mock import patch
 
-import pymupdf
 import pytest
+from pdf_fixtures import text_pages, write_pdf
 
 from raw2md.engines import ConversionError
 from raw2md.source_text import SourceText
@@ -15,15 +15,7 @@ from raw2md.source_text import SourceText
 
 def _make_pdf(path: Path, pages: list[str | None]) -> None:
     """Write a PDF whose i-th page carries `pages[i]`, or nothing for None."""
-    doc = pymupdf.open()
-    try:
-        for text in pages:
-            page = doc.new_page()
-            if text:
-                page.insert_text((72, 72), text)
-        doc.save(str(path))
-    finally:
-        doc.close()
+    write_pdf(path, text_pages(pages))
 
 
 def test_witness_exposes_page_text_in_order(tmp_path: Path) -> None:

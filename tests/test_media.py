@@ -8,8 +8,8 @@ import random
 from collections.abc import Sequence
 from pathlib import Path
 
-import pymupdf
 import pytest
+from pdf_fixtures import COVER_RECT, LOGO_RECT, Rect, image_pages, write_pdf
 from PIL import Image
 
 from raw2md.media import (
@@ -96,17 +96,11 @@ def _png_bytes() -> bytes:
     return buf.getvalue()
 
 
-_LOGO_RECT = pymupdf.Rect(10, 10, 60, 40)
-
-# The same image bigger and moved: a logo blown up on the cover page.
-_COVER_RECT = pymupdf.Rect(10, 10, 160, 90)
-
-
 def _write_pdf_with_images(
     path: Path,
     pages: Sequence[bytes | None],
     *,
-    rects: Sequence[pymupdf.Rect] | None = None,
+    rects: Sequence[Rect] | None = None,
     rotates: Sequence[int] | None = None,
 ) -> None:
     """Write a PDF with one page per entry, inserting the given PNG if any.
@@ -114,17 +108,7 @@ def _write_pdf_with_images(
     Identical bytes on separate pages share one xref, as a reused picture does.
     `rects` and `rotates` place each page's image on its own.
     """
-    doc = pymupdf.open()
-    try:
-        for i, png in enumerate(pages):
-            page = doc.new_page()
-            if png is not None:
-                rect = rects[i] if rects is not None else _LOGO_RECT
-                rotate = rotates[i] if rotates is not None else 0
-                page.insert_image(rect, stream=png, rotate=rotate)
-        doc.save(str(path))
-    finally:
-        doc.close()
+    write_pdf(path, image_pages(pages, rects=rects, rotates=rotates))
 
 
 def test_dedupe_repeated_images_collapses_a_logo_reused_across_pages(
@@ -159,7 +143,7 @@ def test_dedupe_repeated_images_leaves_same_xref_different_placement(
     # The cover shares the logo's xref but renders differently.
     logo = _png_bytes()
     source = tmp_path / "doc.pdf"
-    _write_pdf_with_images(source, [logo, logo], rects=[_LOGO_RECT, _COVER_RECT])
+    _write_pdf_with_images(source, [logo, logo], rects=[LOGO_RECT, COVER_RECT])
     media_dir = tmp_path / "doc"
     media_dir.mkdir()
     media = ("_page_0_Picture_0.jpeg", "_page_1_Picture_0.jpeg")

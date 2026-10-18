@@ -5,28 +5,20 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-import pymupdf
 import pytest
+from pdf_fixtures import blank_pages, write_pdf
 
 from raw2md.source_outline import SourceOutline
 
 
-def _make_pdf(path: Path, toc: list[list[object]], *, pages: int = 3) -> None:
+def _make_pdf(path: Path, toc: list[tuple[int, str, int]], *, pages: int = 3) -> None:
     """Write a PDF of `pages` blank pages carrying `toc` as its outline."""
-    doc = pymupdf.open()
-    try:
-        for _ in range(pages):
-            doc.new_page()
-        if toc:
-            doc.set_toc(toc)
-        doc.save(str(path))
-    finally:
-        doc.close()
+    write_pdf(path, blank_pages(pages), outline=toc)
 
 
 def test_witness_reads_the_outline_of_a_pdf(tmp_path: Path) -> None:
     source = tmp_path / "book.pdf"
-    _make_pdf(source, [[1, "1 Introduction", 1], [2, "1.1 Scope", 2]])
+    _make_pdf(source, [(1, "1 Introduction", 1), (2, "1.1 Scope", 2)])
 
     witness = SourceOutline.from_source(source)
 

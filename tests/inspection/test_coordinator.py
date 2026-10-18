@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pymupdf
 import pytest
+from pdf_fixtures import blank_pages, pdf_bytes
 
 from raw2md.llm.base import (
     DocumentTooLargeError,
@@ -255,13 +255,7 @@ def test_trace_keeps_the_unusable_reply_and_the_retry(tmp_path: Path) -> None:
 
 def test_trace_names_each_chunk(tmp_path: Path) -> None:
     # A stub source would fall back to one whole-source request.
-    doc = pymupdf.open()
-    try:
-        doc.new_page()
-        doc.new_page()
-        source = MediaPart(doc.tobytes(), "application/pdf")
-    finally:
-        doc.close()
+    source = MediaPart(pdf_bytes(blank_pages(2)), "application/pdf")
     body = "\n".join(["First page line.", "Second page line.", ""])
     pages = ((0, 1), (1, 2))
     op = InspectOperation(

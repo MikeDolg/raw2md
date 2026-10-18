@@ -132,7 +132,8 @@ packages = ["src/raw2md", "src/raw2md_engine"]
 
 [dependency-groups]
 # pikepdf ships with img2pdf, but the scan generator imports it directly.
-dev = ["ruff", "mypy", "pytest", "pytest-cov", "types-pyyaml", "pikepdf"]
+# fpdf2 builds the PDFs of the tests and the smoke generator.
+dev = ["ruff", "mypy", "pytest", "pytest-cov", "types-pyyaml", "pikepdf", "fpdf2"]
 
 [tool.ruff]
 target-version = "py311"
@@ -227,6 +228,8 @@ mypy_path = ["src", "benchmarks/mpdocbench/scripts"]
 # CUDA wheel installed.
 module = [
     "pymupdf",
+    "pypdfium2",
+    "pypdfium2.*",
     "img2pdf",
     "PIL",
     "PIL.*",

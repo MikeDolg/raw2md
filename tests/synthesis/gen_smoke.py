@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pymupdf
+from fpdf import FPDF
 
 _PDF_TITLE = "Smoke test document"
 
@@ -45,21 +45,18 @@ _BODY_LEADING = 18.0
 
 
 def write_pdf(path: Path) -> Path:
-    """Write a one-page born-digital PDF to *path*, with the metadata cleared."""
+    """Write a one-page born-digital PDF to *path*."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    with pymupdf.open() as document:
-        page = document.new_page()
-        page.insert_text(
-            (_LEFT_MARGIN, _TITLE_BASELINE), _PDF_TITLE, fontsize=18, fontname="helv"
-        )
-        baseline = _BODY_BASELINE
-        for line in _PDF_BODY:
-            page.insert_text(
-                (_LEFT_MARGIN, baseline), line, fontsize=11, fontname="helv"
-            )
-            baseline += _BODY_LEADING
-        document.set_metadata({})
-        document.save(str(path))
+    document = FPDF(unit="pt", format="A4")
+    document.add_page()
+    document.set_font("Helvetica", size=18)
+    document.text(_LEFT_MARGIN, _TITLE_BASELINE, _PDF_TITLE)
+    document.set_font("Helvetica", size=11)
+    baseline = _BODY_BASELINE
+    for line in _PDF_BODY:
+        document.text(_LEFT_MARGIN, baseline, line)
+        baseline += _BODY_LEADING
+    document.output(str(path))
     return path
 
 

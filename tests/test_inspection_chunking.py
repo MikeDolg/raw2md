@@ -9,8 +9,9 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 
-import pymupdf
+import pypdfium2
 import pytest
+from pdf_fixtures import pdf_bytes, text_pages
 
 from raw2md.llm.base import (
     DEFAULT_MAX_REQUEST_BYTES,
@@ -121,26 +122,25 @@ def request_bytes(parts: Sequence[Part], prompt: str) -> int:
 
 
 def page_count(data: bytes) -> int:
-    with pymupdf.open(stream=data, filetype="pdf") as doc:
-        return int(doc.page_count)
+    doc = pypdfium2.PdfDocument(data)
+    try:
+        return len(doc)
+    finally:
+        doc.close()
 
 
 def text_of(data: bytes) -> str:
-    with pymupdf.open(stream=data, filetype="pdf") as doc:
-        return "\n".join(str(page.get_text("text")) for page in doc)
+    doc = pypdfium2.PdfDocument(data)
+    try:
+        return "\n".join(page.get_textpage().get_text_bounded() for page in doc)
+    finally:
+        doc.close()
 
 
 def make_pdf(pages: int, *, stamped: bool = False) -> MediaPart:
     """A PDF of `pages` blank pages, each optionally stamped with its number."""
-    doc = pymupdf.open()
-    try:
-        for index in range(pages):
-            page = doc.new_page()
-            if stamped:
-                page.insert_text((72, 72), f"stamped page {index + 1}")
-        return MediaPart(bytes(doc.tobytes()), "application/pdf")
-    finally:
-        doc.close()
+    texts = [f"stamped page {index + 1}" if stamped else None for index in range(pages)]
+    return MediaPart(pdf_bytes(text_pages(texts)), "application/pdf")
 
 
 def make_body(

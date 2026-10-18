@@ -111,7 +111,7 @@ jobs:
 
       - name: Convert a DOCX end to end
         run: |
-          uv run --no-project --with pymupdf python tests/synthesis/gen_smoke.py docx smoke.docx
+          uv run --no-project --with fpdf2 python tests/synthesis/gen_smoke.py docx smoke.docx
           raw2md smoke.docx --output-dir out
 
       - name: Check the result
@@ -161,7 +161,7 @@ jobs:
 
       - name: Convert a one-page PDF without a GPU
         run: |
-          uv run --no-project --with pymupdf python tests/synthesis/gen_smoke.py pdf smoke.pdf
+          uv run --no-project --with fpdf2 python tests/synthesis/gen_smoke.py pdf smoke.pdf
           raw2md smoke.pdf --cuda off --output-dir out
 
       - name: Check the result
