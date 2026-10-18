@@ -627,7 +627,7 @@ def _media_checks(body: _Body, base_dir: Path | None) -> _GroupResult:
     repeated_images = _count_repeated_images(body.structural)
     if repeated_images:
         metrics["repeated_images"] = repeated_images
-        # Always minor: a running logo after the xref dedup looks the same.
+        # Always minor: a running logo after the image dedup looks the same.
         defects.append(
             Defect(
                 CheckId.REPEATED_IMAGES,
@@ -1079,7 +1079,7 @@ def _is_single_color(path: Path) -> bool:
 def _count_repeated_images(structural: list[Segment]) -> int:
     """Count distinct local image paths linked 3 or more times across the body.
 
-    A signal only: after the xref dedup a running logo is one path linked from
+    A signal only: after the image dedup a running logo is one path linked from
     every page.
     """
     counts: dict[str, int] = {}

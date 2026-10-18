@@ -20,7 +20,7 @@ from pathlib import Path
 
 _logger = logging.getLogger("raw2md")
 
-# Formats that can carry a text layer: pdf (PyMuPDF) and djvu (djvutxt).
+# Formats that can carry a text layer: pdf (pdfium) and djvu (djvutxt).
 _PDF_EXTENSION = ".pdf"
 _DJVU_EXTENSION = ".djvu"
 
@@ -130,17 +130,17 @@ class SourceText:
 
 def _pdf_pages(source: Path) -> list[str] | None:
     """Page texts of a pdf, or None when it yields no witness."""
-    # Lazy: a text-only route does not pay for loading PyMuPDF.
-    from raw2md.engines import pymupdf
+    # Lazy: a text-only route does not pay for loading pdfium.
+    from raw2md.engines import pdfium
 
     try:
-        if not pymupdf.has_text_layer(source):
+        if not pdfium.has_text_layer(source):
             _logger.info("no source text layer in %s", source.name)
             return None
-        return pymupdf.page_texts(source)
+        return pdfium.page_texts(source)
     except (RuntimeError, OSError) as exc:
-        # PyMuPDF raises RuntimeError subclasses, sometimes OSError, for a
-        # malformed or encrypted document; the file still converts.
+        # pdfium raises a RuntimeError subclass for a malformed or encrypted
+        # document, OSError for a missing file; the file still converts.
         _logger.warning("source text unavailable for %s: %s", source.name, exc)
         return None
 
@@ -150,7 +150,7 @@ def _djvu_pages(source: Path) -> list[str] | None:
 
     The pdf text-layer floor decides here too.
     """
-    from raw2md.engines import djvu, pymupdf
+    from raw2md.engines import djvu, pdfium
     from raw2md.engines.base import ConversionError
 
     try:
@@ -159,7 +159,7 @@ def _djvu_pages(source: Path) -> list[str] | None:
         # The file still converts through the render chain.
         _logger.warning("source text unavailable for %s: %s", source.name, exc)
         return None
-    if not pymupdf.pages_bear_text(pages):
+    if not pdfium.pages_bear_text(pages):
         _logger.info("no source text layer in %s", source.name)
         return None
     return pages

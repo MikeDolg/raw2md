@@ -44,7 +44,7 @@ from raw2md.engines import (
     check_signature,
     check_source,
     normalize_extension,
-    pymupdf,
+    pdfium,
     weights,
 )
 from raw2md.engines.base import condense_process_output
@@ -307,28 +307,72 @@ def test_check_source_leaves_a_missing_file_to_the_engine(tmp_path: Path) -> Non
 def test_count_pages_returns_page_count(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _make_pdf(source, pages=3, text="Page text content here.")
-    assert pymupdf.count_pages(source) == 3
+    assert pdfium.count_pages(source) == 3
 
 
 def test_has_text_layer_true_for_text_pdf(tmp_path: Path) -> None:
     source = tmp_path / "text.pdf"
     _make_pdf(source, pages=1, text="A line of recognizable text content.")
-    assert pymupdf.has_text_layer(source) is True
+    assert pdfium.has_text_layer(source) is True
 
 
 def test_has_text_layer_false_for_empty_pdf(tmp_path: Path) -> None:
     source = tmp_path / "blank.pdf"
     _make_pdf(source, pages=2, text=None)
-    assert pymupdf.has_text_layer(source) is False
+    assert pdfium.has_text_layer(source) is False
 
 
 def test_render_pages_yields_one_png_per_page(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _make_pdf(source, pages=2, text="Some text.")
-    rasters = list(pymupdf.render_pages(source, dpi=72))
+    rasters = list(pdfium.render_pages(source, dpi=72))
 
     assert len(rasters) == 2
     assert all(raster.startswith(_PNG_MAGIC) for raster in rasters)
+
+
+def test_page_texts_end_lines_with_a_bare_newline(tmp_path: Path) -> None:
+    source = tmp_path / "doc.pdf"
+    write_pdf(source, text_pages(["First line of text\nSecond line of text", None]))
+
+    texts = pdfium.page_texts(source)
+
+    assert texts == ["First line of text\nSecond line of text", ""]
+
+
+def test_outline_entries_number_levels_from_one(tmp_path: Path) -> None:
+    source = tmp_path / "book.pdf"
+    outline = [(1, "Part One", 1), (2, "Chapter 1", 1), (3, "Section 1.1", 2)]
+    write_pdf(source, blank_pages(2), outline=outline)
+
+    assert pdfium.outline_entries(source) == [
+        (1, "Part One"),
+        (2, "Chapter 1"),
+        (3, "Section 1.1"),
+    ]
+
+
+def test_needs_password_only_for_an_encrypted_pdf(tmp_path: Path) -> None:
+    secret = tmp_path / "secret.pdf"
+    write_pdf(secret, blank_pages(1), password="pw")  # noqa: S106 -- throwaway password of a test fixture
+    plain = tmp_path / "plain.pdf"
+    write_pdf(plain, blank_pages(1))
+    damaged = tmp_path / "damaged.pdf"
+    damaged.write_bytes(b"%PDF-1.4 not openable by anything")
+
+    assert pdfium.needs_password(secret) is True
+    assert pdfium.needs_password(plain) is False
+    assert pdfium.needs_password(damaged) is False
+
+
+def test_extract_pages_bytes_clamps_the_range_to_the_document(tmp_path: Path) -> None:
+    data = pdf_bytes(text_pages(["Page one.", "Page two.", "Page three."]))
+
+    cut = pdfium.extract_pages_bytes(data, 1, 9)
+
+    assert pdfium.count_pages_bytes(cut) == 2
+    with pytest.raises(ValueError, match="empty page range"):
+        pdfium.extract_pages_bytes(data, 5, 9)
 
 
 def _png(color: str) -> bytes:
@@ -346,8 +390,8 @@ def _make_pdf_with_images(
 ) -> None:
     """Write a PDF with one page per list entry, each drawing the given PNG.
 
-    Identical bytes on separate pages share one xref, as a reused picture does.
-    `rects` and `rotates` place each page's image on its own.
+    Identical bytes on separate pages share one image object, as a reused
+    picture does. `rects` and `rotates` place each page's image on its own.
     """
     write_pdf(path, image_pages(pages, rects=rects, rotates=rotates))
 
@@ -359,19 +403,19 @@ def test_image_placements_by_page_shares_placement_for_a_reused_image(
     logo = _png("red")
     _make_pdf_with_images(source, [logo, logo, logo])
 
-    placements = pymupdf.image_placements_by_page(source)
+    placements = pdfium.image_placements_by_page(source)
 
     assert [len(page) for page in placements] == [1, 1, 1]
     assert placements[0][0] == placements[1][0] == placements[2][0]
 
 
-def test_image_placements_by_page_distinct_images_get_distinct_xrefs(
+def test_image_placements_by_page_distinct_images_get_distinct_keys(
     tmp_path: Path,
 ) -> None:
     source = tmp_path / "doc.pdf"
     _make_pdf_with_images(source, [_png("red"), _png("blue")])
 
-    placements = pymupdf.image_placements_by_page(source)
+    placements = pdfium.image_placements_by_page(source)
 
     assert len(placements[0]) == 1
     assert len(placements[1]) == 1
@@ -381,14 +425,14 @@ def test_image_placements_by_page_distinct_images_get_distinct_xrefs(
 def test_image_placements_by_page_same_image_different_bbox_differs(
     tmp_path: Path,
 ) -> None:
-    # Same xref, scaled up: a cover blow-up is no duplicate of the logo.
+    # Same image object, scaled up: a cover blow-up is no duplicate of the logo.
     logo = _png("red")
     source = tmp_path / "doc.pdf"
     _make_pdf_with_images(source, [logo, logo], rects=[LOGO_RECT, COVER_RECT])
 
-    placements = pymupdf.image_placements_by_page(source)
+    placements = pdfium.image_placements_by_page(source)
 
-    assert placements[0][0][0] == placements[1][0][0]  # same xref
+    assert placements[0][0][0] == placements[1][0][0]  # same stream
     assert placements[0][0][1] != placements[1][0][1]  # different transform
     assert placements[0][0] != placements[1][0]
 
@@ -396,14 +440,14 @@ def test_image_placements_by_page_same_image_different_bbox_differs(
 def test_image_placements_by_page_same_bbox_different_rotation_differs(
     tmp_path: Path,
 ) -> None:
-    # Same xref and bbox; only the transform tells the rotated crop apart.
+    # Same image object and bbox; only the transform tells the rotated crop apart.
     logo = _png("red")
     source = tmp_path / "doc.pdf"
     _make_pdf_with_images(source, [logo, logo], rotates=[0, 180])
 
-    placements = pymupdf.image_placements_by_page(source)
+    placements = pdfium.image_placements_by_page(source)
 
-    assert placements[0][0][0] == placements[1][0][0]  # same xref
+    assert placements[0][0][0] == placements[1][0][0]  # same stream
     assert placements[0][0] != placements[1][0]  # different transform
 
 
@@ -413,32 +457,75 @@ def test_image_placements_by_page_empty_page_yields_no_placements(
     source = tmp_path / "doc.pdf"
     _make_pdf_with_images(source, [None])
 
-    assert pymupdf.image_placements_by_page(source) == [[]]
+    assert pdfium.image_placements_by_page(source) == [[]]
 
 
-def _write_pdf_with_inline_image(path: Path) -> None:
-    """Write a one-page PDF whose only image is a content-stream inline image.
+def _write_pdf_with_contents(path: Path, contents: list[bytes]) -> None:
+    """Write a PDF with one page per content stream, written by hand.
 
-    The PDF writer has no API for `BI ... EI`, so the content stream is
-    replaced by hand.
+    The PDF writer has no API for an inline image (`BI ... EI`) or a form
+    XObject, so each page's content stream is replaced.
     """
-    content = (
-        b"q 40 0 0 40 10 10 cm BI /W 2 /H 2 /CS /RGB /BPC 8 ID "
-        + bytes([255, 0, 0] * 4)
-        + b" EI Q"
-    )
-    with pikepdf.Pdf.open(io.BytesIO(pdf_bytes(blank_pages(1)))) as pdf:
-        pdf.pages[0].Contents = pdf.make_stream(content)
+    with pikepdf.Pdf.open(io.BytesIO(pdf_bytes(blank_pages(len(contents))))) as pdf:
+        for page, content in zip(pdf.pages, contents, strict=True):
+            page.Contents = pdf.make_stream(content)
         pdf.save(path)
 
 
-def test_image_placements_by_page_drops_unresolvable_inline_images(
+_INLINE_IMAGE = (
+    b"q 40 0 0 40 10 10 cm BI /W 2 /H 2 /CS /RGB /BPC 8 ID "
+    + bytes([255, 0, 0] * 4)
+    + b" EI Q"
+)
+
+
+def test_image_placements_by_page_keys_an_inline_image(tmp_path: Path) -> None:
+    # pdfium does not tell an inline image apart, so the same one in the same
+    # place on two pages collapses like a repeated logo.
+    source = tmp_path / "doc.pdf"
+    _write_pdf_with_contents(source, [_INLINE_IMAGE, _INLINE_IMAGE])
+
+    placements = pdfium.image_placements_by_page(source)
+
+    assert [len(page) for page in placements] == [1, 1]
+    assert placements[0][0][1] == (40.0, 0.0, 0.0, 40.0, 10.0, 10.0)
+    assert placements[0][0] == placements[1][0]
+
+
+def test_image_placements_by_page_takes_a_form_image_to_page_space(
     tmp_path: Path,
 ) -> None:
+    # One form drawn at two scales: the image inside it is placed differently.
     source = tmp_path / "doc.pdf"
-    _write_pdf_with_inline_image(source)
+    _write_pdf_with_contents(
+        source, [b"q 1 0 0 1 0 0 cm /Fm0 Do Q", b"q 2 0 0 2 0 0 cm /Fm0 Do Q"]
+    )
+    with pikepdf.Pdf.open(source, allow_overwriting_input=True) as pdf:
+        image = pdf.make_stream(
+            bytes([0, 0, 255] * 4),
+            Type=pikepdf.Name.XObject,
+            Subtype=pikepdf.Name.Image,
+            Width=2,
+            Height=2,
+            ColorSpace=pikepdf.Name.DeviceRGB,
+            BitsPerComponent=8,
+        )
+        form = pdf.make_stream(
+            b"q 40 0 0 40 10 10 cm /Im0 Do Q",
+            Type=pikepdf.Name.XObject,
+            Subtype=pikepdf.Name.Form,
+            BBox=[0, 0, 100, 100],
+            Resources=pikepdf.Dictionary(XObject=pikepdf.Dictionary(Im0=image)),
+        )
+        for page in pdf.pages:
+            page.Resources = pikepdf.Dictionary(XObject=pikepdf.Dictionary(Fm0=form))
+        pdf.save(source)
 
-    assert pymupdf.image_placements_by_page(source) == [[]]
+    placements = pdfium.image_placements_by_page(source)
+
+    assert placements[0][0][0] == placements[1][0][0]  # same stream
+    assert placements[0][0][1] == (40.0, 0.0, 0.0, 40.0, 10.0, 10.0)
+    assert placements[1][0][1] == (80.0, 0.0, 0.0, 80.0, 20.0, 20.0)
 
 
 # ---------------------------------------------------------------------------
@@ -1739,13 +1826,9 @@ def test_bundled_engine_failure_names_a_pdf_that_does_not_open(tmp_path: Path) -
 
 def test_bundled_engine_failure_names_a_pdf_with_no_page(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
-    # A pdf cut off before its pages opens but holds nothing.
-    source.write_bytes(
-        b"%PDF-1.4\n"
-        b"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
-        b"2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\n"
-        b"trailer<</Root 1 0 R>>\n%%EOF\n"
-    )
+    # A well-formed pdf with an empty page tree loads but holds nothing.
+    with pikepdf.new() as pdf:
+        pdf.save(source)
     fake = _make_fake_engine(convert_error=RuntimeError("boom"))
 
     with _install_fake_engine(fake), pytest.raises(ConversionError) as caught:

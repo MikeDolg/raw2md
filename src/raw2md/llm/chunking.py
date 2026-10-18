@@ -16,7 +16,6 @@ from bisect import bisect_right
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from raw2md.engines import pymupdf
 from raw2md.llm.base import inline_media_bytes
 
 _logger = logging.getLogger("raw2md")
@@ -340,8 +339,11 @@ def _line_tokens(numbered: Sequence[str], start: int, end: int) -> int:
 
 def _page_count(source: bytes) -> int | None:
     """Page count of the source PDF, or None when it cannot be read."""
+    # Lazy: a source that is no pdf never loads pdfium.
+    from raw2md.engines import pdfium
+
     try:
-        count = pymupdf.count_pages_bytes(source)
+        count = pdfium.count_pages_bytes(source)
     except (RuntimeError, ValueError, OSError) as exc:
         _logger.warning("inspection: cannot read source pages, sending whole: %s", exc)
         return None

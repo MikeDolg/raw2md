@@ -1,6 +1,6 @@
 """Conversion engines behind a common interface.
 
-The engines are raw2md-engine, pandoc, and djvu. `pymupdf` is a shared analysis
+The engines are raw2md-engine, pandoc, and djvu. `pdfium` is a shared analysis
 helper, not an engine, so it is not re-exported here. `preflight` holds the
 checks that run before an engine opens a source.
 """

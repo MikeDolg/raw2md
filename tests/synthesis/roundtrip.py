@@ -71,10 +71,10 @@ class RoundtripResult:
         """Source page count for the density check, as the pipeline computes it."""
         if self.input_file.suffix.lower() != ".pdf":
             return None
-        from raw2md.engines import pymupdf
+        from raw2md.engines import pdfium
 
         try:
-            return pymupdf.count_pages(self.input_file)
+            return pdfium.count_pages(self.input_file)
         except (RuntimeError, OSError):
             return None
 

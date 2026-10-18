@@ -50,7 +50,7 @@ def _check_pdf_password(source: Path) -> None:
     if normalize_extension(source) != "pdf":
         return
     # Lazy: a run that converts no pdf does not pay for the import.
-    from raw2md.engines import pymupdf
+    from raw2md.engines import pdfium
 
-    if pymupdf.needs_password(source):
+    if pdfium.needs_password(source):
         raise ConversionError(f"{source.name}: the pdf is password-protected")

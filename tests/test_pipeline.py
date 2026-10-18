@@ -2017,7 +2017,7 @@ OCR_REPLIES = [
 
 
 def _fake_render_pages(source: Path, **_: object) -> Iterator[bytes]:
-    """Stand in for pymupdf.render_pages: yield fixed rasters, ignore the file."""
+    """Stand in for pdfium.render_pages: yield fixed rasters, ignore the file."""
     yield from OCR_PAGES
 
 
@@ -2046,7 +2046,7 @@ def run_with_ocr(
 def test_ocr_replaces_engine_and_records_model(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _fake_render_pages)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _fake_render_pages)
     src = tmp_path / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
     provider = FakeProvider(list(OCR_REPLIES))
@@ -2068,7 +2068,7 @@ def test_ocr_djvu_route_records_the_model_like_pdf(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # `source` carries the extension, so `engine` names the model alone.
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _fake_render_pages)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _fake_render_pages)
 
     def _fake_djvu_to_pdf(source: Path, dest_pdf: Path, temp_root: Path) -> None:
         dest_pdf.write_bytes(b"%PDF-fake")
@@ -2098,7 +2098,7 @@ def test_ocr_pdf_without_pdf_header_stops_before_rendering(
         raise AssertionError("a mismatched signature must not reach rendering")
         yield b""  # unreachable; makes this a generator function
 
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _unexpected_render)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _unexpected_render)
     src = tmp_path / "a.pdf"
     src.write_bytes(b"this file is plainly not a pdf at all")
     provider = FakeProvider([])
@@ -2115,7 +2115,7 @@ def test_ocr_result_drops_fabricated_image_links_and_placeholders(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # OCR extracts no media, so a fabricated image link must not survive.
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _fake_render_pages)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _fake_render_pages)
     src = tmp_path / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
     fabricated_reply = (
@@ -2140,7 +2140,7 @@ def test_ocr_rate_limit_is_llm_error_without_result(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     caplog.set_level(logging.WARNING, logger="raw2md")
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _fake_render_pages)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _fake_render_pages)
     src = tmp_path / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
     provider = FakeProvider([RateLimitError("429 exhausted")])
@@ -2158,7 +2158,7 @@ def test_ocr_oversize_is_conversion_error_without_result(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     caplog.set_level(logging.WARNING, logger="raw2md")
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _fake_render_pages)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _fake_render_pages)
     src = tmp_path / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
     provider = FakeProvider([DocumentTooLargeError("over the limit")])
@@ -2172,7 +2172,7 @@ def test_ocr_oversize_is_conversion_error_without_result(
 
 
 def _failing_render(source: Path, **_: object) -> Iterator[bytes]:
-    """Stand in for render_pages on a malformed PDF: raise like PyMuPDF would."""
+    """Stand in for render_pages on a malformed PDF: raise like pdfium would."""
     raise RuntimeError("cannot open broken PDF")
     yield b""  # unreachable; makes this a generator function
 
@@ -2183,7 +2183,7 @@ def test_ocr_render_failure_is_conversion_error_without_result(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     caplog.set_level(logging.WARNING, logger="raw2md")
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _failing_render)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _failing_render)
     src = tmp_path / "a.pdf"
     src.write_bytes(b"not a real pdf")
     provider = FakeProvider([])
@@ -2200,7 +2200,7 @@ def test_ocr_lost_page_is_marked_in_the_written_result(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.WARNING, logger="raw2md")
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _fake_render_pages)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _fake_render_pages)
     src = tmp_path / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
     # Page 1 stays empty over all three attempts; page 2 recognizes.
@@ -2221,7 +2221,7 @@ def test_recognition_failure_not_recommended_after_llm_ocr(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.WARNING, logger="raw2md")
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _fake_render_pages)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _fake_render_pages)
     src = tmp_path / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
     # OCR already ran, so recommending it again would be meaningless.
@@ -2437,7 +2437,7 @@ def test_debug_saves_llm_requests_and_replies(tmp_path: Path) -> None:
 def test_debug_keeps_ocr_replies_of_a_failed_run(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _fake_render_pages)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _fake_render_pages)
     src = tmp_path / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
     # OCR is the conversion, so a rate limit on page 2 leaves no result.
@@ -2456,7 +2456,7 @@ def test_debug_keeps_ocr_replies_of_a_failed_run(
 def test_debug_leaves_no_folder_when_ocr_fails_before_the_first_request(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _failing_render)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _failing_render)
     src = tmp_path / "a.pdf"
     src.write_bytes(b"not a real pdf")
     provider = FakeProvider([])

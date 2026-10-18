@@ -1,6 +1,6 @@
 """Media asset post-processing after conversion: pictures, not markup.
 
-Runs right after the engine returns, in this order: furniture drop, xref
+Runs right after the engine returns, in this order: furniture drop, image
 dedup, pandoc's nested `media/` lift, EMF/WMF render, then link rewrite. Each
 step is a no-op on an empty media tuple, so a route with extraction disabled
 or an engine that embeds no pictures pays nothing.
@@ -152,17 +152,17 @@ def dedupe_repeated_images(
 ) -> tuple[str, tuple[str, ...]]:
     """Collapse a pdf picture reused across pages to one extracted file.
 
-    The key is the (xref, transform) pair read from the source pdf. Only a
-    page with exactly one source image and exactly one crop takes part;
-    otherwise which crop is which is unknown. Native pdf only: a djvu's
-    assembled pages share no xref.
+    The key is the (stream hash, transform) pair read from the source pdf.
+    Only a page with exactly one source image and exactly one crop takes
+    part; otherwise which crop is which is unknown. Native pdf only: a djvu's
+    assembled pages share no image object.
     """
     if not media or source.suffix.lower() != _PDF_EXTENSION:
         return body, media
-    from raw2md.engines import pymupdf
+    from raw2md.engines import pdfium
 
     try:
-        placements_by_page = pymupdf.image_placements_by_page(source)
+        placements_by_page = pdfium.image_placements_by_page(source)
     except (RuntimeError, OSError) as exc:
         _logger.warning("image dedup skipped for %s: %s", source.name, exc)
         return body, media
@@ -177,7 +177,7 @@ def dedupe_repeated_images(
         page_by_asset[asset] = page
         assets_per_page[page] = assets_per_page.get(page, 0) + 1
 
-    canonical_by_placement: dict[tuple[int, tuple[float, ...]], str] = {}
+    canonical_by_placement: dict[tuple[str, tuple[float, ...]], str] = {}
     duplicates: dict[str, str] = {}
     for asset in media:
         asset_page = page_by_asset.get(asset)

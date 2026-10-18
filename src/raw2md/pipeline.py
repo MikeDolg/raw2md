@@ -601,10 +601,10 @@ def _render_ocr_pages(source: Path, ctx: RunContext) -> Iterator[Iterator[bytes]
 
     The iterator holds the document open: consume it inside the `with` block.
     """
-    from raw2md.engines import pymupdf
+    from raw2md.engines import pdfium
 
     if source.suffix.lower() == _PDF_EXTENSION:
-        with closing(_safe_render(pymupdf.render_pages(source), source)) as pages:
+        with closing(_safe_render(pdfium.render_pages(source), source)) as pages:
             yield pages
         return
     if ctx.temp_root is None:
@@ -615,12 +615,12 @@ def _render_ocr_pages(source: Path, ctx: RunContext) -> Iterator[Iterator[bytes]
     with tempfile.TemporaryDirectory(prefix="raw2md_ocr_", dir=ctx.temp_root) as tmp:
         pdf_path = Path(tmp) / "ocr.pdf"
         djvu_to_pdf(source, pdf_path, ctx.temp_root)
-        with closing(_safe_render(pymupdf.render_pages(pdf_path), source)) as pages:
+        with closing(_safe_render(pdfium.render_pages(pdf_path), source)) as pages:
             yield pages
 
 
 def _safe_render(pages: Iterator[bytes], source: Path) -> Generator[bytes, None, None]:
-    """Yield page rasters, mapping a PyMuPDF render failure to ConversionError.
+    """Yield page rasters, mapping a pdfium render failure to ConversionError.
 
     The failure surfaces lazily while pages are pulled, so it is caught around
     the iteration only; provider errors pass through.

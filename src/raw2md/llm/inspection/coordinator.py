@@ -11,7 +11,6 @@ import logging
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 
-from raw2md.engines import pymupdf
 from raw2md.llm.base import (
     MediaPart,
     Part,
@@ -378,9 +377,12 @@ def _chunk_parts(
 
     A page range that cannot be cut goes against the whole source instead.
     """
+    # Lazy: a source that is no pdf never loads pdfium.
+    from raw2md.engines import pdfium
+
     region = TextPart("\n".join(numbered[chunk.start : chunk.end]))
     try:
-        pages = pymupdf.extract_pages_bytes(
+        pages = pdfium.extract_pages_bytes(
             source_part.data, chunk.first_page, chunk.last_page
         )
     except (RuntimeError, ValueError, OSError) as exc:

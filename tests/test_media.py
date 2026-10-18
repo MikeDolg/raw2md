@@ -105,8 +105,8 @@ def _write_pdf_with_images(
 ) -> None:
     """Write a PDF with one page per entry, inserting the given PNG if any.
 
-    Identical bytes on separate pages share one xref, as a reused picture does.
-    `rects` and `rotates` place each page's image on its own.
+    Identical bytes on separate pages share one image object, as a reused
+    picture does. `rects` and `rotates` place each page's image on its own.
     """
     write_pdf(path, image_pages(pages, rects=rects, rotates=rotates))
 
@@ -137,10 +137,10 @@ def test_dedupe_repeated_images_collapses_a_logo_reused_across_pages(
     assert not (media_dir / "_page_2_Picture_0.jpeg").exists()
 
 
-def test_dedupe_repeated_images_leaves_same_xref_different_placement(
+def test_dedupe_repeated_images_leaves_same_image_different_placement(
     tmp_path: Path,
 ) -> None:
-    # The cover shares the logo's xref but renders differently.
+    # The cover shares the logo's image object but renders differently.
     logo = _png_bytes()
     source = tmp_path / "doc.pdf"
     _write_pdf_with_images(source, [logo, logo], rects=[LOGO_RECT, COVER_RECT])

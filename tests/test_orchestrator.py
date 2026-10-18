@@ -1097,7 +1097,7 @@ def test_settings_and_prompts_loaded_once_per_run(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # With all three LLM operations, each settings file is read once per run.
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _render_one_page)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _render_one_page)
     src = home / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
     settings_calls = {"n": 0}
@@ -1223,7 +1223,7 @@ OCR_REPLY = "\n".join(["# Heading", "", "Recognized page text.", ""])
 
 
 def _render_one_page(source: Path, **_: object) -> Iterator[bytes]:
-    """Stand in for pymupdf.render_pages: one fixed raster, ignoring the file."""
+    """Stand in for pdfium.render_pages: one fixed raster, ignoring the file."""
     yield b"png"
 
 
@@ -1276,7 +1276,7 @@ def test_run_ocr_non_vision_provider_exits_3(
 def test_run_ocr_applied_end_to_end(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _render_one_page)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _render_one_page)
     src = home / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
     provider = FakeProvider(available=True, reply=OCR_REPLY, vision=True)
@@ -1951,7 +1951,7 @@ def test_inspection_skipped_for_non_pdf_source(
 def test_ocr_rate_limit_is_llm_error_exits_5(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _render_one_page)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _render_one_page)
     src = home / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
     monkeypatch.setattr(
@@ -1972,7 +1972,7 @@ def test_ocr_rate_limit_is_llm_error_exits_5(
 def test_resume_after_ocr_llm_error_reconverts_the_file(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _render_one_page)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _render_one_page)
     folder = home / "in"
     folder.mkdir()
     (folder / "a.pdf").write_bytes(b"%PDF-1.4 stub")
@@ -1999,7 +1999,7 @@ def test_resume_after_ocr_llm_error_reconverts_the_file(
 
 
 def test_ocr_oversize_exits_4(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("raw2md.engines.pymupdf.render_pages", _render_one_page)
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _render_one_page)
     src = home / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
     monkeypatch.setattr(

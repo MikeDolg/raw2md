@@ -118,10 +118,10 @@ class BundledEngine(Engine):
         A failed count skips the density check instead of failing a successful
         conversion.
         """
-        from raw2md.engines import pymupdf
+        from raw2md.engines import pdfium
 
         try:
-            return pymupdf.count_pages(source)
+            return pdfium.count_pages(source)
         except (RuntimeError, OSError):
             return None
 
@@ -227,15 +227,15 @@ def _converter_config(
 
 
 def _failure_reason(source: Path, exc: Exception) -> str:
-    """Name the defect of the input when PyMuPDF proves it.
+    """Name the defect of the input when pdfium proves it.
 
     The engine reports an unloadable source as its own failure. The engine text
     is kept either way: a failure from elsewhere (out of device memory) must stay
     visible even when the source is also damaged.
     """
-    from raw2md.engines import pymupdf
+    from raw2md.engines import pdfium
 
-    defect = pymupdf.read_defect(source)
+    defect = pdfium.read_defect(source)
     if defect is None:
         return f"{DEFAULT_ENGINE} conversion failed: {source.name}: {exc}"
     return f"{source.name}: {defect}; {DEFAULT_ENGINE}: {exc}"

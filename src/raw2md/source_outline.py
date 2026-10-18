@@ -51,14 +51,14 @@ class SourceOutline:
         """
         if source.suffix.lower() != _PDF_EXTENSION:
             return cls.empty()
-        # Lazy: a text-only route does not pay for loading PyMuPDF.
-        from raw2md.engines import pymupdf
+        # Lazy: a text-only route does not pay for loading pdfium.
+        from raw2md.engines import pdfium
 
         try:
-            entries = pymupdf.outline_entries(source)
+            entries = pdfium.outline_entries(source)
         except (RuntimeError, OSError) as exc:
-            # PyMuPDF raises RuntimeError subclasses, sometimes OSError, for a
-            # malformed or encrypted document; the file still converts.
+            # pdfium raises a RuntimeError subclass for a malformed or encrypted
+            # document, OSError for a missing file; the file still converts.
             _logger.warning("source outline unavailable for %s: %s", source.name, exc)
             return cls.empty()
         if not entries:
