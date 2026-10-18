@@ -1,3 +1,4 @@
+# Modified by the raw2md authors. See NOTICE.
 from __future__ import annotations
 
 import math

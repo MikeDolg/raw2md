@@ -19,8 +19,8 @@ modified copy of three packages by Datalab:
 | `pdftext` | 0.6.3 | Apache-2.0 | <https://github.com/datalab-to/pdftext> |
 
 The copy keeps only the code that converts a PDF to Markdown. `NOTICE` names
-the tag and the commit of each original package and lists every changed file
-with the date of the change. The license text of each package is in its
+the tag and the commit of each original package, describes the changes, and
+gives the date of the last change. The license text of each package is in its
 folder: `src/raw2md_engine/marker/LICENSE`, `src/raw2md_engine/surya/LICENSE`,
 and `src/raw2md_engine/pdftext/LICENSE`. The wheel carries `NOTICE` and the
 three license texts. Datalab does not endorse or support raw2md.

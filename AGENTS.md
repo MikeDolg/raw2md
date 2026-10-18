@@ -114,8 +114,10 @@ Both layers skip a test when its tool or its key is absent.
 - Each `# noqa` and `# type: ignore` names its rule code and gives a reason.
 - Test data is invented. Do not copy text from real documents into tests.
 - `src/raw2md_engine/` is upstream code: `ruff`, `mypy`, and the comment
-  length test skip it. When you change a file there, add its upstream path
-  and the date to `NOTICE`.
+  length test skip it. When you change a file there, set the date of the
+  last change in `NOTICE`. Add an item to the list of changes only for a
+  new kind of change. A changed file of `pdftext/` starts with the line
+  `# Modified by the raw2md authors. See NOTICE.`
 
 ## Issues and pull requests
 

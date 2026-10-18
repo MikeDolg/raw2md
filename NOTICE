@@ -36,62 +36,24 @@ pdftext
 Changes
 -------
 
-Paths below are the paths in the upstream repositories. Each package of the
-copy keeps the layout of its upstream package.
+The copy differs from the original packages in the ways below. The history
+of the repository holds each change with its diff.
 
-2026-10-17: every Python file in `marker/`, `surya/`, and `pdftext/` that
-imports another module of these three packages. The change rewrites the
-import path from `marker.`, `surya.`, and `pdftext.` to `raw2md_engine.marker.`,
-`raw2md_engine.surya.`, and `raw2md_engine.pdftext.`. The change also
-rewrites the one module path that `marker/config/parser.py` holds in a
-string. No other line changed.
+- The import paths `marker.`, `surya.`, and `pdftext.` are rewritten to
+  `raw2md_engine.marker.`, `raw2md_engine.surya.`, and
+  `raw2md_engine.pdftext.`.
+- The parts that raw2md does not call are removed: the LLM pass, the
+  extraction converter, the config parser, the input formats other than
+  PDF, the output formats other than Markdown, and the command-line and
+  browser applications.
+- The PDF converter builds its provider and its Markdown renderer
+  directly.
+- The settings are fixed values. They do not load from environment
+  variables or from a `local.env` file.
+- The copy downloads nothing: no font when the converter starts and no
+  model weights. `marker/models.py` takes the folder of the weights from
+  its caller.
 
-2026-10-18: `marker/processors/llm/`, `marker/services/`,
-`marker/extractors/`, `marker/scripts/`, `marker/converters/extraction.py`,
-and `marker/renderers/extraction.py` removed. These parts serve the LLM
-pass, the extraction converter, and the command-line applications, and
-raw2md does not call them.
+Each changed file of `pdftext/` carries a notice at its top.
 
-2026-10-18: `marker/converters/__init__.py`, `marker/converters/pdf.py`,
-`marker/converters/table.py`, `marker/config/crawler.py`,
-`marker/config/parser.py`, and `marker/output.py` changed. The change
-removes the imports of the removed modules, the LLM processors in the
-default processor lists, the LLM service of the converter, the
-`--llm_service` option, and the extraction output.
-
-2026-10-18: removed from `marker/`: the providers other than
-`providers/pdf.py` and `providers/utils.py` (document, epub, html, image,
-powerpoint, spreadsheet, and the registry), `converters/ocr.py`,
-`converters/table.py`, the renderers `chunk.py`, `json.py`, and
-`ocr_json.py`, `processors/util.py`, `utils/batch.py`, and `utils/gpu.py`.
-Removed from `surya/`: `scripts/`, `debug/`, `models.py`, `input/load.py`,
-and `recognition/languages.py`. Removed from `pdftext/`: `scripts/`. These
-parts serve other input formats, other output formats, and the
-command-line and browser applications, and raw2md does not call them.
-
-2026-10-18: `marker/converters/pdf.py`, `marker/config/parser.py`, and
-`marker/output.py` changed. The change builds the PDF provider directly,
-keeps only the Markdown renderer and output format, and removes the
-unused output helpers.
-
-2026-10-18: `marker/config/` removed. raw2md builds the PDF converter
-directly and does not use the command-line config parser.
-`marker/converters/__init__.py`, `marker/util.py`, and
-`marker/providers/__init__.py` changed. The converter no longer downloads
-a font when it starts. The change removes the font download, the font CSS
-helper of the providers, and the helpers that only the config parser
-used.
-
-2026-10-18: `marker/settings.py`, `surya/settings.py`, and
-`pdftext/settings.py` changed. The settings are fixed values of a plain
-class and no longer load from environment variables or from a `local.env`
-file. The device is detected as before, without the `TORCH_DEVICE`
-override. The change also removes the settings that no remaining code
-reads.
-
-2026-10-18: `surya/common/s3.py`, `surya/settings.py`, and
-`marker/models.py` changed. The copy no longer downloads model weights.
-`marker/models.py` takes the folder of the weights from its caller. A
-checkpoint `<task>/<date>` loads from the folder `<task>/surya-<date>`
-there. The change removes the download helpers, the download settings,
-and the default cache folder.
+Last change: 2026-10-18.

@@ -1,3 +1,4 @@
+# Modified by the raw2md authors. See NOTICE.
 import atexit
 import math
 from concurrent.futures import ProcessPoolExecutor

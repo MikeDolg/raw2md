@@ -1,3 +1,4 @@
+# Modified by the raw2md authors. See NOTICE.
 import math
 
 import pypdfium2 as pdfium

@@ -1,3 +1,4 @@
+# Modified by the raw2md authors. See NOTICE.
 import unicodedata
 from typing import List
 

@@ -1,3 +1,4 @@
+# Modified by the raw2md authors. See NOTICE.
 import ctypes
 import math
 from typing import Dict, List, Optional, Tuple

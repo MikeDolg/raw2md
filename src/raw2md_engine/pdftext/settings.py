@@ -1,3 +1,4 @@
+# Modified by the raw2md authors. See NOTICE.
 class Settings:
     # Fixed values: the engine reads no environment variable and no settings
     # file.
