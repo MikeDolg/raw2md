@@ -11,6 +11,7 @@ import pytest
 from conftest import make_run_config
 from test_engines import _install_fake_marker, _make_fake_marker, _make_pdf
 
+from raw2md import paths
 from raw2md.engines import ConvertOptions, EngineRegistry, MarkerEngine, PandocEngine
 from raw2md.pipeline import FileResult, Outcome, RunContext, process_file
 from raw2md.queue import QueueItem
@@ -75,7 +76,9 @@ def test_pdf_conversion_opens_no_connection(tmp_path: Path) -> None:
     assert (tmp_path / "doc.md").is_file()
 
 
-def test_marker_models_load_with_a_device_only(tmp_path: Path) -> None:
+def test_marker_models_load_with_a_device_and_the_weights_folder(
+    tmp_path: Path,
+) -> None:
     source = tmp_path / "doc.pdf"
     _make_pdf(source, pages=1, text="Invented text.")
     fake = _make_fake_marker()
@@ -85,4 +88,6 @@ def test_marker_models_load_with_a_device_only(tmp_path: Path) -> None:
             source, tmp_path / "doc", ConvertOptions()
         )
 
-    fake.create_model_dict.assert_called_once_with(device="cpu")
+    fake.create_model_dict.assert_called_once_with(
+        device="cpu", weights_dir=str(paths.models_dir())
+    )

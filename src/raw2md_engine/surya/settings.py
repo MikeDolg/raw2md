@@ -2,8 +2,6 @@ import os
 from typing import Callable, Dict, Optional
 
 import torch
-from pathlib import Path
-from platformdirs import user_cache_dir
 
 
 class Settings:
@@ -14,11 +12,7 @@ class Settings:
     IMAGE_DPI: int = 96  # Used for detection, layout, reading order
     IN_STREAMLIT: bool = False  # Whether we're running in streamlit
     DISABLE_TQDM: bool = False  # Disable tqdm progress bars
-    S3_BASE_URL: str = "https://models.datalab.to"
-    PARALLEL_DOWNLOAD_WORKERS: int = (
-        10  # Number of workers for parallel model downloads
-    )
-    MODEL_CACHE_DIR: str = str(Path(user_cache_dir("datalab")) / "models")
+    MODEL_DIR: Optional[str] = None  # Set by marker.models.create_model_dict
     LOGLEVEL: str = "INFO"  # Logging level
 
     @property

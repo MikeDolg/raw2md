@@ -13,6 +13,9 @@ _UPSTREAM_NAMES = frozenset({"marker", "surya", "pdftext"})
 # The packages that load settings from the environment and from `local.env`.
 _SETTINGS_LOADERS = frozenset({"pydantic_settings", "dotenv"})
 
+# raw2md downloads the weights; the copy only reads them from disk.
+_NETWORK_CLIENTS = frozenset({"requests", "httpx", "urllib3", "huggingface_hub"})
+
 _ENVIRONMENT_NAMES = frozenset({"environ", "environb", "getenv", "getenvb"})
 
 # The copy sets these variables for its libraries and reads none of them.
@@ -90,6 +93,16 @@ def test_copy_imports_no_upstream_package() -> None:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for line, top in _top_level_imports(tree):
             if top in _UPSTREAM_NAMES:
+                offenders.append(f"{path.relative_to(_COPY)}:{line}")
+    assert not offenders, offenders
+
+
+def test_copy_imports_no_network_client() -> None:
+    offenders = []
+    for path in sorted(_COPY.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for line, top in _top_level_imports(tree):
+            if top in _NETWORK_CLIENTS:
                 offenders.append(f"{path.relative_to(_COPY)}:{line}")
     assert not offenders, offenders
 

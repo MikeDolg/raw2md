@@ -9,7 +9,7 @@ import subprocess
 import sys
 import types
 from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -19,7 +19,9 @@ from unittest.mock import MagicMock, patch
 import pymupdf as pymupdf_lib
 import pytest
 from PIL import Image
+from test_weights import FakeHub, fill_weights
 
+from raw2md import paths
 from raw2md.engines import (
     ConversionError,
     ConversionResult,
@@ -35,6 +37,7 @@ from raw2md.engines import (
     check_source,
     normalize_extension,
     pymupdf,
+    weights,
 )
 from raw2md.engines.base import condense_process_output
 from raw2md.engines.djvu import djvu_to_pdf, page_texts
@@ -1100,7 +1103,7 @@ def _make_fake_marker(
     """
     loaded_models: dict[str, Any] = {"loaded": True}
 
-    def _create(device: Any = None) -> dict[str, Any]:
+    def _create(device: Any = None, *, weights_dir: str) -> dict[str, Any]:
         if model_banner is not None:
             print(model_banner)  # noqa: T201 -- simulates the real engine's console output for the capture test
         return loaded_models
@@ -1129,10 +1132,14 @@ def _make_fake_marker(
 
 
 @contextmanager
-def _install_fake_marker(fake: SimpleNamespace) -> Iterator[None]:
+def _install_fake_marker(
+    fake: SimpleNamespace, *, weights_ready: bool = True
+) -> Iterator[None]:
     """Register fake marker modules so the engine's lazy imports resolve.
 
-    A real `__spec__` keeps `find_spec("raw2md_engine")` truthy.
+    A real `__spec__` keeps `find_spec("raw2md_engine")` truthy. With
+    `weights_ready` the weights check finds every file in place, so the
+    test reads no folder; without it the real check runs.
     """
     engine_mod: Any = types.ModuleType("raw2md_engine")
     engine_mod.__spec__ = importlib.machinery.ModuleSpec("raw2md_engine", None)
@@ -1157,7 +1164,12 @@ def _install_fake_marker(fake: SimpleNamespace) -> Iterator[None]:
         "raw2md_engine.marker.converters.pdf": pdf_mod,
         "raw2md_engine.marker.output": output_mod,
     }
-    with patch.dict(sys.modules, modules):
+    with ExitStack() as stack:
+        stack.enter_context(patch.dict(sys.modules, modules))
+        if weights_ready:
+            stack.enter_context(
+                patch("raw2md.engines.weights.missing_files", return_value=())
+            )
         yield
 
 
@@ -1372,6 +1384,73 @@ def test_marker_engine_loads_model_once_across_files(tmp_path: Path) -> None:
 
     # One loaded model is shared across the queue.
     assert fake.create_model_dict.call_count == 1
+
+
+def test_marker_engine_downloads_missing_weights_before_the_models(
+    home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = home / "doc.pdf"
+    _write_pdf_bytes(source)
+    weights_dir = paths.models_dir()
+    fill_weights(weights_dir)
+    gone = weights.FILES[1]
+    (weights_dir / gone).unlink()
+    hub = FakeHub().install(monkeypatch)
+    fake = _make_fake_marker()
+    loaded_models: dict[str, Any] = fake.loaded_models
+    downloads_before_models: list[int] = []
+
+    def _create(**kwargs: Any) -> dict[str, Any]:
+        downloads_before_models.append(len(hub.calls))
+        return loaded_models
+
+    fake.create_model_dict.side_effect = _create
+    phases: list[str] = []
+
+    with _install_fake_marker(fake, weights_ready=False):
+        MarkerEngine(home).convert(
+            source, home / "doc", ConvertOptions(on_phase=phases.append)
+        )
+
+    assert hub.filenames == [gone]
+    assert downloads_before_models == [1]
+    assert phases[0] == "weights"
+    assert fake.create_model_dict.call_args.kwargs["weights_dir"] == str(weights_dir)
+
+
+def test_marker_engine_with_the_weights_in_place_requests_nothing(
+    home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = home / "doc.pdf"
+    _write_pdf_bytes(source)
+    fill_weights(paths.models_dir())
+    hub = FakeHub().install(monkeypatch)
+    phases: list[str] = []
+
+    with _install_fake_marker(_make_fake_marker(), weights_ready=False):
+        MarkerEngine(home).convert(
+            source, home / "doc", ConvertOptions(on_phase=phases.append)
+        )
+
+    assert hub.calls == []
+    assert "weights" not in phases
+
+
+def test_marker_engine_reports_a_failed_weights_download(
+    home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = home / "doc.pdf"
+    _write_pdf_bytes(source)
+    FakeHub(error=OSError("connection refused")).install(monkeypatch)
+    fake = _make_fake_marker()
+
+    with (
+        _install_fake_marker(fake, weights_ready=False),
+        pytest.raises(ConversionError, match="cannot download the engine weights"),
+    ):
+        MarkerEngine(home).convert(source, home / "doc", ConvertOptions())
+
+    fake.create_model_dict.assert_not_called()
 
 
 def test_marker_engine_cuda_off_forces_cpu(tmp_path: Path) -> None:

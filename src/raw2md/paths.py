@@ -45,3 +45,7 @@ def default_temp_dir() -> Path:
 
 def logs_dir() -> Path:
     return home_dir() / "logs"
+
+
+def models_dir() -> Path:
+    return home_dir() / "models"

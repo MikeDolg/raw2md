@@ -14,8 +14,13 @@ from raw2md_engine.surya.settings import settings as surya_settings
 
 
 def create_model_dict(
-    device=None, dtype=None, attention_implementation: str | None = None
+    device=None,
+    dtype=None,
+    attention_implementation: str | None = None,
+    *,
+    weights_dir: str,
 ) -> dict:
+    surya_settings.MODEL_DIR = weights_dir
     return {
         "layout_model": LayoutPredictor(FoundationPredictor(checkpoint=surya_settings.LAYOUT_MODEL_CHECKPOINT, attention_implementation=attention_implementation, device=device, dtype=dtype)),
         "recognition_model": RecognitionPredictor(FoundationPredictor(checkpoint=surya_settings.RECOGNITION_MODEL_CHECKPOINT, attention_implementation=attention_implementation, device=device, dtype=dtype)),

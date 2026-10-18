@@ -88,3 +88,10 @@ class and no longer load from environment variables or from a `local.env`
 file. The device is detected as before, without the `TORCH_DEVICE`
 override. The change also removes the settings that no remaining code
 reads.
+
+2026-10-18: `surya/common/s3.py`, `surya/settings.py`, and
+`marker/models.py` changed. The copy no longer downloads model weights.
+`marker/models.py` takes the folder of the weights from its caller. A
+checkpoint `<task>/<date>` loads from the folder `<task>/surya-<date>`
+there. The change removes the download helpers, the download settings,
+and the default cache folder.

@@ -9,9 +9,11 @@ Under `mark_pages` the output is paginated and the separators become page
 marks. The marks carry page boundaries through cleaning, which rewrites and
 drops lines, so a line-index map would be stale by inspection.
 
-marker and surya print progress to stdout/stderr; a call captures it so the
-progress bars stay intact. marker breaks on non-ASCII paths, so such a source
-is copied into the ASCII temp folder first.
+The weights download before the first model load, only when the folder lacks
+a file of the pinned revision. marker, surya, and the download print progress
+to stdout/stderr; a call captures it so the progress bars stay intact. marker
+breaks on non-ASCII paths, so such a source is copied into the ASCII temp
+folder first.
 """
 
 from __future__ import annotations
@@ -24,6 +26,8 @@ from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, TextIO
 
+from raw2md import paths
+from raw2md.engines import weights
 from raw2md.engines.base import (
     ConversionError,
     ConversionResult,
@@ -88,6 +92,8 @@ class MarkerEngine(Engine):
 
         work_source, cleanup = self._prepare_ascii_input(source)
         try:
+            if self._models is None:
+                self._ensure_weights(options.on_phase)
             with capture_engine_output(self._log_stream, on_phase=options.on_phase):
                 models = self._load_models()
                 text, images = self._run_marker(
@@ -119,6 +125,24 @@ class MarkerEngine(Engine):
         except (RuntimeError, OSError):
             return None
 
+    def _ensure_weights(self, on_phase: Callable[[str], None] | None) -> None:
+        """Download the missing weights into the log, under their own phase.
+
+        The download runs outside the phase sniffer: its progress lines would
+        relabel the bar as a marker phase.
+        """
+        weights_dir = paths.models_dir()
+        missing = weights.missing_files(weights_dir)
+        if not missing:
+            return
+        if on_phase is not None:
+            on_phase("weights")
+        try:
+            with capture_engine_output(self._log_stream):
+                weights.fetch(weights_dir, missing)
+        except weights.WeightsError as exc:
+            raise ConversionError(str(exc)) from exc
+
     def _load_models(self) -> dict[str, Any]:
         """Load and cache the marker model dictionary (the heavy step)."""
         models = self._models
@@ -127,7 +151,9 @@ class MarkerEngine(Engine):
 
             # device=None lets marker auto-detect the GPU; "cpu" forces CPU.
             device = None if self._cuda else "cpu"
-            models = create_model_dict(device=device)
+            models = create_model_dict(
+                device=device, weights_dir=str(paths.models_dir())
+            )
             self._models = models
         return models
 
