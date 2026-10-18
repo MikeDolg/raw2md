@@ -1,5 +1,9 @@
 # Coverage has no gate: the statuses report the number and never fail a
 # commit or a pull request.
+# The engine copy is upstream code; the number covers raw2md itself.
+ignore:
+  - "src/raw2md_engine"
+
 coverage:
   status:
     project:

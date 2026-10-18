@@ -456,7 +456,7 @@ UTF-8 without a byte order mark.
 |---|---|
 | System | Windows or Linux; macOS is not tested |
 | Python | 3.11 to 3.14 |
-| GPU | NVIDIA Turing or newer (`sm_75`+), driver 580 or newer; without a GPU, `raw2md-engine` runs on the CPU, but this mode is not supported |
+| GPU | NVIDIA Turing or newer (`sm_75`+), 4 GB of VRAM or more, driver 580 or newer; without a GPU, `raw2md-engine` runs on the CPU, which is much slower |
 | `pandoc` | 3.1.9 or newer, only for `docx` |
 | `ddjvu` (DjVuLibre) | only for `djvu` |
 

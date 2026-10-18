@@ -87,7 +87,7 @@ Most of the testing used English and Russian sources, with a few German, French,
 
 ## Installation
 
-raw2md needs Python 3.11 to 3.14. For `raw2md-engine`, you need an NVIDIA GPU of the Turing generation or newer (GTX 16xx, RTX 20xx, and later cards) with driver 580 or newer. Without such a card, the engine runs on the CPU. This mode is very slow, and raw2md does not support it.
+raw2md needs Python 3.11 to 3.14. For `raw2md-engine`, you need an NVIDIA GPU of the Turing generation or newer (GTX 16xx, RTX 20xx, and later cards) with 4 GB of VRAM or more and driver 580 or newer. Without such a card, or with `--cuda off`, the engine runs on the CPU. This mode works, but it is much slower.
 
 Install the tool with [uv](https://docs.astral.sh/uv/getting-started/installation/):
 
