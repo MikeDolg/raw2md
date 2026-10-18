@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from huggingface_hub._local_folder import write_download_metadata
 from huggingface_hub.errors import HfHubHTTPError
 
 from raw2md import paths
@@ -29,10 +30,16 @@ class FakeHub:
     `error` is raised instead, after the files before it arrived.
     """
 
-    def __init__(self, error: Exception | None = None, fail_at: int = 0) -> None:
+    def __init__(
+        self,
+        error: Exception | None = None,
+        fail_at: int = 0,
+        commit_hash: str | None = None,
+    ) -> None:
         self.calls: list[dict[str, Any]] = []
         self._error = error
         self._fail_at = fail_at
+        self._commit_hash = commit_hash
 
     def __call__(self, repo_id: str, filename: str, **kwargs: Any) -> str:
         if self._error is not None and len(self.calls) == self._fail_at:
@@ -41,6 +48,12 @@ class FakeHub:
         target = Path(kwargs["local_dir"]) / filename
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(b"weights")
+        write_download_metadata(
+            local_dir=Path(kwargs["local_dir"]),
+            filename=filename,
+            commit_hash=self._commit_hash or kwargs["revision"],
+            etag="etag",
+        )
         return str(target)
 
     @property
@@ -162,8 +175,25 @@ def test_fetch_into_a_home_with_cyrillic_in_its_path(
     assert (weights_dir / weights.FILES[-1]).is_file()
 
 
+def test_a_file_of_another_revision_is_not_stamped(
+    home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    weights_dir = paths.models_dir()
+    FakeHub(commit_hash="0" * 40).install(monkeypatch)
+
+    with pytest.raises(weights.WeightsError, match="cannot confirm"):
+        weights.fetch(weights_dir, weights.FILES)
+
+    assert weights.stamp_revision(weights_dir) is None
+
+
 @pytest.mark.parametrize(
-    "error", [HfHubHTTPError("404 Client Error"), OSError("No space left")]
+    "error",
+    [
+        HfHubHTTPError("404 Client Error"),
+        OSError("No space left"),
+        RuntimeError("Data processing error"),
+    ],
 )
 def test_a_failed_download_raises_and_leaves_no_stamp(
     home: Path, monkeypatch: pytest.MonkeyPatch, error: Exception

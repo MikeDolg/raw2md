@@ -111,6 +111,22 @@ def missing_files(weights_dir: Path) -> tuple[str, ...]:
     return tuple(name for name in FILES if not (weights_dir / name).is_file())
 
 
+def _require_pinned(weights_dir: Path, name: str) -> None:
+    """Fail when the file on disk is not the pinned revision.
+
+    With the Hub unreachable, the download returns an existing file of any
+    revision instead of failing. Its metadata record names the real revision.
+    """
+    from huggingface_hub._local_folder import read_download_metadata
+
+    record = read_download_metadata(weights_dir, name)
+    if record is None or record.commit_hash != REVISION:
+        raise WeightsError(
+            f"cannot confirm that {name} is at revision {REVISION} of {REPO_ID}: "
+            "the Hub may be unreachable"
+        )
+
+
 def fetch(weights_dir: Path, names: Sequence[str]) -> None:
     """Download `names` at the pinned revision, then stamp the folder.
 
@@ -124,8 +140,10 @@ def fetch(weights_dir: Path, names: Sequence[str]) -> None:
         weights_dir.mkdir(parents=True, exist_ok=True)
         for name in names:
             hf_hub_download(REPO_ID, name, revision=REVISION, local_dir=weights_dir)
+            _require_pinned(weights_dir, name)
         (weights_dir / STAMP_NAME).write_text(REVISION + "\n", encoding="utf-8")
-    except (HfHubHTTPError, OSError) as exc:
+    # The Xet backend reports a transport failure as RuntimeError.
+    except (HfHubHTTPError, OSError, RuntimeError) as exc:
         raise WeightsError(
             f"cannot download the engine weights from {REPO_ID} "
             f"into {weights_dir}: {exc}"
