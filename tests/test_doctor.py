@@ -390,6 +390,7 @@ def test_report_lists_the_missing_weights_without_changing_the_exit_code(
 ) -> None:
     monkeypatch.setattr("raw2md.llm.gemini.find_spec", lambda name: object())
     monkeypatch.setenv("GOOGLE_API_KEY", "secret")
+    write_settings(gemini_only())
     assert run_doctor([]) == ExitCode.SUCCESS
     out = capsys.readouterr().out
     assert f"folder: {models_dir()}" in out
@@ -403,6 +404,7 @@ def test_report_shows_complete_weights(
 ) -> None:
     monkeypatch.setattr("raw2md.llm.gemini.find_spec", lambda name: object())
     monkeypatch.setenv("GOOGLE_API_KEY", "secret")
+    write_settings(gemini_only())
     for name in weights.FILES:
         target = models_dir() / name
         target.parent.mkdir(parents=True, exist_ok=True)
