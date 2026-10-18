@@ -12,8 +12,9 @@ from zoneinfo import ZoneInfoNotFoundError
 import pytest
 
 from raw2md.doctor import _cuda_status, _CudaStatus, run_doctor
+from raw2md.engines import weights
 from raw2md.exit_codes import ExitCode
-from raw2md.paths import settings_file
+from raw2md.paths import models_dir, settings_file
 
 _MISSING_CMD = "definitely-not-a-real-command-xyz"
 _GPU = _CudaStatus(torch_importable=True, cuda_build="13.0", vram_mb=4096)
@@ -369,3 +370,35 @@ def test_doctor_help_exits_zero(home: Path) -> None:
     with pytest.raises(SystemExit) as exc_info:
         run_doctor(["--help"])
     assert exc_info.value.code == 0
+
+
+# --- Weights block -------------------------------------------------------------
+
+
+def test_report_lists_the_missing_weights_without_changing_the_exit_code(
+    home: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr("raw2md.llm.gemini.find_spec", lambda name: object())
+    monkeypatch.setenv("GOOGLE_API_KEY", "secret")
+    assert run_doctor([]) == ExitCode.SUCCESS
+    out = capsys.readouterr().out
+    assert f"folder: {models_dir()}" in out
+    assert f"revision: {weights.REVISION} (on disk: none)" in out
+    assert f"{len(weights.FILES)} of {len(weights.FILES)} to download" in out
+    assert f"    {weights.FILES[0]}" in out.splitlines()
+
+
+def test_report_shows_complete_weights(
+    home: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr("raw2md.llm.gemini.find_spec", lambda name: object())
+    monkeypatch.setenv("GOOGLE_API_KEY", "secret")
+    for name in weights.FILES:
+        target = models_dir() / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("x", encoding="utf-8")
+    (models_dir() / weights.STAMP_NAME).write_text(weights.REVISION, encoding="utf-8")
+    assert run_doctor([]) == ExitCode.SUCCESS
+    out = capsys.readouterr().out
+    assert f"(on disk: {weights.REVISION})" in out
+    assert "files: all present" in out

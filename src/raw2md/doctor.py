@@ -5,6 +5,8 @@ The exit code sums up four reports:
 - engines: a missing marker is a missing dependency (exit 3); pandoc and the
   djvu chain are optional and only disable their format;
 - the torch build, the GPU, and `recognition_batch_size`: informational only;
+- the weights folder, its revision, and the missing files: informational only,
+  because the first conversion downloads what is missing;
 - `zoneinfo`: required, because the daily quota boundary needs an IANA zone
   and Windows has no system zone database;
 - settings.json: a schema error, an unknown model, or a vision operation on
@@ -21,10 +23,10 @@ from collections.abc import Sequence
 from typing import NamedTuple
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from raw2md.engines import DjvuEngine, MarkerEngine, PandocEngine
+from raw2md.engines import DjvuEngine, MarkerEngine, PandocEngine, weights
 from raw2md.exit_codes import ExitCode
 from raw2md.llm import build_provider
-from raw2md.paths import default_temp_dir, settings_file
+from raw2md.paths import default_temp_dir, models_dir, settings_file
 from raw2md.settings import (
     OPERATIONS,
     Settings,
@@ -62,6 +64,7 @@ def run_doctor(args: Sequence[str] | None = None) -> int:
         return int(ExitCode.ARGUMENT_ERROR)
 
     _report_marker(settings)
+    _report_weights()
     config_problems, dependency_problems = _report_settings(settings)
     if config_problems:
         return int(ExitCode.ARGUMENT_ERROR)
@@ -191,6 +194,25 @@ def _report_marker(settings: Settings) -> None:
             "  WARNING: recognition_batch_size is set but CUDA is unavailable; "
             "the value was likely tuned against a GPU's VRAM"
         )
+
+
+def _report_weights() -> None:
+    """Report the weights folder, the pinned and the stamped revision, the gaps."""
+    weights_dir = models_dir()
+    stamp = weights.stamp_revision(weights_dir)
+    missing = weights.missing_files(weights_dir)
+    print("weights:")
+    print(f"  folder: {weights_dir}")
+    print(f"  revision: {weights.REVISION} (on disk: {stamp or 'none'})")
+    if not missing:
+        print("  files: all present")
+        return
+    print(
+        f"  files: {len(missing)} of {len(weights.FILES)} to download "
+        "(the first conversion or `raw2md init` fetches them)"
+    )
+    for name in missing:
+        print(f"    {name}")
 
 
 def _report_settings(settings: Settings) -> tuple[int, int]:

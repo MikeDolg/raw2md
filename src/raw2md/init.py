@@ -1,7 +1,7 @@
 """The `init` subcommand: creates the missing ~/.raw2md service files.
 
 Every service file that raw2md ships a template for is created when missing;
-an existing file is never touched.
+an existing file is never touched. Then the missing engine weights download.
 """
 
 import argparse
@@ -10,9 +10,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from raw2md.engines import weights
 from raw2md.exit_codes import ExitCode
 from raw2md.keywords import default_keywords_text
-from raw2md.paths import keywords_file, prompts_file, settings_file
+from raw2md.paths import keywords_file, models_dir, prompts_file, settings_file
 from raw2md.prompts import default_prompts_text
 from raw2md.service import MANAGEMENT_FAILURE
 from raw2md.settings import (
@@ -58,6 +59,26 @@ def run_init_command(args: list[str]) -> int:
             )
         else:
             _warn_vision_gap(settings_template)
+    return _fetch_weights()
+
+
+def _fetch_weights() -> int:
+    """Download the missing weights; the service files stay on a failure.
+
+    The Hub client draws its own progress bar for each file.
+    """
+    weights_dir = models_dir()
+    missing = weights.missing_files(weights_dir)
+    if not missing:
+        print(f"weights are in place: {weights_dir}")
+        return int(ExitCode.SUCCESS)
+    print(f"downloading {len(missing)} weight files into {weights_dir}")
+    try:
+        weights.fetch(weights_dir, missing)
+    except weights.WeightsError as error:
+        print(f"raw2md: {error}", file=sys.stderr)
+        return MANAGEMENT_FAILURE
+    print(f"downloaded the weights: {weights_dir}")
     return int(ExitCode.SUCCESS)
 
 

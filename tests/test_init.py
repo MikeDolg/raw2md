@@ -1,15 +1,30 @@
 """Tests for the `init` subcommand: the ~/.raw2md service file creator."""
 
 import json
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 
+from raw2md.engines import weights
 from raw2md.init import run_init_command
 from raw2md.keywords import default_keywords_text
-from raw2md.paths import keywords_file, prompts_file, settings_file
+from raw2md.paths import keywords_file, models_dir, prompts_file, settings_file
 from raw2md.prompts import default_prompts_text
 from raw2md.settings import default_settings_text
+
+
+@pytest.fixture(autouse=True)
+def fetched(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, ...]]:
+    """Replace the download with a recorder; the tests never reach the network."""
+    calls: list[tuple[str, ...]] = []
+
+    def fake_fetch(weights_dir: Path, names: Sequence[str]) -> None:
+        calls.append(tuple(names))
+
+    monkeypatch.setattr(weights, "fetch", fake_fetch)
+    return calls
+
 
 # --- Creating what is missing ------------------------------------------------
 
@@ -154,3 +169,54 @@ def test_no_vision_warning_without_model_arguments(
 ) -> None:
     run_init_command([])
     assert "no chosen model has vision" not in capsys.readouterr().err
+
+
+# --- Weights ------------------------------------------------------------------
+
+
+def _stamp_complete_weights() -> None:
+    folder = models_dir()
+    for name in weights.FILES:
+        target = folder / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("x", encoding="utf-8")
+    (folder / weights.STAMP_NAME).write_text(weights.REVISION, encoding="utf-8")
+
+
+def test_downloads_the_missing_weights(
+    home: Path, fetched: list[tuple[str, ...]]
+) -> None:
+    assert run_init_command([]) == 0
+    assert fetched == [weights.FILES]
+
+
+def test_downloads_only_the_missing_files(
+    home: Path, fetched: list[tuple[str, ...]]
+) -> None:
+    _stamp_complete_weights()
+    (models_dir() / weights.FILES[1]).unlink()
+    assert run_init_command([]) == 0
+    assert fetched == [(weights.FILES[1],)]
+
+
+def test_complete_weights_make_no_download(
+    home: Path, fetched: list[tuple[str, ...]], capsys: pytest.CaptureFixture[str]
+) -> None:
+    _stamp_complete_weights()
+    assert run_init_command([]) == 0
+    assert fetched == []
+    assert "weights are in place" in capsys.readouterr().out
+
+
+def test_failed_download_fails_init_and_keeps_the_service_files(
+    home: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def failing_fetch(weights_dir: Path, names: Sequence[str]) -> None:
+        raise weights.WeightsError("cannot download the engine weights")
+
+    monkeypatch.setattr(weights, "fetch", failing_fetch)
+    assert run_init_command([]) == 1
+    assert settings_file().read_text(encoding="utf-8") == default_settings_text()
+    assert prompts_file().is_file()
+    assert keywords_file().is_file()
+    assert "cannot download the engine weights" in capsys.readouterr().err
