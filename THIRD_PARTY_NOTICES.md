@@ -1,14 +1,34 @@
 # Third-party notices
 
-The GPL-3.0-or-later license in `LICENSE` covers the raw2md source code only. This file
-lists the third-party material that raw2md bundles or keeps in its test
+The GPL-3.0-or-later license in `LICENSE` covers the raw2md source code. This
+file lists the third-party material that raw2md bundles or keeps in its test
 assets, and the licenses of the software and the models that an installation
 of raw2md runs.
 
 ## Bundled material
 
-The raw2md package contains one third-party file: `raw2md/katex.min.js`,
-KaTeX 0.18.4, unmodified. raw2md uses it to check that formulas are valid.
+### The conversion engine
+
+The package `raw2md_engine`, which raw2md names `raw2md-engine`, is a
+modified copy of three packages by Datalab:
+
+| Package | Version | License | Repository |
+|---|---|---|---|
+| `marker-pdf` | 1.10.2 | GPL-3.0-or-later | <https://github.com/datalab-to/marker> |
+| `surya-ocr` | 0.17.1 | GPL-3.0-or-later | <https://github.com/datalab-to/surya> |
+| `pdftext` | 0.6.3 | Apache-2.0 | <https://github.com/datalab-to/pdftext> |
+
+The copy keeps only the code that converts a PDF to Markdown. `NOTICE` names
+the tag and the commit of each original package and lists every changed file
+with the date of the change. The license text of each package is in its
+folder: `src/raw2md_engine/marker/LICENSE`, `src/raw2md_engine/surya/LICENSE`,
+and `src/raw2md_engine/pdftext/LICENSE`. The wheel carries `NOTICE` and the
+three license texts. Datalab does not endorse or support raw2md.
+
+### KaTeX
+
+The raw2md package contains `raw2md/katex.min.js`, KaTeX 0.18.4, unmodified.
+raw2md uses it to check that formulas are valid.
 
 ```text
 The MIT License (MIT)
@@ -48,15 +68,13 @@ Font License 1.1. The license text is in
 
 The package manager installs the dependencies. raw2md does not distribute
 them, and its license does not change their licenses. The installed
-program runs under all of them together. Two are strong copyleft licenses:
+program runs under all of them together. One is a strong copyleft license:
+`PyMuPDF` is available under AGPL-3.0, or under a commercial license from
+Artifex.
 
-- `PyMuPDF` is available under AGPL-3.0, or under a commercial license from
-  Artifex.
-- `marker-pdf` and `surya-ocr` are available under GPL-3.0-or-later.
-
-If you distribute a program that contains raw2md and these dependencies, or
-you let users interact over a network with a modified `PyMuPDF`, the terms of
-these licenses apply to you. The other runtime dependencies use permissive or
+If you distribute a program that contains raw2md and `PyMuPDF`, or you let
+users interact over a network with a modified `PyMuPDF`, the terms of the
+AGPL-3.0 apply to you. The other runtime dependencies use permissive or
 weak copyleft licenses: MIT, BSD, Apache-2.0, HPND, MPL-2.0, and LGPL-3.0.
 
 The CUDA libraries come inside the `torch` wheel. raw2md does not distribute
@@ -64,13 +82,19 @@ them.
 
 ## Model weights
 
-`marker` downloads its model weights on the first run. The weights are not
-part of raw2md. They are licensed by Datalab under a modified AI Pubs
-OpenRAIL-M license:
-<https://github.com/datalab-to/marker/blob/v1.10.2/MODEL_LICENSE>
+The model weights of `raw2md-engine` are not part of the raw2md package.
+raw2md downloads them into `~/.raw2md/models` from the Hugging Face repository
+<https://huggingface.co/MikeDolg/raw2md-models>. The repository holds an
+unchanged copy of the five checkpoints that `surya-ocr` 0.17.1 uses. Datalab
+created and trained the models.
 
-The link gives the text at `marker` 1.10.2, the version that raw2md installs.
-The terms of later `marker` versions differ.
+The weights are licensed by Datalab under a modified AI Pubs OpenRAIL-M
+license. The repository and the weights folder carry its full text as
+`DATALAB_MODEL_LICENSE`. It is the file `MODEL_LICENSE` of `surya-ocr` 0.17.1:
+<https://github.com/datalab-to/surya/blob/v0.17.1/MODEL_LICENSE>
+
+The terms of later `surya` versions can differ. The GPL-3.0-or-later license
+of raw2md does not apply to the weights.
 
 In short, and the license text governs:
 
@@ -80,8 +104,8 @@ In short, and the license text governs:
 - An organization whose product or service competes with Datalab may not use
   the weights, whatever its size.
 - The license applies to the output of the models too: a Markdown file that
-  raw2md makes from a PDF or a DjVu file with `marker`. If you share such a
-  file, give credit to Datalab, link to the model, and include a copy of the
-  license.
+  raw2md makes from a PDF or a DjVu file with `raw2md-engine`. If you share
+  such a file, give credit to Datalab, link to the model, and include a copy
+  of the license.
 
 Commercial licenses are available from Datalab: <https://www.datalab.to/>

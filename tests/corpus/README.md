@@ -29,7 +29,7 @@ The round-trip tests run only on request:
 
 ```bash
 uv run pytest -m roundtrip            # all formats
-uv run pytest -m roundtrip -k docx    # docx only, without marker
+uv run pytest -m roundtrip -k docx    # docx only, without raw2md-engine
 ```
 
 Each format needs its own tools. A test skips when a tool is not installed.
@@ -37,10 +37,10 @@ Each format needs its own tools. A test skips when a tool is not installed.
 | Format | Fixtures | Tools |
 |---|---|---|
 | `docx` | all except `handwriting.md` | pandoc |
-| `pdf` | `mixed.md`, `headers.md`, `tables.md`, `formulas.md`, `images.md`, `nested_lists.md`, `multilang.md`, `long_doc.md` | pandoc, XeLaTeX, marker |
-| `scan`, `scan_degraded` | `mixed.md` | pandoc, XeLaTeX, `img2pdf`, marker |
-| `handwriting_scan` | `handwriting.md` | pandoc, XeLaTeX, `img2pdf`, marker |
-| `djvu` | `mixed.md` | pandoc, XeLaTeX, DjVuLibre (`c44`, `djvm`, `ddjvu`), marker |
+| `pdf` | `mixed.md`, `headers.md`, `tables.md`, `formulas.md`, `images.md`, `nested_lists.md`, `multilang.md`, `long_doc.md` | pandoc, XeLaTeX, `raw2md-engine` |
+| `scan`, `scan_degraded` | `mixed.md` | pandoc, XeLaTeX, `img2pdf`, `raw2md-engine` |
+| `handwriting_scan` | `handwriting.md` | pandoc, XeLaTeX, `img2pdf`, `raw2md-engine` |
+| `djvu` | `mixed.md` | pandoc, XeLaTeX, DjVuLibre (`c44`, `djvm`, `ddjvu`), `raw2md-engine` |
 
 To run one round-trip by hand and keep its result, give a fixture and a format
 from the table:

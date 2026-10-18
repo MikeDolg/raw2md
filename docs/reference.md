@@ -11,7 +11,7 @@ requirements. The guides to [cleaning](cleaning.md),
 ```text
 raw2md [INPUT] [flags]        # convert a file or a folder
 raw2md resume [show|path]     # continue an interrupted run
-raw2md init [MODEL ...]       # create the missing service files
+raw2md init [MODEL ...]       # create the missing service files, download the weights
 raw2md settings <action>      # path | show | edit | check
 raw2md prompts  <action>      # path | show | edit | check
 raw2md keywords <action>      # path | show | edit | check
@@ -25,7 +25,7 @@ subcommand, give it as a path: `./resume`.
 
 | Input | Converter | Result |
 |---|---|---|
-| `pdf` | `marker`, or the model from `-e` | `md` and an image folder; with `-e <model>`, only `md` |
+| `pdf` | `raw2md-engine`, or the model from `-e` | `md` and an image folder; with `-e <model>`, only `md` |
 | `djvu` | `ddjvu` to PDF, then as `pdf` | the same as for `pdf` |
 | `docx` | `pandoc` | `md` and an image folder |
 | `md` | none: the file goes to cleaning without conversion | `md` |
@@ -33,7 +33,7 @@ subcommand, give it as a path: `./resume`.
 The tool does not go into the subfolders of a folder. It takes the files from
 the top of the folder in alphabetical order. It skips the files of other
 formats without a message. It processes the files one at a time, because
-`marker` takes the whole GPU.
+`raw2md-engine` takes the whole GPU.
 
 The tool always cleans an `md` file that you give explicitly. In a folder, the
 tool treats an `md` file with a raw2md header as an earlier result. It skips
@@ -45,7 +45,7 @@ set another folder with `-o`.
 | Short | Flag | What it does | Default |
 |---|---|---|---|
 | `-o` | `--output-dir DIR` | writes the results to `DIR`, not next to the source | the source folder |
-| `-e` | `--engine <engine>` | the engine for `pdf` and `djvu`: `marker`, or a model key for LLM-OCR mode; `pandoc` always converts `docx` | `marker` |
+| `-e` | `--engine <engine>` | the engine for `pdf` and `djvu`: `raw2md-engine`, or a model key for LLM-OCR mode; `pandoc` always converts `docx` | `raw2md-engine` |
 | `-i` | `--llm-inspection <model>` | turns on inspection; only for `pdf` and `djvu` | `none` |
 | `-p` | `--llm-post <model>` | turns on post-processing | `none` |
 | `-s` | `--skip-existing` | keeps a finished result and does not convert the file again | replaces the result |
@@ -63,6 +63,9 @@ be in `operations.<operation>.allowed` for its operation: `ocr` for `-e`,
 `inspection` for `-i`, and `post` for `-p`. Otherwise the run ends with an
 argument error. The flags of the LLM stages are independent: you can turn on
 each stage without the others.
+
+`-e marker`, the engine name of raw2md 0.1.x, ends with an argument error that
+names `raw2md-engine`.
 
 In LLM-OCR mode, the model recognizes the whole page and does not extract
 images. Therefore `--disable-image-extraction` changes nothing in this mode.
@@ -150,7 +153,7 @@ Each result starts with a YAML header, unless you set `--no-yaml`:
 ---
 raw2md_version: 0.1.0
 source: book.pdf
-engine: marker
+engine: raw2md-engine
 inspection: none
 post: none
 converted_at: 2026-10-03
@@ -165,7 +168,7 @@ issues:
 |---|---|
 | `raw2md_version` | the version of raw2md; the tool recognizes its own header by this field |
 | `source` | the name of the source, with the extension |
-| `engine` | what converted the file: `marker`, `pandoc` (`docx`), `clean` (`md`), or the model key in LLM-OCR mode |
+| `engine` | what converted the file: `raw2md-engine`, `pandoc` (`docx`), `clean` (`md`), or the model key in LLM-OCR mode |
 | `inspection` | `none`: the stage was off, or it had nothing to compare with (`docx`, `md`); the model key: the stage succeeded; `failed`: the stage failed |
 | `post` | `none`, the model key, or `failed`, as for `inspection`; `partial (N/M)`: N zones of M came back |
 | `converted_at` | the date of the conversion |
@@ -207,6 +210,9 @@ during a run.
 `Ctrl+C` stops the run with the code `130`. The tool prints the summary line,
 and the queue stays for `resume`.
 
+`resume` does not continue a queue that an older raw2md version saved, such as
+0.1.x. It ends with the code `2` and asks you to start the run again.
+
 ## Service files
 
 The service files are in the `.raw2md` folder in the home folder of the user:
@@ -216,6 +222,7 @@ The service files are in the `.raw2md` folder in the home folder of the user:
   settings.json     # models and settings
   prompts.yaml      # prompts of the LLM stages
   keywords.yaml     # words that the cleaning rules look for
+  models/           # weights of raw2md-engine
   state/            # queue, lock, daily request counter
   logs/raw2md.log   # log of the last run
   tmp/              # temporary conversion files
@@ -225,7 +232,9 @@ The `raw2md init` command creates the missing files from the shipped templates
 and does not touch the existing files. Without a file, the built-in values
 apply. The `raw2md init MODEL ...` command keeps only the named models in the
 new `settings.json`. If none of them can read images, `init` warns that LLM-OCR
-and inspection have no model.
+and inspection have no model. Then `init` downloads the missing
+[weights](#weights) and shows a progress bar for each file. If the download
+fails, `init` ends with the code `1`, and the files that it created stay.
 
 Each file has four actions:
 
@@ -270,7 +279,7 @@ priority over a built-in value. This is the template that `init` writes:
     "inspection": {"allowed": ["gemini_api"]},
     "post": {"allowed": ["claude_cli", "gemini_api"]}
   },
-  "marker": {"recognition_batch_size": "default"},
+  "raw2md-engine": {"recognition_batch_size": "default"},
   "cleaning": {"witness_min": 20},
   "log_file": true
 }
@@ -278,8 +287,9 @@ priority over a built-in value. This is the template that `init` writes:
 
 The `models` section describes the models. The `operations` section sets which
 models each operation permits: `ocr` (LLM-OCR), `inspection`, and `post`. A
-model key can be any name except `none`, `failed`, `partial`, `marker`,
-`pandoc`, and `djvu`. The header fields and the `-e` flag use these values. A
+model key can be any name except `none`, `failed`, `partial`, `raw2md-engine`,
+`marker`, `pandoc`, and `djvu`. The header fields and the `-e` flag use these
+values. A
 model with `cli` access does not see images. Therefore it does not fit `ocr`
 and `inspection`.
 
@@ -311,9 +321,12 @@ request several times with a growing pause.
 
 | Section | Field | What it sets | Default |
 |---|---|---|---|
-| `marker` | `recognition_batch_size` | the recognition batch size of `marker`; a smaller number uses less video memory | `"default"`: the `marker` value for the video memory |
+| `raw2md-engine` | `recognition_batch_size` | the recognition batch size of the engine; a smaller number uses less video memory | `"default"`: the engine value for the video memory |
 | `cleaning` | `witness_min` | how many times a spelling must occur in the document before cleaning repairs a damaged word with it; 2 at least | 20 |
 | – | `log_file` | whether to write the detailed log; `--no-log-file` turns the log off, but it cannot turn the log on | `true` |
+
+A `marker` section, the name of this section in raw2md 0.1.x, is a settings
+error with the code `2`. The message names `raw2md-engine`.
 
 ### `prompts.yaml`
 
@@ -352,6 +365,31 @@ hold several words (`table of contents`). The case does not matter.
 The copy in `~/.raw2md` replaces the shipped list completely. A section that
 the copy does not have stays empty, and the rule of that section finds nothing.
 
+### Weights
+
+`raw2md-engine` reads its model weights, about 3.3 GB, from
+`~/.raw2md/models`. The tool downloads them from the
+[raw2md-models](https://huggingface.co/MikeDolg/raw2md-models) repository on
+Hugging Face, at the fixed revision that each raw2md release names. A new
+revision comes only with a new release. No variable or setting moves the
+folder.
+
+The `revision` file in the folder names the revision of the files on disk.
+Before the first `pdf` or `djvu` conversion of a run, the tool checks the
+folder:
+
+| What is on disk | What happens |
+|---|---|
+| all the files, and `revision` names the release revision | no network request |
+| some files are missing | the tool downloads the missing files |
+| no `revision` file, or another revision | the tool checks every file against the release revision and downloads the changed ones |
+
+`raw2md init` does the same download with a progress bar. During a
+conversion, the progress bar of the file shows the `weights` stage while the
+download goes on. If the download fails, the file gets no result. The tool
+writes the `revision` file only after all the files arrived, so the next run
+continues an interrupted download.
+
 ## Exit codes
 
 | Code | When |
@@ -370,7 +408,8 @@ the exit code. If an LLM stage fails, the tool still writes the result without
 it, and the exit code reports the error.
 
 The subcommands `settings`, `prompts`, `keywords`, `init`, and `resume show`
-return `1` if they cannot read or write a file. The `doctor` subcommand returns
+return `1` if they cannot read or write a file, and `init` also returns `1` if
+it cannot download the weights. The `doctor` subcommand returns
 `0` if everything is ready, `2` for an error in `settings.json`, and `3` if a
 dependency is missing.
 
@@ -404,7 +443,8 @@ of the stage, and one for the whole run.
 
 The tool writes the detailed log to `~/.raw2md/logs/raw2md.log` and overwrites
 it at the start of each run. The log holds the same lines as the console, plus
-the details of each stage. The output of `marker` does not go into the log. To
+the details of each stage. The output of the engine, its weight download
+included, does not go into the log. To
 turn the log off, use the `--no-log-file` flag or the `log_file: false` field.
 The console colors the entries by level when the output goes to a terminal and
 the `NO_COLOR` variable is not set. The tool writes the result and the log in
@@ -415,23 +455,29 @@ UTF-8 without a byte order mark.
 | Requirement | What you need |
 |---|---|
 | System | Windows or Linux; macOS is not tested |
-| Python | 3.11 to 3.13 |
-| GPU | NVIDIA Turing or newer (`sm_75`+), driver 580 or newer; without a GPU, `marker` runs on the CPU, but this mode is not supported |
+| Python | 3.11 to 3.14 |
+| GPU | NVIDIA Turing or newer (`sm_75`+), driver 580 or newer; without a GPU, `raw2md-engine` runs on the CPU, but this mode is not supported |
 | `pandoc` | 3.1.9 or newer, only for `docx` |
 | `ddjvu` (DjVuLibre) | only for `djvu` |
 
-The raw2md install includes `marker`. You install `pandoc` and `ddjvu`
-separately. If one of them is missing, only its format does not work. The
-`raw2md doctor` command checks the engines, the torch build, the GPU
-visibility, `settings.json`, and the access to each permitted model. If CUDA is
-not available, `doctor` gives the reason: a CPU build of torch, or a driver
-that does not see the GPU.
+The raw2md install includes `raw2md-engine`, and the tool downloads its
+[weights](#weights) separately. You install `pandoc` and `ddjvu` separately.
+If one of them is missing, only its format does not work. The `raw2md doctor`
+command checks the engines, the torch build, the GPU visibility, the weights,
+`settings.json`, and the access to each permitted model. If CUDA is not
+available, `doctor` gives the reason: a CPU build of torch, or a driver that
+does not see the GPU. For the weights, `doctor` shows the folder, the release
+revision, the revision on disk, and the missing files. Missing weights do not
+change its exit code, because the first conversion downloads them.
 
 | Variable | What it sets |
 |---|---|
 | the `key_env` of the model, `GOOGLE_API_KEY` in the template | the API key of the model |
 | `RAW2MD_TMP` | the temporary folder of the conversion |
 | `NO_COLOR` | turns off the colors in the console |
+
+`raw2md-engine` takes its settings from raw2md only. `TORCH_DEVICE`,
+`MODEL_CACHE_DIR`, and a `local.env` file have no effect on it.
 
 The path of the temporary folder must hold only Latin characters, and the
 folder must be writable. Without `RAW2MD_TMP`, the tool uses `~/.raw2md/tmp` if

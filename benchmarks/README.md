@@ -17,9 +17,11 @@
 | `head`, HeadTEDS ↑ | 0.371 | 0.408 | 0.392 | 0.430 |
 | `display_formula`, CDM ↑ | 0.818 | 0.821 | 0.858 | 0.867 |
 
-**engine** is the output of `marker` before raw2md, and **raw2md** is the
-final Markdown file. The difference between the two is what raw2md adds.
-`raw2md <pdf> -e marker -d`, no LLM stages. The details of each run are in
+**engine** is the output of `marker` 1.10.2 before raw2md, and **raw2md** is
+the final Markdown file. The difference between the two is what raw2md adds.
+The runs used raw2md 0.1.x, `raw2md <pdf> -e marker -d`, no LLM stages.
+`raw2md-engine` is based on the same `marker` release. The details of each run
+are in
 [mpdocbench/results/](mpdocbench/results/).
 
 `FigureF1` and `table_relation` are not computable for raw2md: they read

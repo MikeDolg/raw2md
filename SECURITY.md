@@ -12,9 +12,11 @@ does not add a warranty or a commitment.
 2. **Local by default.** Without LLM options (an LLM model in `--engine`,
    `--inspection`, `--post`), raw2md does not intentionally send document
    content to external services.
-3. **Runtime downloads.** Some engines download models or other runtime
-   assets, especially on first use. The download happens while the
-   engine loads its models; the document is not passed to that step.
+3. **Runtime downloads.** raw2md downloads the weights of `raw2md-engine`
+   from the `MikeDolg/raw2md-models` repository on Hugging Face, at the
+   commit that the release fixes. The download runs in `raw2md init`, or
+   before the first PDF or DjVu conversion when files are missing. The
+   document is not passed to that step.
 4. **LLM isolation.** LLM providers get no tools. The `claude_cli`
    provider runs without tools, MCP servers, or user settings, preventing
    document instructions from invoking those capabilities.

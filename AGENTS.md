@@ -14,7 +14,7 @@ one file at a time, in these stages:
 
 | Stage | When it runs | What it does |
 |---|---|---|
-| Conversion | always, except for a Markdown source | converts the source with `marker` (PDF), `pandoc` (DOCX), DjVuLibre and `marker` (DjVu), or Gemini (`-e`) |
+| Conversion | always, except for a Markdown source | converts the source with `raw2md-engine` (PDF), `pandoc` (DOCX), DjVuLibre and `raw2md-engine` (DjVu), or Gemini (`-e`) |
 | Cleaning | always | repairs defects with deterministic rules |
 | Inspection | with `-i`, for PDF and DjVu | compares the text with the source pages through a large language model (LLM) |
 | Post-processing | with `-p` | repairs damaged markup through an LLM |
@@ -29,7 +29,8 @@ The guide to each stage is in `docs/`.
 | `src/raw2md/cli.py` | the arguments and the subcommands |
 | `src/raw2md/orchestrator.py`, `queue.py`, `lock.py` | the run: the lock, the queue, resume, and the exit code |
 | `src/raw2md/pipeline.py` | the stages of one file |
-| `src/raw2md/engines/` | the conversion engines; `base.py` holds their interface |
+| `src/raw2md/engines/` | the conversion engines; `base.py` holds their interface, `marker.py` is the adapter of `raw2md-engine`, and `weights.py` downloads its weights |
+| `src/raw2md_engine/` | `raw2md-engine`: a reduced copy of `marker`, `surya`, and `pdftext`, with the upstream layout and names; `NOTICE` lists its changed files |
 | `src/raw2md/cleaner.py` | the entry points of cleaning and the order of its passes |
 | `src/raw2md/cleaning/` | the cleaning rules, grouped by the object that they repair: headings, lists, tables, formulas, and prose |
 | `src/raw2md/mdtext/` | the Markdown readers that all stages share: protected zones, lines, tables, and formulas |
@@ -46,7 +47,7 @@ The guide to each stage is in `docs/`.
 
 ## Setup
 
-The project supports Python 3.11 to 3.13 on Linux and Windows.
+The project supports Python 3.11 to 3.14 on Linux and Windows.
 
 The fast layer and the checks below do not need `torch`. For them, install a
 light environment:
@@ -56,7 +57,7 @@ light environment:
 2. Set the `UV_NO_SYNC` environment variable to `1`. Without it, the next
    `uv run` installs `torch` again.
 
-Conversion with `marker` and the round-trip layer need the full environment.
+Conversion with `raw2md-engine` and the round-trip layer need the full environment.
 It includes the CUDA build of `torch`, which takes several gigabytes:
 
 ```bash
@@ -82,8 +83,9 @@ the task needs it:
 
 - `uv run pytest -m roundtrip` generates PDF, DOCX, and DjVu files from
   `tests/corpus/`. Then it converts them back and compares the result with
-  the source. It uses `pandoc`, `xelatex`, DjVuLibre, and `marker`. Without a
-  GPU, `marker` is very slow.
+  the source. It uses `pandoc`, `xelatex`, DjVuLibre, and `raw2md-engine`,
+  which downloads its weights into `~/.raw2md/models` on the first run.
+  Without a GPU, the engine is very slow.
 - `uv run pytest -m llm_live` sends real requests to Gemini and Claude Code.
   It spends the API quota. It needs `GOOGLE_API_KEY` and `claude` on `PATH`.
 
@@ -100,8 +102,8 @@ Both layers skip a test when its tool or its key is absent.
 - If a change alters what a user sees, update its document in the same
   change: `docs/reference.md` for a command, a flag, a setting, a result file,
   or an exit code, and the stage guide in `docs/` for a repair or a check.
-- Import `marker`, `pymupdf`, and an LLM SDK only inside `engines/` and
-  `llm/`. The rest of the code uses the interfaces in `engines/base.py` and
+- Import `raw2md_engine`, `pymupdf`, and an LLM SDK only inside `engines/`
+  and `llm/`. The rest of the code uses the interfaces in `engines/base.py` and
   `llm/base.py`.
 - Give `encoding="utf-8"` to every file read and write. The code runs on
   Windows and Linux.
@@ -111,6 +113,9 @@ Both layers skip a test when its tool or its key is absent.
   length of comments and docstrings.
 - Each `# noqa` and `# type: ignore` names its rule code and gives a reason.
 - Test data is invented. Do not copy text from real documents into tests.
+- `src/raw2md_engine/` is upstream code: `ruff`, `mypy`, and the comment
+  length test skip it. When you change a file there, add its upstream path
+  and the date to `NOTICE`.
 
 ## Issues and pull requests
 
@@ -129,6 +134,8 @@ them by hand:
 
 ## Licenses
 
-The code is under the GPL-3.0-or-later license. The results in `examples/` have their own
-licenses, which `examples/README.md` lists. Do not copy these results into
-code or tests.
+The code is under the GPL-3.0-or-later license. `src/raw2md_engine/` keeps
+the licenses of its original packages, which `NOTICE` lists. The engine
+weights are under the Datalab model license, which `THIRD_PARTY_NOTICES.md`
+describes. The results in `examples/` have their own licenses, which
+`examples/README.md` lists. Do not copy these results into code or tests.
