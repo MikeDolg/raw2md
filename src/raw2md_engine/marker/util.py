@@ -1,15 +1,12 @@
 import inspect
-import os
 from importlib import import_module
 from typing import List, Annotated
 import re
 
 import numpy as np
-import requests
 from pydantic import BaseModel
 
 from raw2md_engine.marker.schema.polygon import PolygonBox
-from raw2md_engine.marker.settings import settings
 
 OPENING_TAG_REGEX = re.compile(r"<((?:math|i|b))(?:\s+[^>]*)?>")
 CLOSING_TAG_REGEX = re.compile(r"</((?:math|i|b))>")
@@ -32,14 +29,6 @@ def strings_to_classes(items: List[str]) -> List[type]:
         module = import_module(module_name)
         classes.append(getattr(module, class_name))
     return classes
-
-
-def classes_to_strings(items: List[type]) -> List[str]:
-    for item in items:
-        if not inspect.isclass(item):
-            raise ValueError(f"Item {item} is not a class")
-
-    return [f"{item.__module__}.{item.__name__}" for item in items]
 
 
 def verify_config_keys(obj):
@@ -77,19 +66,6 @@ def assign_config(cls, config: BaseModel | dict | None):
 
         if hasattr(cls, split_k):
             setattr(cls, split_k, dict_config[k])
-
-
-def parse_range_str(range_str: str) -> List[int]:
-    range_lst = range_str.split(",")
-    page_lst = []
-    for i in range_lst:
-        if "-" in i:
-            start, end = i.split("-")
-            page_lst += list(range(int(start), int(end) + 1))
-        else:
-            page_lst.append(int(i))
-    page_lst = sorted(list(set(page_lst)))  # Deduplicate page numbers and sort in order
-    return page_lst
 
 
 def matrix_intersection_area(boxes1: List[List[float]], boxes2: List[List[float]]) -> np.ndarray:
@@ -149,15 +125,6 @@ def sort_text_lines(lines: List[PolygonBox], tolerance=1.25):
         sorted_lines.extend(sorted_group)
 
     return sorted_lines
-
-def download_font():
-    if not os.path.exists(settings.FONT_PATH):
-        os.makedirs(os.path.dirname(settings.FONT_PATH), exist_ok=True)
-        font_dl_path = f"{settings.ARTIFACT_URL}/{settings.FONT_NAME}"
-        with requests.get(font_dl_path, stream=True) as r, open(settings.FONT_PATH, 'wb') as f:
-            r.raise_for_status()
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
 
 def get_opening_tag_type(tag):
     """

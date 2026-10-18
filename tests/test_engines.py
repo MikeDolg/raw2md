@@ -1119,18 +1119,11 @@ def _make_fake_marker(
     pdf_converter = MagicMock(return_value=converter_instance)
     text_from_rendered = MagicMock(return_value=(body, "md", images or {}))
 
-    config_parser_instance = MagicMock()
-    config_parser_instance.generate_config_dict.return_value = {"effective": True}
-    config_parser_instance.get_processors.return_value = ["processor"]
-    config_parser_instance.get_renderer.return_value = "renderer"
-    config_parser = MagicMock(return_value=config_parser_instance)
-
     return SimpleNamespace(
         create_model_dict=create_model_dict,
         converter_instance=converter_instance,
         pdf_converter=pdf_converter,
         text_from_rendered=text_from_rendered,
-        config_parser=config_parser,
         loaded_models=loaded_models,
     )
 
@@ -1151,16 +1144,11 @@ def _install_fake_marker(fake: SimpleNamespace) -> Iterator[None]:
     pdf_mod.PdfConverter = fake.pdf_converter
     output_mod: Any = types.ModuleType("raw2md_engine.marker.output")
     output_mod.text_from_rendered = fake.text_from_rendered
-    config_mod: Any = types.ModuleType("raw2md_engine.marker.config")
-    parser_mod: Any = types.ModuleType("raw2md_engine.marker.config.parser")
-    parser_mod.ConfigParser = fake.config_parser
     engine_mod.marker = marker_mod
     marker_mod.models = models_mod
     marker_mod.converters = converters_mod
     converters_mod.pdf = pdf_mod
     marker_mod.output = output_mod
-    marker_mod.config = config_mod
-    config_mod.parser = parser_mod
     modules = {
         "raw2md_engine": engine_mod,
         "raw2md_engine.marker": marker_mod,
@@ -1168,8 +1156,6 @@ def _install_fake_marker(fake: SimpleNamespace) -> Iterator[None]:
         "raw2md_engine.marker.converters": converters_mod,
         "raw2md_engine.marker.converters.pdf": pdf_mod,
         "raw2md_engine.marker.output": output_mod,
-        "raw2md_engine.marker.config": config_mod,
-        "raw2md_engine.marker.config.parser": parser_mod,
     }
     with patch.dict(sys.modules, modules):
         yield
@@ -1247,8 +1233,9 @@ def test_marker_engine_source_pages_none_when_count_fails(tmp_path: Path) -> Non
     assert result.source_pages is None
 
 
-def test_marker_engine_builds_converter_through_config_parser(tmp_path: Path) -> None:
-    # Config, processors, and renderer come from ConfigParser.
+def test_marker_engine_keeps_default_processors_and_renderer(tmp_path: Path) -> None:
+    # Without the two arguments the converter takes its default processors
+    # and its Markdown renderer.
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
     fake = _make_fake_marker()
@@ -1256,13 +1243,79 @@ def test_marker_engine_builds_converter_through_config_parser(tmp_path: Path) ->
     with _install_fake_marker(fake):
         MarkerEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
 
-    parser_options = fake.config_parser.call_args.args[0]
-    assert parser_options.get("output_format") == "markdown"
     kwargs = fake.pdf_converter.call_args.kwargs
-    assert kwargs["config"] == {"effective": True}
-    assert kwargs["processor_list"] == ["processor"]
-    assert kwargs["renderer"] == "renderer"
+    assert set(kwargs) == {"config", "artifact_dict"}
     assert kwargs["artifact_dict"] is fake.loaded_models
+
+
+_PAGINATION = {
+    "paginate_output": True,
+    "page_separator": "<!-- raw2md-page-break -->",
+}
+
+
+@pytest.mark.parametrize(
+    ("extract_media", "mark_pages", "batch_size", "expected"),
+    [
+        (True, False, None, {"output_format": "markdown"}),
+        (True, False, 8, {"output_format": "markdown", "recognition_batch_size": 8}),
+        (True, True, None, {"output_format": "markdown", **_PAGINATION}),
+        (
+            True,
+            True,
+            8,
+            {"output_format": "markdown", **_PAGINATION, "recognition_batch_size": 8},
+        ),
+        (False, False, None, {"output_format": "markdown", "extract_images": False}),
+        (
+            False,
+            False,
+            8,
+            {
+                "output_format": "markdown",
+                "extract_images": False,
+                "recognition_batch_size": 8,
+            },
+        ),
+        (
+            False,
+            True,
+            None,
+            {"output_format": "markdown", "extract_images": False, **_PAGINATION},
+        ),
+        (
+            False,
+            True,
+            8,
+            {
+                "output_format": "markdown",
+                "extract_images": False,
+                **_PAGINATION,
+                "recognition_batch_size": 8,
+            },
+        ),
+    ],
+)
+def test_marker_engine_converter_config(
+    tmp_path: Path,
+    extract_media: bool,
+    mark_pages: bool,
+    batch_size: int | None,
+    expected: dict[str, Any],
+) -> None:
+    # An option the adapter leaves unset stays out of the dict, so the
+    # class default holds; a None value would override it.
+    source = tmp_path / "doc.pdf"
+    _write_pdf_bytes(source)
+    fake = _make_fake_marker()
+    options = ConvertOptions(extract_media=extract_media, mark_pages=mark_pages)
+
+    with _install_fake_marker(fake):
+        MarkerEngine(tmp_path, recognition_batch_size=batch_size).convert(
+            source, tmp_path / "doc", options
+        )
+
+    assert fake.pdf_converter.call_args.kwargs["config"] == expected
 
 
 def test_marker_engine_redirects_output_to_log(
@@ -1435,36 +1488,7 @@ def test_marker_engine_disable_image_extraction(tmp_path: Path) -> None:
 
     assert result.media == ()
     assert not media_dir.exists()
-    # ConfigParser translates the flag into marker's effective config.
-    parser_options = fake.config_parser.call_args.args[0]
-    assert parser_options.get("disable_image_extraction") is True
-
-
-def test_marker_engine_recognition_batch_size_reaches_config(tmp_path: Path) -> None:
-    source = tmp_path / "doc.pdf"
-    _write_pdf_bytes(source)
-    fake = _make_fake_marker()
-
-    with _install_fake_marker(fake):
-        MarkerEngine(tmp_path, recognition_batch_size=8).convert(
-            source, tmp_path / "doc", ConvertOptions()
-        )
-
-    parser_options = fake.config_parser.call_args.args[0]
-    assert parser_options.get("recognition_batch_size") == 8
-
-
-def test_marker_engine_no_recognition_batch_size_by_default(tmp_path: Path) -> None:
-    # ConfigParser reads the key's presence, so it must be absent, not None.
-    source = tmp_path / "doc.pdf"
-    _write_pdf_bytes(source)
-    fake = _make_fake_marker()
-
-    with _install_fake_marker(fake):
-        MarkerEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
-
-    parser_options = fake.config_parser.call_args.args[0]
-    assert "recognition_batch_size" not in parser_options
+    assert fake.pdf_converter.call_args.kwargs["config"]["extract_images"] is False
 
 
 def _paginated(*blocks: str) -> str:
@@ -1483,8 +1507,7 @@ def test_marker_engine_leaves_output_unpaginated_by_default(tmp_path: Path) -> N
             source, tmp_path / "doc", ConvertOptions()
         )
 
-    parser_options = fake.config_parser.call_args.args[0]
-    assert "paginate_output" not in parser_options
+    assert "paginate_output" not in fake.pdf_converter.call_args.kwargs["config"]
     assert result.body == "# Title\n\nBody text.\n"
 
 
@@ -1505,8 +1528,7 @@ def test_marker_engine_rewrites_page_separators_into_marks(tmp_path: Path) -> No
             source, tmp_path / "doc", ConvertOptions(mark_pages=True)
         )
 
-    parser_options = fake.config_parser.call_args.args[0]
-    assert parser_options.get("paginate_output") is True
+    assert fake.pdf_converter.call_args.kwargs["config"]["paginate_output"] is True
     # marker counts pages from 0, the mark from 1; each mark sits directly
     # above its page's first line.
     assert result.body == "\n".join(

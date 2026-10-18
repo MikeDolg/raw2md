@@ -4,16 +4,13 @@ from typing import Optional, List, Type
 from pydantic import BaseModel
 
 from raw2md_engine.marker.processors import BaseProcessor
-from raw2md_engine.marker.util import assign_config, download_font
+from raw2md_engine.marker.util import assign_config
 
 
 class BaseConverter:
     def __init__(self, config: Optional[BaseModel | dict] = None):
         assign_config(self, config)
         self.config = config
-
-        # Download render font, needed for some providers
-        download_font()
 
     def __call__(self, *args, **kwargs):
         raise NotImplementedError

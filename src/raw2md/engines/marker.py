@@ -140,29 +140,15 @@ class MarkerEngine(Engine):
     ) -> tuple[str, dict[str, Any]]:
         """Run marker on `source`, returning (markdown, images-by-name).
 
-        Options go through marker's `ConfigParser`, which derives the processors
-        and the renderer; a raw config dict would silently ignore them.
+        The converter keeps its default processors and its Markdown renderer.
         """
-        from raw2md_engine.marker.config.parser import ConfigParser
         from raw2md_engine.marker.converters.pdf import PdfConverter
         from raw2md_engine.marker.output import text_from_rendered
 
-        options: dict[str, Any] = {"output_format": "markdown"}
-        if not extract_media:
-            options["disable_image_extraction"] = True
-        if mark_pages:
-            options["paginate_output"] = True
-            options["page_separator"] = _PAGE_SEPARATOR
-        if self._recognition_batch_size is not None:
-            options["recognition_batch_size"] = self._recognition_batch_size
-
-        config_parser = ConfigParser(options)
-        converter = PdfConverter(
-            config=config_parser.generate_config_dict(),
-            artifact_dict=models,
-            processor_list=config_parser.get_processors(),
-            renderer=config_parser.get_renderer(),
+        config = _converter_config(
+            extract_media, mark_pages, self._recognition_batch_size
         )
+        converter = PdfConverter(config=config, artifact_dict=models)
         rendered = converter(str(source))
         text, _ext, images = text_from_rendered(rendered)
         if mark_pages:
@@ -193,6 +179,25 @@ class MarkerEngine(Engine):
         dest = work_dir / f"input{source.suffix.lower()}"
         shutil.copy2(absolute, dest)
         return dest, lambda: shutil.rmtree(work_dir, ignore_errors=True)
+
+
+def _converter_config(
+    extract_media: bool, mark_pages: bool, recognition_batch_size: int | None
+) -> dict[str, Any]:
+    """The marker config of one conversion, as marker's command line builds it.
+
+    marker hands each key to every class that has an attribute of that name.
+    An unset option stays out of the dict, so the class default holds.
+    """
+    config: dict[str, Any] = {"output_format": "markdown"}
+    if not extract_media:
+        config["extract_images"] = False
+    if mark_pages:
+        config["paginate_output"] = True
+        config["page_separator"] = _PAGE_SEPARATOR
+    if recognition_batch_size is not None:
+        config["recognition_batch_size"] = recognition_batch_size
+    return config
 
 
 def _failure_reason(source: Path, exc: Exception) -> str:

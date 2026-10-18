@@ -73,3 +73,11 @@ command-line and browser applications, and raw2md does not call them.
 `marker/output.py` changed. The change builds the PDF provider directly,
 keeps only the Markdown renderer and output format, and removes the
 unused output helpers.
+
+2026-10-18: `marker/config/` removed. raw2md builds the PDF converter
+directly and does not use the command-line config parser.
+`marker/converters/__init__.py`, `marker/util.py`, and
+`marker/providers/__init__.py` changed. The converter no longer downloads
+a font when it starts. The change removes the font download, the font CSS
+helper of the providers, and the helpers that only the config parser
+used.
