@@ -12,7 +12,7 @@ from raw2md.cleaner import clean, clean_in_place
 
 
 def test_numbered_zigzag_restored_to_flat_ordered() -> None:
-    # marker writes a numbered list as alternating `- N.` bullets.
+    # The engine writes a numbered list as alternating `- N.` bullets.
     text = "- 2. A\n  - 3. B\n- 4. C\n"
     assert clean_in_place(text) == "2. A\n3. B\n4. C\n"
 
@@ -184,7 +184,7 @@ def test_restored_numbered_list_with_child_is_idempotent() -> None:
 
 
 def test_bold_numbered_marker_glued_to_text_gets_a_space() -> None:
-    # marker writes the item number as bold text without the space after it.
+    # The engine writes the item number as bold text without the space after it.
     assert clean_in_place("- **10.**ZENTRIX\n") == "- **10.** ZENTRIX\n"
 
 
@@ -223,7 +223,7 @@ def test_bold_numbered_marker_in_a_nested_list_item_gets_a_space() -> None:
 
 
 def test_bullet_glyph_trailing_a_list_item_is_dropped() -> None:
-    # marker can put its bullet dingbat at the end of the item above.
+    # The engine can put its bullet dingbat at the end of the item above.
     text = "- First item text ❚\n- Second item text\n"
     assert clean_in_place(text) == "- First item text\n- Second item text\n"
 

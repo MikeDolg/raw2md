@@ -37,9 +37,9 @@ class ConversionMethod(str, Enum):  # noqa: UP042
     Cleaning's heading recovery reads it.
     """
 
-    MARKER = "raw2md-engine"
+    BUNDLED = "raw2md-engine"
     PANDOC = "pandoc"
-    DJVU_MARKER = "djvu+raw2md-engine"
+    DJVU_BUNDLED = "djvu+raw2md-engine"
     LLM_OCR = "llm-ocr"
     DJVU_LLM_OCR = "djvu+llm-ocr"
     # A md input is re-cleaned, not converted.
@@ -52,7 +52,7 @@ OWN_HEADER_KEY = "raw2md_version"
 
 # The built-in engine's one user-visible name: the `--engine` default, the
 # header's `engine`, and the settings.json section.
-DEFAULT_ENGINE = ConversionMethod.MARKER.value
+DEFAULT_ENGINE = ConversionMethod.BUNDLED.value
 
 # The engine's name in 0.1.x, for `--engine` and the settings.json section. It
 # is refused with the new name, never read as a model key.

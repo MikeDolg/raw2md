@@ -9,10 +9,10 @@ from pathlib import Path
 
 import pytest
 from conftest import make_run_config
-from test_engines import _install_fake_marker, _make_fake_marker, _make_pdf
+from test_engines import _install_fake_engine, _make_fake_engine, _make_pdf
 
 from raw2md import paths
-from raw2md.engines import ConvertOptions, EngineRegistry, MarkerEngine, PandocEngine
+from raw2md.engines import BundledEngine, ConvertOptions, EngineRegistry, PandocEngine
 from raw2md.pipeline import FileResult, Outcome, RunContext, process_file
 from raw2md.queue import QueueItem
 
@@ -67,24 +67,24 @@ def test_docx_conversion_opens_no_connection(tmp_path: Path) -> None:
 def test_pdf_conversion_opens_no_connection(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _make_pdf(source, pages=2, text="A plain paragraph of invented text.")
-    fake = _make_fake_marker(body="A plain paragraph of invented text.\n")
+    fake = _make_fake_engine(body="A plain paragraph of invented text.\n")
 
-    with _install_fake_marker(fake):
-        result = _run(source, EngineRegistry([MarkerEngine(tmp_path)]))
+    with _install_fake_engine(fake):
+        result = _run(source, EngineRegistry([BundledEngine(tmp_path)]))
 
     assert result.outcome is Outcome.OK
     assert (tmp_path / "doc.md").is_file()
 
 
-def test_marker_models_load_with_a_device_and_the_weights_folder(
+def test_engine_models_load_with_a_device_and_the_weights_folder(
     tmp_path: Path,
 ) -> None:
     source = tmp_path / "doc.pdf"
     _make_pdf(source, pages=1, text="Invented text.")
-    fake = _make_fake_marker()
+    fake = _make_fake_engine()
 
-    with _install_fake_marker(fake):
-        MarkerEngine(tmp_path, cuda=False).convert(
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path, cuda=False).convert(
             source, tmp_path / "doc", ConvertOptions()
         )
 

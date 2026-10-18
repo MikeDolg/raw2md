@@ -70,7 +70,7 @@ _INLINE_CLOSE_PRINTED_AMOUNT = frozenset(")]}")
 # touches whitespace it did not orphan.
 _LABEL_RE = re.compile(r"[ \t]*\\label\{[^}]*\}")
 
-# A pipe-table row by its leading border, which pandoc and marker always emit;
+# A pipe-table row by its leading border, which pandoc and the engine always emit;
 # this matches a row not yet well-formed enough to confirm as a table.
 _TABLE_ROW_START_RE = re.compile(r"^[ \t]*\|")
 
@@ -172,7 +172,7 @@ _NUMBERING = r"[A-Za-z]{0,2}\d+(?:\.\d+)*[a-z]?"
 # form.
 _NUMBER_LINE_NUMBERING = rf"(?:(?:[IVXLC]+|\d+)[.\-])?{_NUMBERING}"
 
-# The equation number marker leaves as text at a span's tail, held off by
+# The equation number the engine leaves as text at a span's tail, held off by
 # spacing. `_split_equation_number` re-derives the match from `group(0)`.
 _EQUATION_NUMBER_RE = re.compile(
     rf"(?:\\q?quad|\\[;,]|[ \t])[ \t]*\([ \t]*({_NUMBERING})[ \t]*\)$"
@@ -213,7 +213,7 @@ _CONDITION_MARKUP_RE = re.compile(r"</?[A-Za-z][^>]*>|\*\*")
 # 27; a longer bracketed line is an enumeration or a paragraph.
 _CONDITION_MAX = 40
 
-# Holds a rejoined condition off the formula, as marker holds a number off; a
+# Holds a rejoined condition off the formula, as the engine holds a number off; a
 # plain space collapses in math mode.
 _CONDITION_SPACER = "\\quad"
 
@@ -443,7 +443,7 @@ def _unescape_pipes(content: str) -> str:
 def reclose_runaway_display_spans(seg_list: list[Segment]) -> list[Segment]:
     r"""Close a display span whose own trailing backslash glued its `$$` shut.
 
-    marker can end a formula with spaces and a backslash flush against `$$`
+    The engine can end a formula with spaces and a backslash flush against `$$`
     (`\$$`); the closer never pairs, and every heading and formula up to the
     next opener reads as one math block. Inside an open span, a backslash run
     glued to `$$` on a formula end, reached before any unescaped `$$`, goes
@@ -1018,7 +1018,7 @@ def _join_over_null_delimiters(head: str, tail: str) -> str:
 def _split_equation_number(content: str) -> tuple[str, str]:
     """`content` without the equation number at its end, and that number.
 
-    Either the `\\tag{...}` marker writes or the parenthesized text it leaves,
+    Either the `\\tag{...}` the engine writes or the parenthesized text it leaves,
     which keeps the spacing command before it. Only a plain numbering is read,
     so a trailing condition (`(1 \\le i \\le n-1)`) stays content.
     """
@@ -1184,7 +1184,7 @@ def _stranded_under_paragraph(below: str) -> bool:
 def tag_equation_numbers(seg_list: list[Segment]) -> list[Segment]:
     r"""Fold a display formula's equation number, or rejoin its stranded tail.
 
-    marker leaves a recognized number as a line under the block or as text at
+    The engine leaves a recognized number as a line under the block or as text at
     the span's tail; both fold into `\tag{}`. The cut also strands the closing
     sentence mark, a line opening with one, or a bracketed condition on the line
     below; each folds back inside the span, before the closer and any tag, and
@@ -1535,7 +1535,7 @@ _MATH_SPAN_HTML_RE = re.compile(r"</?(?:sup|sub|math)\b[^>]*>", re.IGNORECASE)
 def strip_math_span_html(seg_list: list[Segment]) -> list[Segment]:
     r"""Drop an HTML tag the recognition left standing inside a math span.
 
-    marker can leave `<sup>`, `<sub>`, or `<math>` inside `$` markup
+    The engine can leave `<sup>`, `<sub>`, or `<math>` inside `$` markup
     (`$<sup>^{\ast}</sup>$`). A renderer refuses it, and a repair zone on it
     cannot succeed: the reply strips the tag, and the preservation guard reads
     that as lost content. A tag draws nothing in math mode, so it goes; a span
@@ -1596,7 +1596,7 @@ def _strip_span_html(span: str) -> str | None:
 
 
 def normalize_math(seg_list: list[Segment]) -> list[Segment]:
-    """Normalize marker's math for KaTeX inside detected `$...$`/`$$...$$` zones.
+    """Normalize the engine's math for KaTeX inside detected `$...$`/`$$...$$` zones.
 
     Runs per run of plain lines, so a `$` is never paired across a protected
     zone. Only mechanical substitutions that keep the formula's words; see
@@ -1622,7 +1622,7 @@ def normalize_math(seg_list: list[Segment]) -> list[Segment]:
 
 
 def _normalize_math_zones(text: str) -> str:
-    """Fix marker math in `text`, display zones first.
+    """Fix engine math in `text`, display zones first.
 
     The inline pattern would otherwise read the two `$` of a `$$` as its own
     empty span.
@@ -1706,7 +1706,7 @@ def _prime_quotes_in_math(text: str) -> str:
 def _balance_environments(content: str) -> str:
     """Drop the environment markup a split aligned block left behind.
 
-    marker can cut an aligned block across two spans, leaving the tail an
+    The engine can cut an aligned block across two spans, leaving the tail an
     orphan `\\end{...}` and its `&`, which KaTeX rejects. The orphan closer is
     the proof, so an `&` goes only with one: in prose paired as a span
     (`$5 & $6`) the `&` is a word. The whitespace separating each goes too.

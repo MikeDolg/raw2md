@@ -99,7 +99,7 @@ def display_units(
 ) -> dict[int, DisplayUnit]:
     """Find the display formulas cut across several lines, keyed by every line.
 
-    marker emits a long display formula as one damaged `$$...$$` per line, and
+    The engine emits a long display formula as one damaged `$$...$$` per line, and
     no piece can be repaired alone. Every piece is a damaged whole-line span,
     and every piece after the first opens with a token no formula opens with;
     otherwise two damaged formulas side by side would merge. Blank lines belong

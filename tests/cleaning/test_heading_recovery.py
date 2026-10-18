@@ -17,9 +17,9 @@ from ._helpers import (
     outlined,
 )
 
-# ---- headings marker lost to plain text ---------------------------------------
+# ---- headings the engine lost to plain text -----------------------------------
 
-# marker dropped the marker of a `6.1.1.1`-depth heading; its parent is present.
+# The engine dropped the marker of a `6.1.1.1`-depth heading; its parent is present.
 _LOST_HEADING_TEXT = (
     "# 6 Maintenance\n"
     "\n"
@@ -479,8 +479,8 @@ def test_uppercase_tail_merge_is_stable_on_a_second_clean() -> None:
     assert clean_full_text(once) == once
 
 
-def test_uppercase_tail_merge_is_off_on_the_marker_route() -> None:
-    options = CleanOptions(method=ConversionMethod.MARKER)
+def test_uppercase_tail_merge_is_off_on_the_engine_route() -> None:
+    options = CleanOptions(method=ConversionMethod.BUNDLED)
     text = body(
         "**INTRO**",
         "**UNDER THE HEAT**",
@@ -945,15 +945,15 @@ def test_caps_heading_directly_before_an_html_table_is_recovered() -> None:
 # ---- the route a body came from ------------------------------------------------
 
 
-def test_recovery_is_off_on_the_marker_route() -> None:
+def test_recovery_is_off_on_the_engine_route() -> None:
     # On a recognized page an all-caps line may be a running head or OCR debris.
-    options = CleanOptions(method=ConversionMethod.MARKER)
+    options = CleanOptions(method=ConversionMethod.BUNDLED)
     assert clean_in_place(_CAPS_TEXT, options) == _CAPS_TEXT
     assert clean_in_place(_UNSTYLED_TEXT, options) == _UNSTYLED_TEXT
 
 
 def test_recovery_is_off_on_the_djvu_route() -> None:
-    options = CleanOptions(method=ConversionMethod.DJVU_MARKER)
+    options = CleanOptions(method=ConversionMethod.DJVU_BUNDLED)
     assert clean_in_place(_CAPS_TEXT, options) == _CAPS_TEXT
 
 
@@ -968,5 +968,5 @@ def test_recovery_is_on_for_the_clean_route() -> None:
 
 
 def test_route_does_not_gate_the_other_cleaning_rules() -> None:
-    options = CleanOptions(method=ConversionMethod.MARKER)
+    options = CleanOptions(method=ConversionMethod.BUNDLED)
     assert clean_in_place("##Text\n", options) == "## Text\n"

@@ -58,7 +58,7 @@ class StubEngine(Engine):
         self,
         *,
         extensions: frozenset[str],
-        method: ConversionMethod = ConversionMethod.MARKER,
+        method: ConversionMethod = ConversionMethod.BUNDLED,
         body: str = OK_BODY,
         media: tuple[str, ...] = (),
         source_pages: int | None = None,
@@ -174,7 +174,7 @@ def test_real_signatures_reach_their_engine(tmp_path: Path) -> None:
         extensions=frozenset({"docx"}), method=ConversionMethod.PANDOC
     )
     djvu_engine = StubEngine(
-        extensions=frozenset({"djvu"}), method=ConversionMethod.DJVU_MARKER
+        extensions=frozenset({"djvu"}), method=ConversionMethod.DJVU_BUNDLED
     )
     pdf_src = tmp_path / "a.pdf"
     pdf_src.write_bytes(b"%PDF-1.4 real enough")
@@ -226,7 +226,7 @@ def test_docx_with_ole2_content_stops_before_pandoc(
     assert "OLE2" in caplog.text
 
 
-def test_pdf_without_pdf_header_stops_before_marker(
+def test_pdf_without_pdf_header_stops_before_the_engine(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.ERROR, logger="raw2md")
@@ -237,7 +237,7 @@ def test_pdf_without_pdf_header_stops_before_marker(
     result = run_one(src, EngineRegistry([engine]))
 
     assert result.outcome is Outcome.NO_RESULT
-    assert engine.last_options is None  # never reached marker
+    assert engine.last_options is None  # never reached the engine
     assert not (tmp_path / "a.md").exists()
     assert "%PDF-" in caplog.text
 
@@ -845,7 +845,7 @@ def test_density_failure_via_djvu_source_pages(tmp_path: Path) -> None:
         [
             StubEngine(
                 extensions=frozenset({"djvu"}),
-                method=ConversionMethod.DJVU_MARKER,
+                method=ConversionMethod.DJVU_BUNDLED,
                 source_pages=50,
             )
         ]
@@ -1574,7 +1574,7 @@ def test_inspection_djvu_without_temp_root_is_failed_not_none(
         [
             StubEngine(
                 extensions=frozenset({"djvu"}),
-                method=ConversionMethod.DJVU_MARKER,
+                method=ConversionMethod.DJVU_BUNDLED,
                 body=INSPECT_BODY,
             )
         ]
@@ -1603,7 +1603,7 @@ def test_inspection_djvu_build_error_is_failed_not_none(
         [
             StubEngine(
                 extensions=frozenset({"djvu"}),
-                method=ConversionMethod.DJVU_MARKER,
+                method=ConversionMethod.DJVU_BUNDLED,
                 body=INSPECT_BODY,
             )
         ]
@@ -1630,7 +1630,7 @@ def _assembling_djvu_engine(pdf: bytes) -> StubEngine:
     """A stub standing in for the djvu chain: it converts a pdf it assembled."""
     return StubEngine(
         extensions=frozenset({"djvu"}),
-        method=ConversionMethod.DJVU_MARKER,
+        method=ConversionMethod.DJVU_BUNDLED,
         body=INSPECT_BODY,
         assembled_pdf=pdf,
     )

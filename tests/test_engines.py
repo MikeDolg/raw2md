@@ -23,6 +23,7 @@ from test_weights import FakeHub, fill_weights
 
 from raw2md import paths
 from raw2md.engines import (
+    BundledEngine,
     ConversionError,
     ConversionResult,
     ConvertOptions,
@@ -31,7 +32,6 @@ from raw2md.engines import (
     EngineNotFoundError,
     EngineRegistry,
     EngineUnavailableError,
-    MarkerEngine,
     PandocEngine,
     check_signature,
     check_source,
@@ -102,7 +102,7 @@ def test_normalize_extension_strips_dot_and_case() -> None:
 
 
 def test_select_matches_extension_case_insensitively() -> None:
-    engine = StubEngine(method=ConversionMethod.MARKER, extensions=frozenset({"pdf"}))
+    engine = StubEngine(method=ConversionMethod.BUNDLED, extensions=frozenset({"pdf"}))
     registry = EngineRegistry([engine])
 
     assert registry.select(Path("a.pdf")) is engine
@@ -113,7 +113,7 @@ def test_select_matches_extension_case_insensitively() -> None:
 def test_select_finds_engine_declaring_non_normalized_extension() -> None:
     # Registration normalizes claims, so `PDF`/`.pdf` stays selectable.
     engine = StubEngine(
-        method=ConversionMethod.MARKER, extensions=frozenset({"PDF", ".djvu"})
+        method=ConversionMethod.BUNDLED, extensions=frozenset({"PDF", ".djvu"})
     )
     registry = EngineRegistry([engine])
 
@@ -123,7 +123,7 @@ def test_select_finds_engine_declaring_non_normalized_extension() -> None:
 
 def test_select_unknown_extension_raises_not_found() -> None:
     registry = EngineRegistry(
-        [StubEngine(method=ConversionMethod.MARKER, extensions=frozenset({"pdf"}))]
+        [StubEngine(method=ConversionMethod.BUNDLED, extensions=frozenset({"pdf"}))]
     )
     with pytest.raises(EngineNotFoundError):
         registry.select(Path("notes.txt"))
@@ -144,9 +144,9 @@ def test_select_unavailable_engine_raises_unavailable() -> None:
 
 
 def test_registry_rejects_two_engines_for_one_extension() -> None:
-    first = StubEngine(method=ConversionMethod.MARKER, extensions=frozenset({"pdf"}))
+    first = StubEngine(method=ConversionMethod.BUNDLED, extensions=frozenset({"pdf"}))
     second = StubEngine(
-        method=ConversionMethod.DJVU_MARKER, extensions=frozenset({"pdf", "djvu"})
+        method=ConversionMethod.DJVU_BUNDLED, extensions=frozenset({"pdf", "djvu"})
     )
     with pytest.raises(ValueError, match="pdf"):
         EngineRegistry([first, second])
@@ -154,11 +154,11 @@ def test_registry_rejects_two_engines_for_one_extension() -> None:
 
 def test_unavailable_lists_each_engine_once() -> None:
     available = StubEngine(
-        method=ConversionMethod.MARKER, extensions=frozenset({"pdf"})
+        method=ConversionMethod.BUNDLED, extensions=frozenset({"pdf"})
     )
     # One engine handling two extensions must still appear once in the report.
     missing = StubEngine(
-        method=ConversionMethod.DJVU_MARKER,
+        method=ConversionMethod.DJVU_BUNDLED,
         extensions=frozenset({"djvu", "djv"}),
         available=False,
     )
@@ -169,7 +169,7 @@ def test_unavailable_lists_each_engine_once() -> None:
 
 def test_unavailable_empty_when_all_present() -> None:
     registry = EngineRegistry(
-        [StubEngine(method=ConversionMethod.MARKER, extensions=frozenset({"pdf"}))]
+        [StubEngine(method=ConversionMethod.BUNDLED, extensions=frozenset({"pdf"}))]
     )
     assert registry.unavailable() == ()
 
@@ -1084,11 +1084,11 @@ def test_fold_leaves_a_block_that_is_not_a_table() -> None:
 
 
 # ---------------------------------------------------------------------------
-# MarkerEngine (pdf route, marker mocked)
+# BundledEngine (pdf route, engine copy mocked)
 # ---------------------------------------------------------------------------
 
 
-def _make_fake_marker(
+def _make_fake_engine(
     *,
     body: str = "BODY\n",
     images: dict[str, Any] | None = None,
@@ -1096,7 +1096,7 @@ def _make_fake_marker(
     convert_banner: tuple[str, str] | None = None,
     convert_error: Exception | None = None,
 ) -> SimpleNamespace:
-    """Build mocks standing in for marker's library entry points.
+    """Build mocks standing in for the library entry points of the engine.
 
     The banners make the fakes print, for output-isolation tests.
     `convert_error` is raised inside the converter call.
@@ -1132,10 +1132,10 @@ def _make_fake_marker(
 
 
 @contextmanager
-def _install_fake_marker(
+def _install_fake_engine(
     fake: SimpleNamespace, *, weights_ready: bool = True
 ) -> Iterator[None]:
-    """Register fake marker modules so the engine's lazy imports resolve.
+    """Register fake `raw2md_engine.marker` modules for the lazy imports.
 
     A real `__spec__` keeps `find_spec("raw2md_engine")` truthy. With
     `weights_ready` the weights check finds every file in place, so the
@@ -1177,39 +1177,39 @@ def _write_pdf_bytes(path: Path) -> None:
     path.write_bytes(b"%PDF-1.4 minimal")
 
 
-def test_marker_engine_method_and_extensions(tmp_path: Path) -> None:
-    engine = MarkerEngine(tmp_path)
-    assert engine.method is ConversionMethod.MARKER
+def test_bundled_engine_method_and_extensions(tmp_path: Path) -> None:
+    engine = BundledEngine(tmp_path)
+    assert engine.method is ConversionMethod.BUNDLED
     assert engine.extensions == frozenset({"pdf"})
 
 
-def test_marker_engine_available_when_package_present(tmp_path: Path) -> None:
-    with patch("raw2md.engines.marker.find_spec", return_value=MagicMock()):
-        assert MarkerEngine(tmp_path).available() is True
+def test_bundled_engine_available_when_package_present(tmp_path: Path) -> None:
+    with patch("raw2md.engines.bundled.find_spec", return_value=MagicMock()):
+        assert BundledEngine(tmp_path).available() is True
 
 
-def test_marker_engine_unavailable_when_package_missing(tmp_path: Path) -> None:
-    with patch("raw2md.engines.marker.find_spec", return_value=None):
-        assert MarkerEngine(tmp_path).available() is False
+def test_bundled_engine_unavailable_when_package_missing(tmp_path: Path) -> None:
+    with patch("raw2md.engines.bundled.find_spec", return_value=None):
+        assert BundledEngine(tmp_path).available() is False
 
 
-def test_marker_engine_convert_raises_when_unavailable(tmp_path: Path) -> None:
+def test_bundled_engine_convert_raises_when_unavailable(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
     with (
-        patch("raw2md.engines.marker.find_spec", return_value=None),
+        patch("raw2md.engines.bundled.find_spec", return_value=None),
         pytest.raises(ConversionError, match="raw2md-engine is not installed"),
     ):
-        MarkerEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
+        BundledEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
 
 
-def test_marker_engine_convert_returns_body(tmp_path: Path) -> None:
+def test_bundled_engine_convert_returns_body(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
-    fake = _make_fake_marker(body="# Title\n")
+    fake = _make_fake_engine(body="# Title\n")
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(
             source, tmp_path / "doc", ConvertOptions()
         )
 
@@ -1217,26 +1217,26 @@ def test_marker_engine_convert_returns_body(tmp_path: Path) -> None:
     assert result.media == ()
 
 
-def test_marker_engine_fills_source_pages_from_real_pdf(tmp_path: Path) -> None:
+def test_bundled_engine_fills_source_pages_from_real_pdf(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _make_pdf(source, pages=3, text="Page text content here.")
-    fake = _make_fake_marker()
+    fake = _make_fake_engine()
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(
             source, tmp_path / "doc", ConvertOptions()
         )
 
     assert result.source_pages == 3
 
 
-def test_marker_engine_source_pages_none_when_count_fails(tmp_path: Path) -> None:
+def test_bundled_engine_source_pages_none_when_count_fails(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)  # not a real pdf: PyMuPDF cannot open it
-    fake = _make_fake_marker(body="# Title\n")
+    fake = _make_fake_engine(body="# Title\n")
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(
             source, tmp_path / "doc", ConvertOptions()
         )
 
@@ -1245,15 +1245,15 @@ def test_marker_engine_source_pages_none_when_count_fails(tmp_path: Path) -> Non
     assert result.source_pages is None
 
 
-def test_marker_engine_keeps_default_processors_and_renderer(tmp_path: Path) -> None:
+def test_bundled_engine_keeps_default_processors_and_renderer(tmp_path: Path) -> None:
     # Without the two arguments the converter takes its default processors
     # and its Markdown renderer.
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
-    fake = _make_fake_marker()
+    fake = _make_fake_engine()
 
-    with _install_fake_marker(fake):
-        MarkerEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
 
     kwargs = fake.pdf_converter.call_args.kwargs
     assert set(kwargs) == {"config", "artifact_dict"}
@@ -1308,7 +1308,7 @@ _PAGINATION = {
         ),
     ],
 )
-def test_marker_engine_converter_config(
+def test_bundled_engine_converter_config(
     tmp_path: Path,
     extract_media: bool,
     mark_pages: bool,
@@ -1319,66 +1319,66 @@ def test_marker_engine_converter_config(
     # class default holds; a None value would override it.
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
-    fake = _make_fake_marker()
+    fake = _make_fake_engine()
     options = ConvertOptions(extract_media=extract_media, mark_pages=mark_pages)
 
-    with _install_fake_marker(fake):
-        MarkerEngine(tmp_path, recognition_batch_size=batch_size).convert(
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path, recognition_batch_size=batch_size).convert(
             source, tmp_path / "doc", options
         )
 
     assert fake.pdf_converter.call_args.kwargs["config"] == expected
 
 
-def test_marker_engine_redirects_output_to_log(
+def test_bundled_engine_redirects_output_to_log(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
     log = io.StringIO()
-    fake = _make_fake_marker(
+    fake = _make_fake_engine(
         model_banner="MODEL LOADING",
-        convert_banner=("MARKER STDOUT", "SURYA STDERR"),
+        convert_banner=("ENGINE STDOUT", "ENGINE STDERR"),
     )
 
-    with _install_fake_marker(fake):
-        MarkerEngine(tmp_path, log_stream=log).convert(
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path, log_stream=log).convert(
             source, tmp_path / "doc", ConvertOptions()
         )
 
     captured = capsys.readouterr()
-    assert "MARKER STDOUT" not in captured.out
-    assert "SURYA STDERR" not in captured.err
+    assert "ENGINE STDOUT" not in captured.out
+    assert "ENGINE STDERR" not in captured.err
     log_text = log.getvalue()
     assert "MODEL LOADING" in log_text
-    assert "MARKER STDOUT" in log_text
-    assert "SURYA STDERR" in log_text
+    assert "ENGINE STDOUT" in log_text
+    assert "ENGINE STDERR" in log_text
 
 
-def test_marker_engine_discards_output_without_log(
+def test_bundled_engine_discards_output_without_log(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
-    fake = _make_fake_marker(convert_banner=("NOISE OUT", "NOISE ERR"))
+    fake = _make_fake_engine(convert_banner=("NOISE OUT", "NOISE ERR"))
 
-    with _install_fake_marker(fake):
-        MarkerEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
 
     captured = capsys.readouterr()
     assert "NOISE OUT" not in captured.out
     assert "NOISE ERR" not in captured.err
 
 
-def test_marker_engine_loads_model_once_across_files(tmp_path: Path) -> None:
+def test_bundled_engine_loads_model_once_across_files(tmp_path: Path) -> None:
     first = tmp_path / "a.pdf"
     second = tmp_path / "b.pdf"
     _write_pdf_bytes(first)
     _write_pdf_bytes(second)
-    fake = _make_fake_marker()
-    engine = MarkerEngine(tmp_path)
+    fake = _make_fake_engine()
+    engine = BundledEngine(tmp_path)
 
-    with _install_fake_marker(fake):
+    with _install_fake_engine(fake):
         engine.convert(first, tmp_path / "a", ConvertOptions())
         engine.convert(second, tmp_path / "b", ConvertOptions())
 
@@ -1386,7 +1386,7 @@ def test_marker_engine_loads_model_once_across_files(tmp_path: Path) -> None:
     assert fake.create_model_dict.call_count == 1
 
 
-def test_marker_engine_downloads_missing_weights_before_the_models(
+def test_bundled_engine_downloads_missing_weights_before_the_models(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     source = home / "doc.pdf"
@@ -1396,7 +1396,7 @@ def test_marker_engine_downloads_missing_weights_before_the_models(
     gone = weights.FILES[1]
     (weights_dir / gone).unlink()
     hub = FakeHub().install(monkeypatch)
-    fake = _make_fake_marker()
+    fake = _make_fake_engine()
     loaded_models: dict[str, Any] = fake.loaded_models
     downloads_before_models: list[int] = []
 
@@ -1407,8 +1407,8 @@ def test_marker_engine_downloads_missing_weights_before_the_models(
     fake.create_model_dict.side_effect = _create
     phases: list[str] = []
 
-    with _install_fake_marker(fake, weights_ready=False):
-        MarkerEngine(home).convert(
+    with _install_fake_engine(fake, weights_ready=False):
+        BundledEngine(home).convert(
             source, home / "doc", ConvertOptions(on_phase=phases.append)
         )
 
@@ -1418,7 +1418,7 @@ def test_marker_engine_downloads_missing_weights_before_the_models(
     assert fake.create_model_dict.call_args.kwargs["weights_dir"] == str(weights_dir)
 
 
-def test_marker_engine_with_the_weights_in_place_requests_nothing(
+def test_bundled_engine_with_the_weights_in_place_requests_nothing(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     source = home / "doc.pdf"
@@ -1427,8 +1427,8 @@ def test_marker_engine_with_the_weights_in_place_requests_nothing(
     hub = FakeHub().install(monkeypatch)
     phases: list[str] = []
 
-    with _install_fake_marker(_make_fake_marker(), weights_ready=False):
-        MarkerEngine(home).convert(
+    with _install_fake_engine(_make_fake_engine(), weights_ready=False):
+        BundledEngine(home).convert(
             source, home / "doc", ConvertOptions(on_phase=phases.append)
         )
 
@@ -1436,71 +1436,71 @@ def test_marker_engine_with_the_weights_in_place_requests_nothing(
     assert "weights" not in phases
 
 
-def test_marker_engine_reports_a_failed_weights_download(
+def test_bundled_engine_reports_a_failed_weights_download(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     source = home / "doc.pdf"
     _write_pdf_bytes(source)
     FakeHub(error=OSError("connection refused")).install(monkeypatch)
-    fake = _make_fake_marker()
+    fake = _make_fake_engine()
 
     with (
-        _install_fake_marker(fake, weights_ready=False),
+        _install_fake_engine(fake, weights_ready=False),
         pytest.raises(ConversionError, match="cannot download the engine weights"),
     ):
-        MarkerEngine(home).convert(source, home / "doc", ConvertOptions())
+        BundledEngine(home).convert(source, home / "doc", ConvertOptions())
 
     fake.create_model_dict.assert_not_called()
 
 
-def test_marker_engine_cuda_off_forces_cpu(tmp_path: Path) -> None:
+def test_bundled_engine_cuda_off_forces_cpu(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
-    fake = _make_fake_marker()
+    fake = _make_fake_engine()
 
-    with _install_fake_marker(fake):
-        MarkerEngine(tmp_path, cuda=False).convert(
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path, cuda=False).convert(
             source, tmp_path / "doc", ConvertOptions()
         )
 
     assert fake.create_model_dict.call_args.kwargs.get("device") == "cpu"
 
 
-def test_marker_engine_cuda_on_auto_selects_device(tmp_path: Path) -> None:
+def test_bundled_engine_cuda_on_auto_selects_device(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
-    fake = _make_fake_marker()
+    fake = _make_fake_engine()
 
-    with _install_fake_marker(fake):
-        MarkerEngine(tmp_path, cuda=True).convert(
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path, cuda=True).convert(
             source, tmp_path / "doc", ConvertOptions()
         )
 
     assert fake.create_model_dict.call_args.kwargs.get("device") is None
 
 
-def test_marker_engine_ascii_source_passed_through(tmp_path: Path) -> None:
+def test_bundled_engine_ascii_source_passed_through(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
-    fake = _make_fake_marker()
+    fake = _make_fake_engine()
 
-    with _install_fake_marker(fake):
-        MarkerEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
 
     filepath = fake.converter_instance.call_args.args[0]
     assert filepath == str(source.resolve())
 
 
-def test_marker_engine_non_ascii_source_copied_to_ascii_temp(tmp_path: Path) -> None:
+def test_bundled_engine_non_ascii_source_copied_to_ascii_temp(tmp_path: Path) -> None:
     src_dir = tmp_path / "src"
     src_dir.mkdir()
     source = src_dir / "файл.pdf"
     _write_pdf_bytes(source)
     temp_root = tmp_path / "asciitmp"
-    fake = _make_fake_marker()
+    fake = _make_fake_engine()
 
-    with _install_fake_marker(fake):
-        MarkerEngine(temp_root).convert(source, tmp_path / "out", ConvertOptions())
+    with _install_fake_engine(fake):
+        BundledEngine(temp_root).convert(source, tmp_path / "out", ConvertOptions())
 
     filepath = fake.converter_instance.call_args.args[0]
     assert filepath != str(source.resolve())
@@ -1509,59 +1509,59 @@ def test_marker_engine_non_ascii_source_copied_to_ascii_temp(tmp_path: Path) -> 
     assert Path(filepath).is_relative_to(temp_root)
 
 
-def test_marker_engine_cleans_temp_after_non_ascii(tmp_path: Path) -> None:
+def test_bundled_engine_cleans_temp_after_non_ascii(tmp_path: Path) -> None:
     src_dir = tmp_path / "src"
     src_dir.mkdir()
     source = src_dir / "файл.pdf"
     _write_pdf_bytes(source)
     temp_root = tmp_path / "asciitmp"
-    fake = _make_fake_marker()
+    fake = _make_fake_engine()
 
-    with _install_fake_marker(fake):
-        MarkerEngine(temp_root).convert(source, tmp_path / "out", ConvertOptions())
+    with _install_fake_engine(fake):
+        BundledEngine(temp_root).convert(source, tmp_path / "out", ConvertOptions())
 
     # The per-call work folder is removed once conversion finishes.
-    assert list(temp_root.glob("marker_*")) == []
+    assert list(temp_root.glob("raw2md_engine_*")) == []
 
 
-def test_marker_engine_cleans_temp_on_failure(tmp_path: Path) -> None:
+def test_bundled_engine_cleans_temp_on_failure(tmp_path: Path) -> None:
     src_dir = tmp_path / "src"
     src_dir.mkdir()
     source = src_dir / "файл.pdf"
     _write_pdf_bytes(source)
     temp_root = tmp_path / "asciitmp"
-    fake = _make_fake_marker(convert_error=RuntimeError("boom"))
+    fake = _make_fake_engine(convert_error=RuntimeError("boom"))
 
-    with _install_fake_marker(fake), pytest.raises(ConversionError):
-        MarkerEngine(temp_root).convert(source, tmp_path / "out", ConvertOptions())
+    with _install_fake_engine(fake), pytest.raises(ConversionError):
+        BundledEngine(temp_root).convert(source, tmp_path / "out", ConvertOptions())
 
-    assert list(temp_root.glob("marker_*")) == []
+    assert list(temp_root.glob("raw2md_engine_*")) == []
 
 
-def test_marker_engine_extracts_images(tmp_path: Path) -> None:
+def test_bundled_engine_extracts_images(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
     image = Image.new("RGB", (2, 2), "white")
-    fake = _make_fake_marker(images={"fig_1.png": image, "fig_0.png": image})
+    fake = _make_fake_engine(images={"fig_1.png": image, "fig_0.png": image})
     media_dir = tmp_path / "doc"
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(source, media_dir, ConvertOptions())
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(source, media_dir, ConvertOptions())
 
     assert result.media == ("fig_0.png", "fig_1.png")
     assert (media_dir / "fig_0.png").exists()
     assert (media_dir / "fig_1.png").exists()
 
 
-def test_marker_engine_disable_image_extraction(tmp_path: Path) -> None:
+def test_bundled_engine_disable_image_extraction(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
     image = Image.new("RGB", (2, 2), "white")
-    fake = _make_fake_marker(images={"fig.png": image})
+    fake = _make_fake_engine(images={"fig.png": image})
     media_dir = tmp_path / "doc"
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(
             source, media_dir, ConvertOptions(extract_media=False)
         )
 
@@ -1571,18 +1571,18 @@ def test_marker_engine_disable_image_extraction(tmp_path: Path) -> None:
 
 
 def _paginated(*blocks: str) -> str:
-    """marker's paginated output: `{page}` plus the separator, blank-line wrapped."""
+    """Paginated engine output: `{page}` plus the separator, blank-line wrapped."""
     return "\n\n" + "\n\n".join(blocks) + "\n"
 
 
-def test_marker_engine_leaves_output_unpaginated_by_default(tmp_path: Path) -> None:
+def test_bundled_engine_leaves_output_unpaginated_by_default(tmp_path: Path) -> None:
     # Page marks are inspection's addressing; without it none are written.
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
-    fake = _make_fake_marker(body="# Title\n\nBody text.\n")
+    fake = _make_fake_engine(body="# Title\n\nBody text.\n")
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(
             source, tmp_path / "doc", ConvertOptions()
         )
 
@@ -1590,7 +1590,7 @@ def test_marker_engine_leaves_output_unpaginated_by_default(tmp_path: Path) -> N
     assert result.body == "# Title\n\nBody text.\n"
 
 
-def test_marker_engine_rewrites_page_separators_into_marks(tmp_path: Path) -> None:
+def test_bundled_engine_rewrites_page_separators_into_marks(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
     body = _paginated(
@@ -1600,15 +1600,15 @@ def test_marker_engine_rewrites_page_separators_into_marks(tmp_path: Path) -> No
         "{1}<!-- raw2md-page-break -->",
         "Second page text.",
     )
-    fake = _make_fake_marker(body=body)
+    fake = _make_fake_engine(body=body)
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(
             source, tmp_path / "doc", ConvertOptions(mark_pages=True)
         )
 
     assert fake.pdf_converter.call_args.kwargs["config"]["paginate_output"] is True
-    # marker counts pages from 0, the mark from 1; each mark sits directly
+    # The engine counts pages from 0, the mark from 1; each mark sits directly
     # above its page's first line.
     assert result.body == "\n".join(
         [
@@ -1623,7 +1623,7 @@ def test_marker_engine_rewrites_page_separators_into_marks(tmp_path: Path) -> No
     )
 
 
-def test_marker_engine_holds_a_mark_out_of_a_block(tmp_path: Path) -> None:
+def test_bundled_engine_holds_a_mark_out_of_a_block(tmp_path: Path) -> None:
     # A list crosses the page boundary; a mark inside it would read as a list
     # line, so it waits for the block to end.
     source = tmp_path / "doc.pdf"
@@ -1634,10 +1634,10 @@ def test_marker_engine_holds_a_mark_out_of_a_block(tmp_path: Path) -> None:
         "- second item\n{1}<!-- raw2md-page-break -->\n- third item",
         "After the list.",
     )
-    fake = _make_fake_marker(body=body)
+    fake = _make_fake_engine(body=body)
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(
             source, tmp_path / "doc", ConvertOptions(mark_pages=True)
         )
 
@@ -1646,10 +1646,10 @@ def test_marker_engine_holds_a_mark_out_of_a_block(tmp_path: Path) -> None:
     assert page_mark(2) not in lines[: lines.index("- third item")]
 
 
-def test_marker_engine_rejoins_a_paragraph_split_by_a_page_break(
+def test_bundled_engine_rejoins_a_paragraph_split_by_a_page_break(
     tmp_path: Path,
 ) -> None:
-    # Paginated, marker splits a paragraph at the boundary; the rejoin keeps
+    # Paginated, the engine splits a paragraph at the boundary; the rejoin keeps
     # the marked text equal to the unmarked one.
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
@@ -1660,10 +1660,10 @@ def test_marker_engine_rejoins_a_paragraph_split_by_a_page_break(
         "across the page boundary.",
         "A later paragraph.",
     )
-    fake = _make_fake_marker(body=body)
+    fake = _make_fake_engine(body=body)
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(
             source, tmp_path / "doc", ConvertOptions(mark_pages=True)
         )
 
@@ -1675,7 +1675,7 @@ def test_marker_engine_rejoins_a_paragraph_split_by_a_page_break(
     assert pages == ((0, 1), (2, 2))
 
 
-def test_marker_engine_marks_a_block_that_runs_to_the_end(tmp_path: Path) -> None:
+def test_bundled_engine_marks_a_block_that_runs_to_the_end(tmp_path: Path) -> None:
     # No later block to wait for, so the mark goes to the top of the block.
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
@@ -1684,10 +1684,10 @@ def test_marker_engine_marks_a_block_that_runs_to_the_end(tmp_path: Path) -> Non
         "Opening paragraph.",
         "- first item\n{1}<!-- raw2md-page-break -->\n- second item",
     )
-    fake = _make_fake_marker(body=body)
+    fake = _make_fake_engine(body=body)
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(
             source, tmp_path / "doc", ConvertOptions(mark_pages=True)
         )
 
@@ -1696,7 +1696,7 @@ def test_marker_engine_marks_a_block_that_runs_to_the_end(tmp_path: Path) -> Non
     assert pages == ((0, 1), (2, 2))
 
 
-def test_marker_engine_drops_a_mark_with_no_line_to_address(tmp_path: Path) -> None:
+def test_bundled_engine_drops_a_mark_with_no_line_to_address(tmp_path: Path) -> None:
     # A trailing blank page opens nothing, and leaving it out shifts nothing.
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
@@ -1705,17 +1705,17 @@ def test_marker_engine_drops_a_mark_with_no_line_to_address(tmp_path: Path) -> N
         "Only page with text.",
         "{1}<!-- raw2md-page-break -->",
     )
-    fake = _make_fake_marker(body=body)
+    fake = _make_fake_engine(body=body)
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(
             source, tmp_path / "doc", ConvertOptions(mark_pages=True)
         )
 
     assert result.body == f"{page_mark(1)}\nOnly page with text."
 
 
-def test_marker_engine_stacks_marks_of_a_page_with_no_text(tmp_path: Path) -> None:
+def test_bundled_engine_stacks_marks_of_a_page_with_no_text(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)
     body = _paginated(
@@ -1725,10 +1725,10 @@ def test_marker_engine_stacks_marks_of_a_page_with_no_text(tmp_path: Path) -> No
         "{2}<!-- raw2md-page-break -->",
         "Third page text.",
     )
-    fake = _make_fake_marker(body=body)
+    fake = _make_fake_engine(body=body)
 
-    with _install_fake_marker(fake):
-        result = MarkerEngine(tmp_path).convert(
+    with _install_fake_engine(fake):
+        result = BundledEngine(tmp_path).convert(
             source, tmp_path / "doc", ConvertOptions(mark_pages=True)
         )
 
@@ -1738,32 +1738,32 @@ def test_marker_engine_stacks_marks_of_a_page_with_no_text(tmp_path: Path) -> No
     assert pages == ((0, 1), (2, 2), (2, 3))
 
 
-def test_marker_engine_wraps_conversion_failure(tmp_path: Path) -> None:
+def test_bundled_engine_wraps_conversion_failure(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _make_pdf(source, pages=1, text="Readable text.")
-    fake = _make_fake_marker(convert_error=RuntimeError("boom"))
+    fake = _make_fake_engine(convert_error=RuntimeError("boom"))
 
     with (
-        _install_fake_marker(fake),
+        _install_fake_engine(fake),
         # The source opens, so the engine's own text stands.
         pytest.raises(ConversionError, match="boom"),
     ):
-        MarkerEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
+        BundledEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
 
 
-def test_marker_engine_failure_names_a_pdf_that_does_not_open(tmp_path: Path) -> None:
+def test_bundled_engine_failure_names_a_pdf_that_does_not_open(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)  # %PDF- headed, but no pdf any reader can open
-    fake = _make_fake_marker(convert_error=RuntimeError("boom"))
+    fake = _make_fake_engine(convert_error=RuntimeError("boom"))
 
     with (
-        _install_fake_marker(fake),
+        _install_fake_engine(fake),
         pytest.raises(ConversionError, match="the pdf does not open"),
     ):
-        MarkerEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
+        BundledEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
 
 
-def test_marker_engine_failure_names_a_pdf_with_no_page(tmp_path: Path) -> None:
+def test_bundled_engine_failure_names_a_pdf_with_no_page(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     # A pdf cut off before its pages opens but holds nothing.
     source.write_bytes(
@@ -1772,10 +1772,10 @@ def test_marker_engine_failure_names_a_pdf_with_no_page(tmp_path: Path) -> None:
         b"2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\n"
         b"trailer<</Root 1 0 R>>\n%%EOF\n"
     )
-    fake = _make_fake_marker(convert_error=RuntimeError("boom"))
+    fake = _make_fake_engine(convert_error=RuntimeError("boom"))
 
-    with _install_fake_marker(fake), pytest.raises(ConversionError) as caught:
-        MarkerEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
+    with _install_fake_engine(fake), pytest.raises(ConversionError) as caught:
+        BundledEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
 
     message = str(caught.value)
     assert "carries no readable page" in message
@@ -1824,20 +1824,20 @@ def test_condense_empty_output_stays_empty() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _make_stub_marker_engine(
+def _make_stub_bundled_engine(
     *,
     available: bool = True,
     body: str = "# Converted\n",
     error: Exception | None = None,
 ) -> MagicMock:
-    """Stand-in MarkerEngine for DjvuEngine chain tests."""
-    marker = MagicMock(spec=MarkerEngine)
-    marker.available.return_value = available
+    """Stand-in BundledEngine for DjvuEngine chain tests."""
+    bundled = MagicMock(spec=BundledEngine)
+    bundled.available.return_value = available
     if error is not None:
-        marker.convert.side_effect = error
+        bundled.convert.side_effect = error
     else:
-        marker.convert.return_value = ConversionResult(body=body)
-    return marker
+        bundled.convert.return_value = ConversionResult(body=body)
+    return bundled
 
 
 def _requested_pages(cmd: list[str], page_count: int) -> tuple[int, int]:
@@ -1893,51 +1893,53 @@ def _ddjvu_calls(sp: MagicMock) -> list[list[str]]:
 
 
 def test_djvu_engine_method_and_extensions(tmp_path: Path) -> None:
-    engine = DjvuEngine(MagicMock(spec=MarkerEngine), tmp_path)
-    assert engine.method is ConversionMethod.DJVU_MARKER
+    engine = DjvuEngine(MagicMock(spec=BundledEngine), tmp_path)
+    assert engine.method is ConversionMethod.DJVU_BUNDLED
     assert engine.extensions == frozenset({"djvu"})
 
 
 def test_djvu_engine_available_when_all_deps_present(tmp_path: Path) -> None:
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     with (
         patch("raw2md.engines.djvu.shutil.which", return_value="/usr/bin/ddjvu"),
         patch("raw2md.engines.djvu.find_spec", return_value=MagicMock()),
     ):
-        assert DjvuEngine(marker, tmp_path).available() is True
+        assert DjvuEngine(bundled, tmp_path).available() is True
 
 
 def test_djvu_engine_unavailable_when_ddjvu_missing(tmp_path: Path) -> None:
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     with (
         patch("raw2md.engines.djvu.shutil.which", return_value=None),
         patch("raw2md.engines.djvu.find_spec", return_value=MagicMock()),
     ):
-        assert DjvuEngine(marker, tmp_path).available() is False
+        assert DjvuEngine(bundled, tmp_path).available() is False
 
 
 def test_djvu_engine_unavailable_when_img2pdf_missing(tmp_path: Path) -> None:
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     with (
         patch("raw2md.engines.djvu.shutil.which", return_value="/usr/bin/ddjvu"),
         patch("raw2md.engines.djvu.find_spec", return_value=None),
     ):
-        assert DjvuEngine(marker, tmp_path).available() is False
+        assert DjvuEngine(bundled, tmp_path).available() is False
 
 
-def test_djvu_engine_unavailable_when_marker_unavailable(tmp_path: Path) -> None:
-    marker = _make_stub_marker_engine(available=False)
+def test_djvu_engine_unavailable_when_bundled_engine_unavailable(
+    tmp_path: Path,
+) -> None:
+    bundled = _make_stub_bundled_engine(available=False)
     with (
         patch("raw2md.engines.djvu.shutil.which", return_value="/usr/bin/ddjvu"),
         patch("raw2md.engines.djvu.find_spec", return_value=MagicMock()),
     ):
-        assert DjvuEngine(marker, tmp_path).available() is False
+        assert DjvuEngine(bundled, tmp_path).available() is False
 
 
 def test_djvu_engine_calls_ddjvu_with_tiff_format(tmp_path: Path) -> None:
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
     img2pdf_mock.convert.return_value = b"%PDF-fake"
 
@@ -1945,7 +1947,7 @@ def test_djvu_engine_calls_ddjvu_with_tiff_format(tmp_path: Path) -> None:
         patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run()) as sp,
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -1959,14 +1961,14 @@ def test_djvu_engine_calls_ddjvu_with_tiff_format(tmp_path: Path) -> None:
 def test_djvu_engine_passes_page_tiffs_to_img2pdf(tmp_path: Path) -> None:
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
 
     with (
         patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run(3)),
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -1980,10 +1982,10 @@ def test_djvu_engine_passes_page_tiffs_to_img2pdf(tmp_path: Path) -> None:
     assert img2pdf_mock.convert.call_args.kwargs["outputstream"] is not None
 
 
-def test_djvu_engine_passes_pdf_to_marker(tmp_path: Path) -> None:
+def test_djvu_engine_passes_pdf_to_bundled_engine(tmp_path: Path) -> None:
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
     img2pdf_mock.convert.return_value = b"%PDF-fake"
 
@@ -1991,18 +1993,18 @@ def test_djvu_engine_passes_pdf_to_marker(tmp_path: Path) -> None:
         patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run()),
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
-    pdf_arg: Path = marker.convert.call_args.args[0]
+    pdf_arg: Path = bundled.convert.call_args.args[0]
     assert pdf_arg.name == "assembled.pdf"
 
 
-def test_djvu_engine_forwards_options_to_marker(tmp_path: Path) -> None:
+def test_djvu_engine_forwards_options_to_bundled_engine(tmp_path: Path) -> None:
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
     img2pdf_mock.convert.return_value = b"%PDF-fake"
     opts = ConvertOptions(extract_media=False)
@@ -2011,15 +2013,15 @@ def test_djvu_engine_forwards_options_to_marker(tmp_path: Path) -> None:
         patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run()),
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        DjvuEngine(marker, tmp_path).convert(source, tmp_path / "book", opts)
+        DjvuEngine(bundled, tmp_path).convert(source, tmp_path / "book", opts)
 
-    assert marker.convert.call_args.args[2] is opts
+    assert bundled.convert.call_args.args[2] is opts
 
 
-def test_djvu_engine_returns_marker_result(tmp_path: Path) -> None:
+def test_djvu_engine_returns_bundled_engine_result(tmp_path: Path) -> None:
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine(body="# DjVu result\n")
+    bundled = _make_stub_bundled_engine(body="# DjVu result\n")
     img2pdf_mock = MagicMock()
     img2pdf_mock.convert.return_value = b"%PDF-fake"
 
@@ -2027,7 +2029,7 @@ def test_djvu_engine_returns_marker_result(tmp_path: Path) -> None:
         patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run()),
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        result = DjvuEngine(marker, tmp_path).convert(
+        result = DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2037,7 +2039,7 @@ def test_djvu_engine_returns_marker_result(tmp_path: Path) -> None:
 def test_djvu_engine_raises_on_ddjvu_failure(tmp_path: Path) -> None:
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
 
     with (
@@ -2048,7 +2050,7 @@ def test_djvu_engine_raises_on_ddjvu_failure(tmp_path: Path) -> None:
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
         pytest.raises(ConversionError, match="ddjvu failed"),
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2056,7 +2058,7 @@ def test_djvu_engine_raises_on_ddjvu_failure(tmp_path: Path) -> None:
 def test_djvu_engine_raises_on_img2pdf_failure(tmp_path: Path) -> None:
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
     img2pdf_mock.convert.side_effect = ValueError("unsupported format")
 
@@ -2065,7 +2067,7 @@ def test_djvu_engine_raises_on_img2pdf_failure(tmp_path: Path) -> None:
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
         pytest.raises(ConversionError, match="img2pdf assembly failed"),
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2074,7 +2076,7 @@ def test_djvu_engine_temp_cleaned_up_on_success(tmp_path: Path) -> None:
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
     temp_root = tmp_path / "tmp"
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
     img2pdf_mock.convert.return_value = b"%PDF-fake"
 
@@ -2082,7 +2084,7 @@ def test_djvu_engine_temp_cleaned_up_on_success(tmp_path: Path) -> None:
         patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run()),
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        DjvuEngine(marker, temp_root).convert(
+        DjvuEngine(bundled, temp_root).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2098,7 +2100,7 @@ def test_djvu_engine_leaves_the_assembled_pdf_in_the_scratch_dir(
     temp_root = tmp_path / "tmp"
     scratch = tmp_path / "scratch"
     scratch.mkdir()
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
     img2pdf_mock.convert.return_value = b"%PDF-fake"
 
@@ -2106,14 +2108,14 @@ def test_djvu_engine_leaves_the_assembled_pdf_in_the_scratch_dir(
         patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run()),
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        result = DjvuEngine(marker, temp_root).convert(
+        result = DjvuEngine(bundled, temp_root).convert(
             source, tmp_path / "book", ConvertOptions(scratch_dir=scratch)
         )
 
     assert result.source_pdf is not None
     assert result.source_pdf.parent == scratch
     assert result.source_pdf.is_file()
-    assert marker.convert.call_args.args[0] == result.source_pdf
+    assert bundled.convert.call_args.args[0] == result.source_pdf
     # The per-page TIFFs go with their temp dir.
     assert list(temp_root.glob("raw2md_djvu_*")) == []
 
@@ -2123,7 +2125,7 @@ def test_djvu_engine_names_no_pdf_without_a_scratch_dir(tmp_path: Path) -> None:
     # not named.
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
     img2pdf_mock.convert.return_value = b"%PDF-fake"
 
@@ -2131,7 +2133,7 @@ def test_djvu_engine_names_no_pdf_without_a_scratch_dir(tmp_path: Path) -> None:
         patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run()),
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        result = DjvuEngine(marker, tmp_path / "tmp").convert(
+        result = DjvuEngine(bundled, tmp_path / "tmp").convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2144,7 +2146,7 @@ def test_djvu_engine_non_ascii_source_copied_to_temp(tmp_path: Path) -> None:
     source = src_dir / "книга.djvu"
     source.write_bytes(b"fake djvu")
     temp_root = tmp_path / "tmp"
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
     img2pdf_mock.convert.return_value = b"%PDF-fake"
 
@@ -2152,7 +2154,7 @@ def test_djvu_engine_non_ascii_source_copied_to_temp(tmp_path: Path) -> None:
         patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run()) as sp,
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        DjvuEngine(marker, temp_root).convert(
+        DjvuEngine(bundled, temp_root).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2165,7 +2167,7 @@ def test_djvu_engine_non_ascii_source_copied_to_temp(tmp_path: Path) -> None:
 def test_djvu_engine_raises_on_ddjvu_timeout(tmp_path: Path) -> None:
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
 
     def fake_run(cmd: list[str], **kwargs: object) -> MagicMock:
@@ -2176,7 +2178,7 @@ def test_djvu_engine_raises_on_ddjvu_timeout(tmp_path: Path) -> None:
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
         pytest.raises(ConversionError, match="ddjvu timed out"),
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2184,7 +2186,7 @@ def test_djvu_engine_raises_on_ddjvu_timeout(tmp_path: Path) -> None:
 def test_djvu_engine_raises_on_ddjvu_not_found(tmp_path: Path) -> None:
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
 
     with (
@@ -2197,7 +2199,7 @@ def test_djvu_engine_raises_on_ddjvu_not_found(tmp_path: Path) -> None:
             ConversionError, match="ddjvu not found or could not be launched"
         ),
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2222,7 +2224,7 @@ def test_djvu_engine_temp_cleaned_up_on_failure(tmp_path: Path) -> None:
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
     temp_root = tmp_path / "tmp"
-    marker = _make_stub_marker_engine(error=ConversionError("marker failed"))
+    bundled = _make_stub_bundled_engine(error=ConversionError("engine failed"))
     img2pdf_mock = MagicMock()
     img2pdf_mock.convert.return_value = b"%PDF-fake"
 
@@ -2231,7 +2233,7 @@ def test_djvu_engine_temp_cleaned_up_on_failure(tmp_path: Path) -> None:
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
         pytest.raises(ConversionError),
     ):
-        DjvuEngine(marker, temp_root).convert(
+        DjvuEngine(bundled, temp_root).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2242,7 +2244,7 @@ def test_djvu_renders_pages_in_bounded_groups(tmp_path: Path) -> None:
     # A whole large scan in one call can outrun a single timeout window.
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
 
     with (
@@ -2251,7 +2253,7 @@ def test_djvu_renders_pages_in_bounded_groups(tmp_path: Path) -> None:
         ) as sp,
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2267,14 +2269,14 @@ def test_djvu_pages_are_assembled_in_page_order(tmp_path: Path) -> None:
     # The assembled order comes from page numbers, not file order.
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
 
     with (
         patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run(20)),
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2303,7 +2305,7 @@ def test_djvu_renders_whole_document_when_page_count_unreadable(
     # djvused is optional: without a page count the render is one call.
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
 
     with (
@@ -2313,7 +2315,7 @@ def test_djvu_renders_whole_document_when_page_count_unreadable(
         ) as sp,
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2327,7 +2329,7 @@ def test_djvu_raises_when_no_page_was_rendered(tmp_path: Path) -> None:
     # ddjvu succeeding with no output must not reach img2pdf.
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
 
     with (
@@ -2338,7 +2340,7 @@ def test_djvu_raises_when_no_page_was_rendered(tmp_path: Path) -> None:
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
         pytest.raises(ConversionError, match="rendered no pages"),
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2349,7 +2351,7 @@ def test_djvu_error_message_collapses_repeated_stderr(tmp_path: Path) -> None:
     # libtiff repeats a write error per strip; the log keeps one line.
     source = tmp_path / "book.djvu"
     source.write_bytes(b"fake djvu")
-    marker = _make_stub_marker_engine()
+    bundled = _make_stub_bundled_engine()
     img2pdf_mock = MagicMock()
     stderr = b"Maximum TIFF file size exceeded.\n" * 900
 
@@ -2361,7 +2363,7 @@ def test_djvu_error_message_collapses_repeated_stderr(tmp_path: Path) -> None:
         patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
         pytest.raises(ConversionError) as excinfo,
     ):
-        DjvuEngine(marker, tmp_path).convert(
+        DjvuEngine(bundled, tmp_path).convert(
             source, tmp_path / "book", ConvertOptions()
         )
 
@@ -2371,7 +2373,7 @@ def test_djvu_error_message_collapses_repeated_stderr(tmp_path: Path) -> None:
 
 
 def test_djvu_partial_pdf_is_removed_when_assembly_fails(tmp_path: Path) -> None:
-    # A half-written PDF left behind would be handed to marker as if complete.
+    # A half-written PDF left behind would be handed to the engine as if complete.
     from raw2md.engines.djvu import _assemble_pdf
 
     img2pdf_mock = MagicMock()

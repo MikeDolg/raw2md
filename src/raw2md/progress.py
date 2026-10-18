@@ -2,7 +2,7 @@
 
 Each bar is two stacked lines, a label and the bar beneath it, so both bars
 share a left edge and a width whatever the filename length. Engine output is
-redirected during a conversion call so marker and surya do not corrupt the
+redirected during a conversion call so raw2md-engine does not corrupt the
 bars.
 """
 
@@ -28,9 +28,9 @@ STAGE_NAMES: tuple[str, ...] = (
     "post-processing",
 )
 
-# tqdm descriptions of marker and surya phases, matched as substrings of a
-# redrawn line, and their bracket labels.
-_MARKER_PHASES: tuple[tuple[str, str], ...] = (
+# tqdm descriptions of the engine phases, matched as substrings of a redrawn
+# line, and their bracket labels.
+_ENGINE_PHASES: tuple[tuple[str, str], ...] = (
     ("Detecting bboxes", "detection"),
     ("Recognizing Layout", "layout"),
     ("Running OCR Error Detection", "OCR check"),
@@ -53,12 +53,12 @@ _FILE_BAR_POS = 3
 _LABEL_BAR_FORMAT = "{desc}:"
 
 
-def _marker_phase_label(line: str) -> str | None:
+def _engine_phase_label(line: str) -> str | None:
     """Map one line of redirected engine output to a bracket label, or None.
 
     Another tqdm line yields the engine's name; a non-progress line None.
     """
-    for needle, label in _MARKER_PHASES:
+    for needle, label in _ENGINE_PHASES:
         if needle in line:
             return label
     if _TQDM_MARK in line:
@@ -193,7 +193,7 @@ class _NullWriter(io.TextIOBase):
 
 
 class _PhaseSniffer(io.TextIOBase):
-    """A write sink that passes output through and lifts marker phases out of it.
+    """A write sink that passes output through and lifts engine phases out of it.
 
     A label is reported only when it changes: tqdm redraws each phase many
     times. The bar writes to the stderr captured at its construction, so the
@@ -209,7 +209,7 @@ class _PhaseSniffer(io.TextIOBase):
         written = self._underlying.write(s)
         # tqdm redraws with CR; one write may carry several redraws.
         for chunk in s.replace("\r", "\n").split("\n"):
-            label = _marker_phase_label(chunk)
+            label = _engine_phase_label(chunk)
             if label is not None and label != self._last:
                 self._last = label
                 self._on_phase(label)
@@ -231,7 +231,7 @@ def capture_engine_output(
     """Redirect stdout and stderr during an engine call.
 
     `sink` receives the output; None discards it. `on_phase` receives each new
-    marker phase. The tqdm bars hold the original stderr, so the redirect does
+    engine phase. The tqdm bars hold the original stderr, so the redirect does
     not reach them.
     """
     target: TextIO = sink if sink is not None else cast(TextIO, _NullWriter())

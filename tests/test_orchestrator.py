@@ -69,7 +69,7 @@ class StubEngine(Engine):
         self,
         *,
         extensions: frozenset[str] = frozenset({"pdf"}),
-        method: ConversionMethod = ConversionMethod.MARKER,
+        method: ConversionMethod = ConversionMethod.BUNDLED,
         available: bool = True,
         fail: bool = False,
         fail_on: frozenset[str] = frozenset(),
@@ -1383,13 +1383,13 @@ def test_settings_log_file_false_disables_it_without_the_flag(home: Path) -> Non
 
 
 class _NoisyEngine(StubEngine):
-    """Engine that floods stdout/stderr during convert, as marker/surya do."""
+    """Engine that floods stdout/stderr during convert, as the engine does."""
 
     def convert(
         self, source: Path, media_dir: Path, options: ConvertOptions
     ) -> ConversionResult:
-        print("RAW MARKER BAR 33%")  # noqa: T201 -- simulates marker/surya console noise for the capture test
-        print("SURYA STDERR NOISE", file=sys.stderr)  # noqa: T201 -- simulates marker/surya console noise for the capture test
+        print("RAW ENGINE BAR 33%")  # noqa: T201 -- simulates engine console noise for the capture test
+        print("SURYA STDERR NOISE", file=sys.stderr)  # noqa: T201 -- simulates engine console noise for the capture test
         return super().convert(source, media_dir, options)
 
 
@@ -1402,7 +1402,7 @@ def test_log_file_excludes_raw_engine_output(home: Path) -> None:
     )
     assert code == int(ExitCode.SUCCESS)
     text = (home / ".raw2md" / "logs" / "raw2md.log").read_text(encoding="utf-8")
-    assert "RAW MARKER BAR" not in text
+    assert "RAW ENGINE BAR" not in text
     assert "SURYA STDERR NOISE" not in text
     assert "converting a.pdf via raw2md-engine" in text
     assert "converted a.pdf" in text
@@ -1641,7 +1641,7 @@ def test_single_djvu_engine_is_raw2md_engine(home: Path) -> None:
     src = home / "a.djvu"
     src.write_bytes(b"x")
     engine = StubEngine(
-        extensions=frozenset({"djvu"}), method=ConversionMethod.DJVU_MARKER
+        extensions=frozenset({"djvu"}), method=ConversionMethod.DJVU_BUNDLED
     )
     run(make_run_config(src), registry=registry_for(engine))
     assert "engine: raw2md-engine" in (home / "a.md").read_text(encoding="utf-8")
@@ -1676,7 +1676,7 @@ def test_batch_mixed_types_succeed(home: Path) -> None:
     (folder / "a.pdf").write_bytes(b"x")
     (folder / "b.docx").write_bytes(b"x")
     registry = registry_for(
-        StubEngine(extensions=frozenset({"pdf"}), method=ConversionMethod.MARKER),
+        StubEngine(extensions=frozenset({"pdf"}), method=ConversionMethod.BUNDLED),
         StubEngine(extensions=frozenset({"docx"}), method=ConversionMethod.PANDOC),
     )
     code = run(make_run_config(folder), registry=registry)
@@ -1692,7 +1692,7 @@ def test_stem_collision_folds_extension(home: Path) -> None:
     (folder / "doc.docx").write_bytes(b"x")
     out_dir = home / "out"
     registry = registry_for(
-        StubEngine(extensions=frozenset({"pdf"}), method=ConversionMethod.MARKER),
+        StubEngine(extensions=frozenset({"pdf"}), method=ConversionMethod.BUNDLED),
         StubEngine(extensions=frozenset({"docx"}), method=ConversionMethod.PANDOC),
     )
     # Without an output dir the media folders would clash with the sources.
@@ -1711,7 +1711,7 @@ def test_case_insensitive_collision_folds_extension(home: Path) -> None:
     (folder / "doc.docx").write_bytes(b"x")
     out_dir = home / "out"
     registry = registry_for(
-        StubEngine(extensions=frozenset({"pdf"}), method=ConversionMethod.MARKER),
+        StubEngine(extensions=frozenset({"pdf"}), method=ConversionMethod.BUNDLED),
         StubEngine(extensions=frozenset({"docx"}), method=ConversionMethod.PANDOC),
     )
     code = run(make_run_config(folder, output_dir=out_dir), registry=registry)

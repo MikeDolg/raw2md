@@ -157,8 +157,8 @@ def compare_structure(
     """Return structural mismatches beyond the given per-kind tolerances.
 
     Headings compare per level, so a collapsed level is caught despite an equal
-    total; ``check_headings=False`` skips them for marker on a born-digital PDF.
-    Display and inline formulas have separate tolerances, since marker keeps
+    total; ``check_headings=False`` skips them for the engine on a born-digital PDF.
+    Display and inline formulas have separate tolerances, since the engine keeps
     display math but writes inline math as plain text.
     """
     diffs: list[StructureDiff] = []

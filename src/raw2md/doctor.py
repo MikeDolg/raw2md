@@ -23,7 +23,7 @@ from collections.abc import Sequence
 from typing import NamedTuple
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from raw2md.engines import DjvuEngine, MarkerEngine, PandocEngine, weights
+from raw2md.engines import BundledEngine, DjvuEngine, PandocEngine, weights
 from raw2md.exit_codes import ExitCode
 from raw2md.header import DEFAULT_ENGINE
 from raw2md.llm import build_provider
@@ -80,12 +80,12 @@ def _report_engines() -> int:
     `available()` ignores the temp root, so any path serves here.
     """
     temp_root = default_temp_dir()
-    marker = MarkerEngine(temp_root)
+    bundled = BundledEngine(temp_root)
     # columns: label, engine, required
     engines = [
-        (f"{DEFAULT_ENGINE} (pdf)", marker, True),
+        (f"{DEFAULT_ENGINE} (pdf)", bundled, True),
         ("pandoc (docx)", PandocEngine(), False),
-        ("djvu chain", DjvuEngine(marker, temp_root), False),
+        ("djvu chain", DjvuEngine(bundled, temp_root), False),
     ]
     print("engines:")
     dependency_problems = 0

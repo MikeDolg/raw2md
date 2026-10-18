@@ -127,4 +127,4 @@ The docx round-trip turns it into `\left\{ \begin{matrix}…`, because the
 column specification `{r}` does not survive OMML. The shape stays exact: the
 environment opens on the first line of the formula and closes several lines
 below. The `broken-formula` rule must tell this shape from an environment that
-marker cut short.
+the engine cut short.

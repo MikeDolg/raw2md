@@ -150,9 +150,9 @@ def test_ocr_reference_style_removal_is_idempotent() -> None:
     assert clean(once, _OCR_OPTIONS) == once
 
 
-def test_marker_route_image_links_are_not_touched() -> None:
+def test_engine_route_image_links_are_not_touched() -> None:
     # The strip is gated on `llm_ocr`, not on the method.
-    options = CleanOptions(method=ConversionMethod.MARKER)
+    options = CleanOptions(method=ConversionMethod.BUNDLED)
     text = "before\n\n![](img_p22.png)\n\nafter\n"
     assert clean(text, options) == text
 

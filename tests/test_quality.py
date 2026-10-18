@@ -576,7 +576,7 @@ def test_dollars_in_a_code_fence_are_not_delimiters() -> None:
 
 
 def test_greek_unit_next_to_integer_is_flagged() -> None:
-    # marker's real misread: `55 кГ` (kilogram-force) OCR'd into `55~\kappa\Gamma`.
+    # The engine's real misread: `55 кГ` (kilogram-force) OCR'd into `55~\kappa\Gamma`.
     body = r"Масса образца составила $55~\kappa\Gamma$ по паспорту прибора." + "\n"  # noqa: RUF001
     ev = evaluate(body)
     assert _fired(ev, CheckId.GREEK_UNITS)

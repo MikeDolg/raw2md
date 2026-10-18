@@ -43,7 +43,7 @@ class ConvertOptions:
     """Per-file conversion options passed to every engine.
 
     `extract_media` is False under `--disable-image-extraction`. `on_phase`
-    receives the current marker phase for the progress bar. `mark_pages` asks
+    receives the current engine phase for the progress bar. `mark_pages` asks
     an engine that knows page boundaries to write a `mdtext.pages.page_mark` above
     each page, so inspection can address an edit by page; it is set only when
     inspection runs, so other runs stay unmarked. `scratch_dir` is a folder

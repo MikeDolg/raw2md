@@ -1,8 +1,8 @@
-"""Marker conversion engine for pdf files.
+"""The bundled conversion engine raw2md-engine, for pdf files.
 
 The engine is the copy of marker bundled as `raw2md_engine`. It runs as a
 library: the model dictionary loads once per engine and serves the whole
-queue. Its LLM pass (`use_llm`) stays off. Every marker import is lazy, so the
+queue. Its LLM pass (`use_llm`) stays off. Every engine import is lazy, so the
 fast test layer never loads a model.
 
 Under `mark_pages` the output is paginated and the separators become page
@@ -10,8 +10,8 @@ marks. The marks carry page boundaries through cleaning, which rewrites and
 drops lines, so a line-index map would be stale by inspection.
 
 The weights download before the first model load, only when the folder lacks
-a file of the pinned revision. marker, surya, and the download print progress
-to stdout/stderr; a call captures it so the progress bars stay intact. marker
+a file of the pinned revision. The engine and the download print progress to
+stdout/stderr; a call captures it so the progress bars stay intact. The engine
 breaks on non-ASCII paths, so such a source is copied into the ASCII temp
 folder first.
 """
@@ -38,20 +38,20 @@ from raw2md.header import DEFAULT_ENGINE, ConversionMethod
 from raw2md.mdtext.pages import page_mark
 from raw2md.progress import capture_engine_output
 
-# The tail of marker's `{<page-id>}<separator>` line. The default separator
+# The tail of the engine's `{<page-id>}<separator>` line. The default separator
 # (dashes) reads as a thematic break the body may carry itself.
 _PAGE_SEPARATOR = "<!-- raw2md-page-break -->"
 
-# marker's pagination line: its 0-based page id, then the separator above.
+# The engine's pagination line: its 0-based page id, then the separator above.
 _PAGE_BREAK_RE = re.compile(r"^\{(\d+)\}" + re.escape(_PAGE_SEPARATOR) + r"$")
 
 
-class MarkerEngine(Engine):
-    """marker-based conversion engine for .pdf files.
+class BundledEngine(Engine):
+    """raw2md-engine conversion for .pdf files.
 
     `temp_root` is used only for a non-ASCII source path. `cuda` False forces
-    CPU. `log_stream` receives marker output; without it the output is
-    discarded. `recognition_batch_size` None leaves marker's device default.
+    CPU. `log_stream` receives the engine output; without it the output is
+    discarded. `recognition_batch_size` None leaves the engine's device default.
     """
 
     def __init__(
@@ -70,7 +70,7 @@ class MarkerEngine(Engine):
 
     @property
     def method(self) -> ConversionMethod:
-        return ConversionMethod.MARKER
+        return ConversionMethod.BUNDLED
 
     @property
     def extensions(self) -> frozenset[str]:
@@ -83,9 +83,9 @@ class MarkerEngine(Engine):
     def convert(
         self, source: Path, media_dir: Path, options: ConvertOptions
     ) -> ConversionResult:
-        """Convert a .pdf to Markdown via the marker library.
+        """Convert a .pdf to Markdown via the engine library.
 
-        Raises `ConversionError` when marker is absent or conversion fails.
+        Raises `ConversionError` when the engine is absent or conversion fails.
         """
         if not self.available():
             raise ConversionError(f"{DEFAULT_ENGINE} is not installed")
@@ -96,7 +96,7 @@ class MarkerEngine(Engine):
                 self._ensure_weights(options.on_phase)
             with capture_engine_output(self._log_stream, on_phase=options.on_phase):
                 models = self._load_models()
-                text, images = self._run_marker(
+                text, images = self._run_engine(
                     work_source, models, options.extract_media, options.mark_pages
                 )
             media = (
@@ -113,7 +113,7 @@ class MarkerEngine(Engine):
         return ConversionResult(body=text, media=media, source_pages=source_pages)
 
     def _count_pages(self, source: Path) -> int | None:
-        """Page count of the pdf fed to marker, so a djvu gets one too.
+        """Page count of the pdf fed to the engine, so a djvu gets one too.
 
         A failed count skips the density check instead of failing a successful
         conversion.
@@ -129,7 +129,7 @@ class MarkerEngine(Engine):
         """Download the missing weights into the log, under their own phase.
 
         The download runs outside the phase sniffer: its progress lines would
-        relabel the bar as a marker phase.
+        relabel the bar as an engine phase.
         """
         weights_dir = paths.models_dir()
         missing = weights.missing_files(weights_dir)
@@ -144,12 +144,12 @@ class MarkerEngine(Engine):
             raise ConversionError(str(exc)) from exc
 
     def _load_models(self) -> dict[str, Any]:
-        """Load and cache the marker model dictionary (the heavy step)."""
+        """Load and cache the engine model dictionary (the heavy step)."""
         models = self._models
         if models is None:
             from raw2md_engine.marker.models import create_model_dict
 
-            # device=None lets marker auto-detect the GPU; "cpu" forces CPU.
+            # device=None lets the engine auto-detect the GPU; "cpu" forces CPU.
             device = None if self._cuda else "cpu"
             models = create_model_dict(
                 device=device, weights_dir=str(paths.models_dir())
@@ -157,14 +157,14 @@ class MarkerEngine(Engine):
             self._models = models
         return models
 
-    def _run_marker(
+    def _run_engine(
         self,
         source: Path,
         models: dict[str, Any],
         extract_media: bool,
         mark_pages: bool,
     ) -> tuple[str, dict[str, Any]]:
-        """Run marker on `source`, returning (markdown, images-by-name).
+        """Run the engine on `source`, returning (markdown, images-by-name).
 
         The converter keeps its default processors and its Markdown renderer.
         """
@@ -182,7 +182,7 @@ class MarkerEngine(Engine):
         return text, images
 
     def _save_images(self, images: dict[str, Any], media_dir: Path) -> tuple[str, ...]:
-        """Write marker's in-memory images into `media_dir`, sorted by name."""
+        """Write the engine's in-memory images into `media_dir`, sorted by name."""
         if not images:
             return ()
         media_dir.mkdir(parents=True, exist_ok=True)
@@ -195,13 +195,13 @@ class MarkerEngine(Engine):
         return tuple(names)
 
     def _prepare_ascii_input(self, source: Path) -> tuple[Path, Callable[[], None]]:
-        """Return an ASCII path to feed marker plus a cleanup callback."""
+        """Return an ASCII path to feed the engine plus a cleanup callback."""
         absolute = source.resolve()
         if str(absolute).isascii():
             return absolute, lambda: None
 
         self._temp_root.mkdir(parents=True, exist_ok=True)
-        work_dir = Path(tempfile.mkdtemp(prefix="marker_", dir=self._temp_root))
+        work_dir = Path(tempfile.mkdtemp(prefix="raw2md_engine_", dir=self._temp_root))
         dest = work_dir / f"input{source.suffix.lower()}"
         shutil.copy2(absolute, dest)
         return dest, lambda: shutil.rmtree(work_dir, ignore_errors=True)
@@ -210,9 +210,9 @@ class MarkerEngine(Engine):
 def _converter_config(
     extract_media: bool, mark_pages: bool, recognition_batch_size: int | None
 ) -> dict[str, Any]:
-    """The marker config of one conversion, as marker's command line builds it.
+    """The engine config of one conversion, as marker's command line builds it.
 
-    marker hands each key to every class that has an attribute of that name.
+    The engine hands each key to every class that has an attribute of that name.
     An unset option stays out of the dict, so the class default holds.
     """
     config: dict[str, Any] = {"output_format": "markdown"}
@@ -229,8 +229,8 @@ def _converter_config(
 def _failure_reason(source: Path, exc: Exception) -> str:
     """Name the defect of the input when PyMuPDF proves it.
 
-    marker reports an unloadable source as its own failure. The marker text is
-    kept either way: a failure from elsewhere (out of device memory) must stay
+    The engine reports an unloadable source as its own failure. The engine text
+    is kept either way: a failure from elsewhere (out of device memory) must stay
     visible even when the source is also damaged.
     """
     from raw2md.engines import pymupdf
@@ -242,7 +242,7 @@ def _failure_reason(source: Path, exc: Exception) -> str:
 
 
 def _rewrite_page_breaks(text: str) -> str:
-    """Turn marker's pagination separators into raw2md page marks.
+    """Turn the engine's pagination separators into raw2md page marks.
 
     Invariant: without the mark lines, the body is the unpaginated render. A
     mark sits directly above the first line of a page, without blanks of its
@@ -261,7 +261,7 @@ def _rewrite_page_breaks(text: str) -> str:
     for line in text.split("\n"):
         match = _PAGE_BREAK_RE.match(line)
         if match is not None:
-            # marker numbers pages from 0; raw2md marks and logs count from 1.
+            # The engine numbers pages from 0; raw2md marks and logs count from 1.
             pending.append(int(match.group(1)) + 1)
             drop_blank = True
             continue
@@ -299,7 +299,7 @@ def _rewrite_page_breaks(text: str) -> str:
 def _splits_a_paragraph(out: list[str]) -> bool:
     """True when the last written line is a paragraph awaiting its continuation.
 
-    marker ends such a line with a space and closes an ordinary paragraph
+    The engine ends such a line with a space and closes an ordinary paragraph
     without one. Asked only at a page boundary.
     """
     return len(out) >= 2 and not out[-1].strip() and out[-2].endswith(" ")

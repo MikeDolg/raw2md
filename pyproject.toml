@@ -150,7 +150,7 @@ ignore = [
     "ANN", # strict mypy already checks every annotation
     "TC", "EM", "TRY003", # import placement and exception-message style with no behavior gain
     "PLR2004", # flags a length comparison against 2 along with a real magic number
-    "PLC0415", # lazy imports of heavy engines (marker, torch) are deliberate
+    "PLC0415", # lazy imports of heavy engines (raw2md-engine, torch) are deliberate
     "S603", "S607", "S404", # calling pandoc, djvulibre, and claude by external process is the design
     "TD002", "TD003", "FIX002", # the project's TODO form is `# TODO: remove after <condition>`, no author or issue link
     "S101", # assert narrows types for mypy, in src/ as well as tests/
@@ -195,7 +195,7 @@ testpaths = ["tests"]
 # The benchmark runner is not installed, so its tests import it from here.
 pythonpath = ["benchmarks/mpdocbench/scripts"]
 markers = [
-    "roundtrip: heavy format generation and end-to-end conversion tests (pandoc, xelatex, djvu, marker); run explicitly with -m roundtrip",
+    "roundtrip: heavy format generation and end-to-end conversion tests (pandoc, xelatex, djvu, raw2md-engine); run explicitly with -m roundtrip",
     "concurrency: deliberate multi-process lock checks (cross-process mutual exclusion, crash recovery); run explicitly with -m concurrency",
     "llm_live: end-to-end round-trip tests with real LLM providers (Gemini API, Claude CLI); opt-in, requires GOOGLE_API_KEY and claude in PATH; run explicitly with -m llm_live",
 ]

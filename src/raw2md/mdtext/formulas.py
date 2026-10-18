@@ -117,7 +117,7 @@ class _OpenEnv:
 def math_env_defects(content: str) -> MathEnvDefects:
     """Find unbalanced environments and misplaced `&` in a math span's content.
 
-    marker cuts an aligned block across two spans: the tail keeps `\\end{split}`
+    The engine cuts an aligned block across two spans: the tail keeps `\\end{split}`
     and its `&` but not the opener. A closer matches the nearest open
     environment of its name, so an inner one left open does not orphan it; an
     out-of-order close counts in `crossed`. Escapes are scanned as pairs. An
@@ -189,7 +189,7 @@ def math_unclosed_environment(line: str) -> bool:
     """True when a math span in `line` leaves a `\\begin{env}` unmatched or crossed.
 
     A truncated matrix has no closer to show where it broke, so it is a lost
-    formula like a loop. One line only: marker writes a span on one line.
+    formula like a loop. One line only: the engine writes a span on one line.
     Inline code is masked.
     """
     if "$" not in line:
@@ -294,7 +294,7 @@ def _has_split_index(content: str) -> bool:
 def is_broken_display_line(line: str) -> bool:
     """True when the whole line is one damaged display span and nothing else.
 
-    marker cuts a long display formula into one span per line, each damaged
+    The engine cuts a long display formula into one span per line, each damaged
     at the cut. Alone on the line makes the piece addressable; damage says it
     is a fragment. A sound span is a formula of its own.
     """

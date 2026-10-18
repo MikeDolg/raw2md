@@ -1276,7 +1276,7 @@ def normalize_heading_numbering(
     method: ConversionMethod | None = None,
     stated: frozenset[int] = frozenset(),
 ) -> tuple[list[Segment], frozenset[int]]:
-    """Level numbered headings by numbering depth, restoring the ones marker lost.
+    """Level numbered headings by numbering depth, restoring the ones the engine lost.
 
     Only a heading's `#` count changes. A lost heading may carry its paragraph,
     which is split off, so `stated` is returned renumbered. A body with no
@@ -2199,8 +2199,8 @@ def _has_heading(seg_list: list[Segment]) -> bool:
 def _recovers_headings(method: ConversionMethod | None) -> bool:
     """True when the route the body came from allows heading recovery.
 
-    A recognized body cannot say what bold means: marker both drops heading
-    markers and wraps titles in bold, and the LLM-OCR route runs no marker.
+    A recognized body cannot say what bold means: raw2md-engine both drops heading
+    markers and wraps titles in bold, and the LLM-OCR route does not run it.
     """
     return method in _HEADING_RECOVERY_METHODS
 

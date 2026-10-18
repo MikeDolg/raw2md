@@ -366,7 +366,7 @@ def _span_gap_mark(gap: str) -> str | None:
     """What `gap` holds between two spans, or None when it cannot divide copies.
 
     Whitespace of any kind is normalized, so "" means whitespace alone. A line
-    break divides nothing: marker writes a span on one line.
+    break divides nothing: the engine writes a span on one line.
     """
     if "\n" in gap:
         return None

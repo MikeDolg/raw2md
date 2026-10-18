@@ -1,6 +1,6 @@
 """Temp-path selection for conversions.
 
-marker breaks on non-ASCII paths through its dependencies, so every source is
+raw2md-engine breaks on non-ASCII paths through its dependencies, so every source is
 staged in an ASCII, writable temp folder. The root is, in order: the
 `RAW2MD_TMP` environment variable; `tmp/` inside `~/.raw2md` when its absolute
 path is ASCII; a fixed fallback (`/tmp/raw2md` on Linux, `C:\\raw2md-tmp` on

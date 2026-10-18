@@ -83,7 +83,7 @@ def test_heading_emphasis_in_code_fence_is_not_stripped() -> None:
 
 
 def test_heading_emphasis_strip_runs_before_heading_numbering() -> None:
-    # marker wraps some numbered headings in bold, hiding the number.
+    # The engine wraps some numbered headings in bold, hiding the number.
     text = "## **1.2. A**\n### 1.3 B\n"
     assert clean_in_place(text) == "## 1.2. A\n## 1.3 B\n"
 

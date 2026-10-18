@@ -84,7 +84,7 @@ _LINE_BREAK_HYPHEN_RE = re.compile(r"[^\W\d_]-$")
 # outside math neither renders as anything.
 _BACKSLASH_COMMAND_RE = re.compile(r"\\(?:[A-Za-z]+|.)")
 
-# CommonMark has no sub/superscript syntax, so pandoc and marker write raw HTML
+# CommonMark has no sub/superscript syntax, so pandoc and raw2md-engine write raw HTML
 # (`CO<sub>2</sub>`, `mm<sup>2</sup>`); the tag is the only trace of the meaning.
 _INLINE_MARKUP_RE = re.compile(r"</?su[bp]\b[^>]*>", re.IGNORECASE)
 

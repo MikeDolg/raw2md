@@ -29,7 +29,7 @@ The guide to each stage is in `docs/`.
 | `src/raw2md/cli.py` | the arguments and the subcommands |
 | `src/raw2md/orchestrator.py`, `queue.py`, `lock.py` | the run: the lock, the queue, resume, and the exit code |
 | `src/raw2md/pipeline.py` | the stages of one file |
-| `src/raw2md/engines/` | the conversion engines; `base.py` holds their interface, `marker.py` is the adapter of `raw2md-engine`, and `weights.py` downloads its weights |
+| `src/raw2md/engines/` | the conversion engines; `base.py` holds their interface, `bundled.py` is the adapter of `raw2md-engine`, and `weights.py` downloads its weights |
 | `src/raw2md_engine/` | `raw2md-engine`: a reduced copy of `marker`, `surya`, and `pdftext`, with the upstream layout and names; `NOTICE` lists its changed files |
 | `src/raw2md/cleaner.py` | the entry points of cleaning and the order of its passes |
 | `src/raw2md/cleaning/` | the cleaning rules, grouped by the object that they repair: headings, lists, tables, formulas, and prose |

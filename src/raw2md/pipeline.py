@@ -109,8 +109,8 @@ _OCR_METHODS = {
 # The header's `engine` for a route without an LLM; `source` already carries
 # the djvu extension.
 _ROUTE_ENGINE_NAMES = {
-    ConversionMethod.MARKER: DEFAULT_ENGINE,
-    ConversionMethod.DJVU_MARKER: DEFAULT_ENGINE,
+    ConversionMethod.BUNDLED: DEFAULT_ENGINE,
+    ConversionMethod.DJVU_BUNDLED: DEFAULT_ENGINE,
     ConversionMethod.PANDOC: "pandoc",
     ConversionMethod.CLEAN: "clean",
 }

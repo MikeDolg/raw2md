@@ -131,11 +131,11 @@ def test_missing_cli_command_is_missing_dependency(home: Path) -> None:
     assert run_doctor() == int(ExitCode.MISSING_DEPENDENCY)
 
 
-def test_missing_marker_is_missing_dependency(
+def test_missing_engine_is_missing_dependency(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # marker is required, so its absence is a dependency problem.
-    monkeypatch.setattr("raw2md.engines.marker.find_spec", lambda name: None)
+    # raw2md-engine is required, so its absence is a dependency problem.
+    monkeypatch.setattr("raw2md.engines.bundled.find_spec", lambda name: None)
     monkeypatch.setattr("raw2md.llm.gemini.find_spec", lambda name: object())
     monkeypatch.setenv("GOOGLE_API_KEY", "secret")
     write_settings(gemini_only())

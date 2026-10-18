@@ -451,7 +451,7 @@ def test_a_lift_does_not_reach_into_a_code_fence() -> None:
 
 
 def test_orphan_environment_end_and_its_amp_are_dropped() -> None:
-    # marker's split of an aligned block keeps `\end{split}` but not the opener.
+    # The engine's split of an aligned block keeps `\end{split}` but not the opener.
     text = r"$$&\tau_{23} = \pm \frac{1}{2} (\sigma_2 - \sigma_3) \end{split}$$" + "\n"
     fixed = r"$$\tau_{23} = \pm \frac{1}{2} (\sigma_2 - \sigma_3)$$" + "\n"
     assert clean_in_place(text) == fixed
@@ -523,7 +523,7 @@ def test_plain_tex_equation_number_becomes_a_tag() -> None:
 
 
 def test_a_continuation_piece_joins_the_span_above_it() -> None:
-    # marker emits a long display formula one `$$...$$` per printed line.
+    # The engine emits a long display formula one `$$...$$` per printed line.
     text = "$$U = a + b$$\n\n$$+ c + d$$\n"
     assert clean_in_place(text) == "$$U = a + b + c + d$$\n"
 
@@ -856,7 +856,7 @@ def test_clearing_a_tail_behind_the_closer_is_idempotent() -> None:
 
 
 def test_a_stranded_comma_line_rejoins_the_block() -> None:
-    # marker leaves the comma after a display formula on its own line.
+    # The engine leaves the comma after a display formula on its own line.
     text = "$$a_{ij} = a_{ji}$$\n,\n"
     assert clean_in_place(text) == "$$a_{ij} = a_{ji},$$\n"
 
@@ -1578,7 +1578,7 @@ def test_orphan_sizer_drop_is_idempotent() -> None:
 
 
 def test_a_superscript_tag_inside_a_span_is_dropped() -> None:
-    # marker writes a footnote star as `<sup>` inside the span.
+    # The engine writes a footnote star as `<sup>` inside the span.
     text = r"$<sup>^{\ast}</sup>$" + "\n"
     out = clean_in_place(text)
     assert out == r"$^{\ast}$" + "\n"

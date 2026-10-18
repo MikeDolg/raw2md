@@ -26,7 +26,7 @@ def _target(tmp_path: Path, name: str) -> OutputTarget:
     return resolve_output_target(tmp_path / name, output_dir=None)
 
 
-def test_rewrite_media_links_flat_marker_name(tmp_path: Path) -> None:
+def test_rewrite_media_links_flat_engine_name(tmp_path: Path) -> None:
     target = _target(tmp_path, "a.pdf")
     body = "![fig](_page_0_Picture_0.jpeg)\n"
 
@@ -197,10 +197,10 @@ def test_dedupe_repeated_images_leaves_same_bbox_different_rotation(
     assert (media_dir / "_page_1_Picture_0.jpeg").exists()
 
 
-def test_dedupe_repeated_images_leaves_a_page_marker_split_into_two_crops(
+def test_dedupe_repeated_images_leaves_a_page_the_engine_split_into_two_crops(
     tmp_path: Path,
 ) -> None:
-    # marker cut page 1 into two crops, and which one is the placement is
+    # The engine cut page 1 into two crops, and which one is the placement is
     # unknown.
     logo = _png_bytes()
     source = tmp_path / "doc.pdf"
@@ -471,7 +471,7 @@ def test_flatten_pandoc_media_collision_leaves_file_nested(
 
 
 def test_flatten_pandoc_media_no_nested_media_is_noop(tmp_path: Path) -> None:
-    # marker puts assets directly in media_dir, with no `media/` level.
+    # The engine puts assets directly in media_dir, with no `media/` level.
     media_dir = tmp_path / "doc"
     media_dir.mkdir()
     (media_dir / "_page_0_Picture_0.jpeg").write_bytes(b"x")

@@ -1,6 +1,6 @@
 """Location of math spans in a line, and math masking.
 
-marker writes `$...$` and `$$...$$`; pandoc writes `\\(...\\)` and
+raw2md-engine writes `$...$` and `$$...$$`; pandoc writes `\\(...\\)` and
 `\\[...\\]`. A backslash escapes a `$`, so a printed dollar sign opens no span.
 """
 
@@ -100,7 +100,7 @@ def math_spans(text: str) -> list[str]:
 def mask_math(text: str) -> str:
     """`text` with every math span blanked, delimiters included; offsets kept.
 
-    Both dialects: marker's `$` and pandoc's paired `\\(...\\)`, `\\[...\\]`
+    Both dialects: the engine's `$` and pandoc's paired `\\(...\\)`, `\\[...\\]`
     on one line. A lone pandoc opener looks like an escaped bracket.
     """
     out: list[str] = []

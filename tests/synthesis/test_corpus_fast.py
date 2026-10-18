@@ -245,7 +245,7 @@ def test_percent_encoded_link_resolves_to_real_asset() -> None:
 # Converter artifacts no generation chain reproduces, checked against the
 # independent counting of count_structure.
 
-# marker's page-anchor span before a heading, and a span with a link below it.
+# The engine's page-anchor span before a heading, and a span with a link below it.
 _SPAN_HEADING_TEXT = (
     '#### <span id="page-31-2"></span>4.2.1.1 Check interval\n'
     "\n"

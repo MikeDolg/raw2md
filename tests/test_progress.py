@@ -264,7 +264,7 @@ def test_file_progress_next_stage_overwrites_phase() -> None:
 
 
 # ---------------------------------------------------------------------------
-# marker phase sniffing
+# engine phase sniffing
 # ---------------------------------------------------------------------------
 
 
@@ -278,25 +278,25 @@ def test_file_progress_next_stage_overwrites_phase() -> None:
         ("Recognizing tables: 100%|##########|", "tables"),
     ],
 )
-def test_marker_phase_label_known(line: str, label: str) -> None:
-    from raw2md.progress import _marker_phase_label
+def test_engine_phase_label_known(line: str, label: str) -> None:
+    from raw2md.progress import _engine_phase_label
 
-    assert _marker_phase_label(line) == label
+    assert _engine_phase_label(line) == label
 
 
-def test_marker_phase_label_unknown_progress_line_is_generic() -> None:
+def test_engine_phase_label_unknown_progress_line_is_generic() -> None:
     # An unnamed tqdm description still marks an engine step.
-    from raw2md.progress import _marker_phase_label
+    from raw2md.progress import _engine_phase_label
 
     line = "Loading model shards:  30%|###   | 3/10"
-    assert _marker_phase_label(line) == "raw2md-engine"
+    assert _engine_phase_label(line) == "raw2md-engine"
 
 
-def test_marker_phase_label_non_progress_line_is_ignored() -> None:
-    from raw2md.progress import _marker_phase_label
+def test_engine_phase_label_non_progress_line_is_ignored() -> None:
+    from raw2md.progress import _engine_phase_label
 
-    assert _marker_phase_label("some warning about a font") is None
-    assert _marker_phase_label("") is None
+    assert _engine_phase_label("some warning about a font") is None
+    assert _engine_phase_label("") is None
 
 
 def test_phase_sniffer_forwards_output_to_underlying() -> None:

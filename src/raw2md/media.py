@@ -27,8 +27,8 @@ _PDF_EXTENSION = ".pdf"
 # extracts them as-is and no markdown target renders either format.
 _EMF_EXTENSIONS = frozenset({".emf", ".wmf"})
 
-# marker names a picture `_page_<n>_<BlockType>_<index>`.
-_MARKER_IMAGE_PAGE_RE = re.compile(r"_page_(\d+)_")
+# raw2md-engine names a picture `_page_<n>_<BlockType>_<index>`.
+_ENGINE_IMAGE_PAGE_RE = re.compile(r"_page_(\d+)_")
 
 # An 8x8 hash within 4 bits survives crop jitter between pages but keeps
 # distinct figures of one size apart (calibrated on pdf and djvu bodies).
@@ -43,15 +43,15 @@ def drop_furniture_images(
 ) -> tuple[str, tuple[str, ...]]:
     """Drop a picture repeated across many pages, as furniture.
 
-    marker crops each placement anew, so a logo arrives as byte-distinct files
+    The engine crops each placement anew, so a logo arrives as byte-distinct files
     per page. A difference hash grouped by Hamming distance finds them; a
     group on `_FURNITURE_MIN_PAGES` pages loses all files and links. Only
-    marker names carry a page number, so docx pictures are untouched. Runs
+    engine names carry a page number, so docx pictures are untouched. Runs
     before `dedupe_repeated_images`.
     """
     pages_by_asset: dict[str, int] = {}
     for asset in media:
-        match = _MARKER_IMAGE_PAGE_RE.search(Path(asset).stem)
+        match = _ENGINE_IMAGE_PAGE_RE.search(Path(asset).stem)
         if match is not None:
             pages_by_asset[asset] = int(match.group(1))
     if len(pages_by_asset) < _FURNITURE_MIN_PAGES:
@@ -170,7 +170,7 @@ def dedupe_repeated_images(
     page_by_asset: dict[str, int] = {}
     assets_per_page: dict[int, int] = {}
     for asset in media:
-        match = _MARKER_IMAGE_PAGE_RE.search(Path(asset).stem)
+        match = _ENGINE_IMAGE_PAGE_RE.search(Path(asset).stem)
         if match is None:
             continue
         page = int(match.group(1))
@@ -204,7 +204,7 @@ def dedupe_repeated_images(
 def flatten_pandoc_media(media_dir: Path, media: tuple[str, ...]) -> tuple[str, ...]:
     """Lift pandoc's `<media_dir>/media` nesting up to `<media_dir>` itself.
 
-    The check is structural, so marker output passes unchanged. The body
+    The check is structural, so engine output passes unchanged. The body
     needs no edit: `rewrite_media_links` falls back to the basename. A name
     taken at the top level stays nested, with a log note.
     """
@@ -371,7 +371,7 @@ def _match_asset(norm: str, media: tuple[str, ...]) -> str | None:
     for asset in media:
         if norm == asset or norm.endswith("/" + asset):
             return asset
-    # Fall back to the basename, which is how marker references flat assets.
+    # Fall back to the basename, which is how the engine references flat assets.
     base = norm.rsplit("/", 1)[-1]
     for asset in media:
         if base in (asset, asset.rsplit("/", 1)[-1]):

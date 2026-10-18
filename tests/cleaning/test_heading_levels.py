@@ -1350,7 +1350,7 @@ def test_reading_the_printed_contents_is_idempotent() -> None:
 
 
 def test_a_contents_heading_glued_onto_the_table_header_still_opens_it() -> None:
-    # marker merges the line above a table into the table header.
+    # The engine merges the line above a table into the table header.
     text = (
         "# Оглавление | Section | Title | Стр. |\n"
         "|---|---|---|\n"

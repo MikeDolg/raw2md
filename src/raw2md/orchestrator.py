@@ -1,9 +1,9 @@
 """Run orchestrator: lock, queue, batch bar, and exit-code aggregation.
 
-One run at a time processes files one by one: marker holds the GPU. The
+One run at a time processes files one by one: raw2md-engine holds the GPU. The
 queue is saved up front and removed only when no file failed; a crash or a
 failure leaves it for `resume`. The engine registry is injectable, so tests
-run without marker, a GPU, or a temp path.
+run without raw2md-engine, a GPU, or a temp path.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from typing import TextIO
 
 from raw2md.cleaning import DEFAULT_WITNESS_MIN
 from raw2md.config import RunConfig, requests_llm
-from raw2md.engines import DjvuEngine, EngineRegistry, MarkerEngine, PandocEngine
+from raw2md.engines import BundledEngine, DjvuEngine, EngineRegistry, PandocEngine
 from raw2md.exit_codes import ExitCode
 from raw2md.header import ResultStatus
 from raw2md.keywords import Keywords, KeywordsError, default_keywords, load_keywords
@@ -472,16 +472,16 @@ def build_default_registry(
     *,
     recognition_batch_size: int | None = None,
 ) -> EngineRegistry:
-    """Build the pdf/docx/djvu registry sharing one marker model."""
-    marker = MarkerEngine(
+    """Build the pdf/docx/djvu registry sharing one engine model."""
+    bundled = BundledEngine(
         temp_root,
         cuda=config.cuda,
         log_stream=log_stream,
         recognition_batch_size=recognition_batch_size,
     )
     pandoc = PandocEngine()
-    djvu = DjvuEngine(marker, temp_root)
-    return EngineRegistry([marker, pandoc, djvu])
+    djvu = DjvuEngine(bundled, temp_root)
+    return EngineRegistry([bundled, pandoc, djvu])
 
 
 def _report_unavailable(registry: EngineRegistry) -> None:

@@ -63,7 +63,7 @@ def _structural_diffs(
     """Return diffs for formats where structural comparison is meaningful.
 
     Born-digital PDF skips the per-level heading check and splits the formula
-    tolerance. Scan formats are left out: marker re-levels headings on a raster.
+    tolerance. Scan formats are left out: the engine re-levels headings on a raster.
     """
     if fmt == "docx":
         return compare_structure(
@@ -79,7 +79,7 @@ def _structural_diffs(
             display_formula_tolerance=0,
             inline_formula_tolerance=4,
         )
-        # marker re-levels headings; the total must hold within 2.
+        # The engine re-levels headings; the total must hold within 2.
         if abs(ref.headings_total - out.headings_total) > 2:
             diffs.append(
                 StructureDiff("headings_total", ref.headings_total, out.headings_total)

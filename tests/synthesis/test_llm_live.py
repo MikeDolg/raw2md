@@ -1,7 +1,7 @@
 """End-to-end round-trip tests with real LLM providers.
 
 Behind the ``llm_live`` marker; they need ``GOOGLE_API_KEY`` and/or the
-``claude`` CLI, and some need ``marker``. Run explicitly::
+``claude`` CLI, and some need ``raw2md-engine``. Run explicitly::
 
     uv run pytest -m llm_live                   # full real-LLM suite
     uv run pytest -m llm_live -k smoke          # infrastructure smoke test only
@@ -50,7 +50,7 @@ def _skip_without(*requirements: str) -> None:
         if req == "GOOGLE_API_KEY":
             if not os.environ.get("GOOGLE_API_KEY"):
                 pytest.skip("GOOGLE_API_KEY not set in environment")
-        elif req == "marker":
+        elif req == "raw2md-engine":
             if importlib.util.find_spec("raw2md_engine") is None:
                 pytest.skip("the engine copy raw2md_engine is not installed")
         elif shutil.which(req) is None:
@@ -281,7 +281,7 @@ def test_inspection_and_post(
 
     The ``claude_post`` variant runs the two stages on different providers.
     """
-    _skip_without("marker", "pandoc", "xelatex", *requirements)
+    _skip_without("raw2md-engine", "pandoc", "xelatex", *requirements)
     result = run_roundtrip(
         CORPUS_DIR / "mixed.md",
         "pdf",
@@ -294,7 +294,7 @@ def test_inspection_and_post(
 
 def test_inspection_without_post(raw2md_home_real: Path) -> None:
     """PDF round-trip with --llm-inspection alone; the header records `post: none`."""
-    _skip_without("marker", "pandoc", "xelatex", "GOOGLE_API_KEY")
+    _skip_without("raw2md-engine", "pandoc", "xelatex", "GOOGLE_API_KEY")
     result = run_roundtrip(
         CORPUS_DIR / "mixed.md",
         "pdf",
@@ -327,7 +327,7 @@ def test_ocr_non_vision_model_refused(raw2md_home_real: Path) -> None:
 
 
 def test_ocr_replaces_page(raw2md_home_real: Path) -> None:
-    """OCR round-trip: Gemini vision recognizes a degraded scan, replacing marker.
+    """OCR round-trip: Gemini vision recognizes a degraded scan, replacing the engine.
 
     ``engine`` must record the gemini model, which proves recognition replaced
     the engine rather than being skipped.

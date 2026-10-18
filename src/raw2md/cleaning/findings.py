@@ -520,7 +520,7 @@ def _block_holds_a_formula(lines: Sequence[str]) -> bool:
 
     A truncated formula can render like a whole one, so soundness is not
     asked. The lines are joined, so a multi-line display formula counts. Both
-    dialects count: marker's `$` and pandoc's `\\(...\\)`. The cleaner's own
+    dialects count: the engine's `$` and pandoc's `\\(...\\)`. The cleaner's own
     finding is never re-judged here: its residue may be gone from the line.
     """
     masked = mask_inline_code("\n".join(lines))

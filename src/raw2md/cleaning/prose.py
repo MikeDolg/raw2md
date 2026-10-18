@@ -133,7 +133,7 @@ _SPLIT_ENTRY_NUMBER_RE = re.compile(
     r"^ {0,3}(?:\*\*)?\d{1,9}\. (\d{1,9}\.)(?!\s*\d{1,9}\.)(?=\*\*| |$)"
 )
 
-# marker's empty page anchor, dropped whole: it has no visible content.
+# The engine's empty page anchor, dropped whole: it has no visible content.
 _SPAN_ANCHOR_RE = re.compile(r'<span id="[^"]*">\s*</span>')
 
 # `[text](#target)`, the other half of a page anchor; image links excluded.
@@ -381,7 +381,7 @@ def _normalize_homoglyph_word(word: str) -> str:
 
 
 def strip_html_anchors(seg_list: list[Segment]) -> list[Segment]:
-    """Remove marker's page anchors and unwrap internal links, in plain zones only.
+    """Remove the engine's page anchors and unwrap internal links, in plain zones only.
 
     A page number means nothing once the source is markdown. Runs before the
     heading rules: an anchor after the marker hides the section number.

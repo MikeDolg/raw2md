@@ -163,7 +163,7 @@ def test_cleaning_reaches_a_fixed_point_on_every_corpus_fixture() -> None:
     # so leftover work of its own kind would grade a different document on the
     # second call.
     for path in _corpus_fixtures():
-        for method in (None, ConversionMethod.MARKER, ConversionMethod.PANDOC):
+        for method in (None, ConversionMethod.BUNDLED, ConversionMethod.PANDOC):
             options = CleanOptions(method=method)
             once = clean(path.read_text(encoding="utf-8"), options)
             assert clean(once, options) == once, f"{path.name} / {method}"

@@ -1,7 +1,7 @@
 """DjVu conversion engine.
 
 The chain: ddjvu renders one TIFF per page, img2pdf assembles a PDF, and
-marker converts it. Direct DjVu-to-PDF needs a text layer, which is rare.
+raw2md-engine converts it. Direct DjVu-to-PDF needs a text layer, which is rare.
 ddjvu and img2pdf are optional dependencies.
 
 djvutxt reads the text layer for the source witness; it is not part of the
@@ -27,7 +27,7 @@ from raw2md.engines.base import (
     Engine,
     condense_process_output,
 )
-from raw2md.engines.marker import MarkerEngine
+from raw2md.engines.bundled import BundledEngine
 from raw2md.header import ConversionMethod
 
 _logger = logging.getLogger("raw2md")
@@ -248,42 +248,42 @@ def _assemble_pdf(tiff_paths: list[Path], output: Path) -> None:
         with output.open("wb") as stream:
             img2pdf.convert([str(path) for path in tiff_paths], outputstream=stream)
     except Exception as exc:
-        # A partial PDF must not be handed to marker as if it were complete.
+        # A partial PDF must not be handed to the engine as if it were complete.
         output.unlink(missing_ok=True)
         raise ConversionError(f"img2pdf assembly failed: {exc}") from exc
 
 
 class DjvuEngine(Engine):
-    """DjVu conversion via ddjvu -> img2pdf -> marker.
+    """DjVu conversion via ddjvu -> img2pdf -> raw2md-engine.
 
-    `marker_engine` is shared with the queue, so its model loads once.
+    `bundled_engine` is shared with the queue, so its model loads once.
     `temp_root` holds the intermediate TIFFs and PDF.
     """
 
-    def __init__(self, marker_engine: MarkerEngine, temp_root: Path) -> None:
-        self._marker = marker_engine
+    def __init__(self, bundled_engine: BundledEngine, temp_root: Path) -> None:
+        self._bundled = bundled_engine
         self._temp_root = temp_root
 
     @property
     def method(self) -> ConversionMethod:
-        return ConversionMethod.DJVU_MARKER
+        return ConversionMethod.DJVU_BUNDLED
 
     @property
     def extensions(self) -> frozenset[str]:
         return frozenset({"djvu"})
 
     def available(self) -> bool:
-        """True when ddjvu, img2pdf, and marker are all present."""
+        """True when ddjvu, img2pdf, and raw2md-engine are all present."""
         return (
             shutil.which("ddjvu") is not None
             and find_spec("img2pdf") is not None
-            and self._marker.available()
+            and self._bundled.available()
         )
 
     def convert(
         self, source: Path, media_dir: Path, options: ConvertOptions
     ) -> ConversionResult:
-        """Convert a .djvu to Markdown via ddjvu -> img2pdf -> marker.
+        """Convert a .djvu to Markdown via ddjvu -> img2pdf -> raw2md-engine.
 
         With `scratch_dir` the assembled PDF stays there and is named on the
         result, so inspection does not assemble the book twice. Without it the
@@ -303,7 +303,7 @@ class DjvuEngine(Engine):
                 )
             pdf_path = pdf_dir / _ASSEMBLED_PDF_NAME
             djvu_to_pdf(source, pdf_path, self._temp_root)
-            result = self._marker.convert(pdf_path, media_dir, options)
+            result = self._bundled.convert(pdf_path, media_dir, options)
             if options.scratch_dir is not None:
                 result = replace(result, source_pdf=pdf_path)
         return result

@@ -22,7 +22,7 @@ from raw2md.mdtext.math_spans import mask_math
 from raw2md.mdtext.pages import page_mark_number
 from raw2md.mdtext.zones import Segment, mask_inline_code
 
-# Indentation is spaces only, as marker writes it. A thematic break `- - -`
+# Indentation is spaces only, as the engine writes it. A thematic break `- - -`
 # also matches; the caller rejects it first.
 LIST_ITEM_RE = re.compile(r"^( *)([-*+]|\d{1,9}[.)])( +)(.*)$")
 

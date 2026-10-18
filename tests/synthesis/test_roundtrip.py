@@ -1,7 +1,7 @@
 """End-to-end round-trip tests: generate a format, convert, check the contract.
 
 Behind the ``roundtrip`` marker; the docx branch needs only pandoc, the other
-branches drive marker. Run explicitly::
+branches drive raw2md-engine. Run explicitly::
 
     uv run pytest -m roundtrip                 # the whole suite
     uv run pytest -m roundtrip -k docx         # GPU-free docx only
@@ -43,7 +43,7 @@ pytestmark = pytest.mark.roundtrip
 
 def _require_tools(
     *,
-    marker: bool = False,
+    engine: bool = False,
     xelatex: bool = False,
     djvu: bool = False,
     img2pdf: bool = False,
@@ -51,7 +51,7 @@ def _require_tools(
 ) -> None:
     """Skip a round-trip test whose generation or conversion tool is absent.
 
-    marker is probed with ``find_spec`` as the engine does, ``img2pdf`` on PATH,
+    raw2md-engine is probed with ``find_spec`` as the adapter does, ``img2pdf`` on PATH,
     and the handwriting font as a file.
     """
     if shutil.which("pandoc") is None:
@@ -70,7 +70,7 @@ def _require_tools(
         font = FONTS_DIR / f"{HANDWRITING_FONT_NAME}{HANDWRITING_FONT_EXT}"
         if not font.is_file():
             pytest.skip("handwriting font asset is absent")
-    if marker and importlib.util.find_spec("raw2md_engine") is None:
+    if engine and importlib.util.find_spec("raw2md_engine") is None:
         pytest.skip("the engine copy raw2md_engine is not installed")
 
 
@@ -272,10 +272,10 @@ def test_docx_single_glyph_math_unwraps_to_prose(home: Path) -> None:
         assert wrapped not in body, f"{wrapped!r} was not unwrapped: {body!r}"
 
 
-# --- born-digital PDF via marker -------------------------------------------
+# --- born-digital PDF via raw2md-engine ------------------------------------
 
-# Calibrated on a GPU marker run: marker re-levels headings but keeps the total
-# within 2, and renders inline math as plain text (up to 4 spans lost).
+# Calibrated on a GPU run of the engine: it re-levels headings but keeps the
+# total within 2, and renders inline math as plain text (up to 4 spans lost).
 _PDF_HEADING_TOTAL_TOL = 2
 _PDF_TABLE_TOL = 1
 _PDF_IMAGE_TOL = 1
@@ -284,7 +284,7 @@ _PDF_INLINE_FORMULA_TOL = 4
 
 
 def _assert_born_digital_pdf_structure(result: RoundtripResult) -> None:
-    """Shared born-digital PDF contract calibrated on a GPU marker run."""
+    """Shared born-digital PDF contract calibrated on a GPU run of the engine."""
     _assert_wrote_result(result)
     assert result.header is not None
     assert result.header.engine == "raw2md-engine"
@@ -320,8 +320,8 @@ def _assert_born_digital_pdf_structure(result: RoundtripResult) -> None:
     ],
 )
 def test_pdf_born_digital_roundtrip_contract(home: Path, fixture: str) -> None:
-    """Born-digital PDFs for each fixture convert through marker within tolerance."""
-    _require_tools(marker=True, xelatex=True)
+    """Each fixture's born-digital PDF converts through the engine within tolerance."""
+    _require_tools(engine=True, xelatex=True)
     result = run_roundtrip(CORPUS_DIR / f"{fixture}.md", "pdf", home / "work")
     _assert_born_digital_pdf_structure(result)
 
@@ -332,7 +332,7 @@ def test_pdf_source_filename_with_space_encodes_media_link(home: Path) -> None:
     The space must reach the body percent-encoded, never raw, or CommonMark cuts
     the link target at it. Docx takes the same encoding route.
     """
-    _require_tools(marker=True, xelatex=True)
+    _require_tools(engine=True, xelatex=True)
     result = run_roundtrip(
         CORPUS_DIR / "images.md", "pdf", home / "work", stem="my book"
     )
@@ -349,7 +349,7 @@ def test_pdf_source_filename_with_space_encodes_media_link(home: Path) -> None:
         assert " " not in link, f"{link} carries a raw space"
 
 
-# --- scans and handwriting via marker --------------------------------------
+# --- scans and handwriting via raw2md-engine -------------------------------
 
 # Recognition-failure floors, tied to the quality thresholds.
 _DENSITY_FLOOR = 350
@@ -359,10 +359,10 @@ _UNREADABLE_CEILING = 0.15
 def _assert_scan_recovered_text_with_drifting_levels(
     result: RoundtripResult,
 ) -> Evaluation:
-    """Shared scan contract: marker ran, the text came back, the levels drifted.
+    """Shared scan contract: the engine ran, the text came back, the levels drifted.
 
-    The verdict is not pinned. The shape of marker's level damage varies with the
-    engine build and the card; a ladder flattened upward looks like a short
+    The verdict is not pinned. The shape of the engine's level damage varies with
+    its build and the card; a ladder flattened upward looks like a short
     document's flat shape, so the same damage grades ``bad`` or ``ok``. The
     per-level drift is pinned instead.
     """
@@ -393,7 +393,7 @@ def test_printed_scan_recovers_text_but_levels_drift(home: Path, fmt: str) -> No
     The mild synthetic degradation causes no recognition failure, so
     ``recognition_failure`` stays silent on both rasters.
     """
-    _require_tools(marker=True, xelatex=True, img2pdf=True)
+    _require_tools(engine=True, xelatex=True, img2pdf=True)
     result = run_roundtrip(CORPUS_DIR / "mixed.md", fmt, home / "work")
     ev = _assert_scan_recovered_text_with_drifting_levels(result)
     assert ev.metrics.get("unreadable_share", 0.0) < _UNREADABLE_CEILING
@@ -407,24 +407,24 @@ def test_handwriting_scan_recognition_failure_under_fires(
     Cyrillic misread as Latin is not unreadable, since both scripts are allowed,
     so the share stays under 15%. A known limit, pinned so a change is deliberate.
     """
-    _require_tools(marker=True, xelatex=True, img2pdf=True, handwriting_font=True)
+    _require_tools(engine=True, xelatex=True, img2pdf=True, handwriting_font=True)
     result = run_roundtrip(
         CORPUS_DIR / "handwriting.md", "handwriting_scan", home / "work"
     )
     _assert_scan_recovered_text_with_drifting_levels(result)
 
 
-# --- DjVu via ddjvu -> TIFF -> PDF -> marker --------------------------------
+# --- DjVu via ddjvu -> TIFF -> PDF -> raw2md-engine -------------------------
 
 
 def test_djvu_roundtrip_contract(home: Path) -> None:
-    """DjVu round-trips through ddjvu -> TIFF -> PDF -> marker within tolerance.
+    """DjVu round-trips through ddjvu -> TIFF -> PDF -> raw2md-engine within tolerance.
 
-    Calibrated on a GPU marker run at 150 DPI: headings 3 (H3 shifts to H4),
+    Calibrated on a GPU run of the engine at 150 DPI: headings 3 (H3 shifts to H4),
     tables 1, formulas and images up to total loss. The headers fixture is left
-    out: marker loses every H3 at this resolution.
+    out: the engine loses every H3 at this resolution.
     """
-    _require_tools(marker=True, xelatex=True, djvu=True)
+    _require_tools(engine=True, xelatex=True, djvu=True)
     result = run_roundtrip(CORPUS_DIR / "mixed.md", "djvu", home / "work")
     _assert_wrote_result(result)
     assert result.header is not None

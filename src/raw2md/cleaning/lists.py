@@ -85,9 +85,9 @@ def _walk_item_blocks(
 
 
 def normalize_lists(seg_list: list[Segment]) -> list[Segment]:
-    """Restore marker's broken lists over each block of item lines.
+    """Restore the engine's broken lists over each block of item lines.
 
-    marker demotes a flat numbered list to alternately indented bullets whose
+    The engine demotes a flat numbered list to alternately indented bullets whose
     text is the number, and strays a lone bullet one level deep. Both are
     valid CommonMark, so only the block shape shows them.
     """
@@ -95,7 +95,7 @@ def normalize_lists(seg_list: list[Segment]) -> list[Segment]:
 
 
 def separate_bold_list_marker(seg_list: list[Segment]) -> list[Segment]:
-    """Insert the space marker drops after a numbered marker demoted to bold."""
+    """Insert the space the engine drops after a numbered marker demoted to bold."""
     return _walk_item_blocks(seg_list, _separate_bold_marker_block)
 
 
@@ -160,7 +160,7 @@ _DINGBAT_BULLET_RE = re.compile(r"^( {0,3})•[ \t]+(?=\S)")
 def promote_dingbat_bullet(seg_list: list[Segment]) -> list[Segment]:
     """Rewrite a line opening with a literal `•` glyph as a `-` bullet item.
 
-    marker carries a symbol-font bullet into the body as the character. A
+    The engine carries a symbol-font bullet into the body as the character. A
     table row keeps the glyph as cell data. Runs before list de-nesting, so
     the promoted items form a block.
     """
@@ -226,7 +226,7 @@ def _deeper_runs(items: list[_ListItem], base: int) -> list[tuple[int, int]]:
 
 
 def _is_demoted_numbered(items: list[_ListItem], base: int) -> bool:
-    """True when the block is marker's demoted numbered list, not real nesting.
+    """True when the block is the engine's demoted numbered list, not real nesting.
 
     At least two bullets carry a number as text, one of them at the base
     indent, and the numbers are consecutive. A gap (`2023.`, `2025.`) is bullet
