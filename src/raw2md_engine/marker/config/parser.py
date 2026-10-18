@@ -6,9 +6,6 @@ import click
 
 from raw2md_engine.marker.converters.pdf import PdfConverter
 from raw2md_engine.marker.logger import get_logger
-from raw2md_engine.marker.renderers.chunk import ChunkRenderer
-from raw2md_engine.marker.renderers.html import HTMLRenderer
-from raw2md_engine.marker.renderers.json import JSONRenderer
 from raw2md_engine.marker.renderers.markdown import MarkdownRenderer
 from raw2md_engine.marker.settings import settings
 from raw2md_engine.marker.util import classes_to_strings, parse_range_str, strings_to_classes
@@ -32,7 +29,7 @@ class ConfigParser:
         fn = click.option("--debug", "-d", is_flag=True, help="Enable debug mode.")(fn)
         fn = click.option(
             "--output_format",
-            type=click.Choice(["markdown", "json", "html", "chunks"]),
+            type=click.Choice(["markdown"]),
             default="markdown",
             help="Format to output results in.",
         )(fn)
@@ -110,14 +107,8 @@ class ConfigParser:
 
     def get_renderer(self):
         match self.cli_options["output_format"]:
-            case "json":
-                r = JSONRenderer
             case "markdown":
                 r = MarkdownRenderer
-            case "html":
-                r = HTMLRenderer
-            case "chunks":
-                r = ChunkRenderer
             case _:
                 raise ValueError("Invalid output format")
         return classes_to_strings([r])[0]

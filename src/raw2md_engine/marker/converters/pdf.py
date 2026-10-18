@@ -11,7 +11,7 @@ from contextlib import contextmanager
 import tempfile
 
 from raw2md_engine.marker.processors import BaseProcessor
-from raw2md_engine.marker.providers.registry import provider_from_filepath
+from raw2md_engine.marker.providers.pdf import PdfProvider
 from raw2md_engine.marker.builders.document import DocumentBuilder
 from raw2md_engine.marker.builders.layout import LayoutBuilder
 from raw2md_engine.marker.builders.line import LineBuilder
@@ -136,11 +136,10 @@ class PdfConverter(BaseConverter):
                 os.unlink(temp_file.name)
 
     def build_document(self, filepath: str) -> Document:
-        provider_cls = provider_from_filepath(filepath)
         layout_builder = self.resolve_dependencies(self.layout_builder_class)
         line_builder = self.resolve_dependencies(LineBuilder)
         ocr_builder = self.resolve_dependencies(OcrBuilder)
-        provider = provider_cls(filepath, self.config)
+        provider = PdfProvider(filepath, self.config)
         document = DocumentBuilder(self.config)(
             provider, layout_builder, line_builder, ocr_builder
         )

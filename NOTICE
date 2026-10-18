@@ -58,3 +58,18 @@ raw2md does not call them.
 removes the imports of the removed modules, the LLM processors in the
 default processor lists, the LLM service of the converter, the
 `--llm_service` option, and the extraction output.
+
+2026-10-18: removed from `marker/`: the providers other than
+`providers/pdf.py` and `providers/utils.py` (document, epub, html, image,
+powerpoint, spreadsheet, and the registry), `converters/ocr.py`,
+`converters/table.py`, the renderers `chunk.py`, `json.py`, and
+`ocr_json.py`, `processors/util.py`, `utils/batch.py`, and `utils/gpu.py`.
+Removed from `surya/`: `scripts/`, `debug/`, `models.py`, `input/load.py`,
+and `recognition/languages.py`. Removed from `pdftext/`: `scripts/`. These
+parts serve other input formats, other output formats, and the
+command-line and browser applications, and raw2md does not call them.
+
+2026-10-18: `marker/converters/pdf.py`, `marker/config/parser.py`, and
+`marker/output.py` changed. The change builds the PDF provider directly,
+keeps only the Markdown renderer and output format, and removes the
+unused output helpers.
