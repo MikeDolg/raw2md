@@ -81,3 +81,10 @@ directly and does not use the command-line config parser.
 a font when it starts. The change removes the font download, the font CSS
 helper of the providers, and the helpers that only the config parser
 used.
+
+2026-10-18: `marker/settings.py`, `surya/settings.py`, and
+`pdftext/settings.py` changed. The settings are fixed values of a plain
+class and no longer load from environment variables or from a `local.env`
+file. The device is detected as before, without the `TORCH_DEVICE`
+override. The change also removes the settings that no remaining code
+reads.

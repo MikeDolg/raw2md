@@ -164,8 +164,6 @@ The first `marker` conversion also downloads the model weights, which take about
 | Windows | `%LOCALAPPDATA%\datalab\datalab\Cache\models` |
 | Linux | `~/.cache/datalab/models` |
 
-To keep the weights somewhere else, set the `MODEL_CACHE_DIR` environment variable.
-
 ## Quick start
 
 Give raw2md a file, a folder, or nothing at all:
