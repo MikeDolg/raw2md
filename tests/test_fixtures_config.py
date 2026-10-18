@@ -16,7 +16,7 @@ def test_offline_fixture_loads(raw2md_home: Path) -> None:
     assert settings.models["test_api"].access == "api"
     assert settings.models["test_cli"].access == "cli"
     assert settings.operations["ocr"] == frozenset({"test_api"})
-    assert settings.marker_recognition_batch_size == 8
+    assert settings.engine_recognition_batch_size == 8
 
     prompts = load_prompts(prompts_file())
     # The per-model override path is exercised from a file, not just defaults.
@@ -29,7 +29,7 @@ def test_real_fixture_loads(raw2md_home_real: Path) -> None:
     assert set(settings.models) == {"gemini_api", "claude_cli"}
     assert settings.models["gemini_api"].key_env == "GOOGLE_API_KEY"
     assert settings.operations["inspection"] == frozenset({"gemini_api"})
-    assert settings.marker_recognition_batch_size == 8
+    assert settings.engine_recognition_batch_size == 8
 
     # The real profile drives live models, so it carries the shipped prompts.
     assert load_prompts(prompts_file()) == default_prompts()

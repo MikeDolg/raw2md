@@ -16,6 +16,8 @@ from typing import Self, TextIO, cast
 
 import tqdm as _tqdm_mod
 
+from raw2md.header import DEFAULT_ENGINE
+
 # The pipeline stages in execution order; a route runs a subset. Re-evaluation
 # after inspection or post stays under the stage that just ran.
 STAGE_NAMES: tuple[str, ...] = (
@@ -40,7 +42,7 @@ _MARKER_PHASES: tuple[tuple[str, str], ...] = (
 _TQDM_MARK = "%|"
 
 # Bracket label for a recognized-but-unnamed engine progress line.
-_GENERIC_PHASE = "marker"
+_GENERIC_PHASE = DEFAULT_ENGINE
 
 # Fixed positions keep the four lines in a stable block.
 _BATCH_LABEL_POS = 0
@@ -54,7 +56,7 @@ _LABEL_BAR_FORMAT = "{desc}:"
 def _marker_phase_label(line: str) -> str | None:
     """Map one line of redirected engine output to a bracket label, or None.
 
-    Another tqdm line yields the generic ``marker``; a non-progress line None.
+    Another tqdm line yields the engine's name; a non-progress line None.
     """
     for needle, label in _MARKER_PHASES:
         if needle in line:

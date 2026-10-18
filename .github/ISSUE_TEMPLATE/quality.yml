@@ -29,7 +29,7 @@ body:
     id: engine
     attributes:
       label: Engine and LLM stages
-      description: The engine (`marker`, `pandoc`, or a model key from `-e`) and the `-i` and `-p` flags, if you used them.
+      description: The engine (`raw2md-engine`, `pandoc`, or a model key from `-e`) and the `-i` and `-p` flags, if you used them.
     validations:
       required: true
   - type: textarea

@@ -285,10 +285,11 @@ def test_marker_phase_label_known(line: str, label: str) -> None:
 
 
 def test_marker_phase_label_unknown_progress_line_is_generic() -> None:
-    # An unnamed tqdm description still marks a marker step.
+    # An unnamed tqdm description still marks an engine step.
     from raw2md.progress import _marker_phase_label
 
-    assert _marker_phase_label("Loading model shards:  30%|###   | 3/10") == "marker"
+    line = "Loading model shards:  30%|###   | 3/10"
+    assert _marker_phase_label(line) == "raw2md-engine"
 
 
 def test_marker_phase_label_non_progress_line_is_ignored() -> None:

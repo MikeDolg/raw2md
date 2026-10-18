@@ -287,7 +287,7 @@ def _assert_born_digital_pdf_structure(result: RoundtripResult) -> None:
     """Shared born-digital PDF contract calibrated on a GPU marker run."""
     _assert_wrote_result(result)
     assert result.header is not None
-    assert result.header.engine == "marker"
+    assert result.header.engine == "raw2md-engine"
     out = result.output_counts
     assert out is not None
     ref = result.reference_counts
@@ -368,7 +368,7 @@ def _assert_scan_recovered_text_with_drifting_levels(
     """
     _assert_wrote_result(result)
     assert result.header is not None
-    assert result.header.engine == "marker"
+    assert result.header.engine == "raw2md-engine"
     ev = result.evaluation
     assert ev is not None
     assert ev.recognition_failure is False
@@ -428,7 +428,7 @@ def test_djvu_roundtrip_contract(home: Path) -> None:
     result = run_roundtrip(CORPUS_DIR / "mixed.md", "djvu", home / "work")
     _assert_wrote_result(result)
     assert result.header is not None
-    assert result.header.engine == "marker"
+    assert result.header.engine == "raw2md-engine"
     out_counts = result.output_counts
     assert out_counts is not None
     ref = result.reference_counts

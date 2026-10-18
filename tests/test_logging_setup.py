@@ -115,7 +115,7 @@ def test_plain_info_does_not_reach_console(monkeypatch: pytest.MonkeyPatch) -> N
     )
     setup_logging(log_file=False)
     logger = logging.getLogger("raw2md")
-    logger.info("converting doc.pdf via marker")
+    logger.info("converting doc.pdf via raw2md-engine")
     assert calls == []
 
 
@@ -192,11 +192,13 @@ def test_log_file_records_structured_messages(
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     logger = logging.getLogger("raw2md")
     setup_logging(log_file=True)
-    logger.info("converting doc.pdf via marker")
+    logger.info("converting doc.pdf via raw2md-engine")
     for handler in logger.handlers:
         handler.flush()
     log_path = tmp_path / ".raw2md" / "logs" / "raw2md.log"
-    assert "converting doc.pdf via marker" in log_path.read_text(encoding="utf-8")
+    assert "converting doc.pdf via raw2md-engine" in log_path.read_text(
+        encoding="utf-8"
+    )
 
 
 def test_log_file_rewritten_each_run(

@@ -517,6 +517,32 @@ def test_load_unsupported_version_raises(tmp_path: Path) -> None:
         load_queue(path)
 
 
+def test_queue_of_0_1_is_refused_with_start_again(tmp_path: Path) -> None:
+    # Its shape matches the current one, but it was saved for the marker
+    # engine: only the version tells the two apart.
+    path = tmp_path / "queue.json"
+    queue = Queue(params=make_run_config(tmp_path / "in"), items=())
+    save_queue(queue, path)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["version"] = 5
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(
+        QueueError, match=r"older raw2md \(queue version 5\).*start the run again"
+    ):
+        load_queue(path)
+
+
+@pytest.mark.parametrize("version", [None, "6", True])
+def test_load_non_integer_version_is_unsupported(
+    tmp_path: Path, version: object
+) -> None:
+    path = tmp_path / "queue.json"
+    payload = {"version": version, "params": {}, "items": []}
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(QueueError, match="unsupported queue version"):
+        load_queue(path)
+
+
 def test_load_missing_param_raises(tmp_path: Path) -> None:
     path = tmp_path / "queue.json"
     payload = {"version": QUEUE_VERSION, "params": {"input_path": "x"}, "items": []}
@@ -547,7 +573,7 @@ def test_pre_upgrade_queue_is_rejected_by_version_not_missing_param(
     }
     payload = {"version": QUEUE_VERSION - 1, "params": params, "items": []}
     path.write_text(json.dumps(payload), encoding="utf-8")
-    with pytest.raises(QueueError, match="unsupported queue version"):
+    with pytest.raises(QueueError, match="start the run again"):
         load_queue(path)
 
 
@@ -573,7 +599,7 @@ def test_pre_no_log_file_queue_is_rejected_despite_matching_shape(
     }
     payload = {"version": QUEUE_VERSION - 1, "params": params, "items": []}
     path.write_text(json.dumps(payload), encoding="utf-8")
-    with pytest.raises(QueueError, match="unsupported queue version"):
+    with pytest.raises(QueueError, match="start the run again"):
         load_queue(path)
 
 
@@ -599,7 +625,7 @@ def test_pre_overwrite_removal_queue_is_rejected_despite_extra_key(
     }
     payload = {"version": QUEUE_VERSION - 1, "params": params, "items": []}
     path.write_text(json.dumps(payload), encoding="utf-8")
-    with pytest.raises(QueueError, match="unsupported queue version"):
+    with pytest.raises(QueueError, match="start the run again"):
         load_queue(path)
 
 

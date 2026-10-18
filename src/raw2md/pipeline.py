@@ -37,6 +37,7 @@ from raw2md.engines import (
     check_source,
 )
 from raw2md.header import (
+    DEFAULT_ENGINE,
     LLM_FIELD_FAILED,
     ConversionMethod,
     HeaderParseError,
@@ -108,8 +109,8 @@ _OCR_METHODS = {
 # The header's `engine` for a route without an LLM; `source` already carries
 # the djvu extension.
 _ROUTE_ENGINE_NAMES = {
-    ConversionMethod.MARKER: "marker",
-    ConversionMethod.DJVU_MARKER: "marker",
+    ConversionMethod.MARKER: DEFAULT_ENGINE,
+    ConversionMethod.DJVU_MARKER: DEFAULT_ENGINE,
     ConversionMethod.PANDOC: "pandoc",
     ConversionMethod.CLEAN: "clean",
 }

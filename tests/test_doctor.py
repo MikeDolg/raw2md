@@ -237,7 +237,7 @@ def test_report_lists_engines(
     run_doctor()
     out = capsys.readouterr().out
     assert "engines:" in out
-    assert "marker (pdf)" in out
+    assert "raw2md-engine (pdf)" in out
 
 
 def test_report_shows_cuda_available_with_vram(
@@ -247,7 +247,7 @@ def test_report_shows_cuda_available_with_vram(
     write_settings(gemini_only())
     run_doctor()
     out = capsys.readouterr().out
-    assert "marker:" in out
+    assert "raw2md-engine:" in out
     assert "CUDA: available (4096 MB VRAM)" in out
 
 
@@ -339,7 +339,7 @@ def test_report_warns_batch_size_set_without_cuda(
     # A batch size tuned for VRAM deserves a flag on a run without CUDA.
     monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: _CPU_BUILD)
     data = gemini_only()
-    data["marker"] = {"recognition_batch_size": 8}
+    data["raw2md-engine"] = {"recognition_batch_size": 8}
     write_settings(data)
     run_doctor()
     out = capsys.readouterr().out
@@ -352,12 +352,22 @@ def test_report_no_warning_when_cuda_available_with_batch_size(
 ) -> None:
     monkeypatch.setattr("raw2md.doctor._cuda_status", lambda: _GPU)
     data = gemini_only()
-    data["marker"] = {"recognition_batch_size": 8}
+    data["raw2md-engine"] = {"recognition_batch_size": 8}
     write_settings(data)
     run_doctor()
     out = capsys.readouterr().out
     assert "recognition_batch_size: 8" in out
     assert "WARNING" not in out
+
+
+def test_report_rejects_the_retired_marker_section(
+    home: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = gemini_only()
+    data["marker"] = {"recognition_batch_size": 8}
+    write_settings(data)
+    assert run_doctor() == int(ExitCode.ARGUMENT_ERROR)
+    assert "'marker' section is now 'raw2md-engine'" in capsys.readouterr().out
 
 
 def test_doctor_rejects_unexpected_arguments(home: Path) -> None:

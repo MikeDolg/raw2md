@@ -304,7 +304,7 @@ def test_build_refuses_a_page_that_fetch_did_not_report(tmp_path: Path) -> None:
 def test_raw2md_command_adds_the_llm_stages_only_when_asked(tmp_path: Path) -> None:
     run = RunDir(tmp_path)
     plain = convert.raw2md_command(run, None)
-    assert plain[1:] == ["-o", str(run.outputs), "-d", "-s", "-e", "marker"]
+    assert plain[1:] == ["-o", str(run.outputs), "-d", "-s", "-e", "raw2md-engine"]
     assert convert.raw2md_command(run, "gemini")[-4:] == [
         "-i",
         "gemini",
@@ -335,7 +335,7 @@ def test_convert_adds_a_session_to_the_record(
     monkeypatch.setattr("subprocess.run", _fake_run(1))
     monkeypatch.setattr(convert, "gpu_name", lambda: "Test GPU")
     record = convert.convert(run, None)
-    assert record["command"] == "raw2md <pdf> -d -s -e marker"
+    assert record["command"] == "raw2md <pdf> -d -s -e raw2md-engine"
     assert record["gpu"] == "Test GPU"
     assert [session["exit_code"] for session in record["sessions"]] == [1]
     convert.convert(run, None)

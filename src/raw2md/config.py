@@ -10,11 +10,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+from raw2md.header import DEFAULT_ENGINE, RETIRED_ENGINE
+
 # Disabled-operation sentinel for the --llm-* flags; absence means the same.
 _NONE = "none"
-
-# The --engine value that keeps LLM OCR off.
-_MARKER_ENGINE = "marker"
 
 
 class CliArgumentError(Exception):
@@ -27,7 +26,7 @@ class RunConfig:
 
     The three `llm_*` model fields hold a model key from settings.json or None
     when the operation is disabled. `llm_ocr` reflects `--engine`: None for the
-    built-in `marker` route, a model key when `--engine` names one instead.
+    built-in engine, a model key when `--engine` names one instead.
     `cuda` is True for `--cuda on` (the default). `llm_latex_fix` opens math
     spans to an inspection edit and means nothing without `llm_inspection`
     (`validate_latex_fix`).
@@ -52,8 +51,17 @@ def _model_or_none(value: str) -> str | None:
 
 
 def _engine_to_model(value: str) -> str | None:
-    """Map --engine to RunConfig.llm_ocr: None for marker, else the model key."""
-    return None if value == _MARKER_ENGINE else value
+    """Map --engine to RunConfig.llm_ocr: None for the engine, else the model key."""
+    return None if value == DEFAULT_ENGINE else value
+
+
+def engine_argument(value: str) -> str:
+    """The argparse type of `--engine`: refuse the 0.1.x name with the new one."""
+    if value == RETIRED_ENGINE:
+        raise argparse.ArgumentTypeError(
+            f"the engine '{RETIRED_ENGINE}' is now '{DEFAULT_ENGINE}'"
+        )
+    return value
 
 
 def requests_llm(config: RunConfig) -> bool:

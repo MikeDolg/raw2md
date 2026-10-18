@@ -441,7 +441,7 @@ def _start_context(
                 config,
                 temp_root,
                 log_stream,
-                recognition_batch_size=settings.marker_recognition_batch_size,
+                recognition_batch_size=settings.engine_recognition_batch_size,
             )
     except (TempPathError, _LlmUnavailableError) as exc:
         _logger.error("%s", exc)  # noqa: TRY400 -- expected error; no traceback wanted here

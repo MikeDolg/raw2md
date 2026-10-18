@@ -48,7 +48,7 @@ _logger = logging.getLogger("raw2md")
 
 # Bump when the shape or the meaning of a saved field changes; a file of any
 # other version is refused rather than misread.
-QUEUE_VERSION = 5
+QUEUE_VERSION = 6
 
 
 class QueueError(Exception):
@@ -391,8 +391,20 @@ def load_queue(path: Path | None = None) -> Queue:
         raise QueueError(f"queue.json is not valid JSON: {exc}") from exc
     if not isinstance(data, Mapping):
         raise QueueError("queue.json must be a JSON object")
-    if data.get("version") != QUEUE_VERSION:
-        raise QueueError(f"unsupported queue version: {data.get('version')!r}")
+    version = data.get("version")
+    older = (
+        # bool is an int subclass.
+        isinstance(version, int)
+        and not isinstance(version, bool)
+        and version < QUEUE_VERSION
+    )
+    if older:
+        raise QueueError(
+            f"queue.json was saved by an older raw2md (queue version "
+            f"{version}) and cannot be resumed; start the run again"
+        )
+    if version != QUEUE_VERSION:
+        raise QueueError(f"unsupported queue version: {version!r}")
     return Queue(
         params=_params_from_json(data.get("params")),
         items=_items_from_json(data.get("items")),

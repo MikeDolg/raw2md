@@ -1198,7 +1198,7 @@ def test_marker_engine_convert_raises_when_unavailable(tmp_path: Path) -> None:
     _write_pdf_bytes(source)
     with (
         patch("raw2md.engines.marker.find_spec", return_value=None),
-        pytest.raises(ConversionError, match="marker is not installed"),
+        pytest.raises(ConversionError, match="raw2md-engine is not installed"),
     ):
         MarkerEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
 

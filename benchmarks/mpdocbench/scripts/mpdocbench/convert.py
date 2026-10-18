@@ -23,7 +23,15 @@ def raw2md_command(run: RunDir, llm: str | None) -> list[str]:
     `-s` makes a second call finish an interrupted run instead of starting over:
     a document whose result exists is not converted again.
     """
-    command = [str(run.pdfs), "-o", str(run.outputs), "-d", "-s", "-e", "marker"]
+    command = [
+        str(run.pdfs),
+        "-o",
+        str(run.outputs),
+        "-d",
+        "-s",
+        "-e",
+        "raw2md-engine",
+    ]
     if llm is not None:
         command += ["-i", llm, "-p", llm]
     return command

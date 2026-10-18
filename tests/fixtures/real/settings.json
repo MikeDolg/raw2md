@@ -32,7 +32,7 @@
       ]
     }
   },
-  "marker": {
+  "raw2md-engine": {
     "recognition_batch_size": 8
   },
   "log_file": false

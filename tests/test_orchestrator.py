@@ -1404,7 +1404,7 @@ def test_log_file_excludes_raw_engine_output(home: Path) -> None:
     text = (home / ".raw2md" / "logs" / "raw2md.log").read_text(encoding="utf-8")
     assert "RAW MARKER BAR" not in text
     assert "SURYA STDERR NOISE" not in text
-    assert "converting a.pdf via marker" in text
+    assert "converting a.pdf via raw2md-engine" in text
     assert "converted a.pdf" in text
 
 
@@ -1431,11 +1431,11 @@ def test_cuda_off_reaches_registry_builder(
     code = run(make_run_config(src, cuda=False))
     assert code == int(ExitCode.SUCCESS)
     assert captured.get("cuda") is False
-    # Without settings.json marker's own default stays in force.
+    # Without settings.json the engine's own default stays in force.
     assert captured.get("recognition_batch_size") is None
 
 
-def test_marker_batch_size_from_settings_reaches_registry_builder(
+def test_engine_batch_size_from_settings_reaches_registry_builder(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     src = home / "a.pdf"
@@ -1453,7 +1453,7 @@ def test_marker_batch_size_from_settings_reaches_registry_builder(
                     }
                 },
                 "operations": {},
-                "marker": {"recognition_batch_size": 8},
+                "raw2md-engine": {"recognition_batch_size": 8},
             }
         ),
         encoding="utf-8",
@@ -1621,11 +1621,11 @@ def test_invalid_settings_warns_but_does_not_block_a_plain_run(
 # --- conversion modes --------------------------------------------------------
 
 
-def test_single_pdf_engine_is_marker(home: Path) -> None:
+def test_single_pdf_engine_is_raw2md_engine(home: Path) -> None:
     src = home / "a.pdf"
     src.write_bytes(b"x")
     run(make_run_config(src), registry=registry_for(StubEngine()))
-    assert "engine: marker" in (home / "a.md").read_text(encoding="utf-8")
+    assert "engine: raw2md-engine" in (home / "a.md").read_text(encoding="utf-8")
 
 
 def test_single_docx_engine_is_pandoc(home: Path) -> None:
@@ -1636,15 +1636,15 @@ def test_single_docx_engine_is_pandoc(home: Path) -> None:
     assert "engine: pandoc" in (home / "a.md").read_text(encoding="utf-8")
 
 
-def test_single_djvu_engine_is_marker(home: Path) -> None:
-    # `source` names the .djvu extension, so `engine` says "marker".
+def test_single_djvu_engine_is_raw2md_engine(home: Path) -> None:
+    # `source` names the .djvu extension, so `engine` names the engine alone.
     src = home / "a.djvu"
     src.write_bytes(b"x")
     engine = StubEngine(
         extensions=frozenset({"djvu"}), method=ConversionMethod.DJVU_MARKER
     )
     run(make_run_config(src), registry=registry_for(engine))
-    assert "engine: marker" in (home / "a.md").read_text(encoding="utf-8")
+    assert "engine: raw2md-engine" in (home / "a.md").read_text(encoding="utf-8")
 
 
 def test_single_md_engine_is_clean(home: Path) -> None:

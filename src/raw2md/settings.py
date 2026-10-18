@@ -15,7 +15,7 @@ from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from raw2md.exit_codes import ExitCode
-from raw2md.header import is_reserved_llm_field_value
+from raw2md.header import DEFAULT_ENGINE, RETIRED_ENGINE, is_reserved_llm_field_value
 from raw2md.paths import settings_file
 from raw2md.service import edit_file, parse_file_action, show_file
 
@@ -23,8 +23,8 @@ ACCESS_TYPES = ("api", "cli")
 OPERATIONS = ("ocr", "inspection", "post")
 
 # Built-in route names: a model key equal to one would make an --engine value
-# ambiguous.
-RESERVED_ENGINE_NAMES = frozenset({"marker", "pandoc", "djvu"})
+# ambiguous. The retired engine name stays, so `-e marker` never names a model.
+RESERVED_ENGINE_NAMES = frozenset({DEFAULT_ENGINE, RETIRED_ENGINE, "pandoc", "djvu"})
 
 # Operations that read page images and need vision.
 VISION_OPERATIONS = frozenset({"ocr", "inspection"})
@@ -33,7 +33,7 @@ _TEMPERATURE_MIN = 0.0
 _TEMPERATURE_MAX = 2.0
 
 # "No override", written out so the knob shows in the template.
-_MARKER_BATCH_SIZE_DEFAULT = "default"
+_ENGINE_BATCH_SIZE_DEFAULT = "default"
 
 # Below two occurrences a spelling is not the document's own.
 _WITNESS_MIN_FLOOR = 2
@@ -68,8 +68,8 @@ DEFAULT_SETTINGS: dict[str, Any] = {
         "inspection": {"allowed": ["gemini_api"]},
         "post": {"allowed": ["claude_cli", "gemini_api"]},
     },
-    "marker": {
-        "recognition_batch_size": "default",
+    DEFAULT_ENGINE: {
+        "recognition_batch_size": _ENGINE_BATCH_SIZE_DEFAULT,
     },
     "cleaning": {
         "witness_min": 20,
@@ -121,14 +121,14 @@ class Settings:
     """Parsed settings.json.
 
     `log_file` can only be turned off by `--no-log-file`. None in
-    `marker_recognition_batch_size` or `cleaning_witness_min` leaves the
+    `engine_recognition_batch_size` or `cleaning_witness_min` leaves the
     built-in default in force.
     """
 
     models: Mapping[str, ModelConfig]
     operations: Mapping[str, frozenset[str]]
     log_file: bool
-    marker_recognition_batch_size: int | None = None
+    engine_recognition_batch_size: int | None = None
     cleaning_witness_min: int | None = None
 
 
@@ -187,11 +187,15 @@ def load_settings(path: Path) -> Settings:
 def parse_settings(data: Any) -> Settings:
     if not isinstance(data, dict):
         raise SettingsError("top level must be a JSON object")
+    if RETIRED_ENGINE in data:
+        raise SettingsError(
+            f"the '{RETIRED_ENGINE}' section is now '{DEFAULT_ENGINE}'; rename it"
+        )
     return Settings(
         models=_parse_models(data.get("models")),
         operations=_parse_operations(data.get("operations")),
         log_file=_parse_log_file(data.get("log_file")),
-        marker_recognition_batch_size=_parse_marker(data.get("marker")),
+        engine_recognition_batch_size=_parse_engine(data.get(DEFAULT_ENGINE)),
         cleaning_witness_min=_parse_cleaning(data.get("cleaning")),
     )
 
@@ -210,8 +214,8 @@ def _parse_models(raw: Any) -> dict[str, ModelConfig]:
             )
         if is_reserved_engine_name(name):
             raise SettingsError(
-                f"model key '{name}' is reserved; it collides with a built-in "
-                "conversion engine name (marker/pandoc/djvu)"
+                f"model key '{name}' is reserved; it collides with a conversion "
+                f"engine name ({'/'.join(sorted(RESERVED_ENGINE_NAMES))})"
             )
     return {name: _parse_model(name, spec) for name, spec in raw.items()}
 
@@ -374,27 +378,27 @@ def _parse_log_file(raw: Any) -> bool:
     return raw
 
 
-def _parse_marker(raw: Any) -> int | None:
-    """Parse the optional `marker` section into a recognition batch size.
+def _parse_engine(raw: Any) -> int | None:
+    """Parse the optional engine section into a recognition batch size.
 
-    Absence and `"default"` leave marker's device default; only a positive
+    Absence and `"default"` leave the engine's device default; only a positive
     integer overrides it.
     """
     if raw is None:
         return None
     if not isinstance(raw, dict):
-        raise SettingsError("'marker' must be an object")
-    value = raw.get("recognition_batch_size", _MARKER_BATCH_SIZE_DEFAULT)
-    if value == _MARKER_BATCH_SIZE_DEFAULT:
+        raise SettingsError(f"'{DEFAULT_ENGINE}' must be an object")
+    value = raw.get("recognition_batch_size", _ENGINE_BATCH_SIZE_DEFAULT)
+    if value == _ENGINE_BATCH_SIZE_DEFAULT:
         return None
+    field_name = f"'{DEFAULT_ENGINE}.recognition_batch_size'"
     # bool is an int subclass.
     if isinstance(value, bool) or not isinstance(value, int):
         raise SettingsError(
-            "'marker.recognition_batch_size' must be a positive integer or "
-            f"'{_MARKER_BATCH_SIZE_DEFAULT}'"
+            f"{field_name} must be a positive integer or '{_ENGINE_BATCH_SIZE_DEFAULT}'"
         )
     if value <= 0:
-        raise SettingsError("'marker.recognition_batch_size' must be positive")
+        raise SettingsError(f"{field_name} must be positive")
     return value
 
 

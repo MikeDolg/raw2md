@@ -37,9 +37,9 @@ class ConversionMethod(str, Enum):  # noqa: UP042
     Cleaning's heading recovery reads it.
     """
 
-    MARKER = "marker"
+    MARKER = "raw2md-engine"
     PANDOC = "pandoc"
-    DJVU_MARKER = "djvu+marker"
+    DJVU_MARKER = "djvu+raw2md-engine"
     LLM_OCR = "llm-ocr"
     DJVU_LLM_OCR = "djvu+llm-ocr"
     # A md input is re-cleaned, not converted.
@@ -50,8 +50,13 @@ class ConversionMethod(str, Enum):  # noqa: UP042
 # its own header from arbitrary foreign front matter.
 OWN_HEADER_KEY = "raw2md_version"
 
-# The `--engine` default.
+# The built-in engine's one user-visible name: the `--engine` default, the
+# header's `engine`, and the settings.json section.
 DEFAULT_ENGINE = ConversionMethod.MARKER.value
+
+# The engine's name in 0.1.x, for `--engine` and the settings.json section. It
+# is refused with the new name, never read as a model key.
+RETIRED_ENGINE = "marker"
 
 # Reserved values of `inspection` and `post`; any other value is a model key.
 # `none`: not requested or not applicable. `failed`: requested but not
@@ -112,7 +117,7 @@ class ResultHeader:
 
     raw2md_version: str
     source: str  # source file name with extension
-    engine: str  # "marker", "pandoc", "clean", or a model key: what converted the file
+    engine: str  # DEFAULT_ENGINE, "pandoc", "clean", or a model key: what converted it
     inspection: str  # "none", "failed", or model key from settings.json
     post: str  # "none", "failed", "partial (done/total)", or model key
     converted_at: datetime.date

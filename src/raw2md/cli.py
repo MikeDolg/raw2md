@@ -8,12 +8,13 @@ from pathlib import Path
 from raw2md.config import (
     CliArgumentError,
     build_config,
+    engine_argument,
     requests_llm,
     validate_latex_fix,
     validate_models_allowed,
 )
 from raw2md.exit_codes import ExitCode
-from raw2md.header import get_version
+from raw2md.header import DEFAULT_ENGINE, get_version
 from raw2md.init import run_init_command
 from raw2md.keywords import run_keywords_command
 from raw2md.paths import settings_file
@@ -103,9 +104,10 @@ def build_input_parser() -> argparse.ArgumentParser:
         "-e",
         "--engine",
         metavar="ENGINE",
-        default="marker",
-        help="pdf/djvu conversion engine: marker (default), or an LLM model key "
-        "from settings.json to recognize pages instead",
+        type=engine_argument,
+        default=DEFAULT_ENGINE,
+        help=f"pdf/djvu conversion engine: {DEFAULT_ENGINE} (default), or an LLM "
+        "model key from settings.json to recognize pages instead",
     )
     parser.add_argument(
         "-p",
@@ -130,7 +132,7 @@ def build_input_parser() -> argparse.ArgumentParser:
         "--cuda",
         choices=("on", "off"),
         default="on",
-        help="CUDA mode in marker (default on)",
+        help=f"CUDA mode in {DEFAULT_ENGINE} (default on)",
     )
     parser.add_argument(
         "--no-log-file",

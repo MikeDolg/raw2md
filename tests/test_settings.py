@@ -62,9 +62,10 @@ def test_default_settings_states_no_temperature() -> None:
     assert default_settings().models["gemini_api"].temperature is None
 
 
-def test_default_settings_leaves_marker_batch_size_unset() -> None:
-    # "default" in the template keeps marker's device-based default.
-    assert default_settings().marker_recognition_batch_size is None
+def test_default_settings_leaves_engine_batch_size_unset() -> None:
+    # "default" in the template keeps the engine's device-based default.
+    assert DEFAULT_SETTINGS["raw2md-engine"] == {"recognition_batch_size": "default"}
+    assert default_settings().engine_recognition_batch_size is None
 
 
 def test_default_text_round_trips() -> None:
@@ -142,7 +143,7 @@ def test_reserved_model_key_rejected(reserved: str) -> None:
         parse_settings(data)
 
 
-@pytest.mark.parametrize("engine", ["marker", "pandoc", "djvu"])
+@pytest.mark.parametrize("engine", ["raw2md-engine", "marker", "pandoc", "djvu"])
 def test_reserved_engine_name_rejected_as_model_key(engine: str) -> None:
     # A key equal to an engine name would make --engine ambiguous.
     data = {"models": {engine: {"access": "cli", "command": "c", "model": "x"}}}
@@ -150,7 +151,7 @@ def test_reserved_engine_name_rejected_as_model_key(engine: str) -> None:
         parse_settings(data)
 
 
-@pytest.mark.parametrize("engine", ["marker", "pandoc", "djvu"])
+@pytest.mark.parametrize("engine", ["raw2md-engine", "marker", "pandoc", "djvu"])
 def test_reserved_engine_name_rejected_in_operations_allowed(engine: str) -> None:
     data = {
         "models": {"m": {"access": "cli", "command": "c", "model": "x"}},
@@ -334,42 +335,51 @@ def test_malformed_rpd_reset_zone_rejected(value: str) -> None:
         parse_settings(_api_model_data(rpd_reset_zone=value))
 
 
-# --- marker recognition batch size -----------------------------------------
+# --- Engine recognition batch size -----------------------------------------
 
 
-def _cli_model_data(**marker: Any) -> dict[str, Any]:
+def _cli_model_data(**engine: Any) -> dict[str, Any]:
     data: dict[str, Any] = {
         "models": {"m": {"access": "cli", "command": "c", "model": "x"}},
         "operations": {},
     }
-    if marker:
-        data["marker"] = marker
+    if engine:
+        data["raw2md-engine"] = engine
     return data
 
 
-def test_marker_section_absent_leaves_batch_size_unset() -> None:
-    assert parse_settings(_cli_model_data()).marker_recognition_batch_size is None
+def test_engine_section_absent_leaves_batch_size_unset() -> None:
+    assert parse_settings(_cli_model_data()).engine_recognition_batch_size is None
 
 
-def test_marker_batch_size_default_string_leaves_it_unset() -> None:
+def test_engine_batch_size_default_string_leaves_it_unset() -> None:
     data = _cli_model_data(recognition_batch_size="default")
-    assert parse_settings(data).marker_recognition_batch_size is None
+    assert parse_settings(data).engine_recognition_batch_size is None
 
 
-def test_marker_batch_size_is_read() -> None:
+def test_engine_batch_size_is_read() -> None:
     data = _cli_model_data(recognition_batch_size=4)
-    assert parse_settings(data).marker_recognition_batch_size == 4
+    assert parse_settings(data).engine_recognition_batch_size == 4
 
 
-def test_marker_section_must_be_object() -> None:
+def test_engine_section_must_be_object() -> None:
     data = _cli_model_data()
-    data["marker"] = ["not an object"]
-    with pytest.raises(SettingsError, match="'marker'"):
+    data["raw2md-engine"] = ["not an object"]
+    with pytest.raises(SettingsError, match="'raw2md-engine' must be an object"):
+        parse_settings(data)
+
+
+@pytest.mark.parametrize("section", [{"recognition_batch_size": 8}, {}])
+def test_retired_marker_section_names_the_new_one(section: dict[str, Any]) -> None:
+    # Ignoring the 0.1.x section would drop the batch size silently.
+    data = _cli_model_data()
+    data["marker"] = section
+    with pytest.raises(SettingsError, match="'marker' section is now 'raw2md-engine'"):
         parse_settings(data)
 
 
 @pytest.mark.parametrize("value", [0, -1])
-def test_marker_batch_size_non_positive_rejected(value: int) -> None:
+def test_engine_batch_size_non_positive_rejected(value: int) -> None:
     # A non-positive batch is a typo, not a setting.
     data = _cli_model_data(recognition_batch_size=value)
     with pytest.raises(SettingsError, match="must be positive"):
@@ -377,7 +387,7 @@ def test_marker_batch_size_non_positive_rejected(value: int) -> None:
 
 
 @pytest.mark.parametrize("value", [8.5, "auto", True])
-def test_marker_batch_size_invalid_value_rejected(value: object) -> None:
+def test_engine_batch_size_invalid_value_rejected(value: object) -> None:
     # Only a positive integer or the literal "default" is read.
     data = _cli_model_data(recognition_batch_size=value)
     with pytest.raises(SettingsError, match="positive integer"):

@@ -34,7 +34,7 @@ from raw2md.engines.base import (
     ConvertOptions,
     Engine,
 )
-from raw2md.header import ConversionMethod
+from raw2md.header import DEFAULT_ENGINE, ConversionMethod
 from raw2md.mdtext.pages import page_mark
 from raw2md.progress import capture_engine_output
 
@@ -88,7 +88,7 @@ class MarkerEngine(Engine):
         Raises `ConversionError` when marker is absent or conversion fails.
         """
         if not self.available():
-            raise ConversionError("marker is not installed")
+            raise ConversionError(f"{DEFAULT_ENGINE} is not installed")
 
         work_source, cleanup = self._prepare_ascii_input(source)
         try:
@@ -237,8 +237,8 @@ def _failure_reason(source: Path, exc: Exception) -> str:
 
     defect = pymupdf.read_defect(source)
     if defect is None:
-        return f"marker conversion failed: {source.name}: {exc}"
-    return f"{source.name}: {defect}; marker: {exc}"
+        return f"{DEFAULT_ENGINE} conversion failed: {source.name}: {exc}"
+    return f"{source.name}: {defect}; {DEFAULT_ENGINE}: {exc}"
 
 
 def _rewrite_page_breaks(text: str) -> str:

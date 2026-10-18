@@ -118,7 +118,7 @@ jobs:
         run: bash .github/scripts/check-smoke-result.sh out/smoke.md
 
   pdf:
-    # marker on a CPU runner, one platform only: gigabytes of models and
+    # raw2md-engine on a CPU runner, one platform only: gigabytes of models and
     # minutes of inference. Proves the required engine runs without a GPU.
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -133,11 +133,11 @@ jobs:
           enable-cache: true
           python-version: "3.12"
 
-      # marker's model cache; bump the key suffix to refresh it.
+      # The engine weights folder; bump the key suffix to refresh it.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.cache/datalab
-          key: datalab-models-${{ runner.os }}-v1
+          path: ~/.raw2md/models
+          key: raw2md-models-${{ runner.os }}-v1
 
       - if: inputs.wheel-artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

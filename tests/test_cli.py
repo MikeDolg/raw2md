@@ -92,14 +92,25 @@ def test_llm_none_disables_operation() -> None:
 # --- --engine parsing --------------------------------------------------------
 
 
-def test_engine_default_is_marker_route() -> None:
-    config = parse_config(["x.pdf"])
+def test_engine_default_is_the_engine_route() -> None:
+    namespace = build_input_parser().parse_args(["x.pdf"])
+    assert namespace.engine == "raw2md-engine"
+    assert build_config(namespace).llm_ocr is None
+
+
+def test_engine_explicit_name_is_the_engine_route() -> None:
+    config = parse_config(["x.pdf", "--engine", "raw2md-engine"])
     assert config.llm_ocr is None
 
 
-def test_engine_explicit_marker_is_marker_route() -> None:
-    config = parse_config(["x.pdf", "--engine", "marker"])
-    assert config.llm_ocr is None
+def test_retired_marker_engine_exits_2_with_the_new_name(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Read as a model key, `marker` would fail on settings.json instead.
+    with pytest.raises(SystemExit) as exc_info:
+        main(["x.pdf", "-e", "marker"])
+    assert exc_info.value.code == 2
+    assert "the engine 'marker' is now 'raw2md-engine'" in capsys.readouterr().err
 
 
 def test_engine_model_key_routes_to_llm_ocr() -> None:

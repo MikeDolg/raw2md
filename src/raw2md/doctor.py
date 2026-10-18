@@ -2,8 +2,8 @@
 
 The exit code sums up four reports:
 
-- engines: a missing marker is a missing dependency (exit 3); pandoc and the
-  djvu chain are optional and only disable their format;
+- engines: a missing raw2md-engine is a missing dependency (exit 3); pandoc
+  and the djvu chain are optional and only disable their format;
 - the torch build, the GPU, and `recognition_batch_size`: informational only;
 - the weights folder, its revision, and the missing files: informational only,
   because the first conversion downloads what is missing;
@@ -25,6 +25,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from raw2md.engines import DjvuEngine, MarkerEngine, PandocEngine, weights
 from raw2md.exit_codes import ExitCode
+from raw2md.header import DEFAULT_ENGINE
 from raw2md.llm import build_provider
 from raw2md.paths import default_temp_dir, models_dir, settings_file
 from raw2md.settings import (
@@ -63,7 +64,7 @@ def run_doctor(args: Sequence[str] | None = None) -> int:
         print(f"settings.json: INVALID ({exc})")
         return int(ExitCode.ARGUMENT_ERROR)
 
-    _report_marker(settings)
+    _report_engine(settings)
     _report_weights()
     config_problems, dependency_problems = _report_settings(settings)
     if config_problems:
@@ -82,7 +83,7 @@ def _report_engines() -> int:
     marker = MarkerEngine(temp_root)
     # columns: label, engine, required
     engines = [
-        ("marker (pdf)", marker, True),
+        (f"{DEFAULT_ENGINE} (pdf)", marker, True),
         ("pandoc (docx)", PandocEngine(), False),
         ("djvu chain", DjvuEngine(marker, temp_root), False),
     ]
@@ -152,7 +153,7 @@ def _cuda_status() -> _CudaStatus:
 def _cuda_line(status: _CudaStatus) -> str:
     """Describe CUDA readiness, with the fix for each way it is missing.
 
-    A CPU build and a missing driver look the same to marker, which silently
+    A CPU build and a missing driver look the same to the engine, which silently
     runs on CPU, but they need different fixes: a reinstall of torch or a
     driver install.
     """
@@ -176,16 +177,16 @@ def _cuda_line(status: _CudaStatus) -> str:
     )
 
 
-def _report_marker(settings: Settings) -> None:
-    """Report the GPU marker would run on and the configured batch size.
+def _report_engine(settings: Settings) -> None:
+    """Report the GPU the engine would run on and the configured batch size.
 
     A batch size set without CUDA gets a warning: it was likely tuned for a
     GPU's VRAM.
     """
-    print("marker:")
+    print(f"{DEFAULT_ENGINE}:")
     status = _cuda_status()
     print(f"  {_cuda_line(status)}")
-    batch_size = settings.marker_recognition_batch_size
+    batch_size = settings.engine_recognition_batch_size
     if batch_size is None:
         return
     print(f"  recognition_batch_size: {batch_size}")

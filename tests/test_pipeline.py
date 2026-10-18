@@ -148,7 +148,7 @@ def test_engine_route_writes_ok_result(tmp_path: Path) -> None:
     header = read_header(tmp_path / "a.md")
     assert header is not None
     assert header.status is ResultStatus.OK
-    assert header.engine == "marker"
+    assert header.engine == "raw2md-engine"
     assert header.source == "a.pdf"
 
 

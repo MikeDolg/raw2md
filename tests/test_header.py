@@ -349,7 +349,7 @@ def test_stub_llm_fields_default_to_none_string() -> None:
         source="doc.pdf",
         source_hash="abc",
     )
-    assert stub.engine == "marker"
+    assert stub.engine == "raw2md-engine"
     assert stub.inspection == "none"
     assert stub.post == "none"
 
