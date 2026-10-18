@@ -13,11 +13,14 @@ from conftest import make_run_config
 from raw2md.cleaning import DEFAULT_WITNESS_MIN
 from raw2md.config import RunConfig
 from raw2md.engines import (
+    BundledEngine,
     ConversionError,
     ConversionResult,
     ConvertOptions,
+    DjvuEngine,
     Engine,
     EngineRegistry,
+    PandocEngine,
 )
 from raw2md.exit_codes import ExitCode
 from raw2md.header import ConversionMethod, ResultStatus, from_yaml_block
@@ -40,6 +43,7 @@ from raw2md.orchestrator import (
     _resolve_inspection,
     _resolve_post,
     aggregate_exit_code,
+    build_default_registry,
     run,
     run_resume,
 )
@@ -1433,6 +1437,24 @@ def test_cuda_off_reaches_registry_builder(
     assert captured.get("cuda") is False
     # Without settings.json the engine's own default stays in force.
     assert captured.get("recognition_batch_size") is None
+
+
+def test_default_registry_shares_one_bundled_engine(home: Path) -> None:
+    src = home / "a.pdf"
+    registry = build_default_registry(
+        make_run_config(src, cuda=False), home, None, recognition_batch_size=8
+    )
+    engines = registry._by_extension
+    assert set(engines) == {"pdf", "docx", "djvu"}
+    bundled = engines["pdf"]
+    assert isinstance(bundled, BundledEngine)
+    assert isinstance(engines["docx"], PandocEngine)
+    djvu = engines["djvu"]
+    assert isinstance(djvu, DjvuEngine)
+    # The djvu route converts through the same engine, so the models load once.
+    assert djvu._bundled is bundled
+    assert bundled._cuda is False
+    assert bundled._recognition_batch_size == 8
 
 
 def test_engine_batch_size_from_settings_reaches_registry_builder(
