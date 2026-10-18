@@ -145,11 +145,12 @@ def outline_entries(source: Path) -> list[tuple[int, str]]:
 def image_placements_by_page(source: Path) -> list[list[ImagePlacement]]:
     """(stream hash, transform) of every image placed on each page of `source`.
 
-    pdfium gives no object number, so the SHA-256 of the raw image stream
-    names the shared object: one object has one stream, which survives crops
-    that differ in bytes. The transform, taken to page space through any form,
-    tells apart placements whose box matches but whose rotation or flip
-    differs. An inline image is keyed too: pdfium does not tell it apart.
+    pdfium gives no object number, so a SHA-256 of the raw image stream and of
+    the decoded pixels names the shared object: one object has one stream and
+    one look, which survive crops that differ in bytes. The transform, taken
+    to page space through any form, tells apart placements whose box matches
+    but whose rotation or flip differs. An inline image is keyed too: pdfium
+    does not tell it apart.
     """
     with _open(source) as doc:
         placements: list[list[ImagePlacement]] = []
@@ -159,13 +160,27 @@ def image_placements_by_page(source: Path) -> list[list[ImagePlacement]]:
         return placements
 
 
+def _image_digest(obj: Any) -> str:
+    """SHA-256 of the raw stream and of the decoded pixels.
+
+    The stream alone misses the palette and the decode array: two
+    objects can share samples and still draw different pictures.
+    """
+    digest = hashlib.sha256(bytes(obj.get_data()))
+    bitmap = obj.get_bitmap(render=False)
+    try:
+        digest.update(bitmap.buffer)
+    finally:
+        bitmap.close()
+    return digest.hexdigest()
+
+
 def _images(page: Any, form: Any, outer: Any, depth: int) -> Iterator[ImagePlacement]:
     """Images on `page`, or inside `form` placed by the page-space `outer`."""
     for obj in page.get_objects(filter=_PLACED_TYPES, max_depth=1, form=form):
         matrix = obj.get_matrix().multiply(outer)
         if obj.type == pdfium_c.FPDF_PAGEOBJ_IMAGE:
-            digest = hashlib.sha256(bytes(obj.get_data())).hexdigest()
-            yield digest, tuple(float(value) for value in matrix.get())
+            yield _image_digest(obj), tuple(float(value) for value in matrix.get())
         elif depth < _FORM_MAX_DEPTH:
             yield from _images(page, obj.raw, matrix, depth + 1)
 
@@ -182,6 +197,20 @@ def count_pages_bytes(data: bytes) -> int:
         return len(doc)
 
 
+def _flatten(doc: Any) -> None:
+    """Bake annotation appearances into the pages of `doc`.
+
+    `import_pages` drops the form field tree of the source, so a widget would
+    show blank in a reader that needs it. A flattened page shows the same
+    everywhere.
+    """
+    for page in doc:
+        status = pdfium_c.FPDFPage_Flatten(page, pdfium_c.FLAT_NORMALDISPLAY)
+        page.close()
+        if status == pdfium_c.FLATTEN_FAIL:
+            raise pypdfium2.PdfiumError("the pdf page cannot be flattened")
+
+
 def extract_pages_bytes(data: bytes, first: int, last: int) -> bytes:
     """Return pages `first`..`last` (0-based, inclusive) of a PDF as a new PDF.
 
@@ -195,6 +224,7 @@ def extract_pages_bytes(data: bytes, first: int, last: int) -> bytes:
         out = pypdfium2.PdfDocument.new()
         try:
             out.import_pages(doc, list(range(start, end + 1)))
+            _flatten(out)
             buffer = io.BytesIO()
             out.save(buffer)
             return buffer.getvalue()
@@ -212,6 +242,8 @@ def render_pages(
     overwriting the source.
     """
     with _open(source) as doc:
+        # Before any page loads: pdfium draws form fields only with a form env.
+        doc.init_forms()
         for page in doc:
             # The default white fill renders RGB with no alpha channel.
             bitmap = page.render(scale=dpi / _UNITS_PER_INCH)

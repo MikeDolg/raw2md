@@ -375,6 +375,57 @@ def test_extract_pages_bytes_clamps_the_range_to_the_document(tmp_path: Path) ->
         pdfium.extract_pages_bytes(data, 5, 9)
 
 
+def _form_pdf() -> bytes:
+    """A page with one text field whose appearance is a black bar at the top."""
+    with pikepdf.Pdf.open(io.BytesIO(pdf_bytes(blank_pages(1)))) as pdf:
+        appearance = pdf.make_stream(
+            b"0 g 0 0 100 30 re f",
+            Type=pikepdf.Name.XObject,
+            Subtype=pikepdf.Name.Form,
+            BBox=[0, 0, 100, 30],
+        )
+        widget = pdf.make_indirect(
+            pikepdf.Dictionary(
+                Type=pikepdf.Name.Annot,
+                Subtype=pikepdf.Name.Widget,
+                FT=pikepdf.Name.Tx,
+                T=pikepdf.String("field"),
+                Rect=[100, 600, 200, 630],
+                F=4,
+                AP=pikepdf.Dictionary(N=appearance),
+            )
+        )
+        pdf.pages[0].Annots = pikepdf.Array([widget])
+        pdf.Root.AcroForm = pikepdf.Dictionary(Fields=pikepdf.Array([widget]))
+        out = io.BytesIO()
+        pdf.save(out)
+        return out.getvalue()
+
+
+def _dark_pixels(raster: bytes) -> int:
+    with Image.open(io.BytesIO(raster)) as image:
+        return sum(1 for value in image.convert("L").tobytes() if value < 50)
+
+
+def test_render_pages_draws_form_fields(tmp_path: Path) -> None:
+    source = tmp_path / "form.pdf"
+    source.write_bytes(_form_pdf())
+
+    (raster,) = pdfium.render_pages(source, dpi=72)
+
+    assert _dark_pixels(raster) > 1000
+
+
+def test_extract_pages_bytes_keeps_form_fields_visible(tmp_path: Path) -> None:
+    cut = pdfium.extract_pages_bytes(_form_pdf(), 0, 0)
+    source = tmp_path / "cut.pdf"
+    source.write_bytes(cut)
+
+    (raster,) = pdfium.render_pages(source, dpi=72)
+
+    assert _dark_pixels(raster) > 1000
+
+
 def _png(color: str) -> bytes:
     buf = io.BytesIO()
     Image.new("RGB", (4, 4), color).save(buf, format="PNG")
@@ -419,6 +470,29 @@ def test_image_placements_by_page_distinct_images_get_distinct_keys(
 
     assert len(placements[0]) == 1
     assert len(placements[1]) == 1
+    assert placements[0][0][0] != placements[1][0][0]
+
+
+def test_image_placements_by_page_same_samples_different_palette_differ(
+    tmp_path: Path,
+) -> None:
+    # Identical index samples, two palettes: the pictures look different.
+    def indexed(palette: list[int]) -> bytes:
+        image = Image.new("P", (8, 8))
+        image.putdata([(x + y) % 2 for y in range(8) for x in range(8)])
+        image.putpalette(palette)
+        buf = io.BytesIO()
+        image.save(buf, format="PNG")
+        return buf.getvalue()
+
+    source = tmp_path / "doc.pdf"
+    _make_pdf_with_images(
+        source,
+        [indexed([0, 0, 0, 255, 255, 255]), indexed([255, 0, 0, 0, 0, 255])],
+    )
+
+    placements = pdfium.image_placements_by_page(source)
+
     assert placements[0][0][0] != placements[1][0][0]
 
 
