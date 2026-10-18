@@ -102,7 +102,7 @@ Both layers skip a test when its tool or its key is absent.
 - If a change alters what a user sees, update its document in the same
   change: `docs/reference.md` for a command, a flag, a setting, a result file,
   or an exit code, and the stage guide in `docs/` for a repair or a check.
-- Import `raw2md_engine`, `pymupdf`, and an LLM SDK only inside `engines/`
+- Import `raw2md_engine`, `pypdfium2`, and an LLM SDK only inside `engines/`
   and `llm/`. The rest of the code uses the interfaces in `engines/base.py` and
   `llm/base.py`.
 - Give `encoding="utf-8"` to every file read and write. The code runs on
