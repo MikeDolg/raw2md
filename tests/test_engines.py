@@ -16,6 +16,8 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pikepdf
+import pypdfium2
+import pypdfium2.raw as pdfium_raw
 import pytest
 from pdf_fixtures import (
     COVER_RECT,
@@ -375,6 +377,25 @@ def test_extract_pages_bytes_clamps_the_range_to_the_document(tmp_path: Path) ->
         pdfium.extract_pages_bytes(data, 5, 9)
 
 
+def test_extract_pages_bytes_fails_when_a_page_cannot_be_flattened(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    data = pdf_bytes(text_pages(["Page one."]))
+    monkeypatch.setattr(
+        pdfium_raw, "FPDFPage_Flatten", lambda page, flag: pdfium_raw.FLATTEN_FAIL
+    )
+
+    with pytest.raises(pypdfium2.PdfiumError, match="cannot be flattened"):
+        pdfium.extract_pages_bytes(data, 0, 0)
+
+
+def test_read_defect_names_a_missing_file(tmp_path: Path) -> None:
+    defect = pdfium.read_defect(tmp_path / "absent.pdf")
+
+    assert defect is not None
+    assert defect.startswith("the pdf does not open")
+
+
 def _form_pdf() -> bytes:
     """A page with one text field whose appearance is a black bar at the top."""
     with pikepdf.Pdf.open(io.BytesIO(pdf_bytes(blank_pages(1)))) as pdf:
@@ -566,15 +587,10 @@ def test_image_placements_by_page_keys_an_inline_image(tmp_path: Path) -> None:
     assert placements[0][0] == placements[1][0]
 
 
-def test_image_placements_by_page_takes_a_form_image_to_page_space(
-    tmp_path: Path,
-) -> None:
-    # One form drawn at two scales: the image inside it is placed differently.
-    source = tmp_path / "doc.pdf"
-    _write_pdf_with_contents(
-        source, [b"q 1 0 0 1 0 0 cm /Fm0 Do Q", b"q 2 0 0 2 0 0 cm /Fm0 Do Q"]
-    )
-    with pikepdf.Pdf.open(source, allow_overwriting_input=True) as pdf:
+def _write_pdf_with_form_image(path: Path, contents: list[bytes]) -> None:
+    """Pages that draw `/Fm0`, a form that places one image at 40x40."""
+    _write_pdf_with_contents(path, contents)
+    with pikepdf.Pdf.open(path, allow_overwriting_input=True) as pdf:
         image = pdf.make_stream(
             bytes([0, 0, 255] * 4),
             Type=pikepdf.Name.XObject,
@@ -593,13 +609,33 @@ def test_image_placements_by_page_takes_a_form_image_to_page_space(
         )
         for page in pdf.pages:
             page.Resources = pikepdf.Dictionary(XObject=pikepdf.Dictionary(Fm0=form))
-        pdf.save(source)
+        pdf.save(path)
+
+
+def test_image_placements_by_page_takes_a_form_image_to_page_space(
+    tmp_path: Path,
+) -> None:
+    # One form drawn at two scales: the image inside it is placed differently.
+    source = tmp_path / "doc.pdf"
+    _write_pdf_with_form_image(
+        source, [b"q 1 0 0 1 0 0 cm /Fm0 Do Q", b"q 2 0 0 2 0 0 cm /Fm0 Do Q"]
+    )
 
     placements = pdfium.image_placements_by_page(source)
 
     assert placements[0][0][0] == placements[1][0][0]  # same stream
     assert placements[0][0][1] == (40.0, 0.0, 0.0, 40.0, 10.0, 10.0)
     assert placements[1][0][1] == (80.0, 0.0, 0.0, 80.0, 20.0, 20.0)
+
+
+def test_image_placements_by_page_stops_at_the_form_depth_limit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "doc.pdf"
+    _write_pdf_with_form_image(source, [b"/Fm0 Do"])
+    monkeypatch.setattr(pdfium, "_FORM_MAX_DEPTH", 0)
+
+    assert pdfium.image_placements_by_page(source) == [[]]
 
 
 # ---------------------------------------------------------------------------
