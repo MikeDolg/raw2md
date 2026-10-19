@@ -78,7 +78,7 @@ class Qwen2_5_VisionRotaryEmbedding(nn.Module):
     def __init__(self, dim: int, theta: float = 10000.0) -> None:
         super().__init__()
         self.inv_freq = 1.0 / (
-            theta ** (torch.arange(0, dim, 2, dtype=torch.float) / dim)
+            theta ** (torch.arange(0, dim, 2, dtype=torch.float, device="cpu") / dim)
         )
 
     def forward(self, seqlen: int) -> torch.Tensor:

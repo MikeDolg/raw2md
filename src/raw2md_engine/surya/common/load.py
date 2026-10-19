@@ -5,6 +5,19 @@ import torch
 from raw2md_engine.surya.settings import settings
 
 
+def restore_buffers(model: torch.nn.Module) -> torch.nn.Module:
+    """Rebuild on the CPU the buffers that the checkpoint does not hold.
+
+    transformers 5 builds the model on the meta device and leaves such buffers
+    uninitialized after the load. Call this before the move to the device.
+    """
+    for module in model.modules():
+        build = getattr(module, "build_buffers", None)
+        if build is not None:
+            build()
+    return model
+
+
 class ModelLoader:
     def __init__(self, checkpoint: Optional[str] = None):
         self.checkpoint = checkpoint

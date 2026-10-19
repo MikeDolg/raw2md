@@ -2,7 +2,7 @@ from typing import Optional
 
 import torch
 
-from raw2md_engine.surya.common.load import ModelLoader
+from raw2md_engine.surya.common.load import ModelLoader, restore_buffers
 from raw2md_engine.surya.logging import get_logger
 from raw2md_engine.surya.settings import settings
 from raw2md_engine.surya.table_rec.model.config import (
@@ -54,7 +54,7 @@ class TableRecModelLoader(ModelLoader):
             self.checkpoint, config=config, dtype=dtype
         )
 
-        model = model.to(device)
+        model = restore_buffers(model).to(device)
         model = model.eval()
 
         if settings.COMPILE_ALL or settings.COMPILE_TABLE_REC:

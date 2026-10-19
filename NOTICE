@@ -53,7 +53,14 @@ of the repository holds each change with its diff.
 - The copy downloads nothing: no font when the converter starts and no
   model weights. `marker/models.py` takes the folder of the weights from
   its caller.
+- The models build their non-persistent buffers on the CPU, and the
+  loaders build them again after the load of the weights, before the move
+  to the device (2026-10-19). Changed files, under
+  src/raw2md_engine/surya/: `common/load.py`, `common/adetr/decoder.py`,
+  `common/surya/decoder/__init__.py`, `common/surya/encoder/__init__.py`,
+  `ocr_error/model/encoder.py`, `foundation/loader.py`,
+  `table_rec/loader.py`, and `ocr_error/loader.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-10-18.
+Last change: 2026-10-19.

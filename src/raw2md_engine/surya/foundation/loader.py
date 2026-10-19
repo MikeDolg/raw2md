@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 from transformers.utils import is_flash_attn_2_available
 
-from raw2md_engine.surya.common.load import ModelLoader
+from raw2md_engine.surya.common.load import ModelLoader, restore_buffers
 from raw2md_engine.surya.common.surya.config import SuryaModelConfig
 from raw2md_engine.surya.common.surya import SuryaModel, SuryaXLAModel
 from raw2md_engine.surya.common.surya.processor import SuryaOCRProcessor
@@ -66,8 +66,10 @@ class FoundationModelLoader(ModelLoader):
         config.vision_encoder._attn_implementation_autoset = True
         config.decoder._attn_implementation_autoset = True
 
-        model = model_cls.from_pretrained(
-            self.checkpoint, dtype=dtype, config=config, ignore_mismatched_sizes=True
+        model = restore_buffers(
+            model_cls.from_pretrained(
+                self.checkpoint, dtype=dtype, config=config, ignore_mismatched_sizes=True
+            )
         ).to(device)
         model = model.eval()
 

@@ -1,8 +1,9 @@
 """Checks on the bundled engine copy `src/raw2md_engine`."""
 
 import ast
+from collections.abc import Callable
 from pathlib import Path
-from typing import TypeGuard
+from typing import Any, TypeGuard
 
 import pytest
 
@@ -132,3 +133,87 @@ def test_copy_reads_no_environment() -> None:
 )
 def test_environment_reads_finds_each_form(source: str, expected: list[int]) -> None:
     assert _environment_reads(ast.parse(source)) == expected
+
+
+def _torch() -> Any:
+    # The CI install of the fast layer leaves torch out.
+    return pytest.importorskip("torch", reason="torch is not installed")
+
+
+def _buffer_builders() -> dict[str, Callable[[], Any]]:
+    """Return a small instance of each module that owns a non-persistent buffer."""
+    from raw2md_engine.surya.common.adetr.decoder import SuryaADETRDecoderModel
+    from raw2md_engine.surya.common.surya.decoder import Qwen2RotaryEmbedding
+    from raw2md_engine.surya.common.surya.decoder.config import SuryaDecoderConfig
+    from raw2md_engine.surya.ocr_error.model.config import DistilBertConfig
+    from raw2md_engine.surya.ocr_error.model.encoder import Embeddings
+    from raw2md_engine.surya.table_rec.model.config import SuryaTableRecDecoderConfig
+
+    table_config = SuryaTableRecDecoderConfig(
+        num_hidden_layers=1,
+        hidden_size=16,
+        intermediate_size=32,
+        encoder_hidden_size=16,
+        num_attention_heads=2,
+        num_key_value_heads=1,
+    )
+    text_config = SuryaDecoderConfig(
+        hidden_size=16, num_attention_heads=2, max_position_embeddings=64
+    )
+    ocr_config = DistilBertConfig(vocab_size=10, dim=8, max_position_embeddings=16)
+    return {
+        "table decoder": lambda: SuryaADETRDecoderModel(table_config),
+        "text rotary": lambda: Qwen2RotaryEmbedding(text_config),
+        "ocr embeddings": lambda: Embeddings(ocr_config),
+    }
+
+
+def _non_persistent(model: Any) -> dict[str, tuple[Any, str]]:
+    found = {}
+    for prefix, module in model.named_modules():
+        for name in module._non_persistent_buffers_set:
+            found[f"{prefix}.{name}"] = (module, name)
+    return found
+
+
+@pytest.mark.parametrize("damage", ["garbage", "meta"])
+@pytest.mark.parametrize("name", ["table decoder", "text rotary", "ocr embeddings"])
+def test_restore_rebuilds_buffers(name: str, damage: str) -> None:
+    torch = _torch()
+    from raw2md_engine.surya.common.load import restore_buffers
+
+    model = _buffer_builders()[name]()
+    owners = _non_persistent(model)
+    assert owners
+    expected = {key: getattr(m, n).clone() for key, (m, n) in owners.items()}
+    for module, buffer_name in owners.values():
+        buffer = getattr(module, buffer_name)
+        if damage == "garbage":
+            broken = torch.full_like(buffer, 7)
+        else:
+            broken = torch.empty_like(buffer, device="meta")
+        setattr(module, buffer_name, broken)
+        if hasattr(module, "original_inv_freq"):
+            module.original_inv_freq = broken
+
+    restore_buffers(model)
+
+    for key, (module, buffer_name) in owners.items():
+        buffer = getattr(module, buffer_name)
+        assert buffer.device.type == "cpu", key
+        assert buffer.dtype == expected[key].dtype, key
+        assert torch.equal(buffer, expected[key]), key
+        if hasattr(module, "original_inv_freq"):
+            assert module.original_inv_freq is buffer, key
+
+
+def test_vision_rotary_builds_on_cpu_under_meta() -> None:
+    torch = _torch()
+    from raw2md_engine.surya.common.surya.encoder import (
+        Qwen2_5_VisionRotaryEmbedding,
+    )
+
+    with torch.device("meta"):
+        rotary = Qwen2_5_VisionRotaryEmbedding(8)
+    assert rotary.inv_freq.device.type == "cpu"
+    assert torch.equal(rotary.inv_freq, Qwen2_5_VisionRotaryEmbedding(8).inv_freq)

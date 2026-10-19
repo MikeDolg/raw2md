@@ -59,9 +59,15 @@ class SuryaADETRDecoderRotaryEmbedding(nn.Module):
         super().__init__()
         self.dim = dim
         self.base = base
+        self.build_buffers()
+
+    def build_buffers(self):
         inv_freq = 1.0 / (
             self.base
-            ** (torch.arange(0, self.dim, 2, dtype=torch.int64).float() / self.dim)
+            ** (
+                torch.arange(0, self.dim, 2, dtype=torch.int64, device="cpu").float()
+                / self.dim
+            )
         )
         self.register_buffer("inv_freq", tensor=inv_freq, persistent=False)
 
@@ -652,13 +658,18 @@ class SuryaADETRDecoderModel(SuryaADETRDecoderPreTrainedModel):
         )
         self.gradient_checkpointing = False
 
-        self.register_buffer(
-            "normalizer",
-            torch.tensor(self.config.hidden_size**0.5, dtype=torch.float32),
-            persistent=False,
-        )
+        self.build_buffers()
         # Initialize weights and apply final processing
         self.post_init()
+
+    def build_buffers(self):
+        self.register_buffer(
+            "normalizer",
+            torch.tensor(
+                self.config.hidden_size**0.5, dtype=torch.float32, device="cpu"
+            ),
+            persistent=False,
+        )
 
     # Copied from transformers.models.llama.modeling_llama.LlamaModel.get_input_embeddings
     def get_input_embeddings(self):

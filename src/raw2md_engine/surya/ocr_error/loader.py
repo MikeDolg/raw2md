@@ -2,7 +2,7 @@ from typing import Optional
 
 import torch
 
-from raw2md_engine.surya.common.load import ModelLoader
+from raw2md_engine.surya.common.load import ModelLoader, restore_buffers
 from raw2md_engine.surya.logging import get_logger
 from raw2md_engine.surya.ocr_error.model.config import DistilBertConfig
 from raw2md_engine.surya.ocr_error.model.encoder import DistilBertForSequenceClassification
@@ -32,10 +32,12 @@ class OCRErrorModelLoader(ModelLoader):
 
         config = DistilBertConfig.from_pretrained(self.checkpoint)
         model = (
-            DistilBertForSequenceClassification.from_pretrained(
-                self.checkpoint,
-                dtype=dtype,
-                config=config,
+            restore_buffers(
+                DistilBertForSequenceClassification.from_pretrained(
+                    self.checkpoint,
+                    dtype=dtype,
+                    config=config,
+                )
             )
             .to(device)
             .eval()

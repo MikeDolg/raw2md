@@ -62,9 +62,13 @@ class Embeddings(nn.Module):
 
         self.LayerNorm = nn.LayerNorm(config.dim, eps=1e-12)
         self.dropout = nn.Dropout(config.dropout)
+        self.max_position_embeddings = config.max_position_embeddings
+        self.build_buffers()
+
+    def build_buffers(self):
         self.register_buffer(
             "position_ids",
-            torch.arange(config.max_position_embeddings).expand((1, -1)),
+            torch.arange(self.max_position_embeddings, device="cpu").expand((1, -1)),
             persistent=False,
         )
 
