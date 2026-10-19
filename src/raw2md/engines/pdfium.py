@@ -92,13 +92,27 @@ def read_defect(source: Path) -> str | None:
         with _open(source):
             return None
     except pypdfium2.PdfiumError as exc:
-        # pypdfium2 refuses a document that pdfium loads without error but
-        # with no page.
-        if _last_error() == pdfium_c.FPDF_ERR_SUCCESS:
+        if _loads_without_pages(source):
             return "the pdf carries no readable page"
         return f"the pdf does not open: {exc}"
     except OSError as exc:
         return f"the pdf does not open: {exc}"
+
+
+def _loads_without_pages(source: Path) -> bool:
+    """True when pdfium loads `source` but finds no page in it.
+
+    pypdfium2 refuses such a document like a failed load. The last error code
+    after it differs between the Windows and the Linux builds, so only the
+    document handle decides.
+    """
+    raw = pdfium_c.FPDF_LoadDocument((str(source) + "\x00").encode("utf-8"), None)
+    if not raw:
+        return False
+    try:
+        return int(pdfium_c.FPDF_GetPageCount(raw)) < 1
+    finally:
+        pdfium_c.FPDF_CloseDocument(raw)
 
 
 def pages_bear_text(pages: Iterable[str]) -> bool:
