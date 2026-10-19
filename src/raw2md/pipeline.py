@@ -35,6 +35,7 @@ from raw2md.engines import (
     EngineRegistry,
     EngineUnavailableError,
     check_source,
+    media_path,
 )
 from raw2md.header import (
     DEFAULT_ENGINE,
@@ -388,6 +389,9 @@ def _process_engine(
         try:
             with capture_engine_output(ctx.log_stream):
                 result = engine.convert(source, target.media_dir, options)
+            # The media steps below delete, rename, and write by these names.
+            for asset in result.media:
+                media_path(target.media_dir, asset)
         except ConversionError as exc:
             _logger.error("failed %s: %s", source.name, exc)  # noqa: TRY400 -- expected error, no traceback
             _discard_result(target)

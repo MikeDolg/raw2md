@@ -14,6 +14,7 @@ from raw2md.engines.base import (
     EngineNotFoundError,
     EngineRegistry,
     EngineUnavailableError,
+    media_path,
     normalize_extension,
 )
 from raw2md.engines.bundled import BundledEngine
@@ -36,5 +37,6 @@ __all__ = [
     "PandocEngine",
     "check_signature",
     "check_source",
+    "media_path",
     "normalize_extension",
 ]

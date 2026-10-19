@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from itertools import groupby
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 from raw2md.header import ConversionMethod
 
@@ -36,6 +36,29 @@ class EngineUnavailableError(EngineError):
 
 class ConversionError(EngineError):
     """An engine could not convert a source; maps to exit code 4."""
+
+
+def media_path(media_dir: Path, name: str) -> Path:
+    """Return `media_dir / name`; raise `ConversionError` if it leaves the folder.
+
+    `name` is a posix path relative to the folder. A backslash and the anchors
+    of both path flavors are refused on every platform, so a name that escapes
+    on one system escapes on none. `resolve()` then catches an escape through
+    a link.
+    """
+    relative = PurePosixPath(name)
+    if (
+        not relative.parts
+        or "\\" in name
+        or relative.anchor
+        or PureWindowsPath(name).anchor
+        or ".." in relative.parts
+    ):
+        raise ConversionError(f"unsafe media asset name: {name!r}")
+    path = media_dir / name
+    if not path.resolve().is_relative_to(media_dir.resolve()):
+        raise ConversionError(f"unsafe media asset name: {name!r}")
+    return path
 
 
 @dataclass(frozen=True)

@@ -1724,6 +1724,22 @@ def test_bundled_engine_extracts_images(tmp_path: Path) -> None:
     assert (media_dir / "fig_1.png").exists()
 
 
+def test_bundled_engine_refuses_an_image_name_outside_the_media_folder(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "doc.pdf"
+    _write_pdf_bytes(source)
+    image = Image.new("RGB", (2, 2), "white")
+    fake = _make_fake_engine(images={"../escape.png": image, "fig.png": image})
+    media_dir = tmp_path / "doc"
+
+    with _install_fake_engine(fake), pytest.raises(ConversionError, match="unsafe"):
+        BundledEngine(tmp_path).convert(source, media_dir, ConvertOptions())
+
+    assert not (tmp_path / "escape.png").exists()
+    assert not media_dir.exists()
+
+
 def test_bundled_engine_disable_image_extraction(tmp_path: Path) -> None:
     source = tmp_path / "doc.pdf"
     _write_pdf_bytes(source)

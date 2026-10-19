@@ -12,6 +12,7 @@ import pytest
 from pdf_fixtures import COVER_RECT, LOGO_RECT, Rect, image_pages, write_pdf
 from PIL import Image
 
+from raw2md.engines import ConversionError, media_path
 from raw2md.media import (
     convert_emf_media,
     dedupe_repeated_images,
@@ -562,3 +563,32 @@ def test_convert_emf_media_no_media_is_noop(tmp_path: Path) -> None:
     new_body, new_media = convert_emf_media(media_dir, (), body)
 
     assert (new_body, new_media) == (body, ())
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "",
+        ".",
+        "../escape.png",
+        "media/../../escape.png",
+        "media/../image1.png",
+        "/abs/escape.png",
+        "C:escape.png",
+        "C:/abs/escape.png",
+        "//server/share/escape.png",
+        "media\\image1.png",
+    ],
+)
+def test_media_path_refuses_a_name_outside_the_folder(
+    tmp_path: Path, name: str
+) -> None:
+    with pytest.raises(ConversionError, match="unsafe media asset name"):
+        media_path(tmp_path / "doc", name)
+
+
+@pytest.mark.parametrize("name", ["_page_0_Picture_0.jpeg", "media/image1.png"])
+def test_media_path_joins_a_name_inside_the_folder(tmp_path: Path, name: str) -> None:
+    media_dir = tmp_path / "doc"
+
+    assert media_path(media_dir, name) == media_dir / name

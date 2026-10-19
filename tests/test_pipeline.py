@@ -385,6 +385,26 @@ def test_conversion_failure_leaves_no_result(
     assert any(r.levelname == "ERROR" for r in caplog.records)
 
 
+def test_unsafe_media_name_leaves_no_result(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.WARNING, logger="raw2md")
+    src = tmp_path / "a.pdf"
+    src.write_bytes(b"%PDF-1.4 stub")
+    # The stub writes the file where the name points; the pipeline still
+    # refuses the name before any media step uses it.
+    registry = EngineRegistry(
+        [StubEngine(extensions=frozenset({"pdf"}), media=("../x.png",))]
+    )
+
+    result = run_one(src, registry)
+
+    assert result.outcome is Outcome.NO_RESULT
+    assert not (tmp_path / "a.md").exists()
+    assert not resolve_output_target(src).media_dir.exists()
+    assert "unsafe media asset name" in caplog.text
+
+
 def test_unavailable_engine_skips_without_stub(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:

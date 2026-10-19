@@ -33,6 +33,7 @@ from raw2md.engines.base import (
     ConversionResult,
     ConvertOptions,
     Engine,
+    media_path,
 )
 from raw2md.header import DEFAULT_ENGINE, ConversionMethod
 from raw2md.mdtext.pages import page_mark
@@ -182,13 +183,20 @@ class BundledEngine(Engine):
         return text, images
 
     def _save_images(self, images: dict[str, Any], media_dir: Path) -> tuple[str, ...]:
-        """Write the engine's in-memory images into `media_dir`, sorted by name."""
+        """Write the engine's in-memory images into `media_dir`, sorted by name.
+
+        Every name is checked before the first write, so a refused name leaves
+        no file behind.
+        """
         if not images:
             return ()
+        targets = [
+            (media_path(media_dir, name), image)
+            for name, image in sorted(images.items())
+        ]
         media_dir.mkdir(parents=True, exist_ok=True)
         names: list[str] = []
-        for name, image in sorted(images.items()):
-            out = media_dir / name
+        for out, image in targets:
             out.parent.mkdir(parents=True, exist_ok=True)
             image.save(out)
             names.append(out.relative_to(media_dir).as_posix())
