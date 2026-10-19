@@ -53,6 +53,8 @@ class TableRecEncoderDecoderModel(S3DownloaderMixin, SuryaPreTrainedModel):
         self.encoder.config = self.config.encoder
         self.decoder.config = self.config.decoder
 
+        self.post_init()
+
     def get_encoder(self):
         return self.encoder
 

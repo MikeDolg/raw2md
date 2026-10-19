@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 
 from tokenizers import normalizers
 
-from transformers.tokenization_utils import PreTrainedTokenizer, _is_control, _is_punctuation, _is_whitespace
+from transformers.tokenization_python import PreTrainedTokenizer, _is_control, _is_punctuation, _is_whitespace
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
 from raw2md_engine.surya.common.s3 import S3DownloaderMixin

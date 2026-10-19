@@ -104,7 +104,7 @@ class SuryaModel(S3DownloaderMixin, SuryaPreTrainedModel):
     _supports_static_cache = True
     _supports_attention_backend = True
     main_input_name = "input_ids"
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys = {"lm_head.weight": "embedder.token_embed.weight"}
 
     def __init__(
         self,
@@ -160,12 +160,7 @@ class SuryaModel(S3DownloaderMixin, SuryaPreTrainedModel):
                 ]
             )
 
-    def tie_weights(self):
-        self._tie_weights()
-
-    def _tie_weights(self):
-        # Tie weights of lm head and token embedder
-        self._tie_or_clone_weights(self.lm_head, self.embedder.token_embed)
+        self.post_init()
 
     def get_output_embeddings(self) -> nn.Module:
         return self.lm_head

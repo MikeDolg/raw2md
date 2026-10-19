@@ -56,8 +56,9 @@ dependencies = [
     "img2pdf>=0.5,<0.7",
     # Imported by raw2md.llm.gemini and by the engine copy.
     "google-genai>=1.0,<2",
-    # Downloads the engine weights. transformers 4.x caps it below 1.0.
-    "huggingface-hub>=0.34,<1",
+    # Downloads the engine weights. The range is the one transformers 5
+    # declares.
+    "huggingface-hub>=1.31,<3",
     # Windows has no system IANA zone database for the daily quota reset, and a
     # minimal Linux image may lack one too. No upper bound: releases are
     # calendar-dated data with no API to break.
@@ -89,14 +90,15 @@ dependencies = [
     "regex>=2024.4.28",
     "scikit-learn>=1.6.1,<2",
     "six>=1.15,<2",
-    "tokenizers>=0.22,<0.24",
+    # The range that transformers 5 declares.
+    "tokenizers>=0.23.1,<0.24",
     # 2.14 changes the engine output. tool.uv.sources picks the CUDA build of
     # this direct requirement.
     "torch>=2.7,<2.14",
     # raw2md imports tqdm as well.
     "tqdm>=4.66.1,<5",
-    # Version 5 builds the models on the meta device and fails.
-    "transformers>=4.56.1,<5",
+    # 5.10 is the first release outside the published security advisories.
+    "transformers>=5.10.0,<6",
 ]
 
 [project.scripts]

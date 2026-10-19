@@ -15,7 +15,9 @@ _UPSTREAM_NAMES = frozenset({"marker", "surya", "pdftext"})
 _SETTINGS_LOADERS = frozenset({"pydantic_settings", "dotenv"})
 
 # raw2md downloads the weights; the copy only reads them from disk.
-_NETWORK_CLIENTS = frozenset({"requests", "httpx", "urllib3", "huggingface_hub"})
+_NETWORK_CLIENTS = frozenset(
+    {"requests", "httpx", "httpx2", "urllib3", "huggingface_hub"}
+)
 
 _ENVIRONMENT_NAMES = frozenset({"environ", "environb", "getenv", "getenvb"})
 
@@ -217,3 +219,37 @@ def test_vision_rotary_builds_on_cpu_under_meta() -> None:
         rotary = Qwen2_5_VisionRotaryEmbedding(8)
     assert rotary.inv_freq.device.type == "cpu"
     assert torch.equal(rotary.inv_freq, Qwen2_5_VisionRotaryEmbedding(8).inv_freq)
+
+
+def test_text_rotary_default_frequencies() -> None:
+    torch = _torch()
+    from raw2md_engine.surya.common.surya.decoder import Qwen2RotaryEmbedding
+    from raw2md_engine.surya.common.surya.decoder.config import SuryaDecoderConfig
+
+    config = SuryaDecoderConfig(hidden_size=16, num_attention_heads=2, rope_theta=100.0)
+    rotary = Qwen2RotaryEmbedding(config)
+
+    expected = 1.0 / (100.0 ** (torch.tensor([0.0, 2.0, 4.0, 6.0]) / 8))
+    assert torch.equal(rotary.inv_freq, expected)
+    assert rotary.attention_scaling == 1.0
+
+
+def test_encoder_head_mask() -> None:
+    torch = _torch()
+    from raw2md_engine.surya.ocr_error.model.config import DistilBertConfig
+    from raw2md_engine.surya.ocr_error.model.encoder import DistilBertModel
+
+    config = DistilBertConfig(
+        vocab_size=10,
+        dim=8,
+        n_heads=2,
+        hidden_dim=16,
+        n_layers=1,
+        max_position_embeddings=16,
+    )
+    model = DistilBertModel(config)
+
+    assert model.get_head_mask(None, 3) == [None, None, None]
+    mask = model.get_head_mask(torch.tensor([1.0, 0.0]), 3)
+    assert mask.shape == (3, 1, 2, 1, 1)
+    assert mask.dtype == model.dtype

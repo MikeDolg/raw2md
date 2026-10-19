@@ -134,7 +134,9 @@ def fetch(weights_dir: Path, names: Sequence[str]) -> None:
     after every file arrived, so an interrupted run resumes at the next check.
     """
     from huggingface_hub import hf_hub_download
-    from huggingface_hub.errors import HfHubHTTPError
+
+    # The lazy export names the HTTP client of every major version of the Hub.
+    from huggingface_hub.utils import httpx  # type: ignore[attr-defined]
 
     try:
         weights_dir.mkdir(parents=True, exist_ok=True)
@@ -142,8 +144,9 @@ def fetch(weights_dir: Path, names: Sequence[str]) -> None:
             hf_hub_download(REPO_ID, name, revision=REVISION, local_dir=weights_dir)
             _require_pinned(weights_dir, name)
         (weights_dir / STAMP_NAME).write_text(REVISION + "\n", encoding="utf-8")
-    # The Xet backend reports a transport failure as RuntimeError.
-    except (HfHubHTTPError, OSError, RuntimeError) as exc:
+    # A transport failure of the HTTP client is its HTTPError, not an OSError;
+    # the Hub errors derive from it. The Xet backend raises RuntimeError.
+    except (httpx.HTTPError, OSError, RuntimeError) as exc:
         raise WeightsError(
             f"cannot download the engine weights from {REPO_ID} "
             f"into {weights_dir}: {exc}"

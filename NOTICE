@@ -60,6 +60,16 @@ of the repository holds each change with its diff.
   `common/surya/decoder/__init__.py`, `common/surya/encoder/__init__.py`,
   `ocr_error/model/encoder.py`, `foundation/loader.py`,
   `table_rec/loader.py`, and `ocr_error/loader.py`.
+- The copy follows the API of transformers 5 (2026-10-19): the tied
+  weights as a mapping, `post_init` in every model, the default rotary
+  frequencies and the head mask in the copy itself, the tokenizer helpers
+  from their new module, and no head pruning or ONNX configuration.
+  Changed files, under src/raw2md_engine/surya/: `common/pretrained.py`,
+  `common/adetr/decoder.py`, `common/donut/encoder.py`,
+  `common/surya/__init__.py`, `common/surya/decoder/__init__.py`,
+  `common/surya/decoder/config.py`, `ocr_error/model/config.py`,
+  `ocr_error/model/encoder.py`, `ocr_error/tokenizer.py`,
+  `table_rec/model/encoder.py`, and `table_rec/model/encoderdecoder.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import Optional, Set, List, Tuple, Union, Dict
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -10,10 +10,6 @@ from torch.nn import functional as F, MSELoss, CrossEntropyLoss, BCEWithLogitsLo
 from transformers import apply_chunking_to_forward
 from transformers.activations import get_activation
 from transformers.modeling_outputs import BaseModelOutput, SequenceClassifierOutput
-from transformers.pytorch_utils import (
-    find_pruneable_heads_and_indices,
-    prune_linear_layer,
-)
 
 from transformers.utils import (
     is_flash_attn_greater_or_equal_2_10,
@@ -136,24 +132,7 @@ class MultiHeadSelfAttention(nn.Module):
         self.v_lin = nn.Linear(in_features=config.dim, out_features=config.dim)
         self.out_lin = nn.Linear(in_features=config.dim, out_features=config.dim)
 
-        self.pruned_heads: Set[int] = set()
         self.attention_head_size = self.dim // self.n_heads
-
-    def prune_heads(self, heads: List[int]):
-        if len(heads) == 0:
-            return
-        heads, index = find_pruneable_heads_and_indices(
-            heads, self.n_heads, self.attention_head_size, self.pruned_heads
-        )
-        # Prune linear layers
-        self.q_lin = prune_linear_layer(self.q_lin, index)
-        self.k_lin = prune_linear_layer(self.k_lin, index)
-        self.v_lin = prune_linear_layer(self.v_lin, index)
-        self.out_lin = prune_linear_layer(self.out_lin, index, dim=1)
-        # Update hyper params
-        self.n_heads = self.n_heads - len(heads)
-        self.dim = self.attention_head_size * self.n_heads
-        self.pruned_heads = self.pruned_heads.union(heads)
 
     def forward(
         self,
@@ -732,14 +711,6 @@ class DistilBertModel(DistilBertPreTrainedModel):
 
     def set_input_embeddings(self, new_embeddings: nn.Embedding):
         self.embeddings.word_embeddings = new_embeddings
-
-    def _prune_heads(self, heads_to_prune: Dict[int, List[List[int]]]):
-        """
-        Prunes heads of the model. heads_to_prune: dict of {layer_num: list of heads to prune in this layer} See base
-        class PreTrainedModel
-        """
-        for layer, heads in heads_to_prune.items():
-            self.transformer.layer[layer].attention.prune_heads(heads)
 
     def forward(
         self,

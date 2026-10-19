@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 from huggingface_hub._local_folder import write_download_metadata
 from huggingface_hub.errors import HfHubHTTPError
+from huggingface_hub.utils import httpx  # type: ignore[attr-defined]  # lazy export
 
 from raw2md import paths
 from raw2md.engines import weights
@@ -190,7 +191,13 @@ def test_a_file_of_another_revision_is_not_stamped(
 @pytest.mark.parametrize(
     "error",
     [
-        HfHubHTTPError("404 Client Error"),
+        HfHubHTTPError(
+            "404 Client Error",
+            response=httpx.Response(
+                404, request=httpx.Request("GET", "https://hub.invalid/file")
+            ),
+        ),
+        httpx.ReadError("Connection reset by peer"),
         OSError("No space left"),
         RuntimeError("Data processing error"),
     ],
