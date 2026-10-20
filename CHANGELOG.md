@@ -3,6 +3,24 @@
 Each section holds the notes of one release, newest first. The GitHub release
 of the version carries the same text.
 
+## v0.2.0 - 2026-10-20
+
+### Bug fixes
+
+- Check media asset names against the media folder ([#17](https://github.com/MikeDolg/raw2md/pull/17))
+
+### Features
+
+- feat: bundle the conversion engine as raw2md-engine ([#10](https://github.com/MikeDolg/raw2md/pull/10))
+- Replace PyMuPDF with pypdfium2 for PDF analysis ([#14](https://github.com/MikeDolg/raw2md/pull/14))
+
+### Maintenance
+
+- Move to transformers 5 ([#15](https://github.com/MikeDolg/raw2md/pull/15))
+- Keep the real subprocess.run in tests and run Windows CI on every Python ([#18](https://github.com/MikeDolg/raw2md/pull/18))
+
+Full changelog: <https://github.com/MikeDolg/raw2md/compare/v0.1.1...v0.2.0>
+
 ## v0.1.1 - 2026-10-13
 
 ### Bug fixes
