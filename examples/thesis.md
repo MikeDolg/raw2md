@@ -1,10 +1,10 @@
 ---
-raw2md_version: 0.1.0
+raw2md_version: 0.2.0
 source: Schwamb (2014).pdf
-engine: marker
+engine: raw2md-engine
 inspection: gemini_api
 post: gemini_api
-converted_at: 2026-09-27
+converted_at: 2026-10-20
 source_hash: ASnuYIKCpWkJkvKAUriFPm1aGnr5VCFMxhMDVliIrzs
 status: ok
 issues:
@@ -99,7 +99,6 @@ The findings from this study provide valuable information for future excavations
 |   |          | 2.4.4           | Wall installation effects .               | 45    |
 |   | 2.5      |                 | Summary and key points .                  | 48    |
 
-# Contents
 
 | 3 |   |   | Fibre optic instrumentation | 49 |
 |---|---|---|---|---|
@@ -174,7 +173,6 @@ The findings from this study provide valuable information for future excavations
 |   |     | 7.3.2      | Diaphragm wall construction                                         | 182 |
 |   | 7.4 |            | Summary of key findings                                             | 183 |
 
-# Contents
 
 | 8 |            |           | Summary and conclusion          | 185 |
 |---|------------|-----------|---------------------------------|-----|
@@ -201,7 +199,7 @@ The findings from this study provide valuable information for future excavations
 | 2.5 | Surface settlement of centrifuge tests by<br>Lade et al.<br>(1981) in<br>comparison to predictions (prototype dimensions) | 28 |
 | 2.6 | Laboratory tests from<br>Hagiwara et al.<br>(1998) and<br>Tobar and<br>Meguid<br>(2011) on surface settlement depending on lateral wall |   |
 |   | movement | 30 |
-| 2.7 | Results from<br>Kusakabe's<br>(1982)<br>unsupported axisymmetric cen |   |
+| 2.7 | Results from<br>Kusakabe's<br>(1982)<br>unsupported axisymmetric cen- |   |
 |   | trifuge studies: Comparison of measurements with upper bound<br>predictions | 31 |
 | 2.8 | Deflection of individual diaphragm wall panels compared with |   |
 |   | FE<br>predictions for different excavation stages - reproduced from |   |
@@ -219,12 +217,12 @@ The findings from this study provide valuable information for future excavations
 | 2.14 | Lateral earth pressure and failure mechanism for axisymmetric |   |
 |   | conditions | 41 |
 
-| 2.15 | Kim et al.'s<br>(2013) measurements of lateral earth pressure for a cir |     |
+| 2.15 | Kim et al.'s<br>(2013) measurements of lateral earth pressure for a cir- |     |
 |------|-------------------------------------------------------------------------|-----|
 |      | cular excavation in comparison to their predictions and Rankine         |     |
 |      | theory .                                                                | 43  |
 | 2.16 | Effect of wall installation .                                           | 47  |
-| 3.1  | Cross-sectional view of Shaft F at Abbey Mills with ground con          |     |
+| 3.1  | Cross-sectional view of Shaft F at Abbey Mills with ground con-          |     |
 |      | ditions and pore water pressure distribution                            | 50  |
 | 3.2  | Plan view of Shaft F at Abbey Mills with instrumentation details        | 51  |
 | 3.3  | Construction and monitoring                                             | 52  |
@@ -234,7 +232,7 @@ The findings from this study provide valuable information for future excavations
 | 3.7  | Pre-installation stage                                                  | 61  |
 | 3.8  | Main-installation stage                                                 | 65  |
 | 3.9  | Fujikura pretension clamp                                               | 67  |
-| 3.10 | Routing cables through ducting to safe measurement hut (Cour            |     |
+| 3.10 | Routing cables through ducting to safe measurement hut (Cour-            |     |
 |      | tesy of Thames Water)                                                   | 67  |
 | 3.11 | Experimental test set-up                                                | 69  |
 | 3.12 | Results pretension clamps laboratory test                               | 70  |
@@ -246,9 +244,9 @@ The findings from this study provide valuable information for future excavations
 | 3.17 | Strain versus chainage                                                  | 82  |
 | 3.18 | Interpolation and auto-correlation of datasets .                        | 83  |
 | 3.19 | Calculation of curvature                                                | 84  |
-| 3.20 | Close up view of one pretensioned section of the hoop strain            |     |
+| 3.20 | Close up view of one pretensioned section of the hoop strain-            |     |
 |      | cable (HSC)                                                             | 86  |
-| 4.1  | Overview and location of boreholes for inclinometers and exten          |     |
+| 4.1  | Overview and location of boreholes for inclinometers and exten-          |     |
 |      | someters in one array (A or B) .                                        | 89  |
 | 4.2  | Inclinometers and extensometers at Abbey Mills site .                   | 90  |
 | 4.3  | Inclinometer data analysis                                              | 94  |
@@ -264,7 +262,7 @@ The findings from this study provide valuable information for future excavations
 
 | 5.2  | Diaphragm wall incremental curvature/ bending moment be               |     |
 |------|-----------------------------------------------------------------------|-----|
-|      | tween successive excavation levels from<br>FO<br>measurements and     |     |
+|      | tween successive excavation levels from<br>FO measurements and     |     |
 |      | inclinometers                                                         | 109 |
 | 5.3  | Diaphragm wall curvature/ bending moment at different exca            |     |
 |      | vation levels from FO measurements and inclinometers                  | 110 |
@@ -295,10 +293,10 @@ The findings from this study provide valuable information for future excavations
 | 6.4  | Stiffness degradation for London Clay and Lambeth Group Clay          | 147 |
 | 6.5  | Strain-Hardening/ Softening (SHS) model: fitting piecewise lin        |     |
 |      | ear functions to the effective stress friction angle and dilation     |     |
-|      | angle from test RS17 taken from<br>Ventouras<br>(2005)                | 149 |
+|      | angle from test RS17 taken from<br>Ventouras (2005)                | 149 |
 | 6.6  | Reducing wall thickness due to verticality of panels                  | 153 |
 | 7.1  | FLAC's predictions on the effect of soil models on incremental        |     |
-|      | curvature/ bending moment in comparison with<br>FO<br>measurements159 |     |
+|      | curvature/ bending moment in comparison with<br>FO measurements<br>159 |     |
 | 7.2  | FLAC's predictions on the effect of soil models on absolute cur       |     |
 |      | vature/ bending moment in comparison with FO measurements             | 160 |
 | 7.3  | FLAC's predictions on the effect of soil models on lateral wall       |     |
@@ -307,12 +305,12 @@ The findings from this study provide valuable information for future excavations
 | 7.4  | Investigating the difference between Mohr-Coulomb (MC) and               |     |
 |------|--------------------------------------------------------------------------|-----|
 |      | Hoek-Brown (HB) model for Chalk .                                        | 162 |
-| 7.5  | FLAC's predictions on the difference between<br>WIP<br>or full wall      |     |
+| 7.5  | FLAC's predictions on the difference between<br>WIP or full wall      |     |
 |      | installation                                                             | 164 |
 | 7.6  | Circumferential stiffness versus wall depth for FLAC runs with           |     |
 |      | anisotropic wall stiffness                                               | 165 |
 | 7.7  | FLAC's predictions on the effect of wall stiffness/anisotropy on         |     |
-|      | incremental curvature/ bending moment in comparison with<br>FO           |     |
+|      | incremental curvature/ bending moment in comparison with<br>FO<br>measurements           |     |
 |      | measurements                                                             | 167 |
 | 7.8  | FLAC's predictions on the effect of wall stiffness/ anisotropy on        |     |
 |      | lateral wall movement in comparison with inclinometer data .             | 168 |
@@ -324,19 +322,19 @@ The findings from this study provide valuable information for future excavations
 |      | for anisotropy                                                           | 171 |
 | 7.12 | FLAC's predictions on the effect of wall thickness                       | 172 |
 | 7.13 | FLAC's predictions on the effect of Chalk stiffness                      | 173 |
-| 7.14 | K0<br>Pressure in elements next to shaft wall for different<br>values of |     |
+| 7.14 | Pressure in elements next to shaft wall for different K0 values of |     |
 |      | the Chalk before and after wall installation                             | 174 |
 | 7.15 | FLAC's predictions on the effect of the lateral earth pressure           |     |
 |      | coefficient in Chalk                                                     | 175 |
-| 7.16 | Empirical formulas by<br>New and Bowers<br>(1994) and<br>Geotechnical    |     |
-|      | Consulting Group<br>(2007) applied to Abbey Mills shaft in com           |     |
+| 7.16 | Empirical formulas by<br>New and Bowers (1994) and Geotechnical    |     |
+|      | Consulting Group (2007) applied to Abbey Mills shaft in com           |     |
 |      | parison with highest rod extensometer sensors and PLAXIS and             |     |
 |      | FLAC predictions                                                         | 178 |
 | 7.17 | FLAC's predictions of excavation-induced ground displacement             | 179 |
 | 7.18 | FLAC's predicted horizontal ground movements in comparison               |     |
 |      | to inclinometer measurements AI2 and BI2 6 m behind shaft wall           | 180 |
 | 7.19 | FLAC's predicted horizontal ground movements in comparison               |     |
-|      | to inclinometer measurements AI3 and BI3 15 m behind shaft wall181       |     |
+|      | to inclinometer measurements AI3 and BI3 15 m behind shaft wall<br>181       |     |
 | 7.20 | FLAC's predictions of ground displacement during diaphragm               |     |
 |      | wall installation                                                        | 182 |
 
@@ -347,18 +345,18 @@ The findings from this study provide valuable information for future excavations
 | 3.2 | FO datasets during different construction stages                             | 73  |
 | 5.1 | PLAXIS characteristic soil model input parameters .                          | 106 |
 | 5.2 | PLAXIS design general input parameters                                       | 108 |
-| 5.3 | dDPE<br>zfix<br>and<br>values for error correction for shaft inclinometers . | 114 |
-| 5.4 | dDPE<br>zfix<br>and<br>values for error correction for soil inclinometers .  | 127 |
+| 5.3 | dDPE and zfix values for error correction for shaft inclinometers . | 114 |
+| 5.4 | dDPE and zfix values for error correction for soil inclinometers .  | 127 |
 | 6.1 | FLAC model details .                                                         | 140 |
 | 6.2 | Details of triaxial test used to determine stiffness degradation             |     |
-|     | curve for London Clay (Gasparre,<br>2005)                                    | 146 |
+|     | curve for London Clay (Gasparre, 2005)                                    | 146 |
 | 6.3 | Details of triaxial test used for<br>SHS<br>model for Thanet Sand and        |     |
-|     | Lambeth Group Sand (Ventouras,<br>2005)                                      | 149 |
+|     | Lambeth Group Sand (Ventouras, 2005)                                      | 149 |
 | 6.4 | FLAC1 input parameters .                                                     | 155 |
 | 6.5 | FLAC2 input parameters .                                                     | 155 |
 | 6.6 | Parametric study                                                             | 156 |
 | 7.1 | FLAC's predictions of maximum wall deflection, curvature and                 |     |
-|     | bending moment for different wall thickness (Equation<br>3.10)               | 172 |
+|     | bending moment for different wall thickness (Equation 3.10)               | 172 |
 
 # Nomenclature
 
@@ -538,7 +536,7 @@ active earth pressure by Ueno and Yokoyama \(1996\)
 
 ∆*ε*soil,t,∆*ε*exc,t Incremental temperature-induced strain in the temperature cable
 
-(TC) on soil and excavation face respectively
+
 
 ∆*ε*θ,comb Incremental combined temperature-induced and mechanical hoop strain
 
@@ -791,7 +789,7 @@ Especially for deep shafts it is important to construct panels as vertical as po
 
 Virollet et al. \(2006\) highlight that the thickness of the ring structure is further reduced by the rectangular nature of the diaphragm wall panels (Figure 2.2f\). At Abbey Mills this was less of a problem, as the long primary panels were excavated in three separate pieces as well as equipped with three trapezoidal reinforcement cages (Figure 2.2g\).
 
-Diaphragm walls are very stiff structures which reduce ground movements during excavation; the installation of the wall can however cause ground movements.
+Diaphragm walls are very stiff structures which reduce ground movements during excavation; the installation of the wall can however cause ground movement.
 
 (a) Installation procedure of diaphragm walls ([http:](http://www.bacsol.co.uk/techniques/retaining-walls/diaphragm-walls/) [//www.bacsol.co.uk/techniques/retaining-walls/](http://www.bacsol.co.uk/techniques/retaining-walls/diaphragm-walls/) [diaphragm-walls/](http://www.bacsol.co.uk/techniques/retaining-walls/diaphragm-walls/))
 
@@ -861,15 +859,15 @@ Figure 2.3: Subgrade reaction and pseudo FE methods
 
 Using FE or finite difference packages is the most common design method, as they can account for various features, such as complex soil constitutive behaviour, construction sequences, structural and support details and consolidation and groundwater effects, as well as provide ground movements. As a trade-off the analysis is very time-consuming and the quality of the results highly depends on the availability of appropriate soil models and input parameters. Common packages used are SAFE, PLAXIS, CRISP, FLAC, ABAQUS and DYNA.
 
-##### Wall installation
+#### Wall installation
 
 When designing diaphragm or bored pile walls it is important to take the effect of wall installation into consideration, as the installation process may cause lateral stress relief (in overconsolidated soil) or increase (where lateral earth pressure values are below 0.5). Powrie et al. \(1998\) argues that the installation changes the stress state in overconsolidated clays which may affect the soil stiffness during excavation. Simulations assuming a wished-in-place (WIP) wall cannot predict ground movements related to the construction of the wall, which may be significant.
 
-Several studies \(Conti et al., 2012; Gourvenec and Powrie, 1999; Lings et al., 1994\) give advice on how to incorporate the wall installation in FE analyses.
+Several studies \(Conti et al., 2012; Gourvenec and Powrie, 1999; Lings et al., 1994\) give advise on how to incorporate the wall installation in FE analyses.
 
 CIRIA C580 \(Gaba et al., 2003\) acknowledges the importance of wall installation, but notes that the detailed modelling of the wall installation would be excessive and that further research is required.
 
-##### Soil models
+#### Soil models
 
 Using an appropriate soil model in FE analyses is often crucial for an accurate representation. This includes non-linear and anisotropic soil behaviour.
 
@@ -896,9 +894,9 @@ Lam \(2010\) and Bolton et al. \(2010\) investigated how MSD compares to numeric
 
 $$\frac{\Delta u}{H} = \frac{\gamma_{\rm u}}{400} \frac{\lambda}{H} \left(\frac{\rho g H}{c_{\rm u}}\right)^2 \tag{2.1}$$
 
-where *γ*<sup>u</sup> is the reference shear strain, λ is the wavelength of the bulge the wall is forming (this is related to prop spacing) and ρg is the unit weight of the soil.
+where *γ*<sup>u</sup> is the reference shear strain, *λ* is the wavelength of the bulge the wall is forming (this is related to prop spacing) and *ρg* is the unit weight of the soil.
 
-Bolton et al. \(2010\) notes that this equation does not include the wall's bending stiffness EI. This shows that structural stiffness, across a range of walls from sheet piles to diaphragm walls, has a minor influence on the wall's deflection.
+Bolton et al. (2010) notes that this equation does not include the wall's bending stiffness EI. This shows that structural stiffness, across a range of walls from sheet piles to diaphragm walls, has a minor influence on the wall's deflection.
 
 For circular excavations, Equation 2.1 is perhaps not applicable as the factor 1/400 was derived from field data of braced excavations. It may be difficult to apply MSD to circular excavations, where hoop forces increase the system's stiffness, as the derivation is based on plane strain plasticity theory.
 
@@ -909,7 +907,7 @@ As outlined in Section 2.3 current design practice needs reliable and well-docum
 An extensive literature search for case histories on circular shafts since 1980 has been carried out. The search comprised some of the most relevant journals and conference proceedings as listed below:
 
 - Géotechnique
-- Proceedings of the Institution of Civil Engineers (ICE) Journal of Geotechnical – Journal of Geotechnical Engineering
+- Proceedings of the Institution of Civil Engineers (ICE) – Journal of Geotechnical Engineering
 - Canadian Geotechnical Journal
 - ASCE Journal of Geotechnical and Geoenvironmental Engineering
 - International Conferences on Soil Mechanics and Geotechnical Engineering (ICSMGE)
@@ -986,7 +984,7 @@ $$S_{\rm v}(d) = S_{\rm v,max} \cdot \exp(0.5) \cdot \exp\left(-\frac{(d/H + 2E_
 
 Three approaches were introduced above: (1) New and Bowers \(1994\), (2) Geotechnical Consulting Group \(2007\) and (3) Pairaudeau \(2011\); these are plotted in Figure 2.4b using the dimensions of New and Bowers' \(1994\) shaft. The figure also contains New and Bowers' \(1994\) measurement points. As mentioned above, the formula by New and Bowers \(1994\) was based on the T line measurements. Geotechnical Consulting Group \(2007\) adopted a slightly more conservative approach due to limited evidence; it is however still fitting the data well. It can be seen that the formula based on very small 1 g model tests \(Pairaudeau, 2011\) predicts maximum settlement almost twice as large as New and Bowers \(1994\) and Geotechnical Consulting Group \(2007\). The extent of the settlement trough is however less than half the size in comparison to the other two formulas.
 
-Several reasons for the mismatch of Pairaudeau's \(2011\) formula are possible. The ground conditions were different; whereas Pairaudeau \(2011\) used dry sand, the Heathrow trial tunnel was constructed in London Clay. Pairaudeau's (2011) formula is based on small 1 g model tests and therefore has limitations of being transferred to real scale. On the other hand, the measurements by New and Bowers \(1994\) have not yet been confirmed by another study with similar conditions.
+Several reasons for the mismatch of Pairaudeau's \(2011\) formula are possible. The ground conditions were different; whereas Pairaudeau \(2011\) used dry sand, the Heathrow trial tunnel was constructed in London Clay. Pairaudeau's \(2011\) formula is based on small 1 g model tests and therefore has limitations of being transferred to real scale. On the other hand, the measurements by New and Bowers \(1994\) have not yet been confirmed by another study with similar conditions.
 
 Another well-documented case study was conducted by Muramatsu and Abe \(1996\) in layered soil in Tokyo (Table 2.1\). The extensive monitoring scheme for the 60 m deep diaphragm wall shaft of 28 m diameter also included the measurement of vertical and horizontal surface movement during diaphragm wall installation and excavation. Despite the large dimensions the maximum settlements in the immediate proximity of the shaft were only between 4 and 7 mm (diaphragm wall installation and excavation), while New and Bowers \(1994\) measured 15 mm. In Figure 2.4c the measurements along with the three formulas are plotted. All approaches overestimate the settlements significantly. This indicates that diaphragm wall shafts are likely to result in smaller ground movements than shaft sinkings.
 
@@ -1044,7 +1042,7 @@ Figure 2.7: Results from Kusakabe's \(1982\) unsupported axisymmetric centrifuge
 
 Cabarkapa et al. \(2003\) presented results from a 28 m deep and 56.6 m diameter shaft in Dublin Boulder Clay (Table 2.1\). The predicted and measured wall deflections for different excavation stages for three representative panels are shown in Figure 2.8. Firstly, it can be observed that panel 6 exhibits significantly larger deflections than panel 15 indicating an asymmetrical deformation pattern. Secondly, the disagreement of wall movements, those measured and those computed by the Imperial College Finite Element Program (ICFEP), can be observed. This could be explained by the uncertainty of the input parameters for the soil and hoop stiffness of the shaft walls. The latter refers to a key point of the paper: Diaphragm walls and piled walls have joints and are therefore not continuous in the circumferential direction. In FE simulations the stiffness in the circumferential direction is therefore usually reduced. However, the factor of reduction is an area of high uncertainty. Cabarkapa et al. \(2003\) used a factor of 2 based on previous experience, but initially experimented with factors between 1 and 10 to obtain bounds for likely results. When comparing the measured wall deflections with the numerical predictions (Figure 2.8\), the reduction factor of 2 appears too large and the shape does not match well. On the other hand, it is also questionable how trustworthy the inclinometer data is.
 
-Zdravkovic et al. \(2005\) who numerically investigated rectangular excavations using ICFEP also concluded that the horizontal stiffness of discontinuous walls has to be reduced (independent on the plan shape of the excavation). An indication on the magnitude of reduction is however not given. Several axisymmetric 'reference' analyses were carried out where the ratio of circumferential to vertical Young's modulus *E*θ/*E* was varied between 1 and 0. The maximum deflection of a wall with reduced stiffness of *E*θ/*E* = 1 × 10−5 is only approximately 60 % of the value obtained from a plane strain analysis, as shown in Figure 2.9. The 'stiff wall' where *E*θ/*E* = 1 gave negligible wall movements. Zdravkovic et al. \(2005\) consider such a simulation clearly unrealistic; however without any comparison to field data.
+Zdravkovic et al. \(2005\) who numerically investigated rectangular excavations using ICFEP also concluded that the horizontal stiffness of discontinuous walls has to be reduced (independent on the plan shape of the excavation). An indication on the magnitude of reduction is however not given. Several axisymmetric 'reference' analyses were carried out where the ratio of circumferential to vertical Young's modulus *E*θ/*E* was varied between 1 and 0. The maximum deflection of a wall with reduced stiffness of *E*θ/*E* = 1 × 10−<sup>5</sup> is only approximately 60 % of the value obtained from a plane strain analysis, as shown in Figure 2.9. The 'stiff wall' where *E*θ/*E* = 1 gave negligible wall movements. Zdravkovic et al. \(2005\) consider such a simulation clearly unrealistic; however without any comparison to field data.
 
 Cabarkapa et al.'s \(2003\) further observations even complicate matters. The deflections trends shown in Figure 2.8 indicated two phases: In phase 1 at shallow excavation levels (Figures 2.8a and 2.8b\) the diaphragm wall panels were discontinuous and behaved like independent cantilevers with larger move-
 
@@ -1054,11 +1052,11 @@ Figure 2.9: Axisymmetric analyses with different circumferential stiffness - rep
 
 ments at the top. In phase 2 (Figures 2.8c and 2.8d\) when the initial movement closes any gaps between the panels and activated the hoop stiffness, panels 15 and 20 started bulging at mid and lower depths with a rotation around the ring beam. This indicates that the hoop stiffness of the wall was not realistically modelled by generally reducing the circumferential stiffness by a factor, but that its mobilisation should have been taken into account. The amount of mobilisation can involve parameters such as time, magnitude of deflection, excavation depth and quality of joints.
 
-Another study investigated hoop compression forces, Anagnostopoulos and Georgiadis \(2001\) present results from an instrumented shaft of 20.8 m diameter and 9 m depth constructed in sandy soil in Greece (Table 2.1\). The measured hoop forces in the circumferential direction of the 0.6 m thick diaphragm walls are compared to axisymmetric FE simulations (PLAXIS) and simple hand calculations using *K*0 earth pressures (Figure 2.10\). For both cases, the circumferential stiffness was not reduced despite the horizontal discon
+Another study investigated hoop compression forces, Anagnostopoulos and Georgiadis \(2001\) present results from an instrumented shaft of 20.8 m diameter and 9 m depth constructed in sandy soil in Greece (Table 2.1\). The measured hoop forces in the circumferential direction of the 0.6 m thick diaphragm walls are compared to axisymmetric FE simulations (PLAXIS) and simple hand calculations using *K*<sup>0</sup> earth pressures (Figure 2.10\). For both cases, the circumferential stiffness was not reduced despite the horizontal discon
 
-tinuity of the diaphragm walls. Good agreement was obtained as shown in Figure 2.10 and the authors considered the hand calculations assuming the shaft as a circular hollow cylinder loaded with at-rest earth and pore-water pressures appropriate. They furthermore observed small bending moments at the final excavation stage and hardly any wall deflections. Therefore it might be argued that, in this case of short walls with good quality joints, the full hoop stress was mobilised from an early stage and contributed significantly to the structure's stiffness. Small movements would also not mobilise active earth pressure and therefore justify the good agreement with the simple *K*0-analysis.
+tinuity of the diaphragm walls. Good agreement was obtained as shown in Figure 2.10 and the authors considered the hand calculations assuming the shaft as a circular hollow cylinder loaded with at-rest earth and pore-water pressures appropriate. They furthermore observed small bending moments at the final excavation stage and hardly any wall deflections. Therefore it might be argued that, in this case of short walls with good quality joints, the full hoop stress was mobilised from an early stage and contributed significantly to the structure's stiffness. Small movements would also not mobilise active earth pressure and therefore justify the good agreement with the simple *K*_0-analysis.
 
-Figure 2.10: Comparison of measured hoop force with predictions from a numerical analysis and a *K*0-analysis - reproduced from Anagnostopoulos and Georgiadis \(2001\)
+Figure 2.10: Comparison of measured hoop force with predictions from a numerical analysis and a *K*_0-analysis - reproduced from Anagnostopoulos and Georgiadis \(2001\)
 
 A recent study by Tan and Wang \(2013\) on a 100 m diameter excavation of 18 m depth in Shanghai (Table 2.1\) measured hoop stresses in ring beams and the diaphragm wall in great detail. It was found that the stresses in the ring beams increased directly after their construction when excavation progressed. While the ring beams were only monitored once excavation level reached the particular depth, the stresses in the diaphragm walls could be monitored
 
@@ -1154,13 +1152,13 @@ Ng and Yan \(1999\) and Gourvenec and Powrie \(1999\) conducted full three-dimen
 
 Sideri \(2012\) focused on the installation effect for circular excavations of different construction methods and varying diameter-to-depth-ratios in London Clay. Figure 2.16a shows the development of the lateral earth pressure coefficient (averaged over wall depth) throughout the construction of a diaphragm wall, determined from two-dimensional numerical simulations with ICFEP. The initial value of 1.44 reduces rapidly when the panels are excavated under
 
-bentonite, but increases again during wall concreting. Concrete hardening decreases the earth pressure again and shaft excavation has almost no effect. Sideri \(2012\) also studies the influence of wall anisotropy (due to joints between the panels) on the earth pressure during shaft excavation. The excavation reduces the lateral earth pressure more significantly for walls with very low circumferential stiffness. For *E*θ/*E* = 1 × 10−<sup>5</sup> for example the lateral earth pressure coefficient reduces from 0.95 to 0.6 due to larger wall movements. For jacketed shafts the lateral earth pressure reduces progressively with increasing shaft depths Figure 2.16a).
+bentonite, but increases again during wall concreting. Concrete hardening decreases the earth pressure again and shaft excavation has almost no effect. Sideri \(2012\) also studies the influence of wall anisotropy (due to joints between the panels) on the earth pressure during shaft excavation. The excavation reduces the lateral earth pressure more significantly for walls with very low circumferential stiffness. For *E*θ/*E* = 1 × 10−<sup>5</sup> for example the lateral earth pressure coefficient reduces from 0.95 to 0.6 due to larger wall movements. For jacketed shafts the lateral earth pressure reduces progressively with increasing shaft depths (Figure 2.16a\).
 
 CIRIA C580 \(Gaba et al., 2003, p. 255-259) lists a number of case studies conducted to investigate wall installation effects. Richards et al. \(2006\) for example thoroughly investigated the changes in horizontal water and earth pressure during installation of a bored pile wall and found a reduction of *K*<sup>0</sup> from 1 to 0.8 and no further change over 10 months after the installation. The changes in lateral loading due to borehole excavation, fluid and concrete pressure also resulted in surface settlement. This shows that 'even the most rigid diaphragm or secant pile wall cannot be totally effective in preventing loss of ground' \(Gunn and Clayton, 1992\).
 
 Similar observations were made by Burland and Hancock \(1977\). They recorded the surface settlement behind a shaft wall of a rectangular excavation in London and found that approximately 50 % of the deformation had occurred during installation of the diaphragm wall. Muramatsu and Abe \(1996\) measured the horizontal and vertical movements around a circular shaft during wall construction, as shown in Figure 2.16b. From this it can be observed that again approximately half of the total horizontal and vertical ground movement had occurred during the construction process of the diaphragm wall. This is a significant amount that cannot be reduced by increasing wall stiffness, since it is inherent to the construction process.
 
-Even for rectangular excavations where more field and case studies exist, CIRIA C580 \(Gaba et al., 2003\) states that 'it is difficult to give general advice on the magnitude and extent of lateral stress reduction during wall installation', as this depends on the in situ *K*~0~, soil and ground water conditions, pile or panel geometry, construction sequence and the detailed method. They generally suggest to reduce the lateral earth pressure coefficient to 1.0 (for overconsolidated soils) but use the in situ *K*<sup>0</sup> = 1 − sin*φ* ′ (for normally consolidated soils) where *φ* ′ is the effective stress friction angle.
+Even for rectangular excavations where more field and case studies exist, CIRIA C580 \(Gaba et al., 2003\) states that 'it is difficult to give general advice on the magnitude and extent of lateral stress reduction during wall installation', as this depends on the in situ *K*0, soil and ground water conditions, pile or panel geometry, construction sequence and the detailed method. They generally suggest to reduce the lateral earth pressure coefficient to 1.0 (for overconsolidated soils) but use the in situ *K*<sup>0</sup> = 1 − sin*φ* ′ (for normally consolidated soils) where *φ*′ is the effective stress friction angle.
 
 (a) Development of lateral earth pressure coefficient (averaged over wall depth) throughout construction and excavation of a diaphragm wall shaft and a shaft sinking - reproduced from Sideri (2012)
 
@@ -1214,7 +1212,7 @@ Figure 3.3: (Cont.) Construction and monitoring
 
 An extensive monitoring scheme was employed to monitor the shaft performance during several construction stages. A plan view of the shaft with the locations of the instrumentation is provided in Figure 3.2. Three diaphragm wall panels P10, P15 and P20 were equipped with FO instrumentation, as well as with an inclinometer each. Two arrays of soil instrumentation boreholes for extensometers and inclinometers radiate from the shaft behind panels P15 and P20. Eight surface levelling pins and several targets on the diaphragm wall were surveyed optically.
 
-Figure 3.3a gives an overview when the instrumentation was in place and when readings were obtained. The FO monitoring started in January 2012; several datasets were taken to monitor the diaphragm wall during the dewatering trial, shaft excavation (Figure 3.3d\) and the annulus infill.
+Figure 3.3a gives an overview when the instrumentation was in place and when readings were obtained. The FO monitoring started in January 2012; several datasets were taken to monitor the diaphragm wall during the dewatering trial, shaft excavation (Figure 3.3d and the annulus infill.
 
 The soil inclinometers and extensometers were installed by the sub-contractor SolData Ltd. in summer 2011, so that ground movement during diaphragm wall installation could be measured. SolData Ltd. read the manual instruments weekly, while the rod extensometers recorded automatically every 5 minutes.
 
@@ -1226,7 +1224,7 @@ This chapter focuses on the FO instrumentation, its installation and data analys
 
 Distributed FO sensing is a novel technique which can be used to obtain distributed strain profiles along the length of a FO cable. A standard single-mode fibre can be embedded in concrete or attached to the surface of a structure in a configuration so that the required deformations can be measured.
 
-Several techniques exist; for strain sensing Brillouin Optical Time-Domain Reflectometry/ Analysis (BOTDR/A) are most commonly used. For both, a short square optical pulse of frequency *ν*<sup>0</sup> (corresponding to a wavelength of 1500 nm) is launched into the fibre. Due to impurities in the glass the signal is back-scattered (Figure 3.4a\). BOTDR is based on spontaneous scattering while BOTDA relies on stimulated scattering, which provides higher accuracy of ±2 µε \(Omnisens SA, 2012\) in comparison to ±40 µε \(Yokogawa, 2005\). The BOTDA can however only be used if the cable has no breakage.
+Several techniques exist; for strain sensing Brillouin Optical Time-Domain Reflectometry/ Analysis (BOTDR/A) are most commonly used. For both, a short square optical pulse of frequency *ν*<sup>0</sup> (corresponding to a wavelength of 1500 nm) is launched into the fibre. Due to impurities in the glass the signal is back-scattered (Figure 3.4a. BOTDR is based on spontaneous scattering while BOTDA relies on stimulated scattering, which provides higher accuracy of ±2 µε \(Omnisens SA, 2012\) in comparison to ±40 µε \(Yokogawa, 2005\). The BOTDA can however only be used if the cable has no breakage.
 
 The back-scattered spectrum consists of a Rayleigh component of the same frequency as the launched optical pulse  $\nu_0$  and two components that have undergone a frequency shift, the Raman and Brillouin peaks, as shown in Figure 3.4b. The Brillouin frequency shift  $\nu_B$  is usually around 11 GHz at a wavelength of 1500 nm (Ohno et al., 2001). Its exact peak position varies linearly depending on temperature-induced and mechanical strain. The peak position  $\nu_B(\varepsilon_1, T_1)$  at strain  $\varepsilon_1$  and temperature  $T_1$  can be determined as follows,
 
@@ -1278,7 +1276,7 @@ Figure 3.5: Overview of FO equipment used in this study
 
 ### 3.3.1 Overview
 
-Three panels were instrumented with FO cables, panels P10, P15 and P20, as shown in Figure 3.2. Panels P10 and P20 were primary panels which consisted of three reinforcement cages over their width which are called 'bytes' (indicated by the dashed lines in Figure 3.2\). For panel P10 the left byte (when facing the panel from the centre of the shaft) and for panel P20 the middle byte was instrumented. Since panel P15 was a secondary panel which is shorter in width, only one byte was installed.
+Three panels were instrumented with FO cables, panels P10, P15 and P20, as shown in Figure 3.2. Panels P10 and P20 were primary panels which consisted of three reinforcement cages over their width which are called 'bytes' (indicated by the dashed lines in Figure 3.2) For panel P10 the left byte (when facing the panel from the centre of the shaft) and for panel P20 the middle byte was instrumented. Since panel P15 was a secondary panel which is shorter in width, only one byte was installed.
 
 Each reinforcement cage/ byte was equipped with a bending strain cable (BSC), a hoop strain cable (HSC) and a temperature cable (TC). A schematic overview of the cable arrangements on a reinforcement cage is shown in Figure 3.6. The BSC measures strain on the excavation and soil face which can be processed to wall curvature and hence bending moment. The HSC, arranged in a meander-shape with eight horizontal sections pointing in circumferential direction, provides the hoop strain in the diaphragm wall at a particular depth. To compensate the strain measurements from the BSC and the HSC for temperature-induced strain, a TC is installed in parallel to the BSC.
 
@@ -1311,7 +1309,7 @@ In the pre-installation stage the cages, while lying on the ground, were prepare
 
 Prior to the pre-installation, the FO cables were prepared in the laboratory, cut to the required length and coiled on cable drums (the total length of the cable was divided equally on two drums). The flat BSC were coloured on one side to ensure easy visual identification of any twists during installation, which could cause a breakage when the BSC was pretensioned.
 
-It was important to make sure the reinforcement pieces were placed on higher wooden blanks than usual to allow the installation of FO cables on its underside (Figure 3.7c\).
+It was important to make sure the reinforcement pieces were placed on higher wooden blanks than usual to allow the installation of FO cables on its underside (Figure 3.7c.
 
 The BSC and TC could then be attached to the bottom piece (piece 1) of the reinforcement cage (Figures 3.7a and 3.7d\). The TC was loosely fixed using cable ties, while the BSC required pretension. A pretension *ε*<sup>p</sup> of approximately 2000 µε was applied; this was found to be important for two reasons: firstly to measure compression and secondly to identify the two cable sections on the excavation and soil sides which have to be aligned carefully during the data analysis. Both cables were installed in parallel approximately 1 m apart to avoid tangling during the subsequent main-installation (Figure 3.7d\).
 
@@ -1394,7 +1392,7 @@ Figure 3.10: Routing cables through ducting to safe measurement hut (Courtesy of
 
 ### 3.4.1 Overview
 
-As detailed above special clamps were used to pretension the BSC at several points on the reinforcement cage (Figure 3.9\). Since these clamps were used for the first time, laboratory tests were carried out to check the performance of the clamps. The following objectives were investigated:
+As detailed above special clamps were used to pretension the BSC at several points on the reinforcement cage (Figure 3.9). Since these clamps were used for the first time, laboratory tests were carried out to check the performance of the clamps. The following objectives were investigated:
 
 - Ability of the clamps to keep the pretension over a period of 1 week
 - Accuracy of BOTDR measurement when gradually applying and removing pretension and elastic behaviour of the Fujikura strain cable
@@ -1403,7 +1401,7 @@ As detailed above special clamps were used to pretension the BSC at several poin
 
 ### 3.4.2 Experimental set-up and data acquisition
 
-The experimental set-up is displayed in Figure 3.11. Two metal seats were rigidly attached to a stone wall (indoors). The FO cable of 9200 mm total length was prepared with two connectors at one end (the connectors were spliced onto two out of the four fibre cores inside the cable, Figure 3.5c\), referred to as 'blue' and 'brown' connector. Both connector cable lengths were the same, 940 mm, to allow for direct comparison of the readings without horizontal correlation. The strain induced in the fibre was also measured with two linear variable differential transformers (LVDTs). Those were attached so that they touch the end of the clamps and therefore measure their movement.
+The experimental set-up is displayed in Figure 3.11. Two metal seats were rigidly attached to a stone wall (indoors). The FO cable of 9200 mm total length was prepared with two connectors at one end (the connectors were spliced onto two out of the four fibre cores inside the cable, Figure 3.5c), referred to as 'blue' and 'brown' connector. Both connector cable lengths were the same, 940 mm, to allow for direct comparison of the readings without horizontal correlation. The strain induced in the fibre was also measured with two linear variable differential transformers (LVDTs). Those were attached so that they touch the end of the clamps and therefore measure their movement.
 
 The first readings were taken on the loose fibre lying on the floor; two readings from each connector (dataset L ). Then the clamps were used to attach the FO cable to the wall as shown in Figure 3.11. The fibre was manually pulled until it was just tight, but not under a high amount of tension; again readings were taken (dataset 0 ). Then the nuts of one of the two clamps were turned by three, six, nine and twelve revolutions (datasets 3 , 6 , 9 and 12 ); for every dataset readings from both connectors were taken.
 
@@ -1493,9 +1491,9 @@ In conclusion this means that the BSC of panels P10 and P15 had to be repaired, 
 
 A breakage of an optical fibre can be repaired by a fusion splice. This is a delicate procedure which is usually carried out in clean laboratory environment. To repair the breakages it was decided to by-pass the breakages with a robust cable as shown in Figure 3.15. This requires two splices to be carried out, one at the top of the wall and one at the lowest breakage where the cable comes out of the concrete. Especially the lower splice was difficult to accomplish, as it had to be carried out from a man-rider basket with a very short length of FO cable sticking out of the concrete (Figure 3.14b).
 
-In panel P10 several breakages were visible over the excavation depth. The lowest visible breakage at approximately 20 mbgl was spliced to a piece of additional cable, which was again spliced to the existing cable at the top of the wall to by-pass the breakages (Figure 3.15a). In panel P15 the measurements showed a breakage just below capping beam which was not visible when inspecting the wall. Therefore the cable was cut at approximately 7 mbgl depth where it was exposed. Again a piece of additional cable was used to by-pass the breakage (Figure 3.15b). The spliced sections were protected inside a waterproof box (Figures 3.14c and 3.14d).
+In panel P10 several breakages were visible over the excavation depth. The lowest visible breakage at approximately 20 mbgl was spliced to a piece of additional cable, which was again spliced to the existing cable at the top of the wall to by-pass the breakages (Figure 3.15a). In panel P15 the measurements showed a breakage just below capping beam which was not visible when inspecting the wall. Therefore the cable was cut at approximately 7 mbgl depth were it was exposed. Again a piece of additional cable was used to by-pass the breakage (Figure 3.15b). The spliced sections were protected inside a waterproof box (Figures 3.14c and 3.14d).
 
-After the repair works new baseline readings were taken. For panel P15 the new baseline was taken along with other readings on the 29th of May 2012 (E4, 21 mbgl, Table 3.2). At panel P10 the repair works were more complicated and baseline readings were only taken on the 15th of June 2012 (E4^rep^, 29 mbgl, Table 3.2).
+After the repair works new baseline readings were taken. For panel P15 the new baseline was taken along with other readings on the 29th of May 2012 (E4, 21 mbgl, Table 3.2). At panel P10 the repair works were more complicated and baseline readings were only taken on the 15th of June 2012 (E4rep, 29 mbgl, Table 3.2).
 
 Figure 3.13: Longitudinal section through panel with arrangements of FO cables and detail of concrete cover at different locations
 
@@ -1743,7 +1741,7 @@ where ±0.16 mm is the random error for a single reading and ±0.11 mm is the as
 
 Figure 4.4 schematically explains how DPE occurs. Three surveys are carried out where the inclinometer probe positions of surveys 2 and 3 are lower and higher respectively than in the baseline survey 1. In survey 2 the probe takes larger inclination readings; in survey 3 smaller readings. The data analysis procedure assumes that the measurement depths of surveys 2 and 3 are the same as the baseline survey 1, and the subtraction of the cumulative displacement profiles in Equation 4.7 hence results in erroneous lateral displacement profiles.
 
-The error is easy to identify, but the correction process is elaborate and time-consuming if the exact value of depth error is not known. Through error and trial a suitable depth error value can be approximated and used to correct the data \(Mikkelsen, 2003; Slope Indicator, 2009\).
+The error is easy to identify, but the correction process is elaborate and time-consuming if the exact value of depth error is not known. Through trial and error a suitable depth error value can be approximated and used to correct the data \(Mikkelsen, 2003; Slope Indicator, 2009\).
 
 **Groove spiral error** can occur if the casing is installed with a large spiral twist. These values usually have to exceed 15° to make a difference to the measurements \(Slope Indicator, 2002\).
 
@@ -1795,23 +1793,23 @@ Figure 4.7: Principle of boundary condition and bias shift correction for shaft 
 
 Around Abbey Mills shaft eight levelling pins in the concrete platform were surveyed by the contractor JV MVB. As shown in Figure 3.2 the targets are arranged in two arrays each consisting of four individual targets (Array southwest/ northeast: targets 6000-6003, Array northwest/ southeast: targets 6100-6103). The targets are road nails drilled and glued into a surface feature.
 
-The closed loop levelling survey requires at least two stable benchmarks. At Abbey Mills site three benchmarks existed; they were targets on concrete light towers 63 m north, 128 m south and 152 m north-west of the centre of the shaft, which is outside the expected zone of influence. They were periodically checked to ensure no movement had occurred.
+The closed loop levelling survey requires at least two stable benchmarks. At Abbey Mills site three benchmarks existed; they were targets on concrete light bowers 63 m north, 128 m south and 152 m north-west of the centre of the shaft, which is outside the expected zone of influence. They were periodically checked to ensure no movement had occurred.
 
-The survey was carried out with a precise level (Leica DNA03), which specifies an accuracy of 0.3 mm per measurement (Leica Geosystems AG, 2013a). Using a starting and ending benchmark allows the calculation of the misclosure of the loop. If the misclosure is larger than 2 mm the survey will be repeated. It is usually around 0.5 mm; this value is then equally distributed between all surveyed points. Further errors can be caused by air temperature and seasonal variations. All together, this usually results in an accuracy of approximately ±1 mm.
+The survey was carried out with a precise level (Leica DNA03), which specifies an accuracy of 0.3 mm per measurement \(Leica Geosystems AG, 2013a\). Using a starting and ending benchmark allows the calculation of the misclosure of the loop. If the misclosure is larger than 2 mm the survey will be repeated. It is usually around 0.5 mm; this value is then equally distributed between all surveyed points. Further errors can be caused by air temperature and seasonal variations. All together, this usually results in an accuracy of approximately ±1 mm.
 
 The survey started on the 25th of May 2012 when the excavation had proceeded to almost 20 mbgl, which is taken as baseline. Readings were then taken every 4 days on average.
 
 ## 4.5 Diaphragm wall survey
 
-The contractor JV MVB also surveyed the diaphragm wall. Several targets (Figure 4.8a) were attached to the diaphragm wall. Figure 4.8b provides a schematic overview of the arrangement of those targets; the targets' location in plan view is shown in Figure 3.2. The targets of array 1 were fixed at capping beam level (0 mbgl) and several further arrays were put in place at 12 mbgl (array 2), 31 mbgl (array 3), 46 mbgl (array 4) and at 61 mbgl (array 5).
+The contractor JV MVB also surveyed the diaphragm wall. Several targets (Figure 4.8a\) were attached to the diaphragm wall. Figure 4.8b provides a schematic overview of the arrangement of those targets; the targets' location in plan view is shown in Figure 3.2. The targets of array 1 were fixed at capping beam level (0 mbgl) and several further arrays were put in place at 12 mbgl (array 2), 31 mbgl (array 3), 46 mbgl (array 4) and at 61 mbgl (array 5).
 
 The targets of the capping beam array could be placed on the 5th of April 2012, a few days after excavation started. All other targets in the non-capping beam arrays have the disadvantage that they could only be installed and surveyed after the excavation exposed this particular level. This means that the
 
 wall had already undergone movement before the targets were placed, which cannot be quantified.
 
-The survey was carried out with a total station. Firstly for each monitoring round, the capping beam targets were surveyed. Therefore the total station was set up on the ground surface around the shaft. Using a minimum of four reference points, the three-dimensional coordinates of the capping beam targets can be determined by the resection technique. The reference targets (Figure 4.8a) were installed outside the zone of expected movement and were periodically checked to ensure they remained stable. After having monitored the capping beam targets, the surveyor set up the total station inside the shaft at excavation level to take measurements of the non-capping beam targets. For this, the capping beam targets acted as reference and their values were held as fixed stable points.
+The survey was carried out with a total station. Firstly for each monitoring round, the capping beam targets were surveyed. Therefore the total station was set up on the ground surface around the shaft. Using a minimum of four reference points, the three-dimensional coordinates of the capping beam targets can be determined by the resection technique. The reference targets (Figure 4.8a\) were installed outside the zone of expected movement and were periodically checked to ensure they remained stable. After having monitored the capping beam targets, the surveyor set up the total station inside the shaft at excavation level to take measurements of the non-capping beam targets. For this, the capping beam targets acted as reference and their values were held as fixed stable points.
 
-The Leica TPS1201+ total station has an accuracy of 1 arcsecond for angle measurement and ±1 mm for distance measurement (Leica Geosystems AG, 2013b). At Abbey Mills this resulted in an accuracy of approximately ±2 mm for the capping beam targets in position and level. For the non-capping beam targets the errors accumulated to approximately ±4 mm.
+The Leica TPS1201+ total station has an accuracy of 1 arcsecond for angle measurement and ±1 mm for distance measurement \(Leica Geosystems AG, 2013b\). At Abbey Mills this resulted in an accuracy of approximately ±2 mm for the capping beam targets in position and level. For the non-capping beam targets the errors accumulated to approximately ±4 mm.
 
 After correspondence with JV MVB's surveying department it was found that a Project Control network adjustment was carried out on the 8th of July 2012. This amended the base control site coordinates by approximately 3 mm in both northing and easing, but did not affect the level coordinates. To incorporate this in the graphs a new baseline was set on the 10th of July (i.e. the movement on the 10th was set equal to the values from the 5th of July 2012).
 
@@ -1837,23 +1835,23 @@ Figure 4.8: Optical diaphragm wall survey
 
 Chapters 3 and 4 detailed the monitoring instrumentation put in place at Abbey Mills. This Chapter presents the results in comparison with the PLAXIS design predictions.
 
-The PLAXIS design is summarised in Section 5.2. The main motivation for the instrumentation was the monitoring during the shaft excavation between April and September 2012 (Figure 3.3a); the results from the fibre optic (FO) and conventional instrumentation are presented in Section 5.3. During the diaphragm wall construction between September and December 2011 inclinometer and extensometer measurements were taken; those are presented in Section 5.4. Monitoring results are also obtained for several further construction stages, such as the dewatering trial in February 2012 (Section 5.5) and the annulus infill in April 2012 (Section 5.6).
+The PLAXIS design is summarised in Section 5.2. The main motivation for the instrumentation was the monitoring during the shaft excavation between April and September 2012 (Figure 3.3a\); the results from the fibre optic (FO) and conventional instrumentation are presented in Section 5.3. During the diaphragm wall construction between September and December 2011 inclinometer and extensometer measurements were taken; those are presented in Section 5.4. Monitoring results are also obtained for several further construction stages, such as the dewatering trial in February 2012 (Section 5.5\) and the annulus infill in April 2012 (Section 5.6\).
 
 ## 5.2 PLAXIS design
 
-The initial design of the Abbey Mills shaft was conducted with the finite element (FE) modelling software package PLAXIS version 9.0 (Brinkgreve et al., 2009) which was run in two-dimensional axisymmetric mode. The work was carried out by Bachy Soletanche and this thesis uses their results for comparisons with the field data.
+The initial design of the Abbey Mills shaft was conducted with the finite element (FE) modelling software package PLAXIS version 9.0 \(Brinkgreve et al., 2009\) which was run in two-dimensional axisymmetric mode. The work was carried out by Bachy Soletanche and this thesis uses their results for comparisons with the field data.
 
 A Mohr-Coulomb (MC) soil model without strain hardening was adopted for all layers: Made Ground, River Terrace Deposits, London Clay, Lambeth Group Clay, Lambeth Group Sand, Thanet Sand and Chalk. The thinner layers, i.e. the Harwich Formation and the Calcrete are not explicitly modelled. The input properties are shown in Table 5.1 which are characteristic design values to which a partial safety factor of 1.0 was applied for the serviceability limit state (SLS) (British Standards Institution, 2004b).
 
 The Geotechnical Interpretative Report (GIR) (Morgan Sindall, 2012) details how the parameters were derived. They are mostly based on standard penetration tests, laboratory investigations and correlations with published data. For the Thanet Sand and the unweathered medium to hard, rubbly to blocky Chalk (Clayton, 1990) in situ high pressure dilatometer tests at different strain levels were conducted and the Young's moduli were picked at an axial strain level of 0.1%.
 
-Installation effects were not directly modelled, but incorporated by reduced lateral earth pressure coefficients $K_0$ of the London Clay and the Lambeth Group (both at $K_0 = 1.0$). $K_0$ values were taken constant with distance from the wall.
+Installation effects were not directly modelled, but incorporated by reduced lateral earth pressure coefficients  $K_0$  of the London Clay and the Lambeth Group (both at  $K_0 = 1.0$ ).  $K_0$  values were taken constant with distance from the wall.
 
 Table 5.1: PLAXIS characteristic soil model input parameters
 
 | Stratum | Top Level | $\gamma_{\rm bulk}$ | $c_{\mathbf{u}}$ | $\phi'$ | c' | $K_0$ | $E_{\mathbf{u}}$ | $E_{\mathbf{d}}$ | ν |
 |---|---|---|---|---|---|---|---|---|---|
-| Stratum | [mbgl] | [$[kN/m^3]$] | [kPa] | [°] | [kPa] | [ - ] | [kPa] | [kPa] | [ - ] |
+| Stratum | [mbgl] | $[kN/m^3]$ | [kPa] | [°] | [kPa] | [ - ] | [kPa] | [kPa] | [ - ] |
 | MG | 0.0 | 18.0 | n/a | 30 | 0 | 0.5 | n/a | 5,000 | 0.30 |
 | Al undr. | 6.0 | 16.0 | 20.0 | n/a | n/a | 0.58 | 6,000 | n/a | 0.49 |
 | Al drained | 6.0 | 16.0 | n/a | 25 | 0 | 0.58 | n/a | 4,500 | 0.30 |
@@ -1868,23 +1866,23 @@ Table 5.1: PLAXIS characteristic soil model input parameters
 
 where
 
-$\gamma_{\text{bulk}}$ Bulk density
+ $\gamma_{\text{bulk}}$  = Bulk density
 
-$K_0$ Lateral earth pressure coefficient
+ $K_0$  = Lateral earth pressure coefficient
 
-$c_u$ Undrained shear strength
+ $c_u$  = Undrained shear strength
 
-$E_{\rm u}$ Undrained Young's modulus
+ $E_{\rm u}$  = Undrained Young's modulus
 
-$\phi'$ Eff. stress friction angle
+ $\phi'$  = Eff. stress friction angle
 
-$E_d$ Drained Young's modulus
+ $E_d$  = Drained Young's modulus
 
 c' = Cohesion intercept
 
-$\nu$ Poisson's ratio
+ $\nu$  = Poisson's ratio
 
-A concrete mix grade C50/60 with 70% ground granulated blast-furnace slag was used for the reinforced concrete diaphragm walls. The walls were modelled as 1.2 m thick linear elastic plates with an isotropic stiffness of E = 37 GPa. Wall anisotropy due to joints between the panels was not considered. The interface between the soil and the diaphragm wall was simulated with an elastic-plastic model with an interface strength reduction factor $R_{\text{inter}}$ of 0.8 (Brinkgreve et al., 2009).
+A concrete mix grade C50/60 with 70% ground granulated blast-furnace slag was used for the reinforced concrete diaphragm walls. The walls were modelled as 1.2 m thick linear elastic plates with an isotropic stiffness of E = 37 GPa. Wall anisotropy due to joints between the panels was not considered. The interface between the soil and the diaphragm wall was simulated with an elastic-plastic model with an interface strength reduction factor  $R_{\text{inter}}$  of 0.8 (Brinkgreve et al., 2009).
 
 Figure 5.1 shows the FE mesh adopted in the PLAXIS model. The mesh was made of 735 triangular elements with a refinement in the vicinity of the
 
@@ -1912,9 +1910,9 @@ Table 5.2: PLAXIS design general input parameters
 
 As detailed in Section 3.7, the FO measurements of the bending strain cable (BSC) were converted into curvature and bending moment over the depth of the diaphragm wall (Equations 3.9 and 3.10\). The results are presented in two ways: (1) the incremental curvature/ bending moment between two successive excavation levels, *X* and *Y*, ∆*κ*Y−X/∆*BM*Y−<sup>X</sup> and (2) and the absolute curvature/ bending moment where the 0 mbgl dataset has been set as baseline, ∆*κ*Y−0/ ∆*BM*Y−0. The results for the incremental curvature/ bending moment are displayed in Figure 5.2; the absolute curvature/ bending moment in Figure 5.3. A positive value indicates tension on the soil face and compression on the excavation face and hence bending towards the excavation.
 
-Due to the breakages the data for panel P15 in Figure 5.3 is baselined with the 21 mbgl dataset. The loss in pretension between 53 and 75 mbgl at P10 (Section 3.6) resulted in unrealistic values; these data points are therefore omitted from Figures 5.2 and 5.3. For panels P15 and P20 the top 10 m and for panel P10 the top 20 m were lost due to a breakages/ repairs. The datasets taken at shallow excavation levels (< 35 mbgl) are not displayed; the data only shows noise, due to the small bending.
+Due to the breakages the data for panel P15 in Figure 5.3 is baselined with the 21 mbgl dataset. The loss in pretension between 53 and 75 mbgl at P10 (Section 3.6\) resulted in unrealistic values; these data points are therefore omitted from Figures 5.2 and 5.3. For panels P15 and P20 the top 10 m and for panel P10 the top 20 m were lost due to a breakages/ repairs. The datasets taken at shallow excavation levels (< 35 mbgl) are not displayed; the data only shows noise, due to the small bending.
 
-All three panels with FO instrumentation were also equipped with an inclinometer. The inclinometer data could be differentiated, as detailed in Section 4.3.1, to yield curvature (thin lines) which can be compared with FO data (thick lines in Figures 5.2 and 5.3). The inclinometer was interrogated once a week and this was not always at exactly the same day as the FO data acquisition, but in most cases it was only ±1 day apart. It should also be noted that the curvature obtained from the inclinometer does not depend on the error correction assumptions, i.e. the depth position error (DPE) value *d*DPE or the
+All three panels with FO instrumentation were also equipped with an inclinometer. The inclinometer data could be differentiated, as detailed in Section 4.3.1, to yield curvature (thin lines) which can be compared with FO data (thick lines in Figures 5.2 and 5.3\). The inclinometer was interrogated once a week and this was not always at exactly the same day as the FO data acquisition, but in most cases it was only ±1 day apart. It should also be noted that the curvature obtained from the inclinometer does not depend on the error correction assumptions, i.e. the depth position error (DPE) value *d*DPE or the
 
 Figure 5.2: Diaphragm wall incremental curvature/ bending moment between successive excavation levels from FO measurements and inclinometers
 
@@ -1932,7 +1930,7 @@ In addition the PLAXIS predictions are plotted on the graph, which were obtained
 
 #### 5.3.2.1 Fibre optic instrumentation
 
-The FO instrumentation was configured so that lateral wall movement can be derived. However, the double integrations (Equations 3.11 and 3.12\) over the 84 m deep wall, in combination with the measurement accuracy, accumulated errors, so that the obtained wall movements were unrealistically large. In previous projects, e.g. Schwamb et al. \(2011\) and Mohamad et al. \(2011), the lateral wall movement could be derived successfully; in these cases the walls were significantly shorter, 12 m and 22 m, respectively. Mohamad et al. \(2011\) measured a lateral wall movement of approximately 10 mm, which is also larger than the expected value at Abbey Mills of only 4 mm. For the above stated reasons, the FO instrumentation could not be used to obtain the lateral movement of the diaphragm wall.
+The FO instrumentation was configured so that lateral wall movement can be derived. However, the double integrations (Equations 3.11 and 3.12\) over the 84 m deep wall, in combination with the measurement accuracy, accumulated errors, so that the obtained wall movements were unrealistically large. In previous projects, e.g. Schwamb et al. (2011) and Mohamad et al. \(2011\), the lateral wall movement could be derived successfully; in these cases the walls were significantly shorter, 12 m and 22 m, respectively. Mohamad et al. \(2011\) measured a lateral wall movement of approximately 10 mm, which is also larger than the expected value at Abbey Mills of only 4 mm. For the above stated reasons, the FO instrumentation could not be used to obtain the lateral movement of the diaphragm wall.
 
 #### 5.3.2.2 Shaft inclinometers
 
@@ -1942,9 +1940,9 @@ For deeper excavation levels the bottom of the wall could not be assumed fixed a
 
 Inclinometer data from BI1 and CI1 suggests that the wall initially moved as a cantilever during early excavation stages (9, 15 and 21 mbgl) and develops a bulge for deeper excavation levels. AI1 shows no initial cantilever movement, but also bulging at deeper levels - due to the shallower depth of the casing, it is however less reliable.
 
-In addition the PLAXIS predictions are plotted. Reasonably good agreement in magnitude and shape can be observed. PLAXIS however does not show any cantilever movement at shallow excavation levels, while the inclinometers do. Similar findings were reported by Cabarkapa et al. \(2003\) as shown in Figure 2.8.
+In addition the PLAXIS predictions are plotted. Reasonably good agreement in magnitude and shape can be observed. PLAXIS however does not show any cantilever movement at shallow excavation levels, while the inclinometers do. Similar findings were reported by Cabarkapa et al. (2003) as shown in Figure 2.8.
 
-Above all, the data presents very small wall deflections ∆*u* of less than 4 mm throughout the excavation of a shaft with depth *H* = 71 m, this corresponds to ∆*u*/*H* = 0.0056%. When comparing to non-circular excavations, the ∆*u*/*H* values are significantly larger, in the range of 0.13 to 0.91 % \(Long, 2001). It is expected that circular excavations give smaller movements than cantilever or braced excavations due to a larger system stiffness originating from the hoop effect. This confirms that the Mobilized Strength Design (MSD) method (Equation 2.1, Section 2.3.5\) cannot be applied to circular excavations, as it was based on 110 case studies on braced excavations. This work along with future case studies might provide the necessary field data to derive an MSD approach for circular excavations.
+Above all, the data presents very small wall deflections ∆*u* of less than 4 mm throughout the excavation of a shaft with depth *H* = 71 m, this corresponds to ∆*u*/*H* = 0.0056%. When comparing to non-circular excavations, the ∆*u*/*H* values are significantly larger, in the range of 0.13 to 0.91 % (Long, 2001). It is expected that circular excavations give smaller movements than cantilever or braced excavations due to a larger system stiffness originating from the hoop effect. This confirms that the Mobilized Strength Design (MSD) method (Equation 2.1, Section 2.3.5) cannot be applied to circular excavations, as it was based on 110 case studies on braced excavations. This work along with future case studies might provide the necessary field data to derive an MSD approach for circular excavations.
 
 Figure 5.4: Lateral wall movement from shaft inclinometers in comparison with PLAXIS predictions at different excavation levels (positive = towards excavation)
 
@@ -2014,7 +2012,7 @@ It is also noted that in panels P10 and P20 the excavation side data points are 
 
 #### 5.3.3.2 Earth pressure calculation
 
-The final measurements taken at 71 mbgl, when the excavation depth exceeded the hoop cable depth, can be used to back-calculate the active mobilised earth pressure acting on the shaft *K*a,mob. Assuming that the wall thickness *t* is small in comparison to the diameter *D*, the classical circular arch equation can be used to calculate the incremental hoop stress ∆*σ*θ,
+The final measurements taken at 71 mbgl, when the excavation depth exceeded the hoop cable depth, can be used to back-calculate the active mobilised earth pressure acting on the shaft K_{a,mob}. Assuming that the wall thickness *t* is small in comparison to the diameter *D*, the classical circular arch equation can be used to calculate the incremental hoop stress ∆*σ*θ,
 
 $$\Delta\sigma_{\theta} = -\frac{D}{2t}(\Delta p_{i} - \Delta p_{o}) \tag{5.1}$$
 
@@ -2032,17 +2030,17 @@ $$\Delta p_{\rm i} = 0 - (K_0(\sigma_{\rm v} - u_0) + u_0) \tag{5.3}$$
 
 where *K*<sup>0</sup> is the horizontal earth pressure coefficient at rest, *σ*<sup>v</sup> is the total vertical in situ earth pressure, and *u*<sup>0</sup> is the pore water pressure.
 
-The incremental external pressure ∆*p*<sup>o</sup> ̸= 0, as the wall movement causes a pressure change from *K*<sup>0</sup> to a mobilised active earth pressure *K*a,mob.
+The incremental external pressure ∆*p*<sup>o</sup> ̸= 0, as the wall movement causes a pressure change from K_0 to a mobilised active earth pressure K_{a,mob}.
 
 $$\Delta p_{\rm o} = (K_{\rm a,mob}(\sigma_{\rm v} - u_0) + u_0) - (K_0(\sigma_{\rm v} - u_0) + u_0) \tag{5.4}$$
 
-The *K*0-terms cancel out and an expression for the mobilised active earth pressure can be obtained,
+The K_0-terms cancel out and an expression for the mobilised active earth pressure can be obtained,
 
 $$K_{\text{a,mob}} = \frac{2E\Delta\varepsilon_{\theta}t/D - u_0}{\sigma_{\text{v}} - u_0} \tag{5.5}$$
 
 ### Monitoring results
 
-For the earth pressure coefficient back-calculation the measurements of panels P10 and P20, which both show a similar trend, were used. Average hoop strains of approximately -500 µε were measured at an excavation level of 71 mbgl. With *t* = 1.2 m, *E* = 37 GPa, *D* = 28.9 m, *u*<sup>0</sup> = 365 kPa and *σ*<sup>v</sup> = 1180 kPa this yields an active earth pressure coefficient *K*a,mob in the Chalk of 1.4. This value is larger than the initial *K*<sup>0</sup> as the measurements include the creep which may have occurred at early excavation stages. It should also be noted that this equation is highly sensitive to the wall thickness *t* and concrete Young's modulus *E*. In reality the effective wall thickness of the ring structure is likely to be less than 1.2 m, owing to the non-verticality of the panels. Site records show a verticality value (expressed as the ratio of the horizontal offset at the bottom of the wall to the vertical depth of the wall) of 1:400. Assuming 1:400 in one direction and 1:800 in the other direction this is equivalent to a 0.23 m reduction in wall thickness at a depth of 60 mbgl where the hoop strains were measured. With an effective wall thickness of *t* ′ = 0.97 m, Equation 5.5 yields a *K*a,mob of 1.1. If in addition the wall stiffness is decreased or increased by 20 % the *K*a,mob values range from 0.8 to 1.4, respectively.
+For the earth pressure coefficient back-calculation the measurements of panels P10 and P20, which both show a similar trend, were used. Average hoop strains of approximately -500 µε were measured at an excavation level of 71 mbgl. With *t* = 1.2 m, *E* = 37 GPa, *D* = 28.9 m, u_0 = 365 kPa and *σ*<sup>v</sup> = 1180 kPa this yields an active earth pressure coefficient *K*a,mob in the Chalk of 1.4. This value is larger than the initial K_0 as the measurements include the creep which may have occurred at early excavation stages. It should also be noted that this equation is highly sensitive to the wall thickness *t* and concrete Young's modulus *E*. In reality the effective wall thickness of the ring structure is likely to be less than 1.2 m, owing to the non-verticality of the panels. Site records show a verticality value (expressed as the ratio of the horizontal offset at the bottom of the wall to the vertical depth of the wall) of 1:400. Assuming 1:400 in one direction and 1:800 in the other direction this is equivalent to a 0.23 m reduction in wall thickness at a depth of 60 mbgl where the hoop strains were measured. With an effective wall thickness of *t* ′ = 0.97 m, Equation 5.5 yields a *K*a,mob of 1.1. If in addition the wall stiffness is decreased or increased by 20 % the *K*a,mob values range from 0.8 to 1.4, respectively.
 
 The measurement accuracy and the variability of the input parameters do not allow reliable back-calculation of earth pressure acting on the shaft, they do however show that the measured values are realistic. Earth pressures will be further investigated numerically in Section 7.2.6.
 
@@ -2108,13 +2106,13 @@ Figure 5.13: Lateral ground movement from soil inclinometers at different excava
 
 ## 5.4 Diaphragm wall construction
 
-During the diaphragm wall construction only the soil instrumentation was in place. For the inclinometer data analysis it was not possible to fix the bottom of the borehole to zero movement, as the panel excavation depth of 84 m was deeper than the inclinometer boreholes (Figure 4.1b\). When plotting the shapes of the lateral displacement profiles (not displayed), it was obvious that the noisy data would require error correction. For the bias correction a 2nd point of fixity *z*fix would be necessary, which was not possible due to the same reason as stated above. Horizontal ground movement during diaphragm wall installation might be significantly larger than during shaft excavation. For future instrumentation schemes it is recommended to extend the boreholes deeper than the walls to capture installation effects.
+During the diaphragm wall construction only the soil instrumentation was in place. For the inclinometer data analysis it was not possible to fix the bottom of the borehole to zero movement, as the panel excavation depth of 84 m was deeper than the inclinometer boreholes (Figure 4.1b). When plotting the shapes of the lateral displacement profiles (not displayed), it was obvious that the noisy data would require error correction. For the bias correction a 2nd point of fixity *z*fix would be necessary, which was not possible due to the same reason as stated above. Horizontal ground movement during diaphragm wall installation might be significantly larger than during shaft excavation. For future instrumentation schemes it is recommended to extend the boreholes deeper than the walls to capture installation effects.
 
 The rod extensometer results for all four boreholes are displayed in Figure 5.14. Apart from the relative settlement profiles of the five anchors (baselined with the bottom anchor, according to Equation 4.1\), further information is given in the figure: The grey and blue rectangles show when the diaphragm wall panels were excavated and concreted; the location of the panels relative to the boreholes can be found on the bottom left schematic. On the right of each figure the ground profile with the anchor depths can be found.
 
-At the end of the diaphragm wall construction, on the 9th of December 2011, the highest anchors at 7.3 and 8.1 mbgl of boreholes AE1 and AE2 (Figures 5.14a and 5.14b\) recorded a settlement of 2 mm. In the boreholes BE1 and BE2 (Figures 5.14c and 5.14d\) larger settlements were measured: The anchors at 11.2 and 17.3 mbgl of BE1 show 6 mm settlement, while the surface only settles approximately 4.5 mm; the highest anchor at 8.3 mbgl in BE2 records 4 mm settlement at the end of the diaphragm wall construction. The results are again subject to a stable bottom anchor, as detailed in Sections 4.2.1 and 5.3.4.1.
+At the end of the diaphragm wall construction, on the 9th of December 2011, the highest anchors at 7.3 and 8.1 mbgl of boreholes AE1 and AE2 (Figures 5.14a and 5.14b) recorded a settlement of 2 mm. In the boreholes BE1 and BE2 (Figures 5.14c and 5.14d) larger settlements were measured: The anchors at 11.2 and 17.3 mbgl of BE1 show 6 mm settlement, while the surface only settles approximately 4.5 mm; the highest anchor at 8.3 mbgl in BE2 records 4 mm settlement at the end of the diaphragm wall construction. The results are again subject to a stable bottom anchor, as detailed in Sections 4.2.1 and 5.3.4.1.
 
-In comparison to the excavation-induced movement (between +0.2 and -1.4 mm) these values are significantly higher, showing that the wall installation causes larger soil movement than the shaft excavation. Similar findings were reported by Muramatsu and Abe \(1996\) as shown in Figure 2.16b.
+In comparison to the excavation-induced movement (between +0.2 and -1.4 mm) these values are significantly higher, showing that the wall installation causes larger soil movement than the shaft excavation. Similar findings were reported by Muramatsu and Abe (1996) as shown in Figure 2.16b.
 
 It was also aimed to correlate the trench excavation and concreting of the panels next to the boreholes to the settlement profile (panel excavation and concreting times are shown with the coloured rectangles). However, no specific pattern was found.
 
@@ -2124,11 +2122,11 @@ Figure 5.14: (*Cont.*) Rod extensometer measurements during diaphragm wall const
 
 ## 5.5 Dewatering trial
 
-During the dewatering trial the water level from the deep aquifer (Figure 3.1\) inside the shaft was lowered from approximately 24 to 70 mbgl. Two wells W1 and W3 were used to pump the water, while well W2 was used to measure the drawdown in a distance, as shown in Figure 3.3c. The rod extensometer data (not displayed) seems unaffected; no settlement around the shaft is recorded, which is in line with the unchanged water levels \(Mott MacDonald, 2012\).
+During the dewatering trial the water level from the deep aquifer (Figure 3.1) inside the shaft was lowered from approximately 24 to 70 mbgl. Two wells W1 and W3 were used to pump the water, while well W2 was used to measure the drawdown in a distance, as shown in Figure 3.3c. The rod extensometer data (not displayed) seems unaffected; no settlement around the shaft is recorded, which is in line with the unchanged water levels (Mott MacDonald, 2012).
 
 Inclinometer readings were not taken during the dewatering trial. The FO BSC did not produce useful results; the strain induced by the dewatering trial might have been too low to exceed the noise level.
 
-The results from the HSC are displayed in Figure 5.15. Figure 5.15a plots the hoop strain changes for each panel between the two baseline datasets BD1 and BD2 (Table 3.2\). Figure 5.15b plots the hoop strain changes between the dataset taken during the dewatering trial DD and the 2nd baseline dataset BD2. The eight markers represent the different measurement sections in circumferential direction on soil and excavation face as shown in Figure 3.6b.
+The results from the HSC are displayed in Figure 5.15. Figure 5.15a plots the hoop strain changes for each panel between the two baseline datasets BD1 and BD2 (Table 3.2). Figure 5.15b plots the hoop strain changes between the dataset taken during the dewatering trial DD and the 2nd baseline dataset BD2. The eight markers represent the different measurement sections in circumferential direction on soil and excavation face as shown in Figure 3.6b.
 
 No change in hoop strain would be expected between the two baseline datasets. However, as shown in Figure 5.15a average compressional strains of approximately 100 µε were measured in panels P10 and P20, while panel P15 remained unchanged on average as would be expected. As only the panels in the Chalk show this effect, this may also be related to creep of the Chalk as discussed in Section 5.3.3.1. The rate of creep is approximately ≈ -6 µε/day which is larger than during early excavation stages. This indicates that the creep rate was reducing.
 
@@ -2217,7 +2215,7 @@ FLAC stands for 'Fast Lagrangian Analysis of Continua' and is a two-dimensional 
 
 The shaft was modelled using axisymmetric mode where the *z*-axis is the axis of symmetry. The model as displayed in Figure 6.1 is approximately 93 m wide and 120 m deep and contains 12960 elements (Table 6.1\). All soil elements are 1 m x 1 m; only the first column of elements is only 0.85 m wide. As FLAC does not allow the use of structural elements in axisymmetric mode, the wall was modelled using solid elements with six 0.2 m wide elements across the width of the wall (Figure 6.1 close-up view). An interface was placed between soil and wall extending 1 m below the toe of the wall. The applied mechanical and fluid boundary conditions are displayed in the figure, as well as the assigned pore water pressure distribution. Further details can be found in Figure 6.1 and Table 6.1.
 
-FLAC was used to run a model similar to the PLAXIS design, which is referred to as 'FLAC1'. Further analyses incorporating advanced features and the parametric study were run with the model 'FLAC2'.
+FLAC was used to run a model similar to the PLAXIS design, which is referred to as 'FLAC1'. Further analyses incorporating advanced features and the parametric study were run in with the model 'FLAC2'.
 
 Figure 6.1: Overview of FLAC model
 
@@ -2303,7 +2301,7 @@ $$G_{\rm s} = \frac{\tau - \tau_{\rm ref}}{\gamma - \gamma_{\rm ref}} \tag{6.6}$
 
 To avoid numerical instabilities *G*<sup>s</sup> ≥ *G*max/10.
 
-*G*max and *a* were determined by matching *G*<sup>s</sup> with triaxial test data. For the London Clay the undrained triaxial test 25gUC carried out by Gasparre \(2005\) was picked; details on the test are given in Table 6.2. This test was picked, as it was conducted with a mean effective stress in a similar range of what is expected in the London Clay at Abbey Mills. Gasparre \(2005\) plots shear modulus versus shear strain ε_s; ε_s had to be converted to match FLAC's definition of shear strain *γ* as follows
+*G*max and *a* were determined by matching *G*<sup>s</sup> with triaxial test data. For the London Clay the undrained triaxial test 25gUC carried out by Gasparre \(2005\) was picked; details on the test are given in Table 6.2. This test was picked, as it was conducted with a mean effective stress in a similar range of what is expected in the London Clay at Abbey Mills. Gasparre \(2005\) plots shear modulus versus shear strain *ε*s; *ε*<sup>s</sup> had to be converted to match FLAC's definition of shear strain *γ* as follows
 
 $$\gamma = \frac{\sqrt{3}}{2} \cdot \varepsilon_{\rm s} \tag{6.7}$$
 
@@ -2321,7 +2319,7 @@ Table 6.2: Details of triaxial test used to determine stiffness degradation curv
 | Lithological unit             | B2                                   |
 | Test Type                     | Undrained Compression                |
 | Initial eff. stress           | 350 kPa                              |
-| Stress state before shearing  | p' = 420 kPa, q = -154 kPa |
+| Stress state before shearing  | p ′ = 420 kPa, q = -154 kPa |
 | Sample diameter               | 100 mm                               |
 | Depth from ground level       | 25 m                                 |
 | Depth from top of London Clay | 19 m                                 |
@@ -2447,7 +2445,7 @@ Table 6.4: FLAC1 input parameters
 
 Table 6.5: FLAC2 input parameters
 
-| Stratum | $\gamma_{\rm dry}$ | Porosity | Permeability | Soil | K | G | a | ν | $\phi'$ | ψ | c′ | $K_0$ (WIP) | K <sub>0</sub> (Inst) |
+| Stratum | $\gamma_{\rm dry}$ | Porosity | Permeability | Soil | K | G | а | ν | $\phi'$ | ψ | c′ | $K_0$ (WIP) | K <sub>0</sub> (Inst) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 |   | $[kg/m^3]$ | [ - ] | [m/s] | model | [MPa] | [MPa] | [ - ] | [-] | [°] | [°] | [kPa] | [ - ] | [ - ] |
 | MG | 1654 | 0.35 | $1 \times 10^{-5}$ | MC | 4.2 | 1.9 | - | 0.3 | 30 | 0 | 0 | 0.5 | 0.5 |
@@ -2512,7 +2510,7 @@ Figure 7.2 also contains the reinforcement capacity (dashed blue lines) which wa
 
 When comparing the wall deflections with the inclinometer measurements (Figure 7.3\), it can be observed that FLAC1 and FLAC2-WIP are similar at shallow excavation levels above the Chalk (Figures 7.3a to 7.3e\). When excavating in the Chalk, FLAC2-WIP exhibits a sharper bulge at excavation level in comparison to FLAC1, which agrees well with the inclinometer measurements (Figures 7.3f to 7.3h\). The sharper bulge also explains why larger curvatures/ bending moments were measured (Figures 7.1d and 7.1e\).
 
-It appears that the field measurements in the Chalk are better represented with FLAC2-WIP, which used the Hoek-Brown (HB) model for the Chalk instead of the MC model. The reason for this is discussed in Figure 7.4. The shear yield envelopes for both soil models according to Equations 6.1 and 6.10 are plotted in Figure 7.4a. This shows that the soil simulated with the HB model allows larger stress states before the onset of yield. The stress states in the elements below excavation level are also plotted, and it can be seen that FLAC1 stress states are on the MC failure envelope. This is also shown in Figure 7.4b where the plasticity indicator is plotted on the FLAC grid. Most elements up to 20 m below excavation level are currently at yield or have been at yield in the past. The same plot for FLAC2-WIP (not displayed) shows that the elements are still elastic, as also shown in Figure 7.4a, where the stress states are far below the failure envelope. This suggests that the larger curvatures/ bending moments and the sharper bulge in the wall arise from the fact that the soil below excavation level remained elastic, not plastic, and is hence less deformable.
+It appears that the field measurements in the Chalk are better represented with FLAC2-WIP, which used the Hoek-Brown (HB) model for the Chalk instead of the MC model. The reason for this is discussed in Figure 7.4. The shear yield envelopes for both soil models according to Equations 6.1 and 6.10 are plotted in Figure 7.4a. This shows that the soil simulated with the HB model allows larger stress states before the onset of yield. The stress states in the elements below excavation level are also plotted, and it can be seen that FLAC1 stress states are on the MC failure envelope. This is also shown in Figure 7.4b where the plasticity indicator is plotted on the FLAC grid. Most elements up to 20 m below excavation level are currently at yield or have been at yield in the past. The same plot for FLAC2-WIP (not displayed) shows that the elements are still elastic, as also shown Figure 7.4a, where the stress states are far below the failure envelope. This suggests that the larger curvatures/ bending moments and the sharper bulge in the wall arise from the fact that the soil below excavation level remained elastic, not plastic, and is hence less deformable.
 
 The MC failure envelope is determined by the cohesion intercept *c* ′ and the effective stress friction angle *φ* ′ . The Geotechnical Interpretative Report (GIR) \(Morgan Sindall, 2012\) which is based on CIRIA C574 \(Lord et al., 2002\) recommends *c* ′ = 20 kPa and *φ* ′ = 39° as a 'moderately conservative' approach for structured chalks of grades A to C. Since the majority of Chalk at Abbey Mills was classified into grades A2-A4 (according to CIRIA C574's grading scheme in Section 3.3.3, Lord et al., 2002\) the moderately conservative values were deemed on the 'safe side'. However, in this case the moderately conservative cohesion value predicted smaller wall bending moments than occurred in reality. This shows that assigning a low cohesion to induce conservative ground movements may not always be appropriate for the wall design.
 
@@ -2542,7 +2540,7 @@ Figure 7.5: FLAC's predictions on the difference between WIP or full wall instal
 
 ### 7.2.3 Effect of wall stiffness and anisotropy
 
-Table 6.6 provides on overview of the FLAC models run to examine the wall's anisotropy (i.e. reduced circumferential stiffness due to the effect of the joints between the panels). While FLAC2-Ered is based on an isotropic wall with 30 % stiffness reduction, the other analyses incorporate anisotropy. The vertical stiffness is kept constant at *E* = 37 GPa and the circumferential stiffness *E*θ is reduced to either constant or linear distributions over wall depth, as displayed in Figure 7.6. The model FLAC2-A100-10H (full stiffness at top, 10 % at bottom) was used to simulate verticality tolerances where the overlap between the panels and hence potentially the hoop stiffness reduces with depth. The model FLAC2-A10-100H assumes 10 % stiffness at the top and 100 % at the bottom, which may be the case as lower confining pressures may result in lower circumferential stiffness. The other models with a partly linear and partly constant circumferential stiffness were run to investigate whether low hoop stiffness at the top can simulate cantilever movement, as observed in Figure 5.4. One FLAC model (FLAC2-Amob) is based on an initial hoop stiffness of 10 % *E* linearly increasing to 100 % *E* at 5 mm lateral wall movement.
+Table 6.6 provides an overview of the FLAC models run to examine the wall's anisotropy (i.e. reduced circumferential stiffness due to the effect of the joints between the panels). While FLAC2-Ered is based on an isotropic wall with 30 % stiffness reduction, the other analyses incorporate anisotropy. The vertical stiffness is kept constant at *E* = 37 GPa and the circumferential stiffness *E*θ is reduced to either constant or linear distributions over wall depth, as displayed in Figure 7.6. The model FLAC2-A100-10H (full stiffness at top, 10 % at bottom) was used to simulate verticality tolerances where the overlap between the panels and hence potentially the hoop stiffness reduces with depth. The model FLAC2-A10-100H assumes 10 % stiffness at the top and 100 % at the bottom, which may be the case as lower confining pressures may result in lower circumferential stiffness. The other models with a partly linear and partly constant circumferential stiffness were run to investigate whether low hoop stiffness at the top can simulate cantilever movement, as observed in Figure 5.4. One FLAC model (FLAC2-Amob) is based on an initial hoop stiffness of 10 % *E* linearly increasing to 100 % *E* at 5 mm lateral wall movement.
 
 Figure 7.6: Circumferential stiffness versus wall depth for FLAC runs with anisotropic wall stiffness
 
@@ -2550,13 +2548,13 @@ Figure 7.6: Circumferential stiffness versus wall depth for FLAC runs with aniso
 
 The results in terms of incremental curvature/ bending moment are presented in Figure 7.7, lateral wall displacement in Figure 7.8 and hoop strain in Figure 7.9.
 
-From the incremental curvatures (Figure 7.7\) it can be observed that the analyses with lowest circumferential stiffness at the top of the wall (FLAC2- A10, FLAC2-A10-100H, FLAC2-A10-100H/3, FLAC2-A10-100-5m) give largest values, while the model run FLAC2-A100-10H which has 100 % hoop stiffness at the top of the wall and 10 % at the bottom gives almost the same as the isotropic wall.
+From the incremental curvatures (Figure 7.7) it can be observed that the analyses with lowest circumferential stiffness at the top of the wall (FLAC2- A10, FLAC2-A10-100H, FLAC2-A10-100H/3, FLAC2-A10-100-5m) give largest values, while the model run FLAC2-A100-10H which has 100 % hoop stiffness at the top of the wall and 10 % at the bottom gives almost the same as the isotropic wall.
 
-Similar trends, even more obvious, can be observed from the lateral wall movements (Figure 7.8\). The two runs with 50 % hoop stiffness at the top also show alike behaviour, even though the stiffness at deeper depth is different. When comparing the run with 100 % stiffness at the top and 10 % at the bottom to the isotropic wall, hardly any differences can be observed. This shows clearly that the stiffness at the top of the wall governs its performance. The low stiffness allows more rotation of the wall head, which causes a significant increase in lateral wall movement. The run taking mobilisation into account, FLAC2-Amob, also overestimates the wall's lateral movement. It is difficult to determine the input parameters for this model, which are the initial hoop stiffness and the lateral wall movement when full stiffness is mobilised.
+Similar trends, even more obvious, can be observed from the lateral wall movements (Figure 7.8). The two runs with 50 % hoop stiffness at the top also show alike behaviour, even though the stiffness at deeper depth is different. When comparing the run with 100 % stiffness at the top and 10 % at the bottom to the isotropic wall, hardly any differences can be observed. This shows clearly that the stiffness at the top of the wall governs its performance. The low stiffness allows more rotation of the wall head, which causes a significant increase in lateral wall movement. The run taking mobilisation into account, FLAC2-Amob, also overestimates the wall's lateral movement. It is difficult to determine the input parameters for this model, which are the initial hoop stiffness and the lateral wall movement when full stiffness is mobilised.
 
-The hoop stresses in Figure 7.9 directly relate to the wall deflection in Figure 7.8. Hence, the small increases in wall movement in the Chalk do not significantly affect the hoop strain at around 60 mbgl (Figure 7.9a\). For panel P15, in which the hoop strain was measured at a higher level, the anisotropy has a considerable effect, as the wall movements are as large as 20 mm.
+The hoop stresses in Figure 7.9 directly relate to the wall deflection in Figure 7.8. Hence, the small increases in wall movement in the Chalk do not significantly affect the hoop strain at around 60 mbgl (Figure 7.9a). For panel P15, in which the hoop strain was measured at a higher level, the anisotropy has a considerable effect, as the wall movements are as large as 20 mm.
 
-Figure 7.9 also includes the range of FO measurements. It may be difficult to compare the FO measurements of panels P10 and P20 due to the potential creep influence which caused the early increase in hoop strain. Hence the FO data from panels P10 and P20 is baselined with the 15 mbgl dataset and also added to the figure (Figure 7.9a\). All FLAC predictions are within the range of FO measurements. Due to the wide scatter of FO data it is difficult to draw conclusions. The FO measurements from panel P15, which were not affected by creep are plotted in Figure 7.9b. Only the isotropic wall with full stiffness (37 GPa) and reduced stiffness (26 GPa) and the wall with linear decreasing stiffness (from 100 % at top of wall to 10 % at bottom) match the FO data well.
+Figure 7.9 also includes the range of FO measurements. It may be difficult to compare the FO measurements of panels P10 and P20 due to the potential creep influence which caused the early increase in hoop strain. Hence the FO data from panels P10 and P20 is baselined with the 15 mbgl dataset and also added to the figure (Figure 7.9a). All FLAC predictions are within the range of FO measurements. Due to the wide scatter of FO data it is difficult to draw conclusions. The FO measurements from panel P15, which were not affected by creep are plotted in Figure 7.9b. Only the isotropic wall with full stiffness (37 GPa) and reduced stiffness (26 GPa) and the wall with linear decreasing stiffness (from 100 % at top of wall to 10 % at bottom) match the FO data well.
 
 Figure 7.7: FLAC's predictions on the effect of wall stiffness/anisotropy on incremental curvature/ bending moment in comparison with FO measurements
 
@@ -2566,7 +2564,7 @@ Figure 7.9: FLAC's predictions on the effect of wall stiffness/ anisotropy on ho
 
 Taking all field data into account it seems most likely that the wall behaved fully isotropically due to the following reasons:
 
-- In Figures 7.7a to 7.7c curvatures are significantly overestimated by the FLAC runs with 10 % stiffness at the top, as well as the model that considered the mobilisation. The FO measurements from panels P15 and P20 at deeper levels (Figures 7.7d and 7.7e\) differ from each other too much to allow a reliable conclusion.
+- In Figures 7.7a to 7.7c curvatures are significantly overestimated by the FLAC runs with 10 % stiffness at the top, as well as the model that considered the mobilisation. The FO measurements from panels P15 and P20 at deeper levels (Figures 7.7d and 7.7e) differ from each other too much to allow a reliable conclusion.
 - The wall deflection plots in Figure 7.8 seem to match best with the isotropic wall or the wall with linear variation from 100 % at the top to 10 % at the bottom. The FLAC runs with 50 % at the top overestimate the movement and are hence not considered the correct mechanism.
 - The isotopic wall also matches the hoop profile of panel P15 in Figure 7.9b well and is within the FO measurement range (baselined at 15 mbgl) from panels P10 and P20 Figure 7.9a.
 
@@ -2574,7 +2572,7 @@ Since the isotropic wall and the wall with full stiffness at the top reducing to
 
 #### Parametric study and discussion
 
-The conclusion of isotropic wall stiffness also seems reasonable when considering the joint construction at Abbey Mills (Figure 7.10). After all primary panels were built the secondary panels were constructed. The hydrofraise cut into the concrete of the primary panels (this is easily possible with the more powerful hydrofraise) and when the secondary panels were concreted, direct contact was guaranteed. When considering plane strain excavations made of diaphragm walls (e.g. Figure 7.11), where out of plane bending moments might open up the joints between the panels, anisotropy is a reasonable assumption. In circular excavations however there is reason for joints opening up.
+The conclusion of isotropic wall stiffness also seems reasonable when considering the joint construction at Abbey Mills (Figure 7.10). After all primary panels were built the secondary panels were constructed. The hydrofraise cut into the concrete of the primary panels (this is easily possible with the more powerful hydrofraise) and when the secondary panels were concreted, direct contact was guaranteed. When considering plane strain excavations made of diaphragm walls (e.g. Figure 7.11), where out of plane bending moments might open up the joints between the panels, anisotropy is a reasonable assumption. In circular excavations however there is less reason for joints opening up.
 
 As discussed in Section 5.3.2.2 the wall might have undergone a small cantilever movement at early excavation stages. It was aimed to represent this numerically with FLAC through wall anisotropy, as proposed by Cabarkapa et al. (2003). Even the wall which had 10 % hoop stiffness at the top increasing to full stiffness at 5 mbgl (FLAC2-A10-100-5m) did not show cantilever movement without also increasing the movements at depths. The cantilever movement measured at Abbey Mills might not be uniform around the shaft (this seems also unreasonable due to the stiff capping beam); potentially a small ovalisation has taken place as discussed in Section 5.3.2.3.
 
@@ -2584,11 +2582,11 @@ Figure 7.11: Rectangular excavation made from diaphragm walls and reason for ani
 
 ### 7.2.4 Effect of wall thickness and verticality
 
-Two analyses were run to investigate the effect of reduced wall thickness with depth due to verticality (Table 6.6\): (1) the overall wall thickness was reduced to 1.0 m and (2) the wall thickness was decreased linearly from 1.2 m at the top to 0.9 m at the bottom - this corresponds to a verticality of 1:400 in one direction and 1:800 in the other direction (Figure 6.6\).
+Two analyses were run to investigate the effect of reduced wall thickness with depth due to verticality (Table 6.6): (1) the overall wall thickness was reduced to 1.0 m and (2) the wall thickness was decreased linearly from 1.2 m at the top to 0.9 m at the bottom - this corresponds to a verticality of 1:400 in one direction and 1:800 in the other direction (Figure 6.6).
 
 The results are compared to the baseline FLAC run with a wall thickness of 1.2 m (FLAC2-B). Figure 7.12 displays the lateral wall movement and incremental and absolute curvature of the three FLAC simulations.
 
-The wall deflections for thinner walls (Figure 7.12a and Table 7.1\) only increase slightly, even though the bending stiffness reduces significantly for the thinner walls. This shows that *EI* has a minor effect on the wall deflection as reported by Lam \(2010\) and Bolton et al. \(2010\) for non-circular excavations (Section 2.3.5\).
+The wall deflections for thinner walls (Figure 7.12a and Table 7.1) only increase slightly, even though the bending stiffness reduces significantly for the thinner walls. This shows that *EI* has a minor effect on the wall deflection as reported by Lam (2010) and Bolton et al. (2010) for non-circular excavations (Section 2.3.5).
 
 It can also be observed that the thinner walls generate slightly larger curvatures Figures 7.12b and 7.12c. However, due to the reduced bending stiffness *EI* of the thinner walls the slightly larger curvatures translate into smaller bending moments. The calculations in Table 7.1 show that even though FLAC2-tvert yields the largest curvature, the bending moment is the smallest.
 
@@ -2596,7 +2594,7 @@ When comparing the FLAC results to the field measurements, it is not possible to
 
 The results raise the question whether a thinner wall (1 m instead of 1.2 m) would have been feasible. If structural and ground movements are the decisive factor (e.g. to protect adjacent infrastructure), thinner walls can be considered.
 
-Table 7.1: FLAC's predictions of maximum wall deflection, curvature and bending moment for different wall thickness (Equation 3.10)
+Table 7.1: FLAC's predictions of maximum wall deflection, curvature and bending moment for different wall thicknesses (Equation 3.10)
 
 | FLAC run | t<br>[m] | EI<br>[MNm <sup>2</sup> ] | $\Delta u_{\text{max}}$ [mm] | $\frac{\Delta \kappa_{\text{max}}}{[10^{-4} \text{m}^{-1}]}$ | $\Delta BM_{\rm max}$ [MNm] |
 |---|---|---|---|---|---|
@@ -2895,11 +2893,11 @@ FO instrumentation needs to become more robust so that less breakages occur when
 - Slope Indicator (2011b). *Digitilt Inclinometer Probe 50302599*, User manual. Slope Indicator, Kent.
 - Soga, K. and O'Sullivan, C. (2010). Modeling of geomaterials behavior. *Soils and Foundations*, 50(6):861–875.
 - Symons, I. and Carder, D. (1993). Stress changes in stiff clay caused by the installation of embedded retaining walls. In: Clayton, C. (ed.), *Retaining structures*, pages 227–236. Thomas Telford Ltd., London.
-- Tan, Y. and Wang, D. (2013). Structural Behaviors of Large-Sized Underground Earth Retaining Systems in Shanghai. I: Unpropped Circular Diaphragm Wall. *Journal of Performance of Constructed Facilities*, \*\*:posted ahead of print 14 Oct 2013.
+- Tan, Y. and Wang, D. (2013). Structural Behaviors of Large-Sized Underground Earth Retaining Systems in Shanghai. I: Unpropped Circular Diaphragm Wall. *Journal of Performance of Constructed Facilities*, **posted ahead of print 14 Oct 2013.
 - Terzaghi, K. (1920). Old earth-pressure theories and new test results. *Engineering News-Record*, 85(13):632–637.
 - Terzaghi, K. (1943). *Theoretical Soil Mechanics*. John Wiley & Sons, New York.
 - Thames Water Utilities Limited (2013). *Thames Tideway Strategic Study*. [online] Available at: [http://infrastructure.planningportal.gov.uk/wp-content/](http://infrastructure.planningportal.gov.uk/wp-content/ipc/uploads/projects/WW010001/2. Post-Submission/Application Documents/Other Documents/8.1.1_Thames_Tideway_Strategic_Study_Executive_Summary.pdf) [ipc/uploads/projects/WW010001/2.Post-Submission/ApplicationDocuments/](http://infrastructure.planningportal.gov.uk/wp-content/ipc/uploads/projects/WW010001/2. Post-Submission/Application Documents/Other Documents/8.1.1_Thames_Tideway_Strategic_Study_Executive_Summary.pdf) [OtherDocuments/8.1.1\\_Thames\\_Tideway\\_Strategic\\_Study\\_Executive\\_Summary.](http://infrastructure.planningportal.gov.uk/wp-content/ipc/uploads/projects/WW010001/2. Post-Submission/Application Documents/Other Documents/8.1.1_Thames_Tideway_Strategic_Study_Executive_Summary.pdf) [pdf](http://infrastructure.planningportal.gov.uk/wp-content/ipc/uploads/projects/WW010001/2. Post-Submission/Application Documents/Other Documents/8.1.1_Thames_Tideway_Strategic_Study_Executive_Summary.pdf), [Accessed 20 Jan 2014].
-- Thames Water Utilities Limited (2014). *Thames Tideway Tunnel - The need to clean up the Thames*. [online] Available at: [http://www.thamestidewaytunnel.co.](http://www.thamestidewaytunnel.co.uk/what-we-are-doing/the-need-to-clean-up-the-thames/) [uk/what-we-are-doing/the-need-to-clean-up-the-thames/](http://www.thamestidewaytunnel.co.uk/what-we-are-doing/the-need-to-clean-up-the-thames/), [Accessed 31 Jan 2014].
+- Thames Water Utilities Limited (2014). *Thames Tideway Tunnel - The need to clean up the Thames*. [online] Available at: http://www.thamestidewaytunnel.co.uk/what-we-are-doing/the-need-to-clean-up-the-thames/, [Accessed 31 Jan 2014].
 - Thomas, A. (2009). *Sprayed Concrete Lined Tunnels*. Taylor & Francis, London.
 - Tobar, T. and Meguid, M. A. (2010). Comparative evaluation of methods to determine the earth pressure distribution on cylindrical shafts: A review. *Tunnelling and Underground Space Technology*, 25(2):188–197.
 - Tobar, T. and Meguid, M. A. (2011). Experimental Study of the Earth Pressure Distribution on Cylindrical Shafts. *Journal of Geotechnical and Geoenvironmental Engineering*, 137(11):1121–1125.

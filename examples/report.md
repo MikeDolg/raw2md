@@ -1,12 +1,14 @@
 ---
-raw2md_version: 0.1.0
+raw2md_version: 0.2.0
 source: dancop evaluation final report draft .docx
 engine: pandoc
 inspection: none
 post: gemini_api
-converted_at: 2026-09-28
+converted_at: 2026-10-20
 source_hash: 0fgRXy9kle2j2JH2mrQOksFup8Lxw7ql-PYmg8OZFmg
 status: ok
+issues:
+- headings
 ---
 An Evaluation of the Derbyshire and Nottinghamshire Collaborative Outreach Programme
 
@@ -4038,7 +4040,7 @@ These analyses summate responses across activities and schools/colleges to look 
 
 - The Access project
 
-## Central team/University of Derby Widening access
+### Central team/University of Derby Widening access
 
 Learners who took activities run by the Central/Widening Access team reported a significant increase in their intention to apply to university, knowledge concerning their options, knowledge of university and confidence in fitting in (see Table 19 for mean ratings before and after and the results of the paired sample t-tests).
 
@@ -6200,7 +6202,7 @@ The mean ratings and results of the paired sample t-tests are shown below in Tab
 </tbody>
 </table>
 
-# 3. Feedback on specific activities
+## 3. Feedback on specific activities
 
 These analyses examine the before and after responses for specific activities (which may have been run several times with learners from a number of different schools). There were over 70 different activities delivered but not all were attended by enough learners/learners for inferential statistical analyses to be meaningful. Therefore the following analyses concentrate on those activities which had been delivered to groups of 40 or more:
 

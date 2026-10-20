@@ -1,14 +1,16 @@
 ---
-raw2md_version: 0.1.0
+raw2md_version: 0.2.0
 source: Elementary_mechanism.pdf
-engine: marker
+engine: raw2md-engine
 inspection: gemini_api
 post: gemini_api
-converted_at: 2026-09-27
+converted_at: 2026-10-20
 source_hash: OmvQRlZwVurIMogV9UKeiniWDCxSXibc1ed8ZwPdfF0
-status: ok
+status: bad
 issues:
 - headings
+- heading_ladder
+- lost_chapters
 - hyphenation
 ---
 The original of this book is in the Cornell University Library.
@@ -21,21 +23,21 @@ Elementary mechanism:
 
 # ELEMENTARY MECHANISM:
 
-## ^ ^jext''l00l^
+# ^ ^jext''l00l^
 
-## FOR STUDENTS OF MECHANICAL ENGINEERING.
+# FOR STUDENTS OF MECHANICAL ENGINEERING.
 
-## ARTHUR T. WOODS,
+# ARTHUR T. WOODS,
 
 ASSISTANT ENGINEER, UNITED STATES NAVY; MEMBER OF THE AMERICAN SOCIETY OF MECHANICAL ENGINEERS; ASSISTANT PROFESSOR OF MECHANICAL ENGINEERING, ILLINOIS STATE UNIVERSITY, CHAMPAIGN, ILLINOIS,
 
 AND
 
-## ALBERT W. STAHL, M.E.,
+# ALBERT W. STAHL, M.E.,
 
-ASSISTANT ENGINEER, UNITED STATES NAVY; MEMBER OF THE AMERI- CAN SOCIETY OF MECHANICAL ENGINEERS; PROFESSOR OF MECHANICAL ENGINEERING, PURDUE UNIVERSITY, LA TAYETTE, INDIANA.
+ASSISTANT ENGINEER, UNITED STATES NAVY; MEMBER OF THE AMERI- CAN SOCIETY OF MECHANICAL ENGINEERS; PROFESSOR OF MECHANICAL ENGINEERING, PURDUE UNIVERSITY, LA FAYETTE, INDIANA.
 
-## NEW YORK:
+# NEW YORK:
 
 D. VAN NOSTRAND, PUBLISHER,
 
@@ -53,11 +55,11 @@ In searching for a text-book on this subject for the use of our classes of Mecha
 
 We make little claim to originality of subject-matter, free use having been made of all available matter bearing on the subject. There is, in fact, very little room for such originality, the ground having been almost completely covered by previous writers. Our claim to consideration is based almost entirely on the manner in which the subject has been presented. Accuracy, clearness, and conciseness are the points that we have tried to keep constantly in view. AVhile much has been omitted that is of merely abstract interest, yet it is believed that nearly all that is of direct practical importance will be found in these pages.
 
-We have, in common with nearly all other writers on this subject, closely followed the general plan of Professor Willis' "Principles of Mechanism." Other works which have been consulted, and to which we are in a greater or less degree indebted for hints as to definition and arrange ment, are Rankine's " Machinery and Millwork," Fairbairn's "Mechanism and Machinery of Transmission," Goodeve's "Elements of Mechanism," MaeCord's "Kinematics," Reuleaux* "Kinematics of Machinery," Robinson's " Teeth of Wheels," Grant's " Teeth of Gears," Appleton's " Cyclopsedia of Mechanics," and Unwin's "Elements of Machine Design."
+We have, in common with nearly all other writers on this subject, closely followed the general plan of Professor Willis' "Principles of Mechanism." Other works which have been consulted, and to which we are in a greater or less degree indebted for hints as to definition and arrange ment, are Rankine's " Machinery and Millwork," Fairbairn's "Mechanism and Machinery of Transmission," Goodeve's "Elements of Mechanism," MaeCord's "Kinematics," Reuleaux "Kinematics of Machinery," Robinson's " Teeth of Wheels," Grant's " Teeth of Gears," Appleton's " Cyclopædia of Mechanics," and Unwin's "Elements of Machine Design."
 
 That a want exists for a clear, concise text-book on this subject, we know ; that we have in some measure filled this want, we can only hope.
 
-#### CONTENTS.
+# CONTENTS.
 
 | CHAPTER I. | PAGE |
 |---|---|
@@ -72,25 +74,23 @@ That a want exists for a clear, concise text-book on this subject, we know ; tha
 | COMMUNICATION OF MOTION BY SLIDING CONTACT.—VELOCITY RATIO CONSTANT.— DIRECTIONAL RELATION CONSTANT.— TEETH OF WHEELS | 66 |
 | Special Curves. — Rectification of Circular Arcs. — Construction of Special Curves. — Circular Pitch. — Diametral Pitch. |   |
 
-#### CONTENTS.
 
 | PAGE | CHAPTER VI. |
 |---|---|
 | 0 | COMMUNICATION OF MOTION BY SLIDING CONTACT. — VELOCITY RATIC CONSTANT. — DIRECTIONAL RELATION CONSTANT. — TEETH OF WHEELS (Continued) |
-| - | Definitions. — Angle and Arc of Action. — Epicycloidal System. — Inter<br>changeable Wheels. — Annular Wheels. — Customary Dimensions. —<br>Involute System. |
+| - | Definitions. — Angle and Arc of Action. — Epicycloidal System. — Inter changeable Wheels. — Annular Wheels. — Customary Dimensions. — Involute System. |
 |   | CHAPTER VII. |
 | 113 | COMMUNICATION OF MOTION BY SLIDING CONTACT. — VELOCITY RATIO CONSTANT. — DIRECTIONAL RELATION CONSTANT. — TEETH OF WHEELS (Continued) |
 |   | CHAPTER VIII. |
 |   | COMMUNICATION OF MOTION BY SLIDING CONTACT.—VELOCITY RATIC CONSTANT. — DIRECTIONAL RELATION CONSTANT. — TEETH OF WHEELS (Concluded) |
-|   | Pin Gearing. — Low-numbered Pinions. — Unsymmetrical Teeth. — Twisted<br>Gearing. — Non-circular Wheels. — Bevel Gearing. — Skew-bevel Gearing. — Face Gearing. |
+|   | Pin Gearing. — Low-numbered Pinions. — Unsymmetrical Teeth. — Twisted Gearing. — Non-circular Wheels. — Bevel Gearing. — Skew-bevel Gearing. — Face Gearing. |
 |   | CHAPTER IX. |
 | . 168 | COMMUNICATION OF MOTION BY SLIDING CONTACT. — VELOCITY RATIONAL AND DIRECTIONAL RELATION CONSTANT OR VARYING |
 |   | CHAPTER X. |
 | . 198 | Communication of Motion by Linkwork. — Velocity Ratio and Directional Relation Constant or Varying |
 |   | CHAPTER XI. |
-| . 22 | COMMUNICATION OF MOTION BY WRAPPING CONNECTORS.—VELOCIT<br>RATIO CONSTANT.—DIRECTIONAL RELATION CONSTANT<br>Forms of Connectors and Pulleys.—Guide Pulleys.—Twisted Belts.—Length of Belts, |
+| . 22 | COMMUNICATION OF MOTION BY WRAPPING CONNECTORS.—VELOCIT RATIO CONSTANT.—DIRECTIONAL RELATION CONSTANT Forms of Connectors and Pulleys.—Guide Pulleys.—Twisted Belts.—Length of Belts, |
 
-#### CONTENTS.
 
 CHAPTER XII.
 
@@ -104,40 +104,40 @@ CHAPTER XII.
 
 ## CHAPTER I.
 
-### INTRODUCTION.
+## INTRODUCTION.
 
-1. A Machine is <sup>a</sup> conibiuation of fixed and movable parts, interposed between the power and the work for the purpose of adapting tlie one to the other.
+1. A Machine is a combination of fixed and movable parts, interposed between the power and the work for the purpose of adapting the one to the other.
 
-This definition presupposes the existence of two tilings namely, a source of power, and a certain object to be ac complished. The source of power may be one of the forces of nature applied directly, such as the expansive force of steam in a steam engine, or it may be obtained by the indirect application of such natural forces ; that is, the latter may have been already modified by some other machine. Thus, when a steam engine drives the machinery of a shop by means of a line of shafting, the latter may properly be considered as the source of power of the individual machine.
+This definition presupposes the existence of two things ; namely, a source of power, and a certain object to be accomplished. The source of power may be one of the forces of nature applied directly, such as the expansive force of steam in a steam engine, or it may be obtained by the indirect application of such natural forces ; that is, the latter may have been already modified by some other machine. Thus, when a steam engine drives the machinery of a shop by means of a line of shafting, the latter may properly be considered as the source of power of the individual machine.
 
-2. Mechanism In designing a machine, we must take into consideration both the motions to be produced and the forces to be transmitted. But these two elements may most conveniently be discussed and investigated separately ; and such discussions and investigations constitute the two divisions of the general subject of mechanism ; namely, Pure Mechanism and Constructive Mechanism.
+2. Mechanism. In designing a machine, we must take into consideration both the motions to be produced and the forces to be transmitted. But these two elements may most conveniently be discussed and investigated separately ; and such discussions and investigations constitute the two divisions of the general subject of mechanism ; namely, Pure Mechanism and Constructive Mechanism.
 
 Pure Mechanism, then, treats of the designing of machines, as far as relates to the transmission and modification of motion, and explicitly excludes all considerations of force transmitted, or of strength and durability of parts.
 
 In order that the sense in which we shall use certain fundamental terms may be clearly understood, we shall now give an explanation of such words and phrases.
 
-3. Motion and Rest. —These terms are essentially relative. When a body changes its position with regard to some fixed point, it is said to be in motion relatively to that point ; when no such change is taking place, it is said to be at rest relatively to that point. Two bodies may evi dently be iu motion relatively to a third, and still be at rest with regard to each other.
-4. Path. —When a point moves from one position to another, it describes a line, either straight or curved, connecting the two positions. This line is called its path. But the path alone does not completely define the motion, for the point may move iu the path in either of two directions; as, up or down, to the right or to the left, in the direction of the hands of a watch or the reverse.
-5. Kinds of Motion. —Motion may take place along either a straight or curved path ; in the former case it is termed rectilinear motion, and in the latter case curvilinear motion. In either case, when a moving point travels for ward and backward over the same path, it is said to have a reciprocating motion. For example, the piston of a loco motive has reciprocating rectilinear motion. In the particular case where the reciprocating point moves in the arc of a circle, as, for example, the weight of a pendulum, it is said to oscillate, or, by some, to vibrate. When the motion of a point is interrupted by certain definite intervals of rest, it is said to have an intermittent motion. The motion of the escape wheel of a clock is of this kind.
+3. Motion and Rest. —These terms are essentially relative. When a body changes its position with regard to some fixed point, it is said to be in motion relatively to that point ; when no such change is taking place, it is said to be at rest relatively to that point. Two bodies may evidently be in motion relatively to a third, and still be at rest with regard to each other.
+4. Path. —When a point moves from one position to another, it describes a line, either straight or curved, connecting the two positions. This line is called its path. But the path alone does not completely define the motion, for the point may move in the path in either of two directions; as, up or down, to the right or to the left, in the direction of the hands of a watch or the reverse.
+5. Kinds of Motion. —Motion may take place along either a straight or curved path ; in the former case it is termed rectilinear motion, and in the latter case curvilinear motion. In either case, when a moving point travels forward and backward over the same path, it is said to have a reciprocating motion. For example, the piston of a locomotive has reciprocating rectilinear motion. In the particular case where the reciprocating point moves in the arc of a circle, as, for example, the weight of a pendulum, it is said to oscillate, or, by some, to vibrate. When the motion of a point is interrupted by certain definite intervals of rest, it is said to have an intermittent motion. The motion of the escape wheel of a clock is of this kind.
 6. Revolution and Rotation. —These terms are ordinarily used synonymously, to denote the turning of a body about an axis ; and no ambiguity is usually likely to arise from so using them. Thus, the fly wheel of an engine is said to rotate or revolve. By more strict definition, rotation should be applied only to the turning of a body about an axis which passes through it, while revolution is a more general term to include the motion of a body along a path which is a closed curve. Thus, the earth rotates about its axis and revolves about the sun.
 
-7. Velocity In addition to the path and direction of a moving body, there is another element necessary to completely determine its motion, and that is its velocity.
+7. Velocity. — In addition to the path and direction of a moving body, there is another element necessary to completely determine its motion, and that is its velocity.
 
-Velocity is measured by the relation between tlie distance passed over and the tiine occupied in traversing that distance. Velocity may be uniform and unchanging, or it may become greater or less ; and then changes may take place quickly or slowly, regularly or irregularly. But, for our purposes, it is sufficient to consider only two kinds of velocity, constant or uniform, and variable.
+Velocity is measured by the relation between the distance passed over and the time occupied in traversing that distance. Velocity may be uniform and unchanging, or it may become greater or less ; and then changes may take place quickly or slowly, regularly or irregularly. But, for our purposes, it is sufficient to consider only two kinds of velocity, constant or uniform, and variable.
 
-Velocity is expressed numerically by the number of units of distance passed over in one unit of time. The units of distance and time may be selected . at pleasure ; but, for mechanical purposes, the most convenient units are feet and minutes ; and these will, in general, be employed throughout this volume.
+Velocity is expressed numerically by the number of units of distance passed over in one unit of time. The units of distance and time may be selected at pleasure ; but, for mechanical purposes, the most convenient units are feet and minutes ; and these will, in general, be employed throughout this volume.
 
 When a body moves with a uniform velocity, the distance passed over varies directly with the time. Thus, if by V we designate the velocity, and by S the total distance passed over in the time T, we have S = VT.
 
-Again : if the velocity is given, we may find the time Tto traverse <sup>a</sup> given distance S, for T = —.
+Again : if the velocity is given, we may find the time T to traverse <sup>a</sup> given distance S, for T = —.
 
 When the distance and the time are given, we may determine the velocity from the equation V = —.
 
 For example, if a body moves at a uniform velocity over a distance of 100 feet, and occupies 5 minutes in doing so, it has <sup>a</sup> velocity F = — = = <sup>20</sup> feet per minute. J. u
 
-In case the velocity is variable, these expressions do not give the velocity at any particular instant, but only the mean velocity for the whole time considered. The velocity at any particular instant is measured by the distance which the body would pass over in the next succeeding unit of time, were the velocity with which the body commences that unit to continue uniformly throughout it. Thus, if a railway train is slowing down in coming to a stop, its velocity is de^creas ing, but may, nevertheless, be measured at any instant. If, for instance, we say that the train has a velocity of 20 miles per hour, we mean, that, if it were to continue in motion for one hour at the velocity which.it has at that instant, it would travel 20 miles.
+In case the velocity is variable, these expressions do not give the velocity at any particular instant, but only the mean velocity for the whole time considered. The velocity at any particular instant is measured by the distance which the body would pass over in the next succeeding unit of time, were the velocity with which the body commences that unit to continue uniformly throughout it. Thus, if a railway train is slowing down in coming to a stop, its velocity is de˄creas- ing, but may, nevertheless, be measured at any instant. If, for instance, we say that the train has a velocity of 20 miles per hour, we mean, that, if it were to continue in motion for one hour at the velocity which it has at that instant, it would travel 20 miles.
 
-8. Angular Velocity. —The most natural way of ex pressing the velocity of a rotating body consists in stating the angle through which it turns, or the number of revolutions which it makes, in the unit of time. When the number of revolutions is given, it must usually be expressed as an angle before it can be used in calculation ; and the angle may be stated in degrees or in circular measure. For con venience of comparison with linear velocities, we shall define angular velocity to be the velocity of a rotating body thus expressed in circular measure; i.e., as the quotient obtained by dividing the length of the arc subtending the angle through which it turns in one unit of time, by the length of the radius of that arc. All the points of a rotating body move with the same angular velocity, but the linear velocity of each point varies directly with its radial distance from the centre of motion.
+8. Angular Velocity. —The most natural way of ex- pressing the velocity of a rotating body consists in stating the angle through which it turns, or the number of revolutions which it makes, in the unit of time. When the number of revolutions is given, it must usually be expressed as an angle before it can be used in calculation ; and the angle may be stated in degrees or in circular measure. For convenience of comparison with linear velocities, we shall define angular velocity to be the velocity of a rotating body thus expressed in circular measure; i.e., as the quotient obtained by dividing the length of the arc subtending the angle through which it turns in one unit of time, by the length of the radius of that arc. All the points of a rotating body move with the same angular velocity, but the linear velocity of each point varies directly with its radial distance from the centre of motion.
 
 Let <sup>a</sup> = angular velocity of <sup>a</sup> body, B = radial distance of some point in that body, and V = linear velocity of that
 
@@ -146,7 +146,7 @@ point; in other words, the length of the arc which it describes in the unit of t
 Then
 $$a = \frac{V}{R}.$$
 
-Thus, if a locomotive having driving-wheels 5 feet in diameter is moving at a speed of 30 miles an hour, the linear velocity of a point on the rim of the wheel, relatively to the frame of the engine, is evidently  $V = \frac{S}{T} = \frac{30 \times 5280}{60}$
+Thus, if a locomotive having driving-wheels 5 feet in diameter is moving at a speed of 30 miles an hour, the linear velocity of a point on the rim of the wheel, relatively to the frame of the engine, is evidently $V = \frac{S}{T} = \frac{30 \times 5280}{60}$
 
 = 2640 feet per minute. The angular velocity of the wheel is therefore  $a = \frac{V}{R} = \frac{2640}{2\frac{1}{2}} = 1056$  feet per minute.
 
@@ -160,7 +160,7 @@ per minute.
 
 9. Periodic Motion. — During the operation of a machine, it usually happens that the various moving parts go through a series of changes of motion which recur perpetually in the same order. The interval of time which
 
-includes in itself one such complete series of cLanges is called a period, and the character of the motion is described by the term periodic. The complete series of changes of motion included in one period is called a cycle.
+includes in itself one such complete series of changes is called a period, and the character of the motion is described by the term periodic. The complete series of changes of motion included in one period is called a cycle.
 
 In periodic motion, the general law of the succession of changes is the same in successive periods, but the actual time may vary ; that is, the periods may be unequal in length. As a rule, however, the periods are equal, and the duration, magnitude, and law of succession of the changes are identical, in successive periods ; such motion is known as uniform 2xriodic motion.
 
@@ -168,31 +168,31 @@ In periodic motion, the general law of the succession of changes is the same in 
 
 This modification is accomplished by means of the interposed mechanism above mentioned, and it is to the discussion of the methods by which motion may be transmitted and modified that the following pages are devoted.
 
-11. Elementary Combinations. —The motion of every point of a given piece of a machine being defined by path, direction, and velocity, it will be found that its path is assigned to it by the connection of the piece with the framework of the machine ; but its direction and velocity are determined by its connection with some other moving piece or pieces. Two pieces, so connected that, when <sup>a</sup> given motion is imparted to one, the other moves in a determinate manner, form an elementary combination.
-12. Driver and. Follower. —The piece of an ele mentary combination to which motion is imparted from some extraneous source is termed the driver; and the piece whose motion is received from and governed by the driver is called the follower.
-13. A Train of Mechanism consists of <sup>a</sup> series of movable parts, each of which receives its motion from the preceding one, and transmits it to the one next in order. The train is therefore made up of elementary combinations ; and each piece is at once the follower with regard to the piece that drives it, and the driver of the piece which follows it.
-14. Modes of Transmission of Motion. The simplest means by which one piece can produce motion in another is evidently by direct contact ; the two pieces thus forming an elementary combination, as previously defined. But it frequently happens that motion is communicated from one piece to another through the medium of a third and con necting piece, under such circumstances that the motion of the connecting piece is of no consequence whatever, the proper action of the whole depending entirely on the relative motion of the other two pieces. In this case, the latter may
+11. Elementary Combinations. —The motion of every point of a given piece of a machine being defined by path, direction, and velocity, it will be found that its path is assigned to it by the connection of the piece with the framework of the machine ; but its direction and velocity are determined by its connection with some other moving piece or pieces. Two pieces, so connected that, when a given motion is imparted to one, the other moves in a determinate manner, form an elementary combination.
+12. Driver and Follower. — —The piece of an ele mentary combination to which motion is imparted from some extraneous source is termed the driver; and the piece whose motion is received from and governed by the driver is called the follower.
+13. A Train of Mechanism consists of a series of movable parts, each of which receives its motion from the preceding one, and transmits it to the one next in order. The train is therefore made up of elementary combinations ; and each piece is at once the follower with regard to the piece that drives it, and the driver of the piece which follows it.
+14. Modes of Transmission of Motion. — The simplest means by which one piece can produce motion in another is evidently by direct contact ; the two pieces thus forming an elementary combination, as previously defined. But it frequently happens that motion is communicated from one piece to another through the medium of a third and connecting piece, under such circumstances that the motion of the connecting piece is of no consequence whatever, the proper action of the whole depending entirely on the relative motion of the other two pieces. In this case, the latter may
 
-be properly regarded as forming an elementary combination. We thus see tiiat motion may be transmitted from driver to follower, —
+be properly regarded as forming an elementary combination. We thus see that motion may be transmitted from driver to follower, —
 
-- I. By direct contact. II. By intermediate connectors.
-- 15. Velocity Katio and Directional Relation. It has been already shown that the paths of the pieces in an elementary combination are fixed, and depend on the connection of the pieces with the framework of the machine while their velocity and direction of motion may vary, and must be determined for each instant of action. Thus, in comparing the motions of the pieces for successive instants, we may find changes of velocity or of direction, or both. But, while the absolute velocities and the absolute directions of both pieces may be liable to continual variation, it is evident that there will exist, at each instant, a certain definite ratio between the velocities, and an equally definite relation between the directions, of the driver and follower. This velocity ratio and this directional relation will depend solely on the manner in which the two pieces are connected, and will be entirely independent of their absolute velocities or directions. The velocity ratio, and also the directional relation, may be constant during the entire period, or either or both may vary. For example, if two circular wheels turning on fixed axes gear with each other, their velocity ratio is constant. If one wheel is twice as large as the other, it will make only one-half as many turns in the same time, or its angular velocity will be half that of the smaller wheel. But during any changes in velocity whatsoever, as one wheel cannot rotate without turning the other, and as the respective radii of contact do not change in length, the ratio of their velocities at any instant is the same ; that is, such wheels have a constant velocity ratio. And so, also, of the relative directions of the rotations. If the wheels are in external gear, they will turn in opposite directions ; if in internal gear, in the same direction : but in either case the
+I. By direct contact. II. By intermediate connectors.
+15. Velocity Ratio and Directional Relation. — It has been already shown that the paths of the pieces in an elementary combination are fixed, and depend on the connection of the pieces with the framework of the machine while their velocity and direction of motion may vary, and must be determined for each instant of action. Thus, in comparing the motions of the pieces for successive instants, we may find changes of velocity or of direction, or both. But, while the absolute velocities and the absolute directions of both pieces may be liable to continual variation, it is evident that there will exist, at each instant, a certain definite ratio between the velocities, and an equally definite relation between the directions, of the driver and follower. This velocity ratio and this directional relation will depend solely on the manner in which the two pieces are connected, and will be entirely independent of their absolute velocities or directions. The velocity ratio, and also the directional relation, may be constant during the entire period, or either or both may vary. For example, if two circular wheels turning on fixed axes gear with each other, their velocity ratio is constant. If one wheel is twice as large as the other, it will make only one-half as many turns in the same time, or its angular velocity will be half that of the smaller wheel. But during any changes in velocity whatsoever, as one wheel cannot rotate without turning the other, and as the respective radii of contact do not change in length, the ratio of their velocities at any instant is the same ; that is, such wheels have a constant velocity ratio. And so, also, of the relative directions of the rotations. If the wheels are in external gear, they will turn in opposite directions ; if in internal gear, in the same direction : but in either case the
 
-directional relation will remain coiistant, without regard to any change of absolute direction of the driver.
+directional relation will remain constant, without regard to any change of absolute direction of the driver.
 
 If the two wheels are elliptical, however, as those shown in Fig. 42, the directional relation will be constant, while the velocity ratio will vary according to the varying lengths of the radii of contact.
 
-If, then, in addition to the paths of both driver and fol lower, we have determined their velocity ratio, and the directional relation of their motion, for every instant of an entire period, our knowledge of the action of the combination will be complete.
+If, then, in addition to the paths of both driver and follower, we have determined their velocity ratio, and the directional relation of their motion, for every instant of an entire period, our knowledge of the action of the combination will be complete.
 
 ## CHAPTER 11.
 
-### ELEMENTARY PROPOSITIONS.
+## ELEMENTARY PROPOSITIONS.
 
-Graphic Representation of Motion, — Composition and Resolution of Motions. — Modes of Transmitting Motion. — Velocity Ratio. — Directional Relation.
+Graphic Representation of Motion. — Composition and Resolution of Motions. — Modes of Transmitting Motion. — Velocity Ratio. — Directional Relation.
 
-16. Graphic Representation of Motion. — The problems relating to the motions of points may be most readily solved by geometrical construction. It is evident that the rectilinear motion of a point may be represented by a straight line ; for tlie direction of the line may represent the direction of tlie motion, while the velocity may be indicated by its length. When a point moves in <sup>a</sup> curve, its direction of motion at any instant is the same as tlie direction of the tangent to the curve at the point considered. Hence the curvilinear motion of a point may be represented in the same manner as the rectilinear motion, using the direction of the tangent as tlie direction of the straight line above mentioned, and making its length proportional to the velocity, as before.
+16. Graphic Representation of Motion. — The problems relating to the motions of points may be most readily solved by geometrical construction. It is evident that the rectilinear motion of a point may be represented by a straight line ; for tlie direction of the line may represent the direction of tlie motion, while the velocity may be indicated by its length. When a point moves in a curve, its direction of motion at any instant is the same as tlie direction of the tangent to the curve at the point considered. Hence the curvilinear motion of a point may be represented in the same manner as the rectilinear motion, using the direction of the tangent as tlie direction of the straight line above mentioned, and making its length proportional to the velocity, as before.
 
-By thus representing the motion of properly selected points, we may establish certain relations, by purely geometrical reasoning, which will not only enable us to obtain the velocity ratio and the directional relation in the particular phase represented, but will lead to, and almost involve, the accurate construction on paper of the movements considered. Tlie latter is such an important advantage in practical work, that this method is greatly to be preferred, and has been adopted in this volume.
+By thus representing the motion of properly selected points, we may establish certain relations, by purely geometrical reasoning, which will not only enable us to obtain the velocity ratio and the directional relation in the particular phase represented, but will lead to, and almost involve, the accurate construction on paper of the movements considered. The latter is such an important advantage in practical work, that this method is greatly to be preferred, and has been adopted in this volume.
 
 17. Composition of Motions. If a material point receives a single impulse in a given direction, it will move in that direction with a certain velocity; and, as above explained, its motion may be represented by a straight line having the same direction as the motion, and of a length proportional to the velocity. If a point receives, at the same time, two impulses in different directions, it will obey both, and move in an intermediate direction with a velocity differing from that due to either impulse alone. Such a point may receive, at the same instant, any number of impulses, each one tending to impart to it a motion in a definite direction and with a certain velocity. Now, it is evident that the point can move only in one direction and with one velocity; this motion is called the resultant; and the separate motions which the different impulses, taken single, tended to give it, are called the components.
 18. Parallelogram of Motions.—Given two component motions of a point, to find the resultant.
@@ -217,7 +217,7 @@ This process may be continued for any number of components, and it makes no diff
 
 **20.** Resolution of Motion. — This is the inverse of the process just explained. It is obvious, that, if two or more independent motions can be compounded into a single equivalent motion or resultant, the latter can be again separated, or resolved, into its components. But it evidently makes no difference whether the single motion to be resolved is the resultant of a previous composition, or whether it is an original independent motion. Any single motion can be resolved into two others, each of these again into two others, and so on as far as desired; these components being given any directions at pleasure. In Fig. 4, let AC represent the given motion. Through A draw the indefinite lines AE and
 
-AH in the directions in which it is desired to resolve AC. Through C draw CB parallel to AH, and intersecting AE at B; also CD parallel to AE, and intersecting AH at D. Then AB and AD will be the components required; and it is evident that by their composition AB and AD
+AH in the directions in which it is desired to resolve AC. Through C draw CB parallel to AH, and intersecting AE at B; also CD parallel to AE, and intersecting AH at D. Then AB and AD will be the components required; and it is evident that by their composition
 
 composition (Art. 18) we would find their resultant to be AC, the given motion.
 
@@ -235,7 +235,7 @@ curve joining the respective points of the follower.
 
 2. By sliding contact, when each point of contact of the driver with the follower is continually changed, but so that the curve joining any given pair of points of contact of the driver shall 7iot be equal in length to the curve joining the respective points of the follower.
 
-In contact motions, one or both of the curves must be convex ; and, in the former case, the convex edge must have a
+In contact motions, one or both of the curves must be con vex ; and, in the former case, the convex edge must have a
 
 <sup>\*</sup> More strictly speaking, sliding contact should be defined as that motion in which every point of contact of one piece comes into contact with all the consecutive points, in their order, of a line in the other. Thus, the piston of a steam engine moves in true sliding contact with the interior surface of the cylinder. When this definition of sliding contact is adopted, it is usual to class under the head of mixed contact those contact motions which partake of both rolling and sliding. But, for our purposes, it is sufficient to distinguish between contact which is rolling and that whicli is not; designating by the term " sliding" not only that which is purely so, as just defined, but also the cases just spoken of as mixed contact.
 
@@ -263,7 +263,7 @@ Every elementary combination may be classified according to one of the four mode
 
 arm AP turns about the centre A, the point P will move in the arc of a circle, and hence its direction of motion at any
 
-instant will be represented by the tangent to that arc; that is, by a line perpendicular to the radius AP. Draw Pa perpendicular to AP, and of such a length as to represent the velocity of the point P in that direction. Resolve the velocity Pa into two components (Art. 20), Pc and Pd, along and perpendicular to the link PQ respectively. Similarly, let Qb represent the velocity of the point Q, and resolve it into the components Qf and Qg, along and perpendicular to
+instant will be represented by the tangent to that are; that is, by a line perpendicular to the radius AP. Draw Pa perpendicular to AP, and of such a length as to represent the velocity of the point P in that direction. Resolve the velocity Pa into two components (Art. 20), Pc and Pd, along and perpendicular to the link PQ respectively. Similarly, let Qb represent the velocity of the point Q, and resolve it into the components Qf and Qg, along and perpendicular to
 
 the link. Since the link PQ is rigid, the component velocities of the points P and Q in the direction of the link must be the same; that is, Pc must be equal to Qf. If Pc were greater or less than Qf, the distance between P and Q, that is, the length of the link, would be diminished or increased, which is impossible.
 
@@ -284,15 +284,15 @@ $$\frac{\alpha'}{\alpha} = \frac{Pc}{BM} \times \frac{AN}{Pc} = \frac{AN}{BM} = 
 
 Hence, in the communication of motion by linkwork, —
 
-1. The angular velocities of the arms are inversely proportional to the perpendiculars from the fixed centres of motion upon the line of the link.
-2. The angular velocities of the arms are inversely proportional to the segments into which the line of the link divides the line of centres.
-25. This proposition may also be proved by means of the instantaneous centre.
+- 1. The angular velocities of the arms are inversely proportional to the perpendiculars from the fixed centres of motion upon the line of the link.
+- 2. The angular velocities of the arms are inversely proportional to the segments into which the line of the link divides the line of centres.
+- 25. This proposition may also be proved by means of the instantaneous centre.
 
 In Figs. <sup>10</sup> and <sup>11</sup> the link PQ may be regarded as turning, during each instant of its motion, about some centre in space. This centre may be constantly changing its position in space, and also with regard to the line PQ itself; but at any given instant every point in PQ has the same
 
 angular velocity about this centre, and moves in a direction perpendicular to the line joining it to the centre, and with a linear velocity proportional to its distance from it. As P moves perpendicularly to AP, the centre must lie in AP
 
-(produced if necessary) ; and as Q moves perpendicularly to BQ, it must also lie in BQ (produced if necessary) : hence it will be found at the intersection of these two lines at 0. Let V and v represent the linear velocities of P and Q respectively. As both P and Q have the same angular velocity about O, their linear velocities will be proportional to tlieir distance from that point ; that is,
+(produced if necessary) ; and as Q moves perpendicularly to BQ, it must also lie in BQ (produced if necessary) : hence it will be found at the intersection of these two lines at 0. Let V and <sup>v</sup> represent the linear velocities of P and Q respectively. As both P and Q have the same angular velocity about O, their linear velocities will be proportional to tlieir distance from that point ; that is,
 
 V : <sup>V</sup> :: PO : qO.
 
@@ -327,7 +327,7 @@ upon the common tangent, which is the line of the wrapping-connector, and findin
 
 the upper one will be compelled to turn. Draw Rr, the common tangent, and Hh, the common normal, at the point of contact. The point P, considered as a point of the lower piece, moves at any instant in a direction perpendicular to the radius PA.
 
-Draw Pa perpendicular to PA and of such a length as to represent the velocity of P in that direction. Resolve Pa into two components, PS and PC; the former in the direc tion of the normal, and the latter in that of the tangent. PS is the component which causes the motion of the upper piece ; for PC, acting tangentially, can, of course, produce no motion in tlie latter whatever.
+Draw Pa perpendicular to PA, and of such a length as to represent the velocity of P in that direction. Resolve Pa into two components, PS and PC; the former in the direc tion of the normal, and the latter in that of the tangent. PS is the component which causes the motion of the upper piece ; for PC, acting tangentially, can, of course, produce no motion in tlie latter whatever.
 
 The direction of the motion of the point P, considered as a point of the upper piece, will be represented by the line Pb drawn perpendicularly to PB. It is evident that the length of Pb must be such that its normal component will be PS: for, if the normal component of Pb were greater
 
@@ -373,15 +373,15 @@ not vary ; but, whether it does or not, there will be more or less of sliding be
 
 As the point of contact approaches the line of centres, it diminishes the distance between itself and the point of intersection of the common normal with this line. When the point of contact reaches the line of centres, the contact becomes purely rolling, and these two points coincide. Hence, in rolling contact, the angular velocities of the pieces are inversely proportional to the segments into which the point of contact divides the line of centres.
 
-33. Similarity in all Modes of Transmission It will be observed that the common normal in contact motions bears a very striking resemblance to the lines of the link and of the wrapping connector, previously discussed. In fact, by selecting any two points in this normal, and joining one to each centre by a straight line, we will have two arms and a link, by which, for that instant, we may produce the same velocity ratio as by the curved pieces in contact.
+33. Similarity in all Modes of Transmission. —It will be observed that the common normal in contact motions bears a very striking resemblance to the lines of the link and of the wrapping connector, previously discussed. In fact, by selecting any two points in this normal, and joining one to each centre by a straight line, we will have two arms and a link, by which, for that instant, we may produce the same velocity ratio as by the curved pieces in contact.
 
 If we designate by line of action the line of the link in linkwork, the line of the wrapping connector, and the common normal in contact motions, we may express the laws governing the action of any elementary combination in which the pieces rotate about fixed parallel axes as follows : —
 
-- 1 The angular velocities are inversely proportional to the perpendiculars let fall from the centres of motion upon the line of action.
+1. The angular velocities are inversely proportional to the perpendiculars let fall from the centres of motion upon the line of action.
 2. The angular velocities are inversely proportional to the segments into which the line of action divides the line of centres.
 3. The rotations have the same direction if the centres of motion lie on the same side of the line of action, and contrary directions if they lie on opposite sides of that line.
 
-## CHAPTER III.
+# CHAPTER III.
 
 COMMUNICATION OF MOTION BY ROLLING CONTACT. VELOCITY RATIO CONSTANT. DIRECTIONAL RELATION CONSTANT.
 
@@ -389,11 +389,11 @@ Cylinders. —Cones. — Hyperboloids. — Practical Applications. — Classific
 
 34. It lias been shown (Art. 32) that, in the rolling contact of curved pieces revolving in the same plane about fixed parallel axes, the point of contact will always lie in the line of centres, and that the angular velocities are inversely proportional to the segments into which the point of contact divides that line.
 
-Therefore, if the velocity ratio of two such pieces in roll ing contact is constant, these segments must be constant, and the curves must have a constant radius ; in other words, the curves must be circular arcs turning about their centres, and no other curves will satisfy the conditions.
+Therefore, if the velocitiy ratio of two such pieces in roll ing contact is constant, these segments must be constant, and the curves must have a constant radius ; in other words, the curves must be circular arcs turning about their centres, and no other curves will satisfy the conditions.
 
-### Axes Parallel.
+## Axes Parallel.
 
-35. Rolling Cylinders. —In Fig. 16, let AC, BD, be parallel axes mounted in a framework, by which they are kept at a constant distance from each other. Let E and F be two cylinders, fixed opposite to each other, one on each axis, and concentric with it ; the sum of their radii being equal to the distance between the axes.
+35. Rolling Cylinders. —In Fig. 16, let AC, BD, be parallel axes mounted in a framework, by which they are kept at <sup>a</sup> constant distance from each other. Let E and F be two cylinders, fixed opposite to each other, one on each axis, and concentric witli it ; the sum of their radii being equal to tlie distance between the axes.
 
 The cylinders will, therefore, be in contact in all positions,
 
@@ -401,7 +401,7 @@ the line of contact being a common element of both. If one cylinder be made to r
 
 Fig. 16
 
-Let R be the radius of the driver, and r the radius of the follower. Let the circumference of the driver be divided into N equal parts, and let the circumference of the follower contain n of these parts. Let P and p be the periods or times of rotation ; L and <sup>I</sup> the number of rotations in a given time, or the synchronal rotations of driver and follower respectively ; and, as before, let a and a' be their angular velocities. Then
+Let R be the radius of the driver, and <sup>r</sup> the radius of the follower. Let the circumference of the driver be divided into JV" equal parts, and let the circumference of the follower contain <sup>n</sup> of these parts. Let P and p be the periods or times of rotation ; L and <sup>I</sup> the number of rotations in <sup>a</sup> given time, or the syndironal rotations of driver and follower re spectively ; and, as before, let a and a' be their angular velocities. Then
 
 $$\frac{a'}{a} = \frac{R}{r} = \frac{N}{n} = \frac{P}{p} = \frac{l}{L};$$
 
@@ -413,7 +413,7 @@ If it is desired to have them rotate in the same direction, one wheel is given t
 
 If the axes of rotation are not parallel, they may or may not intersect ; and these cases will be considered separately.
 
-### Axes Intersecting.
+## Axes Intersecting.
 
 37. Rolling Cones. — The conclusions arrived at in Art. 34 follow directly from our propositions concerning rolling contact; the circles in contact being in the same plane, and rotating about fixed parallel axes. A little consideration will, however, make it clear, that, if the axes be
 
@@ -445,13 +445,13 @@ changed in the latter by moving the element of contact from the acute to the obt
 
 40. Thus far we have considered only those cases in which the axes intersect obliquely; but in practice the axes intersect most frequently at right angles, as in Fig. 23. In this case it will be noticed that the cones are in contact along two elements, OM and ON, and that the followers will rotate in opposite directions. Thus, in Fig. 23, where A is the driver, the two followers, B and C, rotate in opposite directions, as shown by the arrows. But if, as in Fig. 24, the driving axis A be continued beyond the common vertex of the cones, and two other frusta be constructed, motion will be given to the two followers B and C in the same direction; the velocity ratio of both pairs of frusta being the same.
 
-### Axes neither Parallel nor Intersecting.
+## Axes neither Parallel nor Intersecting.
 
 41. Hyperboloid of Revolution. — When the axes do not lie in the same plane, motion may be transmitted from the one to the other by means of surfaces, known as hyperboloids of revolution. The hyperboloid of revolution is the warped surface generated by a right line revolving about another right line not in the same plane with the first. Its form and the manner of constructing it are shown in Fig. 25, both vertical and horizontal projections being employed for the sake of clearness. Let the axis be taken vertical; it will be horizontally projected at O' and vertically at Cc. The revolving line, or generatrix, is, for convenience, taken in a position parallel to the vertical plane of projection, and is shown at MN, M'N'. As this line revolves about the axis, any point, P, P, of the line describes a circle, whose radius is projected vertically at OP, and horizontally in its true length at O'P'. Draw the common perpendicular to the two lines MN and Cc. It will be projected horizontally in its true length at O'D', and vertically in the point D. The circles described by different points of the line MN will evidently vary in size; the largest being described by the points M and
 
 N respectively, and the smallest by the point D. To construct the projections of the curved surface, we must find the
 
-projections of the circle described by any point P of the line MN. Its horizontal projection will be the circle W'P'JR' while its vertical projection will be the straight line WPB,
+projections of the circle described by any point P of the line 'MN. Its horizontal projection will be the circle W'P'JR' while its vertical projection will be the straight line WPB,
 
 and R and W will be points of the meridian curve. By repeating this process for a sufficient number of points of the line MN, the meridian curve may be drawn; and it will be found to be a hyperbola. The circle A'D'B', described by the point D' (which is the intersection of the generatrix with the common perpendicular O'D'), is called the *circle of the gorge*; and the circles described by the points M' and N' are called the circles of the lower and upper bases respectively.
 
@@ -463,7 +463,7 @@ Through any point of the surface, then, two rectilinear elements, or *generatric
 
 If a series of such normals be drawn through different points of the revolving line, they will lie in planes perpendicular to the latter, and therefore parallel to each other. Suppose three planes to be drawn parallel to both the axis Cc and the generatrix MN; one through the axis, another
 
-through the generatrix, and the third at any convenient dis- tance. Conceive a number of points to be laid off at definite and equal intervals on the line MN. Now, in passing along MN from one point to the other, the normal, though always remaining perpendicular to MN, will still turn about the latter, so that its other end will describe on the plane through the axis a straight line; viz., the axis itself. Now, as these three planes are parallel, and the normal moves so that its two ends trace straight lines on two of the planes, it is evident that the prolongation of the normal will trace a straight line on the third plane. This straight line may be taken as a new axis; and by revolving MN, the generatrix of the first hyperboloid, about this new axis, a second hyperboloid will be generated: and these two surfaces will, by construction, have a common normal at every point of the element of contact MN, and will be tangent to each other all along that element. If one of these hyperboloids be now rotated about its axis, it will drive the other by a mixture of rolling and sliding contact; the sliding taking place in the direction of the element of contact, and the rolling in a direction perpendicular to that element.
+through the generatrix, and the third at any convenient dis-Conceive a number of points to be laid off at definite and equal intervals on the line MN. Now, in passing along MN from one point to the other, the normal, though always remaining perpendicular to MN, will still turn about the latter, so that its other end will describe on the plane through the axis a straight line; viz., the axis itself. Now, as these three planes are parallel, and the normal moves so that its two ends trace straight lines on two of the planes, it is evident that the prolongation of the normal will trace a straight line on the third plane. This straight line may be taken as a new axis; and by revolving MN, the generatrix of the first hyperboloid, about this new axis, a second hyperboloid will be generated: and these two surfaces will, by construction, have a common normal at every point of the element of contact MN, and will be tangent to each other all along that element. If one of these hyperboloids be now rotated about its axis, it will drive the other by a mixture of rolling and sliding contact; the sliding taking place in the direction of the element of contact, and the rolling in a direction perpendicular to that element.
 
 43. Velocity Ratio of Rolling Hyperboloids. — In Fig. 26 we have two hyperboloids in contact along the line MN, and revolving about the axes Oo and Rr respectively. Let P be the point of contact of the gorge circles APL and BPK, and let the inclined hyperboloid be the driver. Then P, considered as point of the driver, will move in the direction of the tangent to the circle APL. This motion, being parallel to the vertical plane of projection, may be represented, in direction and velocity, by the line Pa. Resolve Pa into two components, PC and PS, along and perpendicular to the element of contact MN respectively. PS will be the component giving motion to the follower, while PC will represent the sliding motion to the point P in the direction of the common element MN.
 
@@ -507,7 +507,7 @@ that is, the angular velocities are inversely proportional, not, as in the case 
 
 The above determination is based on the relative motions of the gorge circles ; but the use of these circles is a mere matter of convenience, as the same may be proved for any other two circles in contact.
 
-44. Percentage of Sliding. —The motion of the line MN of the vertical surface is one of revolution about Oo ; and, Pb being the linear velocity of P, every point in the line MN must have <sup>a</sup> component velocity along that line equal to PD, and in the same direction. Similarly, in revolv ing about Rr, every point in MN must have <sup>a</sup> component velocity in the direction of and equal to PC.
+44. Percentage of Sliding. —The motion of the line MN of the vertical surface is one of revolution about Oo ; and, Pb being the linear velocity of P, every point in the line MN must have <sup>a</sup> component velocity along that line equal to PD, and in the same direction. Similarly, in revolving about Rr, every point in MN must have <sup>a</sup> component velocity in the direction of and equal to PC.
 
 The motion, then, is transmitted by rolling, accompanied by sliding ; the latter taking place along the common element
 
@@ -529,7 +529,7 @@ As in the case of cones, only thin frusta of these hyperboloids (Fig. 26) are us
 
 46. Analogy between Cones and Hyperboloids.—As the radii of the gorge circles are made smaller, the meridian curves of the hyperboloids will become flatter, and the surfaces will begin to approximate to the conical shape. When the radii of both gorge circles reduce to zero, the axes will intersect, and the hyperboloids will become true cones; the element of contact lying in the plane of the axes, and passing through their point of intersection. Cones,
 
-then, may be considered as the limiting case of hyperboloids ; and it will be found, that, under similar conditions, they will present similar peculiarities of arrangement. From the similarity of the solutions in Arts. 38 and 45, it is obvious that we may use our discretion in locating the common element in the case of the hyperboloids, just as explained in Art. 39 for the case of cones. By changing the common element from the acute angle between the projections of the axes, to the obtuse angle (a change similar to that shown by Figs. 19 and 20), we will change the directional relation of the hyperboloids. Again : by varying the velocity ratio so as to divide the angle in the same ratio as in Figs. 21 and 22, we will reduce one hyperboloid to a flat disc in one case, and to a hollow hyperbolic surface in the other.
+then, may be considered as the limiting case of hyperboloids ; and it will be found, that, under similar conditions, they will present similar peculiarities of arrangement. From the similarity of the solutions in Arts. 38 and 45, it is obvious that we may use our discretion in locating the common element in the case of the hyperboloids, just as explained in Art. 39 for the case of cones. By changing the common element from the acute angle between the projections of the axes, to the obtuse angle (a change similar to that shown by Figs. 19 and 20), we will change the directional relation of the hyperboloids. Again : by varying the velocity ratio so as to divide the angle in the same ratio as in Figs. 21 and 22, we will reduce one hyperboloid to a flat disc in one case, and to a liollow hyperbolic surface in the other.
 
 47. The case of axes neither parallel nor intersecting may also be solved by means of two pairs of cones.
 
@@ -537,19 +537,19 @@ In Fig. 28, let Aa, Bb, be the driving and following axes respectively. Draw the
 
 cones, f and g, having their common apex at c, will transmit motion from the intermediate axis Cc to the axis Bb. By this means the rotation of Aa is transmitted, by pure rolling contact, to Bb.
 
-Let a, a', and a" be the angular velocities of the axes Aa, Bb, and Cc respectively, and R, r, and R' the radii of the bases of their cones, those of the cones e and / being the same. Then
+Let a, a', and a" be the angular velocities of the axes Aa, Bb, and Cc respectively, and R, r, and R' the radii of the bases of their cones, those of the cones <sup>e</sup> and / being the same. Then
 
 $$\frac{a''}{a} = \frac{R}{R'},$$
 also  $\frac{a'}{a''} = \frac{R'}{r}$ ; hence  $\frac{a'}{a} = \frac{R}{r}$ ;
 
 exactly as if the cones d and g were in immediate contact.
 
-### Practical Applications.
+## Practical Applications.
 
 48. We have now determined the theoretical forms required to transmit motion by rolling contact with a constant velocity ratio, but the successful application of these forms in practice requires certain changes or substitutions to be made. It is impossible to transmit motion against any considerable resistance by means of such smooth surfaces, and hence various expedients are resorted to in order to obtain the necessary adhesion.
 49. Friction Gearing. For light machinery, and in cases where a constant velocity ratio is not imperative, the rolling pieces may be made of different materials ; for instance, one may be made of wood and the other of iron. In this case, the iron wheel should be the follower. Again : one of the wheels may be covered with leather, or rubber, or other elastic material. To secure the necessary amount of adhesion in such cases, the rotating pieces are kept in contact and pressed together by adjusting their bearings, or applying weights or springs.
 
-50. Grooved Friction Gearing. — Another method is shown in Fig. 29. The wheels are provided with angular grooves, shown in an enlarged section on the left. The angle between ah and cd is usually about forty to fifty degrees. The adhesion is greatly increased by this means, and is obtained, as before, by pressing the wheels together. Such wheels are widely used for hoisting-engines, and are generally made of cast-iron.
+50. Grooved Friction Gearing. — Another method is shown in Fig. 29. The wheels are provided with angular grooves, shown in an enlarged section on the left. The angle between ab and cd is usually about forty to fifty degrees. The adhesion is greatly increased by this means, and is obtained, as before, by pressing the wheels together. Such wheels are widely used for hoisting-engines, and are generally made of cast-iron.
 
 51. Gearing. —The method in most general use for the prevention of slipping between rotating pieces is, to form teeth upon them.
 
@@ -585,7 +585,7 @@ one point only. The lines upon which the teeth are constructed are helices on th
 
 circular disc fixed on the axis. Thus the contact is only between points of the surfaces of the pins. In Fig. 36
 
-the wheels are in planes perpendicular to each other, and tlie perpendicular distance between the axes is equal to the diameter of the pins, which in this case are cylindrical. This class of gearing is best adapted to wooden mill machinery, and has been used for that purpose almost exclusively.
+the wheels are in planes perpendicular to each other, and the perpendicular distance between the axes is equal to the diameter of the pins, which in this case are cylindrical. This class of gearing is best adapted to wooden mill machinery, and has been used for that purpose almost exclusively.
 
 58. Twisted Gearing. —In Fig. 38 is illustrated another form of gearing, sometimes called twisted gearing. It may be regarded as obtained from the stepped wheel shown in Fig. 37. The latter may be produced by cutting an ordinary spur wheel by several planes perpendicular to
 
@@ -597,7 +597,7 @@ to the pressure producing the rotation, there will be a pressure produced in the
 
 The endlong pressure on the bearings may be prevented by the use of a wheel such as is shown in Fig. 39. By this arrangement, there is no longitudinal pressure on the bear ings whatever, and the wheels run in gear with a smoothness of action unsurpassed by any other kind of gearing. In fact, when the teeth of these wheels are accurately formed, and their axes are carefully adjusted in position, we have the perfection of spur gearing.
 
-## CHAPTER IV.
+# CHAPTER IV.
 
 COMMUNICATION OF MOTION BY ROLLING CONTACT. VELOCITY EATIO VARYING. DIRECTIONAL RELATION CONSTANT.
 
@@ -635,7 +635,7 @@ T, such that the arcs ET and FT are equal; E and F being the extremities of the 
 
 similar ellipses can transmit motion between parallel axes by pure rolling contact; each ellipse turning about a focus as a fixed centre, and its major axis being equal to the distance between those centres. The velocity ratio will in this case vary between the limits  $\frac{a'}{a} = \frac{AH}{BG} = \frac{AH}{AE}$  and  $\frac{a'}{a} =$
 
-case vary between the limits
+The velocity ratio will in this
 $$\frac{a}{a} = \frac{BG}{BG} = \frac{AE}{AE}$$
  and  $\frac{a}{a} = \frac{AE}{AE}$
 
@@ -648,12 +648,12 @@ But it may be necessary that there shall be two, three, or more maximum, alterna
 
 Lobed wheels which will roll together and answer these conditions can be produced by several methods from the logarithmic spiral and the ellipse.
 
-66. Lobed Wheels derived from the Logarithmic **Spiral.**—In Fig. 43, let A and B be two fixed parallel axes, let it be required to communicate motion between them by wheels so constructed that the velocity ratio will have four maximum and four minimum values. Let  $\frac{a'}{a} = \frac{BT}{AT}$  be one limit: then the other is necessarily the reciprocal of this,
+66. Lobed Wheels derived from the Logarithmic Spiral. — In Fig. 43, let A and B be two fixed parallel axes, and let it be required to communicate motion between them by wheels so constructed that the velocity ratio will have four maximum and four minimum values. Let $\frac{a'}{a} = \frac{BT}{AT}$ be one limit; then the other is necessarily the reciprocal of this,
 
 or
 $$\frac{a'}{a} = \frac{AT}{BT}$$
 
-Make the angles TAC and DBT equal to 45°. Make BD = AT and AC = BT. Construct (Art. 65) the portion CT of a logarithmic spiral having A as the pole, and passing through the points C and T. Draw CF, TE, and TD, similar curves symmetrically placed with regard to BT and AC. We have thus constructed one lobe of each wheel; and, as the angles TAF and DBE each include one-fourth of a circumference, the quadrilobes can be completed as
+Make the angles TAC and DBT equal to 45°. Make BD = AT and AC = BT. Construct (Art. 65) the portion CT of a logarithmic spiral having A as the pole, and passing through the points C and T. Draw CF, TE, and TD, similar curves symmetrically placed with regard to BTand AC. We have thus constructed one lobe of each wheel: and, as the angles TAF and DBE each include one-fourth of a circumference, the quadrilobes can be completed as
 
 shown, and will roll together with the varying velocity ratio required.
 
@@ -665,15 +665,15 @@ Let A and B be the fixed foci of two equal rolling ellipses in contact at T. Dra
 
 through the points 1, 2, 3, etc., cutting the other semi-ellipse T6' at the points 1', 2', 3', etc., it is evident that the arc T1 = T1', T2 = T2', T3 = T3', etc. Therefore the points 1 and 1', 2 and 2', etc., will come in contact on the line of centres AB; and AB = A1 + B1' = A2 + B2' =, etc. Bisect the angle TA1 by the line AI, and bisect the angle TB1' by the line BI'. Make AI = A1, BI' = B1'. It is evident that these points, I and I', will come in contact on the line of centres when they have turned through the angles TAI (=  $\frac{1}{2}$  angle TA1) and TBI'(=  $\frac{1}{2}$  angle TB1') respectively.
 
-Thus, if we find the series of points I, II, III, etc., and I', II', III', etc., in the manner just described, and draw through them two curves, as shown in the figure, they will be quadrants of two similar and equal bilobes, of which the remaining similar portions can then be readily drawn. From the above considerations, it is evident that these bilobes will roll together in perfect rolling contact. The velocity ratio will vary between  $\frac{a'}{a} = \frac{AT}{BT}$  and  $\frac{a'}{a} = \frac{BT}{AT}$ . By contracting the angles to one-third, we can form the outlines of a pair of
+Thus, if we find the series of points I, II, III, etc., and I', II', etc., in the manner just described, and draw through them two curves, as shown in the figure, they will be quadrants of two similar and equal bilobes, of which the remaining similar portions can then be readily drawn. From the above considerations, it is evident that these bilobes will roll together in perfect rolling contact. The velocity ratio will vary between $\frac{a'}{a} = \frac{AT}{BT}$ and $\frac{a'}{a} = \frac{BT}{AT}$ By contracting the angles to one-third, we can form the outlines of a pair of
 
 trilobes, and so on.
 
-The wheels thus outlined will roll together in similar pairs, as bilobe with bilobe, trilobe with trilobe, and so on ; but dissimilar pairs, such as one bilobe and one trilobe, will not roll together.
+The wheels thus outlines will roll together in similar pairs, as bilobe with bilobe, trilobe with trilobe, and so on ; but dissimilar pairs, such as one bilobe and one trilobe, will not roll together.
 
 68. InterchangeaWe Lobed Wheels. — In Figs. <sup>45</sup> and 46 is illustrated <sup>a</sup> method of constructing lobed wheels from an ellipse, by which any two wheels of the set will roll together. The process of construction is simple and practical ; but the rolling properties of the curves do not admit of simple demonstration, although they may readily be proved by graphical construction. In Fig. 45, let A and B be the
 
-foci of an ellipse, CGPV. Describe <sup>a</sup> circle about its centre with a radius equal to the semi-focal distance OA. Draw the indefinite tangent HN parallel to BA. With radius OC, equal to the semi-major axis, and centre 0, describe an arc CK, and lay off on the tangent the lengths KL, LM, and MN, equal to HK. From the centre lay off on OF the distances OG = OK, OD = OL, OE = OM, and so on. With OC, OD, OE, etc., as semi-major axes, describe a series of concentric ellipses, having the common foci A and B. The primary ellipse is the curve required for the unilobe ; the second ellipse, DQ, is the basis for the bilobe ; the third, EB, for the trilobe ; the fourth, FS, for the quadrilobe ; and
+foci of an ellipse, CGPV. Describe <sup>a</sup> circle about its centre with a radius equal to the semi-focal distance OA. Draw the indefinite tangent HN parallel to BA. With radius OC, equal to the semi-major axis, and centre 0, describe an arc CK, and lay off on the tangent the lengths KL, LM, and MN, equal to HK. From the centre lay off on OF the dis tances OG = OK, OD = OL, OE = OM, and so on. With OC, OD, OE, etc., as semi-major axes, describe a series of concentric ellipses, having the common foci A and B. The primary ellipse is the curve required for the unilobe ; the second ellipse, DQ, is the basis for the bilobe ; the third, EB, for the trilobe ; the fourth, FS, for the quadrilobe ; and
 
 so on. Draw a semi-circle about A, and divide it into any number of equal angles by equidistant radii.
 
@@ -685,7 +685,7 @@ The velocity ratio of any two of these wheels in gear will vary between two limi
 
 69. Compulsory Rotation of Rolling Ellipses.—In the case of rolling ellipses (Fig. 42), it is evident that, when the motion takes place in the direction of the arrows, the radius of contact of the driver is increasing from AE to AH, and hence motion can be readily transmitted from the axis A
 
-to the axis B. But, when H has passed G, the radius of the driver is decreasing, and the driver will therefore tend to
+to the axis B. But, when H has passed O, the radius of the driver is decreasing, and the driver will therefore tend to
 
 leave the follower. This can be prevented by forming teeth on the rolling faces of both pieces ; but, if this is done, we no longer have pure rolling contact.
 
@@ -693,23 +693,23 @@ When the position of the pieces will allow it, we can connect the free foci by m
 
 (Art. 67) the distance between the free foci is constant in rolling ellipses. There will, however, be times during the revolution when the link will be in line with the fixed foci, and hence cannot transmit motion. This necessitates the formation of teeth on a small portion of each ellipse, near the ends of the major axis, as shown in Fig. 47.
 
-Another method, when the revolution always takes place in the same direction, is, to form teeth on the retreating edge of the driver and the corresponding edge of the follower. In this case it is necessary to provide some means of insuring the proper contact of the teeth in order to prevent jamming. This may be done, as shown in Fig. 48, by placing a pin on the driver and a guide plate on the follower, which arrangement compels the first tooth to enter the proper space.
+Another method, when the revolution always takes place in the same direction, is, to form teeth on the retreating edge of the driver and the corresponding edge of the follower. In this case it is necessary to provide some means of insuring the proper contact of the teeth in order to prevent jamming. This may be done, as shown in Fig. 48, by placing a pin on the driver and a guide plate on the follower, which arrange ment compels the first tooth to enter the proper space.
 
 70. Intermittent Motion. —It may happen that the variation in the velocity ratio is to consist of an intermittent
 
 motion of the follower, while the driver revolves uniformly. In Fig. 49 is shown an intermittent motion formed from two spur wheels by cutting away the teeth of the driver on a
 
-portion of the circumference. There is the same objection to this method as before mentioned for elliptical wheels namely, that the teeth are apt to jam after a period of rest of the follower. A partial remedy is the application of <sup>a</sup> pin and guide plate, similar to the arrangement shown Fig. 48. <sup>A</sup> more complete motion is shown in Fig. 50. <sup>A</sup> portion of
+portion of the circumference. There is the same objection to this method as before mentioned for elliptical wheels namely, that the teeth are apt to jam after a period of rest of the follower. A partial remedy is the application of <sup>a</sup> pin and guide plate, similar to the arrangement shown In Fig. 48. <sup>A</sup> more complete motion is shown in Fig. 50. <sup>A</sup> portion of
 
-the driver is a plain disc of a radius greater than the pitch circle of the driver. A portion of the follower is cut away, to correspond to this ; so that, while there is a slight clearance between the two faces, the follower is prevented from turning until the pin and curved piece come in contact.
+the driver is a plain disc of a radius greater than the pitch circle of the driver. A portion of the follower is cut away, to correspond to this ; so that, while there is a slight clear ance between the two faces, the follower is prevented from turning until the pin and curved piece come in contact.
 
 Velocity Ratio Varying. Directional Relation Changing.
 
-71. Mangle Wheels. —By combining <sup>a</sup> spur wheel with an annular wheel, we obtain a mangle wheel, as shown in Fig. 51. The direction of rotation is changed by causing the pinion, which always revolves uniformly in the same* direction, to act alternately on the spur and on the annular portion.
+71. Mangle Wheels. —By combining <sup>a</sup> spur wheel with an annular wheel, we obtain a mangle wheel, as shown in Fig. 51. The direction of rotation is changed by causing the pinion, which always revolves uniformly in the same direction, to act alternately on the spur and on the annular portion.
 
 The velocity ratio is constant during each partial revolution of the mangle wheel ; but it is changed each time that the pinion passes from the spur to the annular portion, and vice
 
-versa. The pinion is mounted so that its shaft has a vibratory motion, working in a straight slot cut in the upright bar. The end of the pinion shaft is guided in the groove CD, the
+versa. The pinion is mounted so that its shaft has a vibra tory motion, working in a straight slot cut in the upright bar. The end of the pinion shaft is guided in the groove CD, the
 
 centre line of which is at a distance from the pitch lines of the mangle wheel equal to the pitch radius of the pinion. The pinion may also be mounted in a swinging frame, as indicated by dotted lines.
 
@@ -719,7 +719,7 @@ If we construct the teeth of the spur and annular portions of the mangle wheel o
 
 simply obtained by means of the pinion and double rack, shown in Fig. 53. Pins are placed on a portion of the face of the pinion, which engage with the pins of the rack above and below alternately, driving the rack back and forth.
 
-## CHAPTER V.
+# CHAPTER V.
 
 COMMUNICATION OF MOTION BY SLIDING CONTACT. VELOCITY RATIO CONSTANT. DIRECTIONAL RELATION CONSTANT. TEETH OF WHEELS.
 
@@ -735,15 +735,15 @@ Divide the line of centres at T, so that  $\frac{AT}{BT} = \frac{a'}{a}$ . Then,
 
 Let a describing circle be taken of any radius, such as cT, and with it describe an epicycloid Td by rolling it on the *outside* of the pitch circle MN, and a hypocycloid Te by rolling it on the *inside* of the pitch circle RS. If these curves be used for the curved edges of two pieces whose centres of motion are A and B respectively, and the lower one be rotated to the position aa', it will drive the other so
 
-as to bring it to the position 66' ; for, by the known properties of the curves, thej' will have their point of contact, P, in the circumference of the describing circle when its centre <sup>c</sup> is on the line of centres, AB, and they will also have a common normal and a common tangent at that point. Draw the line TP from the point of contact of the two pitch circles to the point of contact of the two curves. Now, on whichever of the two pitch circles we regard the describing circle to be rolling at the instant, its instan taneous centre of motion will evidently be the point T. For that instant, then, the point P revolves about T\ that is, it moves in a direction perpendicular to TP, and hence the line TP is the common normal to the two curves at that instant. Of course, this same argument may be applied to any other position of the curves in contact ; and, as their normal thus always cuts the line' of centres in the fixed point T, it is evident that these curves will transmit motion with a constant -s'eloeity ratio. Furthermore, as the arc Ta — arc TP, and as the arc Th = arc TP, we have arc Ta = arc Tb ; showing that the velocity ratio will be the same as that of the two pitch circles. By transmitting motion by sliding contact, then, between these two curves, we may exactly replace the rolling action of the two pitch circles, as far as the velocity ratio is concerned.
+as to bring it to the position 66' ; for, by the known properties of the curves, they will have their point of contact, P, in the circumference of the describing circle when its centre <sup>c</sup> is on the line of centres, AB, and they will also have a common normal and a common tangent at that point. Draw the line TP from the point of contact of the two pitch circles to the point of contact of the two curves. Now, on whichever of the two pitch circles we regard the describing circle to be rolling at the instant, its instantaneous centre of motion will evidently be the point T. For that instant, then, the point P revolves about T\ that is, it moves in a direction perpendicular to TP, and hence the line TP is the common normal to the two curves at that instant. Of course, this same argument may be applied to any other position of the curves in contact ; and, as their normal thus always cuts the line' of centres in the fixed point T, it is evident that these curves will transmit motion with a constant velocity ratio. Furthermore, as the arc Ta = arc TP, and as the arc Tb = arc TP, we have arc Ta = arc Tb ; showing that the velocity ratio will be the same as that of the two pitch circles. By transmitting motion by sliding contact, then, between these two curves, we may exactly replace the rolling action of the two pitch circles, as far as the velocity ratio is concerned.
 
-75. Epicycloicl and Radial Line. — In Fig. <sup>54</sup> the diameter of tlie describing circle is less than the radius BT. But this is not a necessary condition. If we change its diameter, we will change the shape of both curves ; but tlie two curves generated by the same describing circle will always work together.
+75. Epicycloid and Radial Line. — In Fig. <sup>54</sup> the diameter of tlie describing circle is less than the radius BT. But this is not a necessary condition. If we change its diameter, we will change the shape of both curves ; but tlie two curves generated by the same describing circle will always work together.
 
 If we take the diameter of the describing circle just equal to the radius BT, we will get a special case of the hypocycloid. Under these conditions (Fig. 55) the latter will become a straight line passing through the centre B. All the arguments of the last article apply to this case as well
 
 and we thus see that in this case an epicycloidal curve turning about A, and a radial piece turning about B, will, by sliding contact, transmit motion with the same velocity ratio as the pitch circles.
 
-76. Epicycloid and Pin. —In Fig. <sup>54</sup> the convexity of the two curves lies in the same direction, and they lie on tlie same side of the common tangent. In Fig. 65 the hypocyeloid has become a straight line coinciding with the tangent of the epicycloid. If we increase the diameter of the describing circle still more, the two curves will have their convexities in opposite directions, and they will lie on opposite sides of the common tangent. As the. describing circle becomes larger and larger, the hypocyeloid becomes more and more convex, and decreases in size, until, when the describing circle is taken with the same diameter as the pitch circle RS, the hypocyeloid will degenerate into a mere point, the tracing point itself. If, then (Fig. 66), we assume <sup>a</sup> pin to be placed at the point P in the circumference of RS (the diameter of the pin being so small that the latter may be considered as a mere mathematical line)
+76. Epicycloid and Pin. —In Fig. <sup>54</sup> the convexity of the two curves lies in the same direction, and they lie on the same side of the common tangent. In Fig. 65 the hypocyeloid has become a straight line coinciding with the tangent of the epicycloid. If we increase the diameter of the describing circle still more, the two curves will have their convexities in opposite directions, and they will lie on opposite sides of the common tangent. As the. describing circle becomes larger and larger, the hypocyeloid becomes more and more convex, and decreases in size, until, when the describing circle is taken with the same diameter as the pitch circle RS, the hypocyeloid will degenerate into a mere point, the tracing point itself. If, then (Fig. 66), we assume <sup>a</sup> pin to be placed at the point P in the circumference of RS (the diameter of the pin being so small that the latter may be considered as a mere mathematical line)
 
 it follows that it may be driven by the epicycloid Pa with the same constant velocity ratio as the pitch circles.
 
@@ -757,15 +757,15 @@ But, from similar triangles, that is, the BE ^ BT\_ AD AT' velocity ratio of the
 
 ratio in sliding contact motions. But we are not by any means limited to the curves above given. Instead of a describing circle, we may use a describing curve of any shape, provided only that its radius of curvature never exceeds in length the radius of the circle in which the curve is to roll, and thus generate an infinite number of pairs of curves that
 
-will satisfy the given condition. Thus, in Fig. 58, let A, B, and T be taken as before, and draw pitch circles MN and RS. Now, if we take any curve, such as HTP, and roll it on the outside of one pitch circle and on the inside of the other, any point of this describing curve will generate two curves which will give the desired velocity ratio by sliding contact. For, let the describing curve be in the position shown, being in contact with the pitch circles at T\ and let <sup>P</sup> be the describing point. The straight line TP will be the common normal to the two curves, because, on whichever of the two pitch circles we regard the describing curve to be rolling at the instant, the point of contact, T, is the in stantaneous centre of motion ; so that the motion of P in
+will satisfy the given condition. Thus, in Fig. 58, let A, B, and T be taken as before, and draw pitch circles MN and RS. Now, if we take any curve, such as HTP, and roll it on the outside of one pitch circle and on the inside of the other, any point of this describing curve will generate two curves which will give the desired velocity ratio by sliding contact. For, let the describing curve be in the position shown, being in contact with the pitch circles at T\ and let <sup>P</sup> be the describing point. The straight line TP will be the common normal to the two curves, because, on whichever of the two pitch circles we regard the describing curve to be rolling at the instant, the point of contact, T, is the instantaneous centre of motion ; so that the motion of P in
 
-either curve is perpendicular to TP. As the point of contact of the two curves is always in the describing curve, the same argument is true for any point of contact. As tlie common normal will thus always pass through the same point, T, of the line of centres, AB, these curves will, by moving in contact, produce the desired velocity ratio, exactly replacing the rolling action of the two pitch circles.
+either curve is perpendicular to TP. As the point of contact of the two curves is always in the describing curve, the same argument is true for any point of contact. As the common normal will thus always pass through the same point, T, of the line of centres, AB, these curves will, by moving in contact, produce the desired velocity ratio, exactly replacing the rolling action of the two pitch circles.
 
 79. Conjugate Curves. — Any two curves so related, that, by their sliding contact, motion will be transmitted with a constant velocity ratio, are called conjugate curves. Any curve being assumed at pleasure, we may proceed to find another curve, so that the two curves will be conjugate to each other. If, for instance, in Fig. 58, the curve Pa be given, it is only necessary to find the shape of the curve, HTP, which, by rolling on the outside of MN, will generate Pa. By then rolling this describing curve HTP on the inside of RS, we will obtain the required curve, Pb. Again had Pb been given, we could, by <sup>a</sup> similar process, have found Pa ; and Pa and Pb are conjugate curves.
 
 The labor of finding the shape of this describing curve, and using it in this manner, is, however, generally very considerable ; so that, for practical purposes, the following simple and satisfactory mechanical expedient, due to Professor Willis, is usually resorted to.
 
-In Fig. 59, A and B are <sup>a</sup> pair of boards, whose edges are formed into arcs of the given pitch circles. Attach to A <sup>a</sup> thin piece of metal, C, the edge of which is cut to the shape of the proposed curve ab, and to B <sup>a</sup> piece of drawing paper, D ; the curved piece being slightly raised above the surface of the board to allow the paper to pass under it. Roll the boards together, keeping their edges in contact, so that no slipping takes place ; and draw upon D, in a sufficient number of positions, the outline of the edge ab of C. A curve, de, which touches all the successive lines, will be the corresponding curve required for B.
+In Fig. 59, A and B are <sup>a</sup> pair of boards, whose edges are formed into arcs of the given pitch circles. Attach to A <sup>a</sup> thin piece of metal, C, the edge of which is cut to the shape of the proposed curve ab, and to ^ <sup>a</sup> piece of drawing paper, D ; the curved piece being slightly raised above the surface of the board to allow the paper to pass under it. Roll the boards together, keeping their edges in contact, so that no slipping takes place ; and draw upon D, in a sufficient number of positions, the outline of the edge ab of C. A curve, de, which touches all the successive lines, will be the corresponding curve required for B.
 
 For, by the very mode in which it has been obtained, it will touch ab in every position ;~ hence the contact of the two curves ab and de will exactly replace the rolling action of the two pitch circles. To prevent the boards from slipping, a thin band of metal, such as a watch spring, may be placed between them, being fastened to B at g, and to
 
@@ -776,7 +776,7 @@ We shall now give the methods of laying out on paper the principal curves employ
 
 81. Rectification of Circular Arcs. —In construct ing these curves, as well as in many other graphic operations, it becomes necessary to determine the lengths of given
 
-circular ares, as well as to lay off circular arcs of given lengths. Either of these problems may, of course, be solved by calculation ; but for our purposes it is much more satisfactory to employ the following elegant and surprisingly accurate methods of approximation, devised by Professor Eankine.
+circular ares, as well as to lay off circular arcs of given lengths. Either of these problems may, of course, be solved by calculation ; but for our purposes it is much more satisfactory to employ the following elegant and surprisingly accurate methods of approximation, devised by Professor Rankine.
 
 I. To rectify a given circular arc; that is, to lay off its length on a straight line.
 
@@ -801,17 +801,17 @@ As the describing circle rolls along the fixed circle, its centre will successiv
 
 the circular arc through 2' will he <sup>a</sup> point of the epicycloid required. Similarly, we obtain the points a, d, e, /, <sup>g</sup> and the curve drawn through these points will be the epicycloid required. If greater accuracy is required, we need only increase the number of arcs into which we have divided the describing circle.
 
-This method of finding points of the curve is objectionable on account of the resultant obliquity of the intersections at a and /. This may be avoided, and the construction simplified, by laying off the arc lb = 7i2', md = k2>\ etc. In this case it is not necessary to construct the rolling circle in its various positions ; and, as this method gives the best results for points of the curve near T (which is the part of
+This method of finding points of the curve is objectionable on account of the resultant obliquity of the intersections at a and f. This may be avoided, and the construction simplified, by laying off the arc lb = 7i2', md = k2>\ etc. In this case it is not necessary to construct the rolling circle in its various positions ; and, as this method gives the best results for points of the curve near T (which is the part of
 
 the curve employed in teeth of wheels) , it is greatly to be preferred for practical work.
 
-84. Construction of the Hypocycloid. — The hypocycloid is the curve described by a point in the circumference of a circle rolling on the inside of a fixed circle. Its construction, shown in Fig. 63, is in every way similar to that of the epicycloid.
+84. Construction of the Hypocycloid. —The hypocycloid is the curve described by a point in the circumference of a circle rolling on the inside of a fixed circle. Its construction, shown in Fig. 63, is in every way similar to that of the epicycloid.
 
 When the diameter of the rolling circle is less than the radius of the fixed circle, the curve lies on the same side of the centre A as the successive points of contact of the two circles. When the diameter of the rolling circle is greater than the radius of the fixed circle, the curve lies on the opposite side of the centre A. When the diameter of the
 
 rolling circle is equal to the radius of the fixed circle, as shown on the left in Fig. Go, the radii A 2, A 3, etc., pass through the points 2', 3', etc., and the points b and h, k and d, etc., coincide so that the curve becomes a straight line ; and this line is a radius of the fixed circle.
 
-85. Construction of the Cycloid. — The cycloid is the special case of the epicycloid and hypocycloid, in which the radius of the fixed circle becomes infinite, and the circumference of the circle a straight line. The cycloid is thus described by a point in the circumference of a circle rolling on a straight line. Its construction is in all respects similar to that of the epicycloid and hypocycloid.
+85. Construction of the Cycloid. —The cycloid is the special case of the epicycloid and hypocycloid, in which the radius of the fixed circle becomes infinite, and the circumference of the circle a straight line. The cycloid is thus described by a point in the circumference of a circle rolling on a straight line. Its construction is in all respects similar to that of the epicycloid and hypocycloid.
 86. Construction of the Involute. —The involute is generated by a point in a straight line which rolls along a
 
 fixed circle ; or we may regard it as formed by the end of <sup>a</sup> thread which is unwound from about the circle, and kept taut. It will thus always lie in the direction of <sup>a</sup> tangent to the
@@ -847,9 +847,9 @@ No.<br>of
 
 corresponding to the given number of teeth, and multiply this tabular diameter by the given pitch in inches. The product will be the required pitch diameter in inches.
 
-2. Given the pitch diameter and the number of teeth, to find the pitch. Take from the table the diameter corresponding to the given number of teeth, and divide the given pitch diameter by this tabular diameter. The quotient will be the required pitch in inches.
-3. Given the pitch and the pitch diameter, to find the number of teeth. Divide the pitch diameter by the pitch and, taking the quotient as a tabular pitch diameter, find from the table the number of teeth corresponding to this tabular diameter. If the latter is not found in the table, the pitch assumed is not an aliquot part of the pitch circumference, and must be altered slightly so as to agree with the number of teeth corresponding to either the next larger or next smaller tabular diameter.
-88. Diametral Pitch. —It has been shown in the last article, that the relation between the circular pitch, the pitch diameter, and the number of teeth, introduces the inconvenient number 3.1416. As the number of teeth must be an integer, and as the pitch is usually taken some convenient part of an inch, it follows that the pitch diameter will very often contain an awkward decimal fraction. This may be obviated by the use of the diametral pitch, which is being rapidly introduced in this country.
+- 2. Given the pitch diameter and the number of teeth, to find the pitch. Take from the table the diameter corresponding to the given number of teeth, and divide the given pitch diameter by this tabular diameter. The quotient will be the required pitch in inches.
+- 3. Given the pitch and the pitch diameter, to find the number of teeth. Divide the pitch diameter by the pitch and, taking the quotient as a tabular pitch diameter, find from the table the number of teeth corresponding to this tabular diameter. If the latter is not found in the table, the pitch assumed is not an aliquot part of the pitch circumference, and must be altered slightly so as to agree with the number of teeth corresponding to either the next larger or next smaller tabular diameter.
+- 88. Diametral Pitch. —It has been shown in the last article, that the relation between the circular pitch, the pitch diameter, and the number of teeth, introduces the inconvenient number 3.1416. As the number of teeth must be an integer, and as the pitch is usually taken some convenient part of an inch, it follows that the pitch diameter will very often contain an awkward decimal fraction. This may be obviated by the use of the diametral pitch, which is being rapidly introduced in this country.
 
 As the circular pitch is obtained by dividing the pitch circumference by the number of teeth, so another ratio may be obtained by dividing the pitch diameter by the number of teeth. In practice, it is found more convenient to invert this last ratio ; and, when so inverted, it is called the diametral pitch, though theoretically that designation would more properly belong to the ratio as it stood before inversion. In other words, we define diametral pitch to be the number of teeth per inch of pitch diameter. Thus, a wheel which has 8 teeth
 
@@ -861,7 +861,7 @@ Let M= diametral pitch ; then we have MP =3.1416, or the product of the circular
 
 In this system, the number of teeth and the pitch diameter are so related that the circular pitch is usually some decimal but this is of slight importance, as the circular pitch is rarely set off by actual measurement, but usually by dividing the pitch circle into the required number of parts.
 
-To find the number of teeth in any wheel, multiply the diametral pitch by the pitch diameter. For instance, an 8-pitch wheel of <sup>12</sup> inches pitch diameter has <sup>8</sup> x <sup>12</sup> = <sup>96</sup> teeth.
+To find the number of teeth in any wheel, multiply the diametral pitch by the pitch diameter. For instance, an 8-pitch wheel of 12 inches pitch diameter has 8 x 12 = 96 teeth.
 
 Again : to find the pitch diameter, divide the number of teeth by the pitch. Thus, a 6-pitch wheel of 25 teeth has a pitch diameter of ^- = 6:^ inches.
 
@@ -873,7 +873,7 @@ be, in column A ; then the equivalent pitch in the other sys tem will be found o
 
 In this volume, circular pitch is always meant when the word " pitch " is used without further qualification.
 
-## CHAPTER VI.
+# CHAPTER VI.
 
 COMMUNICATION OF MOTION BY SLIDING CONTACT.
 
@@ -912,7 +912,7 @@ respectively. Let T be found as usual. Draw the pitch circles MN and RS, and ass
 
 Bisect Ta in H, and draw through H a reversed face, HP, similar to Pa. The acting outlines of all the teeth of the driver may now be completed by laying off the distance Ha all around the pitch circle MN, and drawing through the points so found a series of equal and alternately reversed faces similar to Pa. Pb is all of the hypocycloid that comes into contact with the face Pa; but, in order to provide room for the point of the latter, the hypocycloid is continued to D, making the depth of the teeth the same in each wheel. laying off the half pitch arc all around the pitch circle RS, and drawing a series of equal and alternately reversed flanks similar to Db, we will get the outlines of the follower's teeth. The entire outlines of the teeth of both wheels are then completed by connecting, by circular arcs concentric with the respective pitch circles, the bottoms of the faces of the driver, and the tops and bottoms of the follower.
 
-In this construction the acting outlines first come into contact at T on the line of centres. The driver moving as indicated by the arrow, the point of contact travels along the describing circle in the arc TP, until it reaches P, where the teeth quit contact. The line of action at any moment is the straight line from T to the point of contact. There is no arc of approach, and the arc of recess is exactly equal to the pitch Ta; that is to say, one pair of teeth quit contact at P at the same moment that another pair come into contact This case is therefore a barely possible one; the driver's tooth being pointed, and just high enough to make the arc of action equal to the pitch. Pa, then, is the necessary length of face to secure this arc of action. Drawing the radial line PA, and calling K the intersection of this radius with the pitch circle MN, we see that in this case Ka is just half the thickness of the tooth; in other words, just one-quarter of the pitch. Had Ka been greater than half Ha, HK must have been less, so that the reversed face through H would not have intersected the face Pa at P, but at some point between P and a, and the case would have been impracticable with the pitch assigned. But if Ka had been less than half the thickness of the tooth, as required by
+In this construction the acting outlines first come into contact at T on the line of centres. The driver moving as indicated by the arrow, the point of contact travels along the describing circle in the arc TP, until it reaches P, where the teeth quit contact. The line of action at any moment is the straight line from T to the point of contact. There is no arc of approach, and the arc of recess is exactly equal to the pitch Ta; that is to say, one pair of teeth quit contact at P at the same moment that another pair come into contact at T. This case is therefore a barely possible one; the driver's tooth being pointed, and just high enough to make the arc of action equal to the pitch. Pa, then, is the necessary length of face to secure this arc of action. Drawing the radial line PA, and calling K the intersection of this radius with the pitch circle MN, we see that in this case Ka is just half the thickness of the tooth; in other words, just one-quarter of the pitch. Had Ka been greater than half Ha, HK must have been less, so that the reversed face through H would not have intersected the face Pa at P, but at some point between P and a, and the case would have been impracticable with the pitch assigned. But if Ka had been less than half the thickness of the tooth, as required by
 
 the pitch assumed, the teeth could have been made higher by extending the faces above P, or they might be left of the same height, and given some thickness at the top, as in Fig. 66.
 
@@ -938,9 +938,9 @@ As the arc of action increases, the percentage of sliding also increases ; so th
 
 94. Teeth with both Faces and Flanks. —Where either wheel is to drive, or where heavy pressures are to be
 
-transmitted, such wheels as above described are evidently unsuitable. To produce their teeth, we rolled a describing circle so as to generate an epicycloid on the outside of MN, and a hypocycloid on the inside of RS. If, now, in addition, we roll another describing circle so as to generate an epicy-
+transmitted, such wheels as above described are evidently unsuitable. To produce their teeth, we rolled a describing circle so as to generate an epicycloid on the outside of MN, and a hypocycloid on the inside of RS. If, now, in addition, we roll another describing circle so as to generate an epicy
 
-cloid on the outside of RS, and a hypocycloid on the inside of MN, it is evident that the teeth of each wheel will have both faces and flanks, and that the faces of the teeth of each wheel will work correctly with the flanks of those of the other. The method of construction is shown in Fig. 67. Let MN and RS be the driving and following pitch circles, as before, drawn about the centres A and B. The epicycloid Pa and the hypocycloid Pb are generated, as in Fig. 65, by the point P of the describing circle whose radius is CT. To complete the teeth, the hypocycloid P'a' and the epicycloid P'b' are generated by means of the point P' of the describing circle whose radius is LT. Continue the hypocycloids  $P\bar{b}$ and  $P'\alpha'$  to D and G', to give clearance, as previously explained. Draw bQ = b'P'; aG = a'G'a'; V = Pa; and b'D'= bD. We now have the complete tooth outline for one side of each tooth, shown in two positions; on the left at the moment of engaging in contact at P', and on the right at the moment of quitting contact at P. The action begins at P'; the driver's flank pushing the face of the follower, and the point of contact moving in the arc P'T, until the points a'and b' come in contact at T. The face of the driver then pushes the flank of the follower, the point of contact now travelling in the arc TP; and at P the action ends.
+cloid on the outside of RS, and a hypocycloid on the inside of MN, it is evident that the teeth of each wheel will have both faces and flanks, and that the faces of the teeth of each wheel will work correctly with the flanks of those of the other. The method of construction is shown in Fig. 67. Let MN and RS be the driving and following pitch circles, as before, drawn about the centres A and B. The epicycloid Pa and the hypocycloid Pb are generated, as in Fig. 65, by the point P of the describing circle whose radius is CT. To complete the teeth, the hypocycloid P'a' and the epicycloid P'b' are generated by means of the point P' of the describing circle whose radius is LT. Continue the hypocycloids  $P\bar{b}$ and $P'\alpha'$  to D and G', to give clearance, as previously explained. Draw bQ = b'P'; aG = a'G'; V = Pa; and b'D' = bD. We now have the complete tooth outline for one side of each tooth, shown in two positions; on the left at the moment of engaging in contact at P', and on the right at the moment of quitting contact at P. The action begins at P'; the driver's flank pushing the face of the follower, and the point of contact moving in the arc P'T, until the points a' and b' come in contact at T. The face of the driver then pushes the flank of the follower, the point of contact now travelling in the arc TP; and at P the action ends.
 
 P' and P may be assumed at pleasure on the circumferences of the respective describing circles, and will fix the lengths of the arcs of approach and recess; viz., Tb' = Ta' = TP'; and Ta = Tb = TP.
 
@@ -950,7 +950,7 @@ If each wheel is to be used indiscriminately as driver or follower, the arcs of 
 
 95. Size of Describing Circle. —The lengths and shapes of the faces and flanks of the teeth of the wheels, with given arcs of approach and recess, evidently depend on the relation between the diameters of the pitch and describing circles.
 
-If, in Fig. 67, the diameter of the upper describing circle were increased, the face Pa would become sliorter, and the curvature of both Pa and Pb would decrease, until, when the diameter of the describing circle became just equal to the radius of RS, the hypocycloid Pb would become a straight line passing through the centre of the pitch circle RS (Art. 75). This fact is often taken advantage of in laying out teeth. When the diameters of both describing circles are thus taken equal to the radii of the pitch circle in which they roll, the flanks of the teeth of both wheels become radial lines, while the faces remain epicycloids. The consequent reduction in the labor of laying out the shape of such teeth has led to their extensive introduction ; though, in conse quence of the convergence of their radial flanks, they have the disadvantage of being comparatively weak at the root. If the diameter of the describing circle be made still larger, the hypocycloidal flanks will converge still more as they recede from the pitch circle, making the tooth still weaker at the root. Though describing circles have been successfully used having a diameter five-eighths as great as that of the pitch circle in which they roll, yet it seems a good practical rule to make the radial flank the limit in this direction. The smaller the describing circles, the longer will be the faces of the teeth, and the greater will be the consequent obliquity of action ; but, on the other hand, the stronger will be the tooth. We thus have the two conflicting conditions of obliquity of action and strength of teeth, and the size of the describing circle will be regulated in each case by their relative importance. A good general rule, which is found to work well in practice, is to make each describing circle of a diameter
+If, in Fig. 67, the diameter of the upper describing circle were increased, the face Pa would become shorter, and the curvature of both Pa and Pb would decrease, until, when the diameter of the describing circle became just equal to the radius of RS, the hypocycloid Pb would become a straight line passing through the centre of the pitch circle RS (Art. 75). This fact is often taken advantage of in laying out teeth. When the diameters of both describing circles are thus taken equal to the radii of the pitch circle in which they roll, the flanks of the teeth of both wheels become radial lines, while the faces remain epicycloids. The consequent reduction in the labor of laying out the shape of such teeth has led to their extensive introduction ; though, in conse quence of the convergence of their radial flanks, they have the disadvantage of being comparatively weak at the root. If the diameter of the describing circle be made still larger, the hypocycloidal flanks will converge still more as they recede from the pitch circle, making the tooth still weaker at the root. Though describing circles have been successfully used having a diameter five-eighths as great as that of the pitch circle in which they roll, yet it seems a good practical rule to make the radial flank the limit in this direction. The smaller the describing circles, the longer will be the faces of the teeth, and the greater will be the consequent obliquity of action ; but, on the other hand, the stronger will be the tooth. We thus have the two conflicting conditions of obliquity of action and strength of teeth, and the size of the describing circle will be regulated in each case by their relative importance. A good general rule, which is found to work well in practice, is to make each describing circle of a diameter
 
 equal to three-eighths of the diameter of the pitch circle in which it rolls.
 
@@ -964,41 +964,41 @@ Again: it is evident that the pitch of the driver's teeth cannot be greater than
 
 The pitch being given, to find the arcs of approach and recess, draw a radius of MN, and lay off on MN, from the point where the radius intersects the latter, an arc  $= \frac{1}{4}$  pitch. Through the point so found draw the epicycloid which would
 
-be formed by rolling the describing circle CT on MN, until it meets and intersects the radius at some point. Through this point of intersection draw a circular arc concentric with MN •, where the latter cuts the describing circle will be the point P, and the arc of recess will be determined on the supposition that the teeth are pointed. If they are not pointed, let <sup>X</sup> be the addendum ; then <sup>a</sup> circular are with radius AT + X will cut the describing circle at the point of quitting contact, P, as before.
+be formed by rolling the describing circle CT on MN, until it meets and intersects the radius at some point. Through this point of intersection draw a circular arc concentric with MN;, where the latter cuts the describing circle will be the point P, and the arc of recess will be determined on the supposition that the teeth are pointed. If they are not pointed, let <sup>X</sup> be the addendum ; then <sup>a</sup> circular are with radius AT + X will cut the describing circle at the point of quitting contact, P, as before.
 
 The arc of approach is found in a similar manner.
 
-97. Practical Example. — In Fig. <sup>68</sup> is shown the method of laying out a pair of such wheels. The diagram
+97. Practical Example. — In Fig. 68 is shown the method of laying out a pair of such wheels. The diagram
 
-is drawn full size, and is the practical solution of the follow ing problem : Distance between centres to be 9 inches. The driver (lower wheel) to have 40 teeth, and the follower 50 teeth. Arc of approach to be equal to the pitch, and the arc
+is drawn full size, and is the practical solution of the follow ing problem : Distance between centres to be 9 inches. \*The driver (lower wheel) to have 40 teeth, and the follower 50 teeth. Arc of approach to be equal to the pitch, and the arc
 
 of recess to be one and a half times the pitch. The conditions given are the same as those given in Art. 92, except that there is to be an arc of approach in this case. The pitch radii of the wheels are 4 and 5 inches, as before ; and the diameters of the respective describing circles are 3 and 3¾ inches.
 
 The faces of the driver's teeth and the flanks of the follower's teeth are found as in Art. 92, and are, in fact, identical with those there found. In this case, however, we do not finish off the bottoms of the faces of the driver's teeth and the tops of the flanks of the follower's teeth by arcs of circles, as is done in Fig. 66.
 
-Lay off the arc TP' = Tb' = arc of approach. Using the describing circle of three inches diameter, and going through the process explained in Art. 94, we obtain flanks for the driver's teeth, and faces for those of the follower. By this construction, as shown in Fig. 66, there are three pair of teeth in contact ; one just quitting contact at P, another in contact at p, and a third pair at p'- In practice, after we have determined that the given arcs of action may be secured with the given pitch (Art. 96), the four curves are usually laid down at T, as shown ( Td and Tg being epicycloids, and Te and Th hypocycloids) . The addendum circle bounding the tops of the teeth, and the root circle bounding the bottoms of the spaces, are next drawn. The pitch points of the teeth are then laid off on the respective pitch circles, and the re spective curves are drawn through the successive pitch points in alternately reversed directions, being limited at the top by the addendum circle, and connected at the bottom by fillets to the arcs of the root circle.
+Lay off the arc TP' = Tb' = arc of approach. Using the describing circle of three inches diameter, and going through the process explained in Art. 94, we obtain flanks for the driver's teeth, and faces for those of the follower. By this construction, as shown in Fig. 66, there are three pair of teeth in contact ; one just quitting contact at P, another in contact at p, and a third pair at p'. In practice, after we have determined that the given arcs of action may be secured with the given pitch (Art. 96), the four curves are usually laid down at T, as shown ( Td and Tg being epicycloids, and Te and Th hypocycloids) . The addendum circle bounding the tops of the teeth, and the root circle bounding the bottoms of the spaces, are next drawn. The pitch points of the teeth are then laid off on the respective pitch circles, and the respective curves are drawn through the successive pitch points in alternately reversed directions, being limited at the top by the addendum circle, and connected at the bottom by fillets to the arcs of the root circle.
 
 98. Interchangeable Wheels. —If the describing circle be made of a diameter bearing a fixed ratio to that of the pitch circle, any pair of wheels so laid out will work together ; but they cannot both work properly with a third wheel of different diameter. Thus, a given wheel having radial flanks
 
-cannot work properly with two or more other wheels of dif ferent diameters, and also having radial flanks.
+cannot work properly with two or more other wheels of different diameters, and also having radial flanks.
 
-If, however, we use the same describing circle for all the faces and all the flanks, we will obtain a series of inter changeable wheels, any one of which will work correctly with any other of the same set. This suggestion is due to Professor Willis, and this method of laying out teeth is invaluable for such purposes as constructing the change-wheels of a lathe.
+If, however, we use the same describing circle for all the faces and all the flanks, we will obtain a series of interchangeable wheels, any one of which will work correctly with any other of the same set. This suggestion is due to Professor Willis, and this method of laying out teeth is invaluable for such purposes as constructing the change-wheels of a lathe.
 
 As, with a constant describing circle, the outlines of the teeth will vary with the diameters of the wheels, so as to make the obliquity of action greater as the latter increases, it is usually advisable to employ as large a describing circle as possible. From the considerations discussed in Art. 95, the practical rule follows, that, for a set of interchangeable wheels, the diameter of the constant describing circle should be half the diameter of the pitch circle of the smallest wheel of the set.
 
-99. Rack and Wheel. — "When <sup>a</sup> wheel works with <sup>a</sup> rack, the line of centres becomes a perpendicular to the pitch line of the rack, and passing through the centre of the wheel. The rack will travel through a distance equal to the circumference of the pitch circle of the wheel for each revolution of the latter, whatever the number of teeth. The pitch of the rack teeth, therefore, is found by rectifying the pitch are of the wheel, and laying off this rectified arc upon the pitch line of the rack. In Fig. 69 the two describing circles are made of the same diameter, so that any other wheel of the same pitch whose tooth outlines are formed by means of the same describing circle will also gear with the rack. In fact, the rack is merely a special case of the wheel ; and all the deductions of the previous articles as to tooth outlines, arcs of action, etc., apply, with obvious modifications, to this case as well. Both faces and flanks of the rack teeth are cycloids (Art. 85) : their tops and bottoms are straight lines. The clearance is obtained as usual.
+99. Rack and Wheel. — "When a wheel works with a rack, the line of centres becomes a perpendicular to the pitch line of the rack, and passing through the centre of the wheel. The rack will travel through a distance equal to the circumference of the pitch circle of the wheel for each revolution of the latter, whatever the number of teeth. The pitch of the rack teeth, therefore, is found by rectifying the pitch are of the wheel, and laying off this rectified arc upon the pitch line of the rack. In Fig. 69 the two describing circles are made of the same diameter, so that any other wheel of the same pitch whose tooth outlines are formed by means of the same describing circle will also gear with the rack. In fact, the rack is merely a special case of the wheel ; and all the deductions of the previous articles as to tooth outlines, arcs of action, etc., apply, with obvious modifications, to this case as well. Both faces and flanks of the rack teeth are cycloids (Art. 85) : their tops and bottoms are straight lines. The clearance is obtained as usual.
 
 In the figure, which is drawn full size, the diameter of pitch circle of the wheel is four inches, and the wheel has forty teeth. The arcs of approach and recess are each made
 
 equal to the pitch. Assuming the -rack to drive to the right, the contact begins at P', the point of contact travelling along the arcs P'T and TP; and at P the action ends.
 
-The principle of making teeth with straight flanks may, of course, be extended to the case of a rack and wheel, as shown in Fig. 70. The describing circle whose diameter is TB, the radius of the wheel, generates the cycloidal faces of the rack teeth and the radial flanks of the wheel teeth. The radius of the rack being infinite, the diameter of the other describing circle is also infinite ; in other words, it is a straight line.
+The principle of making teeth with straight flanks may, of course, be extended to the case of a rack and wheel, as shown in Fig. 70. Tlie describing circle whose diameter is TB, the radius of the wheel, generates the cycloidal faces of the rack teeth and the radial flanks of the wheel teeth. The radius of the rack being infinite, the diameter of the other describing circle is also infinite ; in other words, it is a straight line.
 
 Hence the faces of the wheel teeth are evidently involutes of the pitch circle, while the flanks of the rack teeth are straight lines perpendicular to MN. The arcs of action and the addendum of the rack teeth are found as before. The rack driving to the right, the contact begins at P' (the point of intersection of the wheel addendum circle with the line MN) , travels along the straight line P'T, then along the arc TP tothe point P (the intersection of the rack addendum line with the describing circle) , where the teeth quit contact. In this form of rack tooth the acting flank has degenerated into a mere point, which is consequently subjected to excessive
 
 wear. This is a serious defect, and forms a grave objection to the use of this form of tooth for racks.
 
-100. Annular Wheels.—The construction explained in Art. 94 is applicable not only to the case of wheels in external gear, as there shown, but to that of wheels in internal gear as well. In Fig. 71 the smaller pitch circle lies within the greater ; two describing circles are used, as before. In fact, on comparing this diagram with Fig. 67, both figures
+100. Annular Wheels—The construction explained in Art. <sup>94</sup> is applicable not only to the case of wheels in external gear, as there shown, but to that of wheels in internal gear as well. In Fig. 71 the smaller pitch circle lies within the greater ; two describing circles are used, as before. In fact, on comparing this diagram with Fig. 67, both figures
 
 being similarly lettered, we will see that all the details of construction are the same in both. The pinion is an ordinary spur wheel ; while the acting curves of the annular wheel are identical with those of a spur wheel, having the same pitch and describing circles, the tooth of the one corresponding to the space of the other.
 
@@ -1016,13 +1016,13 @@ In Fig. 72, let bk = circular pitch = P. Then, according to several systems in g
 
 Total<br>depth
 
-system the percentage of backlash gradually diminishes as the pitch increases. The actual amount as given by this system is, however, rather larger than is generally used at present. Teeth proportioned by any of these systems will in general be of good shape, and answer the purpose desired. Should the wheel have less than about twelve teeth, or should the exact amount of approaching or receding action be of importance, no arbitrary system should be used. In all such cases the proper dimensions of the teeth should be found as previously explained. The backlash and clearance should always be made as small as the character of the workmanship will permit. In our diagrams we have assumed no backlash to exist; but its introduction would have no effect, except to diminish the thickness of the tooth. Instead of half the pitch, as it is in the diagrams, the thickness of the tooth would be half the pitch minus half the backlash. In using the diametral pitch, the working depth of a tooth is almost always taken at two pitch parts of an inch, and the addendum at one pitch part of an inch. That is, in a 4-pitch wheel, the working depth is  $\frac{2}{4} = \frac{1}{2}$  inch, and the addendum is  $\frac{1}{4}$  inch. The clearance and backlash are taken at from a fourth to an eighth of one pitch part of an inch; thus, in a 4-pitch wheel, they would be taken at from  $\frac{1}{4 \times 4} \left( = \frac{1}{16} \right)$  to  $\frac{1}{8 \times 4} \left( = \frac{1}{32} \right)$  of an inch.
+system the percentage of backlash gradually diminishes as the pitch increases. The actual amount as given by this system is, however, rather larger than is generally used at. Teeth proportioned by any of these systems will in general be of good shape, and answer the purpose desired. Should the wheel have less than about twelve teeth, or should the exact amount of approaching or receding action be of importance, no arbitrary system should be used. In all such cases the proper dimensions of the teeth should be found as previously explained. The backlash and clearance should always be made as small as the character of the workmanship will permit. In our diagrams we have assumed no backlash to exist; but its introduction would have no effect, except to diminish the thickness of the tooth. Instead of half the pitch, as it is in the diagrams, the thickness of the tooth would be half the pitch minus half the backlash. In using the diametral pitch, the working depth of a tooth is almost always taken at two pitch parts of an inch, and the addendum at one pitch part of an inch. That is, in a 4-pitch wheel, the working depth is  $\frac{2}{4} = \frac{1}{2}$ inch, and the addendum is  $\frac{1}{4}$ inch. The clearance and backlash are taken at from a fourth to an eighth of one pitch part of an inch; thus, in a 4-pitch wheel, they would be taken at from  $\frac{1}{4 \times 4} \left( = \frac{1}{16} \right)$ to $\frac{1}{8 \times 4} \left( = \frac{1}{32} \right)$  of an inch.
 
 The simplicity of these proportions have led to their almost universal adoption whenever the diametral pitch is employed.
 
 102. Involute System.—It has been shown (Art. 80) that involutes of certain circles possess the property of transmitting motion by sliding contact with a constant velocity ratio, and the application of such curves to the formation of the teeth of wheels is shown in Fig. 73.
 
-Let AB be the line of centres, divided at T, so that  $\frac{AT}{BT} = \frac{a'}{a}$ . Draw the pitch circles MN and RS, and their common tangent t'Tt. Draw P'TP, making an oblique angle
+Let AB be the line of centres, divided at T, so that  $\frac{AT}{BT} = \frac{a'}{a}$. Draw the pitch circles MN and RS, and their common tangent t'Tt. Draw P'TP, making an oblique angle
 
 PTt with the tangent t'Tt. From the centres A and B drop the perpendiculars AP' and BP on the line P'TP\ and, with these perpendiculars as radii, describe the circles M'N' and R'S', which will be tangent to the line P'TP.
 
@@ -1038,7 +1038,7 @@ In other words, if each involute be long enough to touch the other at its root, 
 
 103. Given the pitch circles, the obliquity of the line of action, and the desired arcs of approach and recess, to find the limiting values of the pitch which will secure these arcs of action. The receding action evidently continues while the point of contact travels from 7" to P in the line TP, <sup>a</sup> dis tance equal to the arc Oa"
 
-The curves OTH and a"aP being equal involutes of M'N', and the points T, a, lying in the circumference of the circle 'MN, concentric with that of M'N' which contains the points
+The curves OTH and a''aP being equal involutes of M'N', and the points T, a, lying in the circumference of the circle 'MN, concentric with that of M'N' which contains the points
 
  $$O, a'', \text{ it follows that the angle } TAa = \text{angle } OAa'', \text{ and } \frac{\text{arc } Oa''}{\text{arc } Ta} = \frac{AP'}{AT}. \text{ Hence } Oa'' = \frac{AP'}{AT} \times Ta.$$
 
@@ -1074,7 +1074,7 @@ In these wheels, there are evidently always two pairs of teeth in contact. In th
 
 tooth should not be allowed to exceed the amount determined by the methods of the preceding articles.
 
-107. Rack and Wheel. —If, in Fig. 74, the radius AT of the driver were to increase, the curvature of MN, as well as that of the involute of M'N', would necessarily decrease; until, when MN became a straight line, M'N' would also become a straight line, and the involute of M'N' would become a straight line, which must be perpendicular to the line of action, DTE.
+107. Rack and Wheel. —If, in Fig. 74, the radius AT of the driver were to increase, the curvature of MN, as well as that of the involute of M'N', would necessarily decrease; until, when MN became <sup>a</sup> straight line, M'N' would also become <sup>a</sup> straight line, and the involute of M'N' would be come a straight line, which must be perpendicular to the line of action, DTE.
 
 The method of constructing the teeth is exactly similar to that shown in Fig. 74.
 
@@ -1086,13 +1086,13 @@ The construction of the teeth of annular wheels is also in all respects similar 
 1. Any two wheels with involute teeth of which the pitch arcs on the base circles are equal, will gear correctly with each other.
 2. The velocity ratio will not be affected by any change in the distance between their centres.
 
-The peculiarity of interchangeability is also obtainable with epicycloidal teeth under certain conditions (Art. 98). The peculiarity of constant velocity ratio with varying dis tance between the centres is not found in any other form of teeth, and is of special importance in Tnechanism requiring exceptional smoothness and uniformity of action. The shafts may be at the proper distance apart, or not, as happens ; and they may change position by wearing, or by variable adjustment, as when used on rolls, or they may be brought closer together to abolish backlasli. In fact, the involute tooth is remarkably well adapted to such variable demands, and will accommodate itself to errors and defects that are difficult to avoid in practice.
+The peculiarity of interchangeability is also obtainable with epicycloidal teeth under certain conditions (Art. 98). The peculiarity of constant velocity ratio with varying dis tance between the centres is not found in any other form of teeth, and is of special importance in mechanism requiring exceptional smoothness and uniformity of action. The shafts may be at the proper distance apart, or not, as happens ; and they may change position by wearing, or by variable adjustment, as when used on rolls, or they may be brought closer together to abolish backlasli. In fact, the involute tooth is remarkably well adapted to such variable demands, and will accommodate itself to errors and defects that are difficult to avoid in practice.
 
 The line of action of epicycloidal teeth is perpendicular to the line of centres at the instant when the point of contact is on that line ; but that of involute teeth is constantly in the direction of the common tangent of the two base circles, and hence always oblique to the line of centres. The obliquity of involute teeth, then, is constant ; and it is, in general, greater than the mean obliquity of epicycloidal teeth having the same angle of action. The thrust on the bearings is therefore greater with involute than with epicycloidal teeth ; and though for heavy pressures this is sometimes a serious objection to tlie use of involute teeth, yet for ordinary work it would scarcely be so considered.
 
 The involute tooth has a great advantage over the epicycloidal tooth in being of a much stronger shape, spreading considerably at the root, which in the epicycloidal form is often the weakest part. Though the epicycloidal tooth is still in much greater use than the involute tooth, yet the merits of the latter are being rapidly recognized by manufacturers ; and, for light work at least, it is gradually coming into more general use to replace the epicycloidal form.
 
-## CHAPTER VII.
+# CHAPTER VII.
 
 COMMUNICATION OF MOTION BY SLIDING CONTACT. VELOCITY RATIO CONSTANT. DIRECTIONAL RELATION CONSTANT. TEETH OF WHEELS (CONTINUED).
 
@@ -1104,7 +1104,7 @@ The two principal methods of approximation are by circular arcs and by curved te
 
 110. Willis' Method of Circular Arcs.—In Fig. 76, let A and B be the centres of motion, and T the point of contact of the pitch circles MN and RS. Draw the line of action DTE, making any assumed angle with AB, and erect on it the perpendicular TO. On TO assume the point O, and through this point draw the lines APO and BOQ. We have now formed a system of linkwork, consisting of the arms AP and BQ, connected by the link PQ; and as, by
 
-construction, O is the instantaneous centre of PQ, it follows (Art. 25) that  $\frac{a'}{a} = \frac{AT}{BT}$  for that instant. If at any point b on DE we draw two curves, abc and hbe, in contact, and of such shape that P and Q are their respective centres of curvature, these curves will, by revolving about centres A and B respectively, produce the constant velocity  $\frac{a'}{a} = \frac{AT}{BT}$ , the same as that of the pitch circles. In the preceding articles we have already discussed the theoretical shapes of such curves; and, from the above, it is evident that, if circular arcs be drawn through b, with centres P and  $Q_1$ they will fulfil the required condition for that instant. If, however, the teeth are short, and the obliquity is not very great, these arcs differ so slightly from the true curves that they may be substituted for the latter with very good results.
+construction, O is the instantaneous centre of PQ, it follows (Art. 25) that  $\frac{a'}{a} = \frac{AT}{BT}$  for that instant. If at any point b on DE we draw two curves, abc and bbe, in contact, and of such shape that P and Q are their respective centres of curvature, these curves will, by revolving about centres A and B respectively, produce the constant velocity  $\frac{a'}{a} = \frac{AT}{BT}$ , the same as that of the pitch circles. In the preceding articles we have already discussed the theoretical shapes of such curves; and, from the above, it is evident that, if circular arcs be drawn through b, with centres P and  $Q_1$ they will fulfil the required condition for that instant. If, however, the teeth are short, and the obliquity is not very great, these arcs differ so slightly from the true curves that they may be substituted for the latter with very good results.
 
 In the figure the arc abc will be the face of the tooth of MN, while hbe will be the flank of the follower.
 
@@ -1120,9 +1120,9 @@ Assume  $\phi=75^\circ$  30′, which is a very convenient value, for which TP=R
 
 <sup>a</sup> perpendicular, AP, upon TF (or describe <sup>a</sup> semicircle upon AT, and set off TF = AT\ then will F be the centre from whicli an are, aTb, described through T, will be the side of the tooth required. To describe the other teeth, draw, with centre A and radius AF, <sup>a</sup> circle, mn, within the
 
-pitch circle MN; this will be the locus of the centres for the teeth. Set off around the pitch circle, arcs of 0.23 inch and 0.27 inch in length alternately, being the respective widths of tooth and space on the pitch circle. Take the constant radius in the compasses, and, keeping one point in the circle mn, step from tooth to tooth, and describe the arcs, as shown in the figure, joining them directly to the arcs of the addendum circle, and by small fillets to the arcs of the root circle. If aTb were an arc of an involute having mn for a base circle, TP would be its radius of curvature at T. These teeth, therefore, approximate to involute teeth ; and they
+pitch circle MJSf; this will be the locus of the centres for the teeth. Set off around the pitch circle, arcs of 0.23 inch and 0.27 inch in length alternately, being the respective widths of tooth and space on the pitch circle. Take the constant radius in the compasses, and, keeping one point in the circle mn, step from tooth to tooth, and describe the arcs, as shown in the figure, joining them directly to the arcs of the addendum circle, and by small fillets to the arcs of the root circle. If aTb were an arc of an involute having mn for <sup>a</sup> base circle, TP would be its radius of curvature at T. These teeth, therefore, approximate to involute teeth ; and they
 
-possess, in common with them, the oblique action, the power of acting with wheels of any number of teeth, and the adjustment of backlash. But, as the sides of the teeth consist each of a single arc, there is but one position of action in which the angular velocity is strictly constant; namely, when the point of contact is on the line of centres.
+possess, in common with them, the oblique action, the power of acting with wheels of any number of teeth, and the adjustment of backlash. But, as the sides of the teeth consist each of a *single arc*, there is but one position of action in which the angular velocity is strictly constant; namely, when the point of contact is on the line of centres.
 
 The length of the teeth should always be kept within the limits shown in Art. 102, and in such cases the above method of approximation will give fairly good results. The larger the wheel, the more closely will the circular arcs obtained by this rule agree with the true involute curve.
 
@@ -1134,17 +1134,17 @@ Draw OTO' perpendicular to DE, and set off the lengths TO and TO', equal to each
 
 theflanJc of MNmW becircular arcs, with centres Q'andP', and drawn in contact at <sup>a</sup> distance equal half the pitch to th^ left of the line of centres.
 
-From the construction it appears that the teeth of one wheel are not changed in shape by any change in the radius of the other wheel. In short, if any number of wheels be described in the above manner, in which the angle DTA is constant, the distances TO and TO' being the same for the whole set of wheels, then any two of these wheels will work together. The distance TO' may be determined for a set of wheels by considering that if A approach T, the point C remaining fixed, AP' becomes parallel to DE, and the flank of the tooth of MN becomes a straight line. If A approach still nearer, P' appears on the opposite side of T, and the flank becomes convex, giving a very awkward form to the tooth. The greatest value, therefore, that can be given to TO and TO' must be one which, when employed with the
+From the construction it appears that the teeth of one wheel are not changed in shape by any change in the i-adius of the other wheel. In short, if any number of wheels be described in the above manner, in which the angle DTA is constant, the distances TO and TO' being the same for the whole set of wheels, then any two of these wheels will work together. The distance TO' may be determined for a set of wheels by considering that if A approach T, the point C remaining fixed, AP' becomes parallel to DE, and the flank of the tooth of MN becomes <sup>a</sup> straight line. If A approach still nearer, P' appears on the opposite side of T, and the flank becomes convex, giving a very awkward form to the tooth. The greatest value, therefore, that can be given to TO and TO' must be one which, when employed with the
 
-smallest radius of the set, will make AP' parallel to DE. By assuming constant values for this smallest radius, as well as for the angle DTA, in a set of wheels, the values of the radii of curvature of the faces and flanks which correspond to different numbers and pitches, maybe calculated and tabulated for use, so as to supersede the necessity of making the construction in every case. Thus, the values in the tables of Fig. 79 were obtained by assuming that the least radius was just great enough to give the wheel twelve teeth of the required pitch, and that the angle DTA was 75°.
+smallest rnrlins of the set, will make AP' parallel to DE. By assuming constant values for this smallest radius, as well as for the angle DTA, in <sup>a</sup> set of wheels, the values of tlie radii of curvature of the faces and flanks which correspond to different numbers and pitches, maybe calculated and tabulated for use, so as to supersede the necessity of making the construction in every case. Thus, the values in the tables of Fig. 79 were obtained by assuming that the least radius was just great enough to give the wheel twelve teeth of the required pitch, and that the angle DTA was 75°.
 
-114. Willis' Odontograph. — This instrument, repre sented in Fig. 79, was contrived by Professor Willis for the purpose of laying out the approximate forms of teeth according to the principles of Art. 11.3. The figure represents the instrument exactly half the size of the original ; but, as it may be made of a sheet of bristol-board, this figure will enable any one to make it for use. The side NTM, which corresponds to the line DE in Fig. 78, is straight ; and the line TC makes an angle of exactly 75° with it, and corresponds to the radius AT of the wheel. This side, NTM, is graduated into a scale of twentieths of inches ; and each tenth division is numbered, both ways, from T.
+114. Willis' Otlontograpli. — This instrument, repre sented in Fig. 79, was contrived by Professor Willis for the purpose of laying out the approximate forms of teeth accord ing to the principles of Art. 11.3. The figure represents the instrument exactly half the size of the original ; but, as it may be made of a sheet of bristol-board, this figure will enable any one to make it for use. The side NTM, which corresponds to the line DE in Fig. 78, is straight ; and the line TC makes an angle of exactly 75° with it, and corre sponds to the radius AT ofthe wheel. This side, NTM, is graduated into a scale of twentieths of inches ; and each tenth division is numbered, both ways, from T.
 
-The instrument is often made of brass, and in that case is of the shape shown in Fig. 80 ; the tables not being on the instrument, but on a printed sheet accompanying the same.
+The instrument is often made of brass, and in that case is of the shape shown in Fig. 80 ; the tables not being on the instrument, but on a printed sheet accofnpanying tlie same.
 
 The manner of using the instrument is shown in Fig. 80. Let it be required to describe the form of a tooth for a wheel of 29 teeth of 3 inches pitch. This determines the radius AT of the pitch circle MN. Lay off the arcs TD and TE, each equal to half the pitch, and draw the radial lines AD, AE. To draw the flank, apply the instrument with its slant edge on AD, so that D is at the zero point of the scales. In the table headed "Centres for the Flanks of Teeth," look down the column of 3-inch pitch, and opposite to 30 teeth, which is the nearest number to that required, will be found
 
-### TABLE SHOWING THE PLACE OF THE CENTRES UPON THE SCALES.
+## TABLE SHOWING THE PLACE OF THE CENTRES UPON THE SCALES.
 
 CENTRES FOR THE FLANKS OF TEETH.
 
@@ -1183,7 +1183,7 @@ CENTRES FOR THE FLANKS OF TEETH.
 | 80   | 9 | 11 | 13  | 15 | 17 | 19 | 21 | 26 |   |
 | 100  | 9 | 11 | 13  | 15 | 18 | 20 | 22 | 26 | l |
 
-### WILLIS' ODONTOGRAPH,
+## WILLIS' ODONTOGRAPH,
 
 Fig. 79
 
@@ -1195,11 +1195,11 @@ CENTRES FOR 10-FACES. 20-
 
 Rack
 
-the number 49. The point g, indicated on the drawing-board by the position of this number on the scale marked "Scale of Centres for the Flanks of Teeth, ' ' is the centre required, from which the arc Tn must be drawn with the radius gT. The centre for the face Tn is found in a manner precisely similar, by applying the slant edge of the instrument to the radial line AE. The number 21, obtained from the lower table, will indicate the position, 7i, of the required centre on the lower scale. The arc Tn is then drawn, with h as a centre,
+the numhcr 49. The point g, indicated on the drawing-board by the position of this number on the scale marked "Scale of Centres for the Flanks of Teeth, ' ' is the centre required, from which the arc T^i must be drawn with the radius gT. The centre for the face Tn is found in a manner precisely similar, by applying the slant edge of the instrument to the radial line jLE. The number 21, obtained from the lower table, will indicate the position, 7i, of the required centre on the lower scale. The arc Tn is then drawn, with h as a centre,
 
-and radius Tn. We have now the complete tooth outline for one side of one tooth ; the curve pTn being limited at the top by the addendum circle, and at the bottom by the root circle. Having proceeded thus far, the simplest way of drawing the rest of the tooth curves is to describe two circles about A, one through g and the other through h. Then all the centres for the flanks will lie on the former, and all the centres for the faces on the latter, of these two circles. We may now find these centres by striking from each pitch point an are with radius equal to gT to cut the circle of centres for flanks, and an arc with radius Th to cut the circle of centres for faces.
+and radius TYi. We have now the complete tooth outline for one side of one tooth ; the curve pTii being limited at the top by the addendum circle, and at the bottom by the root circle. Having proceeded thus far, the simplest way of drawing the rest of the tooth curves is to describe two circles about A, one through <sup>g</sup> and the other through h. Then all the centres for the flanks will lie on the former, and all the centres for the faces on the latter, of these two circles. We may now find these centres by striking from each pitch point an are with radius equal to gT to cut the circle of centres for flanks, and an arc with radius Th to cut the circle of centres for faces.
 
-The curve nTp isalso correct for an annular wheel of the same radius and number of teeth ; n becoming the root, and
+The curve nTp is also correct for an annular wheel of the same radius and number of teeth ; n becoming the root, and
 
 p the point, of the tooth. Numbers for pitches not inserted in the table may be obtained by direct proportion from the column of some other pitch; thus, for 4-inch pitch, by doubling those of 2-inch pitch. Also, no tabular numbers are given for 12 teeth in the upper table, because their flanks are radial lines.
 
@@ -1209,13 +1209,13 @@ The variation in the contour, due to the addition of a single tooth, becomes les
 
 If, now, instead of proceeding in this manner, we could find from tables the radii of the two circles of centres, and the radii gT and Th, the construction would be much simplified.
 
-This improvement is due to Mr. George B. Grant, who has calculated the distances of the two circles of centres from the pitch circle, and also the radii of the arcs for the faces and flanks. His results appear in the following table, where "Dis." represents the radial distance between the circle of centres and the pitch circle, and "Rad." the radius of the face or flank arc as the case may be:—
+This improvement is due to Mr. George B. Grant, who has calculated the distances of the two circles of centres from the pitch circle, and also the radii of the ares for the faces and flanks. His results appear in the following table, where "Dis." represents the radial distance between the circle of centres and the pitch circle, and "Rad." the radius of the face or flank are as the case may be:—
 
-<sup>\*</sup> The tables in Arts. 115 and 116, and the substance of the matter in those articles, are taken, by permission, from "A Handbook on the Teeth of Gears," by George B. Grant, Boston, Mass.
+<sup>\*</sup> The tables in Arts. 115 and 116, and the substance of the matter in those articles, are taken, by permission, from "A Handhook on the Teeth of Gears," by George B. Grant, Boston, Mass.
 
-### IMPROVED WILLIS ODONTOGRAPH TABLE.
+## IMPROVED WILLIS ODONTOGRAPH TABLE.
 
-(Copyright, 1886, by George B. Grant.)
+(Copyright, 1886, by George B. Giant.)
 
 | NUMBER OF TEETH IN THE WHEEL. |   | FOR ONE DIAMETRAL PITCH.  For any other Pitch, divide Tabular Value by |   |   |   | For One-Inch Circular Pitch.  For any other Pitch, |   |   |   |
 |---|---|---|---|---|---|---|---|---|---|
@@ -1245,9 +1245,9 @@ When the number of teeth is twelve, the flanks are radial, and hence no tabular 
 
 To illustrate the use of the following table, let it be re quired to draw the tooth outline for a wheel of 24 teeth of l|-inch pitch. Draw the pitch circle with its proper radius of 11.46 inches, and mark off the pitch points of the teeth. Draw the addendum, root, and clearance circles, having fixed on the dimensions of the tooth by means of some system of proportions such as those given in Art. 101.
 
-### GRANT'S ODONTOGRAPH TABLE.
+## GRANT'S ODONTOGRAPH TABLE.
 
-EPICYCLOIDAL TEETH.
+EPICrCLOIDAL TEETH.
 
 (Copyright, 1885, by George B. Grant.)
 
@@ -1273,11 +1273,11 @@ the pitch circle. With a pitch point as a centre, strike an arc with radius 1.08
 
 This odontograph, as well as Willis', is arranged for an interchangeable set (Art. 98), from a wheel with twelve teeth to a rack.
 
-117. Robinson's Templet Odontograph. —In the use of this instrument, a method entirely different from those just mentioned is pursued. Instead of using circular arcs, the outlines of the teeth are drawn by means of a templet, which is the curved edge of the instrument itself, when the latter is brought into a proper position.
+117. Kotoinson's Templet Odontograph. —lu the use of this instrument, a method entirely different from those just mentioned is pursued. Instead of using circular arcs, the outlines of the teeth are drawn by means of a templet, which is the curved edge of the instrument itself, when the latter is brought into a proper position.
 
 As the epicycloidal curve is normal to the pitch line, and very nearly so to the tangent to the pitch circle drawn from the middle of a tooth, it is clear that if a curve of rapidly changing curvature be so placed as to be normal to the tan gent, as above described, and at the same time intersecting the addendum circle at the same point that the epicycloidal curve required for the tooth does, it will represent the epicycloidal tooth face with great precision.
 
-The curve adopted as conforming most closely, in general, with limited initial portions of the epicycloid, is the logarithmic spiral. This curve 'appears to possess the highest degree of adaptation, because of its uniform rate of curvature, and also because this rate can be assumed at pleasure. In adopting the particular logarithmic spiral for the odontograph curve, inasmuch as this spiral may have an infinite variety of obliquities, it is evident that the selection is not a matter of
+The curve adopted as conforming most closely, in general, with limited initial portions of the epicycloid, is the loga rithmic spiral. This curve 'appears to possess the highest degree of adaptation, because of its uniform rate of curvature, and also because this rate can be assumed at pleasure. In adopting the particular logarithmic spiral for the odontograph curve, inasmuch as this spiral may have an infinite variety of obliquities, it is evident that the selection is not a matter of
 
 indifference. "When the obliquity, or angle between the normal and radius vector, is very small, the arc of this spiral changes curvature less rapidly than when the obliquity is great. When the obliquity is zero the spiral becomes a circle, and when it is 90° the spiral is simply a radius neither of which approximates to the desired curve.
 
@@ -1285,7 +1285,7 @@ To find that obliquity which makes the spiral best fit the epicycloid, it will p
 
 By an elaborate mathematical investigation,\* Professor Robinson has shown that this curve will produce the required results in all the various cases of epicycloidal and involute gearing.
 
-118. Manner of using- Odontograph. The instru ment is shown in Fig. 81 of full size, and of suitable capacity for laying out all teeth below six inches pitch. The curved edge AB is the logarithmic spiral above spoken of ; and the curve AC is its evolute, in other words, an equal spiral.
+118. Manner of using Odontograph. The instrument is shown in Fig. 81 of full size,, and of suitable capacity for laying out all teeth below six inches pitch. The curved edge AB is the logarithmic spiral above spoken of ; and the curve AC is its evolute, in other words, an equal spiral.
 
 The instrument should be made of metal, because it is intended that it may be used directly for a scribe templet, in which use it will be subject to wear from the passes of the scribe. It has several holes in it, so that it may be attached by wood screws, or by bolts expressly prepared, to any convenient wooden rod, in^ such <sup>a</sup> manner, that, when the rod swings around a centre-pin of the wheel, all the faces of the teeth may be described directly from the instrument itself.
 
@@ -1307,13 +1307,13 @@ Dd ; and the flank may then be drawn to the proper depth. When it is desired to 
 
 " For instance, let it be required to draw the teeth of a wheel having 50 teeth of 3-inch pitch. For this number of teeth we find the tabular values : —
 
-Diam. in Inches. No. of Teeth. Face Setting. Flank Setting. 15.917 50 0.42 0.66
+Biam. in Inches. No. of Teeth. Face Setting. Flank Setting. 15.917 50 0.42 0.66
 
-The diameter of the pitch circle is <sup>3</sup> x 15.917 = 47.751 =- 47f inches. The proper setting to draw the face is <sup>3</sup> <sup>X</sup> 0.42 <sup>=</sup> 1.26, and the corresponding setting for the flank is 3 x 0.66 = 1.98.
+The diameter of the pitch circle is <sup>3</sup> x 15.917 = 47.751 =- 47f inches. The proper setting to draw the face is <sup>3</sup> <sup>X</sup> 0.42 <sup>=</sup> 1.26, and the corresponding setting for the flank is <sup>3</sup> <sup>x</sup> 0.66 = 1.98.
 
 Hence, to draw the face, the odontograph is placed so that the number 1.26 on the scale is at the\* point H (Fig. 80) ; and, to draw the flanks, it is placed so as to bring the number 1.98 at D.
 
-## CHAPTER VIII.
+# CHAPTER VIII.
 
 COMMUNICATION OF MOTION BY SLIDING CONTACT.
 
@@ -1329,7 +1329,7 @@ Skew-Bevel Gearing. — Face Gearing.
 
 119. Pin Gearing.—In Art. 76 it has been shown that an epicycloid traced on the pitch circle of the driver, by rolling on the latter a describing circle equal to the pitch circle of the follower, will drive a pin in the circumference of the following pitch circle with the same constant velocity ratio as if the pitch circles rolled together.
 
-In Fig. 83, let MN and RS be the pitch circles. Lay off the equal pitch arcs Ta and Tb; and, with RS as the describing circle, trace through a the epicycloid aD, which will, of course, pass through b. Draw the equal epicycloid TD in reverse position through T, and let D be the point of intersection of the two epicycloids. Then aDT is the complete outline of a tooth of MN which will drive a pin b (having no appreciable diameter) on RS with the constant velocity ratio  $\frac{a'}{a} = \frac{AT}{BT}$  Through D draw the arc DP concentric with MN. The point P, where this are intersects RS, will evidently be the point at which the tooth aDT and
+In Fig. 83, let MN and RS be the pitch circles. Lay off the equal pitch arcs Ta and Tb; and, with RS as the describing circle, trace through a the epicycloid aD, which will, of course, pass through b. Draw the equal epicycloid TD in reverse position through T, and let D be the point of intersection of the two epicycloids. Then aDT is the complete outline of a tooth of MN which will drive a pin b (having no appreciable diameter) on RS with the constant velocity ratio  $\frac{a'}{a} = \frac{AT}{BT}$ . Through D draw the arc DP concentric with MN. The point P, where this are intersects RS, will evidently be the point at which the tooth aDT and
 
 the pin b will quit contact. Through P draw the epicycloid Pa' equal to Da; then  $TP = Ta' = \operatorname{arc}$  of recess. The wheel MN moving as indicated by the arrow, the contact will begin at T, and the point of contact will travel to the right, along the arc TP, until it reaches the point P, where contact ceases. The contact is wholly on one side of the line of centres; and when the teeth drive, as they should always do (Art. 90), there is no arc of approach.
 
@@ -1337,11 +1337,11 @@ the pin b will quit contact. Through P draw the epicycloid Pa' equal to Da; then
 
 In Fig. 83, let TP, the arc of recess, be given. Through P describe the epicycloid Pa' by rolling RS on MN; draw the radius PA, intersecting MN in K. Then, in order to secure the desired arc of recess, the pitch must not be greater than Ta' = TP, nor less than 2Ka'. If Ta = 2Ka' be the pitch, and the tooth be pointed, the arc of recess will be
 
-TP, as required. If, with the same pitch, the tooth be given some thickness at the top, the arc of recess will become less; and, when the latter has its smallest value (i.e., when it is just equal to the pitch), the top of the tooth will be cut off so as to give the tooth online Tcba.
+TP, as required. If, with the same pitch, the tooth be given some thickness at the top, the arc of recess will become less; and, when the latter has its smallest value (i.e., when it is just equal to the pitch), the top of the tooth will be cut off so as to give the tooth online Teba.
 
 121. If the pitch be given, and it is required to find the arc of action which may be secured, lay off on MN the given pitch arc Ta, and, with RS as describing circle, construct the epicycloids TD and aD. Through their point of intersection, D, draw the arc DP concentric with MN. Then TP is the maximum, and Tb (= pitch) is the minimum, value of the arc of recess; the tooth in the former case being pointed, and in the latter cut off at cb.
 
-122. Pins of Sensible Diameter.—In the preceding articles we have treated the pins as mere mathematical lines; but in practice they must, of course, be given some magnitude, and they are usually made as cylinders of a diameter of about half the pitch. The form of the tooth must then be so modified, that, when it acts on the cylindrical surface of the pin, the latter shall move just as though its axis were being driven by the original epicycloid; in other words, the constant normal distance from the latter to the new tooth ontline must be equal to the radius of the pin. The manner of finding this desired curve is shown in Fig. 83. About successive points along the epicycloid, as centres, circular arcs are drawn, having the same radius as the pin; a curve drawn tangent to this series of arcs will be the required tooth ontline.
+122. Pins of Sensible Diameter.—In the preceding articles we have treated the pins as mere mathematical lines; but in practice they must, of course, be given some magnitude, and they are usually made as cylinders of a diameter of about half the pitch. The form of the tooth must then be so modified, that, when it acts on the cylindrical surface of the pin, the latter shall move just as though its axis were being driven by the original epicycloid; in other words, the constant normal distance from the latter to the new tooth ontline must be equal to the radius of the pin. The manner of finding this desired curve is shown in Fig. 83. About successive points along the epicycloid, as centres, circular ares are drawn, having the same radius as the pin; a curve drawn tangent to this series of arcs will be the required tooth outline.
 
 123. Character of Derived Tooth Outline.\* — The driver's tooth has evidently been shortened, and consequently the arc of recess has been reduced. At first sight, it would seem as though an arc of approach had been
 
@@ -1349,11 +1349,11 @@ TP, as required. If, with the same pitch, the tooth be given some thickness at t
 
 obtained as a compensation for the loss of part of the arc of recess, for the tooth and pin seem to come into driving contact when the centre of the latter is at T ; and, if this were so, there would be an arc of approach approximately equal to the radius of the pin. If, however, the nature of
 
-the derived curve be carefully examined, the fallacy of this assumption will become very evident. In Fig. 84, let MN and RS be the pitch circles of the toothed wheel and of the pin wlieel respectively. Let TDEHK be the epicycloid generated by rolling RS as a describing circle on the outside of MN. Let Tc = radius of the proposed pin, which is in this figure drawn entirely out of proportion, being greatly ex-
+the derived curve be carefully examined, the fallacy of this assumption will become very evident. In Fig. 84, let MN and RS be the pitch circles of the toothed wheel and of the pin wheel respectively. Let TDEHK be the epicycloid generated by rolling RS as a describing circle on the outside of MN. Let Tc = radius of the proposed pin, which is in this figure drawn entirely out of proportion, being greatly ex-
 
 aggerated in order to show the peculiarities of the derived curve more clearly. At successive points of the epicycloid draw a series of normals to the same, making their lengths, Tt, Dd, Ee, Hh, Kk, each equal to Tc, the radius of the pin. The curve tdehk will be the derived curve. The curve begins at t, the extremity of the normal Tt, which is perpendicular to AB; the curve then at first descends, forming a cusp within the circumference of the pin; then, rising, it cuts this circumference at some point, p, and passes to the outside of the pitch circle MN.
 
-Now, it is evident that the part tdep of the derived curve cannot form part of the tooth outline, as it lies wholly within the circumference of the pin. The part phk of the derived curve will then be the part which will form the outline of the proposed tooth, and p will be the first point of the tooth to come into driving contact with the pin. It now remains to find the position of the pin when this first contact takes place. Draw pP normal to the epicycloid. Now, p will come into correct driving contact with the circumference of the pin at the same time that P would come into contact with the axis of the pin. But P will not be in contact with this axis until the latter is at Y, the point at which the pitch circle RS is cut by a circular are passing through P, and concentric with MN. Hence p will not come into correct driving contact with the circumference of the pin until the axis of the latter is at Y. About Y as a centre, draw a circular arc of radius = Tc; draw also through p a circular arc concentric with MN. These two arcs will intersect at  $p_i$  which will be the point at which correct driving contact begins. From A draw a radius through  $p_1$  to intersect MN at V; then TV will be the arc of approach. If V falls on AB (that is, at T), the arc of approach will reduce to zero, and contact will begin on the line of centres. If V falls to the right of AB, contact will not begin until after the respective points have passed the line of centres.
+Now, it is evident that the part tdep of the derived curve cannot form part of the tooth outline, as it lies wholly within the circumference of the pin. The part phk of the derived curve will then be the part which will form the outline of the proposed tooth, and p will be the first point of the tooth to come into driving contact with the pin. It now remains to find the position of the pin when this first contact takes place. Draw pP normal to the epicycloid. Now, p will come into correct driving contact with the circumference of the pin at the same time that P would come into contact with the axis of the pin. But P will not be in contact with this axis until the latter is at Y, the point at which the pitch circle RS is cut by a circular are passing through P, and concentric with MN. Hence p will not come into correct driving contact with the circumference of the pin until the axis of the latter is at Y. About Y as a centre, draw a circular arc of radius = Tc; draw also through p a circular arc concentric with MN. These two arcs will intersect at  $p_i$ , which will be the point at which correct driving contact begins. From A draw a radius through  $p_1$  to intersect MN at V; then TV will be the arc of approach. If V falls on AB (that is, at T), the arc of approach will reduce to zero, and contact will begin on the line of centres. If V falls to the right of AB, contact will not begin until after the respective points have passed the line of centres.
 
 124. Limiting Diameter of Pin. — The two pitch circles and the pitch being given, let it be required to determine the maximum radius that can be given to the pin. Evidently the arc of action cannot be less than the pitch. But this arc of action depends directly on the position of the point p (Fig. 84), and this again depends on the very thing we wish to determine; i.e., the diameter of the pin.
 
@@ -1373,15 +1373,25 @@ the rack carries the pins. The teeth of the wheel are formed by curves parallel 
 
 When the annular wheel is the driver, and is twice as large as the wheel with which it gears, the hypocycloids become straight lines, and the parallel tooth outlines will evidently also be straight lines.
 
-Fig. 90 shows such an arrangement, in which the pin wheel has but three pins, while the wheel teeth are formed T^ig. 88 by cutting three straight grooves, intersecting each other at the centre of the wheel, at angles of sixty degrees, each being of a width equal to the diameter of a pin. By placing rollers on the pins, and making the widths of the slots equal to the diameter of these rollers, tliis arrangement of pin gearing can be used as a shaft coupling to drive in either direction.
+Fig. 90 shows such an arrangement, in which the pin wheel has but three pins, while the wheel teeth are formed
 
-127. LiOw-NumTjered Pinions. — As the number of teeth in a wheel decreases, the teeth themselves become longer, and both the obliquity of action and the amount of sliding rapidly increase. Pinions having very few teeth are, for these reasons, unsuitable for general use ; and accordingly we find that in practice no wheel of less than about twelve teeth is employed if it can possible be avoided. In order to secure smoothness of action and a minimum obliquity of pressure, the number of teeth assigned to any given wheel is usually so great that no doubt exists as to their successful working. It occasionally happens, however, that it becomes imperatively necessary to employ wheels having as few teeth as possible ; and it then becomes a matter of importance to determine whether the desired numbers of teeth will work together.
+Fig. 88
+
+by cutting three straight grooves, intersecting each other at the centre of the wheel, at angles of sixty degrees, each
+
+being of a width equal to the diameter of a pin. By placing rollers on the pins, and making the widths of the slots equal
+
+to the diameter of these rollers, this arrangement of pin
+
+gearing can be used as a shaft coupling to drive in either direction.
+
+127. Low-Numbered Pinions. — As the number of teeth in a wheel decreases, the teeth themselves become longer, and both the obliquity of action and the amount of sliding rapidly increase. Pinions having very few teeth are, for these reasons, unsuitable for general use ; and accordingly we find that in practice no wheel of less than about twelve teeth is employed if it can possible be avoided. In order to secure smoothness of action and a minimum obliquity of pressure, the number of teeth assigned to any given wheel is usually so great that no doubt exists as to their successful working. It occasionally happens, however, that it becomes imperatively necessary to employ wheels having as few teeth as possible ; and it then becomes a matter of importance to determine whether the desired numbers of teeth will work together.
 
 128. Practical Example. —The practicability of any assumed case can be readily determined by the construction of a diagram, keeping in mind the limitations as to pitch, arc of action, etc., explained in previous articles. For example, let it be required to determine the practicability of using two equal pinions of six teeth, having radial flanks.
 
 In Fig. 91, let A and B be the centres of the equal pitch circles, and T their point of tangency. As the flanks are to be radial, the diameter of the describing circles will be equal to the radius of the pitch circles, as shown in the figure. Assume the arc of action to have its smallest value (namely, just equal to the pitch arc) , and let the arcs of approach and recess be equal. Constructing the teeth under these conditions (Alt. 97), we will obtain the wheels shown in Fig. 91. These wheels will just barely work, one pair of teeth quitting contact at P at the same instant that another pair are coming into contact at P'. It is evident that, by continuing the opposite faces until they meet, the arc of action can be somewhat increased without making any other change. Two such wheels, then, can be made to work, though they will never run with the smoothness of action that characterizes wheels having a large number of teeth.
 
-129. In the above example the maximum obliquity of action (that is, the angle PTt) is thirty degrees. In the position represented, P'T is evidently the direction of the pressure between the teeth. Considering the line P'T to represent this pressure in magnitude as well as in direction, P'n and P'm Will represent its components parallel and perpendicular to the line of centres respectively. We thus have P'm as the component which tends to produce rotation while P'n simply forces the axes apart, thus increasing the friction in the bearings.
+129. In the above example the maximum obliquity of action (that is, the angle PTt) is thirty degrees. In the position represented, P'T is evidently the direction of the pressure between the teeth. Considering the line P'T to represent this pressure in magnitude as well as in direction, P'n and P'm will represent its components parallel and perpendicular to the line of centres respectively. We thus have P'm as the component which tends to produce rotation while P'n simply forces the axes apart, thus increasing the friction in the bearings.
 
 In the figure, P'n = PTsinSO" = ^P'T; that is, this objectionable component is equal to half the pressure between the teeth at P'. It is evident that there must be a practical limit beyond which the angle of maximum obliquity cannot go without increasing the prejudicial component P'n to an inordinate extent. This limit is usually placed, as in the foregoing example, at thirty degrees ; and fifteen degrees is usually' taken as the maximum allowable value for the mean obliquity. In the case of involute teeth, the obliquity is constant, and should never exceed fifteen degrees.
 
@@ -1395,7 +1405,7 @@ The action is not very oblique, but the amount of sliding is considerable. As th
 
 A pinion of one tooth communicating a constant angular velocity ratio between parallel axes, appears absolutely impossible. The endless screw is equivalent, however, to a pinion of a single tooth.
 
-131. In Arts. 128 and 129 we have assumed the arcs of approach and of recess to be equal; that is, each equal to half the pitch. Though the total are of action cannot be less than the pitch, yet we may evidently vary the relative amounts of approaching and receding action at pleasure. If, as is usually the case, the arc of recess is to be the greater, it is evident that a pinion of fewer teeth can be used to drive than to follow; for the are of recess depends upon the length of the driver's teeth, and this length again depends on the size of the describing circle. If we take a given wheel and pinion, and gradually decrease the number of teeth in the pinion, - in other words, make it of a smaller diameter, - we shall evidently also decrease the diameter of the describing circle, which generates the faces of the wheel teeth, and hence diminish their lengths. The generating circle for the faces of the pinion's teeth will not be affected, so that the length of these teeth will remain almost the same.
+131. In Arts. 128 and 129 we have assumed the arcs of approach and of recess to be equal; that is, each equal to half the pitch. Though the total are of action cannot be less than the pitch, yet we may evidently vary the relative amounts of approaching and receding action at pleasure. If, as is usually the case, the arc of recess is to be the greater, it is evident that a pinion of fewer teeth can be used to drive than to follow; for the are of recess depends upon the length of the driver's teeth, and this length again depends on the size of the describing circle. If we take a given wheel and pinion, and gradually decrease the number of teeth in the pinion, — in other words, make it of a smaller diameter, — we shall evidently also decrease the diameter of the describing circle, which generates the faces of the wheel teeth, and hence diminish their lengths. The generating circle for the faces of the pinion's teeth will not be affected, so that the length of these teeth will remain almost the same.
 
 But, whatever the conditions, we can evidently determine the practicability of any given case by the construction of a diagram, as explained.
 
@@ -1413,19 +1423,19 @@ Similar problems will occur in regard to annular wheels ; and such problems may 
 
 The least annular wheel which can be driven by a given pinion must have one tooth more than the pinion. The smallest pinion which can be thus used is one of three teeth, the wheel then having four teeth.
 
-The least annular wheel that can drive a given pinion must have one and a half times as many teeth as the pinion when the latter has radial flanks. The various questions of limiting numbers may also be solved in pin gearing, though the
+The least annular wheel that can drive <sup>a</sup> given pinion must have one and <sup>a</sup> half times as many teeth as the pinion when the latter has radial flanks. The various questions of limiting numbers may also be solved in pin gearing, though the
 
 method is more complex, owing to the peculiar nature of the derived curve.
 
 134. But, in any case, it is simply a question of graphical construction ; the teeth being laid out in accordance with the prescribed conditions. Tables have been prepared giving such least numbers, calculated with considerable exactness, for various arcs of recess ; and though it is always prefer able to make the graphic construction for the special case under consideration, yet the following brief extract from such tables may not be without interest. In these tables the flanks of all the spur wheels are supposed to be radial, and the thickness of the tooth and the width of the space, measured along the pitch circle, are supposed to be equal.
 
-### EPICYCLOIDAL GEARING.
+## EPICYCLOIDAL GEARING.
 
-TABLE OF THE LEAST-NUMBERED SPUR WHEELS AND GREATEST-NUMBERED ANNULAR WHEELS THAT WILL WORK WITH GIVEN PINIONS.
+TABLE OF THE LEAST-NUMBERED SPUR WHEELS AND GREATEST-NUMBERED ANNULAR WHEELS THAT WILL WORK WITH GIVEN pinions.
 
 |   | Number of<br>Teeth in |   | er of Teeth in<br>Wheel | Greatest Number of<br>Teeth in Annular Wheel |   |
 |---|---|---|---|---|---|
-|   | Given<br>Pinion. | If Wheel Drives. | If Pinion<br>Drives. | If Wbeel<br>Drives. | If Pinion<br>Drives. |
+|   | Given<br>Pinion. | If Wheel Drives. | If Pinion<br>Drives. | If Wheel<br>Drives. | If Pinion<br>Drives. |
 | Arc of recess = \frac{2}{4} pitch. | 2<br>3<br>4<br>5<br>6<br>7<br>8 | impossible  " " " 33 16 | impossible  34  19  14  12  11  10 | impossible  ''  12  65  rack | 7<br>41<br>rack |
 | Ar | 10 | 9 | 10 |   |   |
 
@@ -1433,14 +1443,14 @@ EPICYCLOIDAL GEARING (Concluded).
 
 |   | Number of<br>Teeth in | 1 | er of Teeth In<br>Wheel | Greatest Number of<br>Teeth in Annular Wheel |   |
 |---|---|---|---|---|---|
-|   | Giveu<br>Pinion. | If Wheel<br>Drives. | If Pluiou<br>Drives. | If Wheel<br>Drives. | If Pinion<br>Drives. |
+|   | Given<br>Pinion. | If Wheel<br>Drives. | If Pluiou<br>Drives. | If Wheel<br>Drives. | If Pinion<br>Drives. |
 | Arc of recess $= \frac{2}{3}$ pitch. | 2<br>3<br>4<br>5<br>6<br>7<br>8 | impossible " " 21 11 8 | impossible<br>37<br>15<br>11<br>10<br>9<br>8 | impossible  ''  8  53  rack | 11<br>rack |
 
-wheels moved the other way, work together correctly, though the inclination of their common normal to the line of centres is too great for the transmission of pressure. The effect of this shape is to produce a very strong form of tooth by taking away matter from the extremity of the tooth where the ordinary form has more than is required for strength, and adding it to the root.
+wheels moved the other way, work together correctly, though the inclination of their common normal to the line of centres is too great for the transmission of pressure. The effect of this shape is to produce <sup>a</sup> very strong form of tooth by taking away matter from the extremity of the tooth where the ordinary form has more than is required for strength, and adding it to the root.
 
-136. Twisted Gearing. —In this class of gearing (Art. 58) the point of contact travels, during the motion of the wheels, from one side to the other. The outer planes of the wheel should be twisted through an angle equal to the pitch, so that a fresh contact is always beginning on one side as the last contact is quitting on the other. In the double wheel shown in Fig. 38, there are, of course, two points of contact, travelling in a symmetrical manner with respect to the mid-plane of the wheel. The teeth must be so formed, that, when the angular velocity ratio is constant, contact shall only take place at the instant of crossing the line of centres. Otherwise, if the teeth were formed upon the usual princi-
+136. Twisted Gearing. —In this class of gearing (Art. 58) the point of contact travels, during the motion of the wheels, from one side to the other. The outer planes of the wheel should be twisted through an angle equal to the pitch, so that a fresh contact is always beginning on one side as the last contact is quitting on the other. In the double wheel shown in Fig. 38, there are, of course, two points of contact, travelling in a symmetrical manner with respect to the mid-plane of the wheel. The teeth must be so formed, that, when the angular velocity ratio is constant, contact shall only take place at the instant of crossing the line of centres. Otherwise, if the teeth were formed upon the usual priuci-
 
-pies, it is evident that the sliding contact before and after the line of centres would still remain. This may evidently be accomplished by making the flanks by any of the usual methods, and then making the faces so that they will lie within the faces which would be proper for a spur wheel with the flanks assumed. The simplest mode of making such teeth is to give them radial flanks, and make the faces semicircles whose diameter is the thickness of the tooth at the pitch circle. The motion is now transmitted by pure rolling contact, and the action of these wheels is exceedingly smooth and noiseless. They are, however, better suited for light work, because the pressure is confined to a single point, instead of being distributed along a line. For heavy work it is preferable to employ the stepped wheels (Fig. 37) in which the teeth are of the usual forms for spur wheels. In this case, the motion is, of course, no longer transmitted by pure rolling contact ; but the action is, nevertheless, much smoother than that of ordinary spur wheels.
+pies, it is evident that the sliding contact before and after the line of centres would still remain. This may evidently be accomplished by making the flanks by any of the usual methods, and then making the faces so that they will lie within the faces which would be proper for a spur wheel with the flanks assumed. The simplest mode of making such teeth is to give them radial flanks, and make the faces semicircles whose diameter is the thickness of the tooth at the pitch circle. The motion is now transmitted by pure rolling contact, and the action of these wheels is exceedingly smooth and noiseless. They are, however, better suited for light work, because the pressure is confined to a single point, instead of being distributed along a line. For heavy work it is preferable to employ the stepped wheels (Fig. 37) in which the teeth are of the usual forms for spur wheels. In this case, the motion is, of course, no longer transmitted by pure' rolling contact ; but the action is, nevertheless, much smoother than that of ordinary spur wheels.
 
 137. Non-circular Wheels. —In all the preceding cases of toothed wheels the pitch curves of the wheels have been circles ; but the teeth may be just as well laid out when the pitch curves are not circular, though in the latter case the operation is much more tedious.
 
@@ -1456,21 +1466,21 @@ In other words, just as we roll a describing cylinder within and without a pitch
 
 139. In Fig. 95, let CDTE be the pitch cone, and CPTH the describing cone ; the two cones having the common vertex C, and being in contact along the right line CT. Draw any element, such as CP, of the describing cone, and consider the latter to roll to the left, keeping its vertex at C, and remaining always in contact with the pitch cone. CT is at any moment the instantaneous axis about which the plane OPT revolves ; hence the surface CPa, generated by the line CP, will be normal to the plane OPT.
 
-We have seen that, with parallel axes, pitch curves may be selected which will produce a variable velocity ratio. Similarly, in bevel wheels, the bases of the cones might be so shaped as to produce changes in the velocity ratio. In practice, however, this is never done ; any desired variation of velocity ratio being produced by some other means. We may, therefore, confine our attention to the case in which all the cones have circular bases. In this case, the point P, being at a constant distance from C, will move in the surface of <sup>a</sup> spliere of which C is the centre, and whose radius is equal to the slant height of the cones. The arc TP = arc
+We have seen that, with parallel axes, pitch curves may be selected which will produce a variable velocity ratio. Similarly, in bevel wheels, the bases of the cones might be so shaped as to produce changes in the velocity ratio. In practice, however, this is never done ; any desired variation of velocity ratio being produced by some other means. We may, therefore, confine our attention to the case in which all the cones have circular bases. In this case, the point P, being at a constant distance from C, will move in the surface of <sup>a</sup> sphere of which C is the centre, and whose radius is equal to the slant height of the cones. The arc TP = arc
 
 Ta ; and the curve Pa, described by the point P, is a spherical epicycloid. Similarly, by rolling the describing cone within a pitch cone, a spherical hypocycloid will be generated. Following out the analogy between cylinder and cones, it is evident that, just as the tooth surfaces of cylindrical wheels are formed by moving a right line along the epicycloid and hypocycloid previously discussed, keeping the line always parallel to the axis of the pitch cylinder, so the tooth sur-' faces of conical wheels must be formed by moving a right line along the spherical epicycloid and hypocycloid, making the line in this case always pass through the common vertex of the pitch cones.
 
-140. Construction of Tooth Outline. — The portion of the spherical surface occupied by the spherical epicycloid and hypocycloid, when they are used in the formation of teeth, is a narrow zone extending a short distance on both sides of the base circle of the pitch cone. For all practical purposes we may substitute for this narrow spherical zone a portion of the surface of a cone which is tangent to the sphere in the base circle of the pitch cone, and whose ele ments are consequently perpendicular to the corresponding elements of the pitch cone.
+140. Construction of Tooth Outline. — The portion of the spherical surface occupied by the spherical epicycloid and hypocycloid, when they are used in the formation of teeth, is a narrow zone extending a short distance on both sides of the base circle of the pitch cone. For all practical purposes we may substitute for this narrow spherical zone a portion of the surface of a cone which is tangent to the sphere in the base circle of the pitch cone, and whose elements are consequently perpendicular to the corresponding elements of the pitch cone.
 
 In Fig. 9G, let CA and CB be the given axes of the pitch cones. Dividing the angle ACB so as to obtain the required / q velocity ratio, which in this case is — <sup>=</sup> -, we And CP, the <sup>a</sup> <sup>2</sup> common element. The bases FGP and EHP are evidently small circles of the sphere whose radius is CP- Draw PA perpendicular to CP, and revolve it around the axis CA, generating the normal cone FPA. Similarly, draw PB perpendicular to CP, and revolve it about the axis CB, generating the normal cone PBE.
 
-These new cones comply with the conditions above mentioned, and a narrow zone of their curved surfaces may be used upon which to describe the tooth outlines.
+These new cones comply with the conditions above mentioned, and <sup>a</sup> narrow zone of their curved surfaces may be used upon which to describe the tooth outlines.
 
 If, now, we roll a describing cone without one of the pitch cones and within the other, we will generate the tooth sur face for the faces of the former and for the flanks of the latter. In order to construct this surface, we must select some particular element of the describing cone, and find the curve which it describes on the surfaces of the normal cones. To do this, we need only draw this element in successive positions, and find the points in which it pierces the normal cones. The curve formed by joining these successive points will be the directrix of the tooth surface ; and the latter will be formed by moving a straight line along this generatrix, the line always passing through the common vertex of the pitch cones.
 
 This method will give the exact curves ; the error of using the surface of the normal cone, instead of that of the sphere, being so small as to be inappreciable. Its application to practical cases involves more labor, however, than that of the following approximate method, which is the one in almost universal use.
 
-141. Tredgold's Method. —If we assume the curved surface of each of the normal cones to be cut along one of the elements, and spread out on a plane, we will have (Fig. 96) portions of two circles whose radii, A'P' and B'P' are
+141. Tredgold's Method. —If we assume the curved surface of each of the normal cones to be cut along one of the elements, and spread out on <sup>a</sup> plane, we will have (Fig. 96) portions of two circles whose radii, A'P' and B'P' are
 
 the slant heights of the cones. If, now, these circles be taken as pitch circles, and teeth be constructed on them by any of the usual methods for spur wheels, we may then wrap these surfaces, with the teeth, back into their original conical shape; and using the tooth curves, as they then appear on the normal cones, as directrices, we may generate the required tooth surfaces by moving a right line in contact with the curves, and passing through the common vertex of the cones, as before.
 
@@ -1484,25 +1494,25 @@ It may be required to describe the teeth by either the epieycloidal or the invol
 
 143. Relative Action of Bevel and Spur "Wheels The action of a toothed wheel, other things being equal, is always more smooth ia proportion as the teeth increase in
 
-number and decrease in size, because these conditions diminish the obliquity of action, as well as the amount of sliding. But in bevel wheels the action of the outer tooth outlines does not deviate much from the plane tangent to the two normal cones at P (Fig. 96), and hence they act the same as spur wheels having the radii AP, BP, which are larger than the radii of the bevel wheels themselves in the
+number and decrease in size, because these conditions diminish the obliquity of action, as well as the amount of sliding. But in bevel wheels the action of the outer tooth outlines does not deviate much from the plane tangent to the two normal cones at P (Fig. 96), and hence they act the same as spur wheels having the radii J.P, BP, which are larger than the radii of the bevel wheels themselves in the
 
 ratios
 $$\frac{AP}{GP}$$
- and  $\frac{BP}{HP}$ . But  $\frac{AP}{GP} = \frac{CP}{CG}$ , and  $\frac{BP}{HP} = \frac{CP}{CH}$ . In
+ and  $\frac{BP}{HP}$ . But $\frac{AP}{GP} = \frac{CP}{CG}$, and $\frac{BP}{HP} = \frac{CP}{CH}$. In
 
-other words, the action of a bevel wheel, so far as it is affected by the number of its teeth, is equal to that of a spur wheel of the same pitch whose radius is greater than that of the given bevel wheel in the same ratio that the slant height of the pitch cone is greater than its altitude.
+other words, the action of a bevel wheel, so far as it is affected by the number of its teeth, is equal to that of a spur wheel of the same pitch whose radius is greater than that of the given bevel wheel iu..the sam^ ratio that the slant height of the pitch cone is greater than its altitude.
 
 In a pair of mitre wheels this ratio is 1^, so that the action of a mitre wheel having, say, fifty teeth is equivalent to that of a spur wheel of seventy teeth.
 
-144. Skew Bevel Wheels. — From the manner in which the tooth surfaces are generated in spur and bevel wheels by means of describing cylinders and cones, it would seem natural to suppose that, when the pitch surfaces become hyperboloids, the tooth surfaces might be generated in a similar manner by means of describing hyperboloids rolled without and within the pitch hyperboloids. This is, indeed, the solution which has usually been given of this problem ; but it is radically wrong, which fact was iirst demonstrated by Professor MacCord. There is, of course, no doubt but that, by rolling a describing hyperboloid within one pitch hyperboloid and without the other, we will obtain two surfaces whose element of contact lies in the surface of the describing hyperboloid. But, in order that such surfaces should be available for tooth surfaces, it is essential that this line of contact should be a line of tangency. And itis just here that the whole construction fails. By an elegant method of demonstration, Professor MacCord has proved
+144. Skew Bevel Wheels. — From the manner in which the tooth surfaces are generated in spur and bevel wheels by means of describing cylinders and cones, it would seem natural to suppose that, when the pitch surfaces become hyperboloids, the tooth surfaces might be generated in a similar manner by means of describing hyperboloids rolled without and within the pitch hyperboloids. This is, indeed, the solution which has usually been given of this problem ; but it is radically wrong, which fact was iirst demonstrated by Professor MacCord. There is, of course, no doubt but that, by rolling a describing hyperboloid within one pitch hyperboloid and without the other, we will obtain two surfaces whose element of contact lies in the surface of the describing hyperboloid. But, in order that such surfaces should be available for tooth surfaces, it is essential that this line of contact should be <sup>a</sup> line of tangency. And itis just here that the whole construction fails. By an elegant method of demonstration, Professor MacCord has proved
 
-that this common line of contact is a line, not of tangency, but of intersection; so that these surfaces simultaneously generated by the rolling of the describing hyperboloid are instantaneously destroyed by each other. This method, then, is inapplicable to the case of skew bevel wheels ; but the tooth surfaces of such wheels may be constructed by taking advantage of a peculiar property of the involute.
+that this common line of contact is a line, not of tangency, but of intersection; so that these surfaces simultaneously generated by the rolling of the describing hyperboloid ai;e instantaneously destroyed by each other. This method, then, is inapplicable to the case of skew bevel wheels ; but the tooth surfaces of such wheels may be constructed by taking advantage of a peculiar property of the involute.
 
-145. Teeth of Skew Bevel Wheels In Fig. 74 we have shown a pair of wheels with involute teeth, DE being the line of action. In the figure the wheels are in the same plane, and the point of contact is always situated in the line DE.
+145. Teeth of Skew Bevel Wheels In Fig. <sup>74</sup> we have shown <sup>a</sup> pair of wheels with involute teeth, DE being the line of action. In the figure the wheels are in tha same plane, and the point of contact is always situated in the line DE.
 
-The upper wheel remaining fixed, suppose the plane of the lower wheel to be revolved through any given angle about the line DE, as on a hinge. The two wheels will now lie in different planes, their axes being neither parallel nor intersecting. The line DE will be the intersection of these two planes ; and tlie position of each wheel in its own plane, with reference to that line, is unaltered. But DE is the locus of contact ; and, as the position of neither wheel with reference to DE has been changed, it follows that the velocity ratio of the wheels will not be affected by the inclination of their planes. When the wheels are so inclined, they can, of course, move only in the direction which makes DE the locus of contact. If they are required to move in the reverse direction, they must be swung about a line similarly inclined to the line of centres in the opposite direction ; but it is evi dent that in no case can they drive in both directions except when they are in the same plane.
+The upper wheel remaining fixed, suppose the plane of the lower wheel to be revolved through any given angle about the line DE, as on a hinge. The two wheels will now lie in different planes, their, axes being neither parallel nor intersecting. The line DE will be the intersection of these two planes ; and tlie position of each wheel in its own plane, with reference to tliat line, is unaltered. But DE is the locus of contact ; and, as the position of neitlier wheel with reference to DE has been changed, it follows that the velocity ratio of the wheels will not be affected by the inclination of their planes. When the wheels are so inclined, they can, of course, move only in the direction which makes DE the locus of contact. If they are required to move in the reverse direction, they must be swung about a line similarly inclined to the line of centres in the opposite direction ; but it is evi dent that in no case can they drive in both directions except when they are in the same plane.
 
-This property of involute teeth, of transmitting motion between axes neither parallel nor meeting, is only true when the wheels are very thin ; so that in practice the teeth of one wheel must be rounded so as to touch those of the other in points only, and not in lines.
+This property of invohUe teeth, of transmitting motion between axes neither parallel nor meeting, is only true when the wheels are very thin ; so that in practice the teeth of one wheel must be rounded so as to touch those of the other in points only, and not in lines.
 
 It is possible, however, to employ teeth of this kind in
 
@@ -1510,10 +1520,10 @@ wheels of any thickness by retaining the involute form for the teeth of one whee
 
 The fronts of the teeth of one of the wheels are made of such a shape that all sections by planes perpendicular to the axis of the wheel shall be involutes ; the shapes of the cor responding sections of the fronts of the teeth of the other wheel are then constructed by a modification of the method of Art. 78.
 
-146. Approximate Method. — Teeth laid out by the above process will not be symmetrical, their fronts being single-curved surfaces, and their backs warped surfaces. Their theoretical construction, as well as their practical manufacture, are both complicated and laborious operations. The result is, that such wheels are rarely employed ; the most usual means of transmitting motion under such circumstances being the employment of two pairs of bevel wheels, as explained in Art. 47. An approximate method of laying out the teeth of skew bevel wheels consists in drawing two cones normal to the hyperboloidal frusta, developing their curved surfaces, and after laying out teeth on them, as in Tredgold's method for bevel wheels, wrapping them back in their proper relative positions. The surfaces of the teeth will be formed by joining the corresponding points of these curves by right lines. The teeth should be small and numerous, and the frusta should be placed as far as convenient from the common perpendicular of the axes.
-147. Face Gearing. — Before the introduction of bevel gearing, the problem of transmitting motion between axes that were not parallel was usually solved by means of face gearing. Let two face wheels with cylindrical pins, exactly alike in every respect, be placed in gear, as shown in plan and elevation in Fig. 98, with their axes at right angles ; the latter not meeting in a point, but having their common perpendicular equal to the diameter of the pins. Then will these wheels revolve together with the same angular velocity.
+146. Approximate Method. — Teeth laid out by the above process will not be symmetrical, their fronts being single-curved surfaces, and their backs warped surfaces. Their theoretical construction, as well as their practical manufacture, are both complicated and laborious operations. The result is, that such wheels are rarely employed ; the most usual means of transmitting motion under such circumstances being the employment of two pairs of bevel wheels, as explained in Art. 47. A.n approximate method of laying out the teeth of skew bevel wheels consists in drawing two cones normal to the byperboloidal frusta, developing their curved surfaces, and after laying out teeth on them, as in Tredgold's method for bevel wheels, wrapping them back in their proper relative positions. The surfaces of the teeth will be formed by joining the corresponding points of these curves by right lines. The teeth should be small and numerous, and the frusta should be placed as far as convenient from the common perpendicular of the axes.
+147. Face Gearing. — Before the introduction of bevel gearing, the problem of transmitting motion between axes that were not parallel was usually solved by means of face gearing. Let two face wheels with cylindrical pins, exactly alike in every respect, be placed in gear, as shown in plan and elevation in Fig. 98, with their axes at right angles ; the latter not meeting in <sup>a</sup> point, but having their common perpendicular equal to the diameter of the pins. Tlieh will these wheels revolve together with the same angular velocity.
 
-Let B be the driver, and let the pins c, g, be in contact. The distance between the axes of these pins is the sum of the radii of the pins ; that is, the diameter of a pin, or, what is equal to this diameter, the perpendicular distance between the axes of the wheels.
+Let B be the driver, and let the pins c, g, he in contact. The distance between the axes of these pins is the sum of the radii of the pins ; that is, the diameter of a pin, or, wliat is equal to this diameter, the pei-pendicular distance between the axes of the wheels.
 
 Let the driver B turn, in the direction of the arrow, through one-sixth of a revolution ; the pin g moving to the
 
@@ -1525,11 +1535,11 @@ The driver was in this case supposed to turn through an angle of sixty degrees; 
 
 Instead of having the corresponding pins of the two wheels in contact, let them be separated by some arbitrary distance, as shown in the figure. Now, if both wheels be turned, in the directions of the arrows, with the same angular velocity, it is evident that the common perpendicular between any two corresponding pins will change according to the positions of the pins at any instant. If, still using mere lines for the pins of the upper wheel, we now expand the pins of the lower wheel into solids of revolution, the radius of whose
 
-cross-section shall at any point be equal to this common perpendicular, it is evident that the two wheels will work together with a constant velocity ratio. In order to obtain the meridian section of these solids of revolution, we proceed as shown in Fig. 100. Let MN and R8 be the pitch circles, of which the former is to carry the cylindrical pins.
+cross-section shall at any point be equal to this common perpendicular, it is evident that the two wheels will work together with a constant velocity ratio. In order to obtain the meridian section of these solids of revolution, we pro ceed as shown in Fig. 100. Let MN and R8 be the pitch circles, of which the former is to carry the cylindrical pins.
 
 Let p and q be the positions of the axes of the pins at the moment when contact is to begin, the common perpendicular pC having been assumed at pleasure. This gives us the radius of the solid of revolution at its upper surface.
 
-The curve pr is the locus of the extremities of the perpendicular distances x found for a number of corresponding positions of the pins p and q as they move through the equal arcs pP and qQ ; and the curve p'r is the locus of extremities
+The curve pr is the locus of the extremities of the perpendicular distances x found for a number of corresponding positions of the pins p and g as they move through the equal arcs pP and qQ ; and the curve p'r is the locus of extremi
 
 ties of the perpendicular distances y similarly found while the same pins move through the equal arcs Pp' and Qq' The curves pr and p'r' will work properly with pins that are mere lines, and whose projections are, consequently, mere points. On expanding these theoretical pins into practical cylinders, their projections will become circles, and the desired curves for the lower pins must be found, as shown in the figure, by the same process as that employed in pin gearing (Art. 122).
 
@@ -1543,7 +1553,7 @@ The principal advantage of face gearing is the facility of making the pins and c
 
 Where the pressure is very light, so that the teeth merely polish each other, this kind of gearing may often be employed to advantage ; but where the pressure is at all heavy, they are unsuitable, as the teeth cut each other, and soon wear out. In face gearing, a derangement in the relative position of the two wheels, if it take place in the direction of the axis of the wheel with cylindrical pins, will not interfere with the action of the gearing.
 
-## CHAPTER IX.
+# CHAPTER IX.
 
 COMMUNICATION OP MOTION BY SLIDING CONTACT. VELOCITY RATIO AND DIRECTIONAL RELATION CONSTANT OR VARYING.
 
@@ -1560,9 +1570,9 @@ The centre of the pin may be treated as practically at all times coinciding with
 
 The most convenient way to design a cam is usually to draw in the first place its pitch line, and then to find the acting edge or edges by the process of Art. 122; using a radius slightly greater than that of the pin in case two edges are employed.
 
-152. Construction of the Cam Curve. — In Fig. 101, let A be the centre of motion of the proposed cam, and BHthe path of the centre of the pin on the follower; the condition being that the centre of the pin shall start from the point H, and assume in succession the positions E, D, C, and B while the cam revolves through successive angles of thirty degrees. With centre A and radius AH, describe the circle HN; produce the radius AH to S, and draw the other radii (produced), AK, AL, AM, and AN, at successive angular intervals of thirty degrees. With centre A, draw circular arcs through the successive positions E, D, C, B, of the pin, and on these arcs lay off the distances Kk = Cc, Ll = Dd, Mm = Ee. Then will k, l, and m be points of the cam curve required. The curve nmlkB, drawn through these points and N and B, will be the curve which will fulfil the required conditions; for, assuming n to be at H, and the cam to revolve in the direction of the arrow, it is evident that as the radii AM, AL, AK, and Ab successively come into the position AS, the joints m, l, k, and B of the cam
+152. Construction of the Cam Curve. — In Fig. 101, let A be the centre of motion of the proposed cam, and BHthe path of the centre of the pin on the follower; the condition being that the centre of the pin shall start from the point H, and assume in succession the positions E, D, C, and B while the cam revolves through successive angles of thirty degrees. With centre A and radius AH, describe the circle HN; produce the radius AH to S, and draw the other radii (produced), AK, AL, AM, and AN, at successive angular intervals of thirty degrees. With centre A, draw circular arcs through the successive positions E, D, C, B, of the pin, and on these arcs lay off the distances Kk = Cc, Ll = Dd, Mm = Ee. Then will k, l, and m be points of the cam curve required. The curve nmlkB, drawn through these points and N and B, will be the curve which will fulfil the required conditions; for, assuming n to be at H, and the cam to revolve in the direction of the arrow, it is evident that as the radii AM, AL, AK, and AK successively come into the position AS, the joints m, l, k, and B of the cam
 
-curve will coincide with E, D, C, and B respectively', thus driving the pin as required. To find the curve for a pin of sensible diameter, we proceed as in Art. 122, drawing circles of the same diameter as the pin in a sufficient number of positions along the pitch line already found, and then drawing the acting edge tangent to these circles.
+curve will coincide with E, D, C, and B respectively, thus driving the pin as required. To find the curve for a pin of sensible diameter, we proceed as in Art. 122, drawing circles of the same diameter as the pin in a sufficient number of positions along the pitch line already found, and then drawing the acting edge tangent to these circles.
 
 When the path of the pin passes through the centre of motion of the cam, the distances Ee, Dd, etc., all reduce to zero ; and the pitch line is drawn through the points of intersection of the successive radii and the circular arcs through the corresponding positions of the pin.
 
@@ -1576,7 +1586,7 @@ need be adhered to. The path of the follower may be any curve whatever, and it m
 
 the pin be the curved line HB, and let the pin successively occupy the positions F, E, D, etc., while the cam revolves in the direction of the arrow through the unequal angles NAM, MAL, LAK, etc. The radii being drawn at the given angles, circular arcs are drawn through F, E, D, etc., and the points of the curve found, just as in Art. 153, by making Rr = Cc, Kk = Dd, etc.
 
-154. Cam for Complete Revolutions. — In Figs. <sup>101</sup> and 102 the directional relation is constant ; in other words, the direction of rotation of the cam must be reversed in order to bring the pin down again to H. But this may be accomplished by simply adding to the curve of the cam, in which case the latter may revolve continually in the same direction. The law of motion of the pin in one direction may be entirely different from that in the other direction, and the pin may be given an interval of rest at any elevation by making the corresponding part of the cam curve an arc of a circle.
+154. Cam for Complete Revolutions. — In Figs. 101 and 102 the directional relation is constant ; in other words, the direction of rotation of the cam must be reversed in order to bring the pin down again to H. But this may be accomplished by simply adding to the curve of the cam, in which case the latter may revolve continually in the same direction. The law of motion of the pin in one direction may be entirely different from that in the other direction, and the pin may be given an interval of rest at any elevation by making the corresponding part of the cam curve an arc of a circle.
 
 In Fig. 103, let A be the centre of motion of the cam, and let the vertical numbered line be the path of the follower. The cam is to revolve uniformly at the rate of one revolution in twelve seconds.
 
@@ -1584,13 +1594,13 @@ Each number on the vertical line shows the required posi tion of the pin at the 
 
 Draw twelve equidistant radii, and draw circular arcs through the various positions of the follower. Making la = la', lib = 2b', Illf = 3/', IVk = 4k', etc., we find the points of the curve, as before. The interval of rest indicated by the coincidence of the numbers 7 and 8 is obtained by means of the circular arc cc. The cam in the figure is drawn in the position when the pin is at the point 012; and the cam is ready, by one complete revolution in the direction of the arrow, to cause the pin to go through the cycle of motion required.
 
-<sup>1</sup> 55. Cam moving in Straight Path. — In all the preceding eases we have assumed the cam to revolve about some fixed centre of motion. But this is not a necessary condition ; it may move in any path whatever. In practice, however, there is but one other path employed; viz., the straight line. In Fig. 104, let ABCD be <sup>a</sup> flat rectangular
+<sup>1</sup> 55. Cam moving in Straight Path. — In all the pre ceding eases we have assumed the cam to revolve about some fixed centre of motion. But this is not a necessary condition ; it may move in any path whatever. In practice, however, there is but one other path employed; viz., the straight line. In Fig. 104, let ABCD be <sup>a</sup> flat rectangular
 
-plate moving in the direction of its length, and let the path of the follower be the line MN, at right angles with the direction of motion of the plate. Let the pin of the follower start from a position of rest at P, and move with a gradually accelerated velocity, so that it occupies the positions 1, 2, 3, 4, etc., at the end of equal successive intervals of time. Lay of on AB the distances MI, I II, II III, III IV, etc., through which the plate moves during the same intervals. In the figure the plate is supposed to be moving uniformly, and these distances are consequently equal ; but they may vary according to any assigned law. Draw the lines la, la, IIIc, IVd, etc., parallel to MN, and the lines la, 26, 8c, 4d, etc., parallel to AB. Their intersections, a, b, c, d, etc., will be points of the required cam curve. From this the working curves are derived in the usual manner, being the
+plate moving in the direction of its length, and let the path of the follower be the line MN, at right angles with the direction of motion of the plate. Let the pin of the follower start from a position of rest at P, and move with a gradually accelerated velocity, so that it occupies the positions 1, 2, 3, 4, etc., at the end of equal successive intervals of time. Lay ofif on AB the distances MI, I II, II III, III IV, etc., through which the plate moves during the same intervals. In the figure the plate is supposed to be moving uniformly, and these distances are consequently equal ; but they may vary according to any assigned law. Draw the lines la, Ia, IIIc, IVd, etc., parallel to MN, and the lines la, 26, 8c, 4d, etc., parallel to AB. Their intersections, a, b, c, d, etc., will be points of the required cam curve. From this the working curves are derived in the usual manner, being the
 
 sides of a groove or slit of the proper width in the plate. The theoretical curve above found is the centre line of the groove.
 
-In the special case shown in the figure, the lines la, la, IIb, 2b, etc. , are at right angles ; the angle between them is always the angle between the directions of motion of the plate and the follower. If in Fig. 104 we make the velocity of the follower also constant, the cam curve will become a straight line ; for instance, if we assume that the follower is to traverse the distance P~, with a uniform velocity, during the same time that the plate moves, also with a uniform velocity, over the distance <sup>M</sup> VII <sup>=</sup> "ig, tlien the straight line PG must be the cam line required. This line will evidently be the hypothenuse of a right triangle, the other two sides of which are the lines representing the respective distances traversed by the plate aud the follower in the same time. The velocity ratio of the cam plate aud the follower in this special case is evidently constant, and is simply the ratio of the isochronous distances above mentioned.
+In the special case shown in the figure, the lines la, la, lib, 2b, etc. , are at right angles ; the angle between them is always the angle between the directions of motion of the plate and the follower. If in Fig. 104 we make the velocity of the follower also constant, the cam curve will become a straight line ; for instance, if we assume that the follower is to traverse the distance P~, with a uniform velocity, during the same time that the plate moves, also with a uniform velocity, over the distance <sup>M</sup> VII <sup>=</sup> "ig, tlien the straight line PG must be the cam line required. This line will evidently be the hypothenuse of a right triangle, the other two sides of which are the lines representing the respective distances traversed by the plate aud the follower in the same time. The velocity ratio of the cam plate aud the follower in this special case is evidently constant, and is simply the ratio of the isochronous distances above mentioned.
 
 156. The Screw. — If a plate with a straight slit or groove, as just described, be wrapped around a cylinder whose axis is parallel to the path of the follower, the slit in the plate will become a spiral groove in the cylinder. If the cylinder be revolved uniformly, this groove will impart precisely the same motion to the follower as before.
 
@@ -1604,7 +1614,7 @@ The screw is sometimes made in this elementary form, consisting of a simple spir
 
 In the first place the pitch is made comparatively small, the necessary motion of the follower being secured by a corresponding increase in the number of revolutions of the screw. The convolutions of the groove are brought so close together that the ridge which separates two contiguous grooves becomes the counterpart of the groove itself. This ridge is termed the thread of the screw ; and from its section the screw derives its distinctive title, such as square-threaded, V-threaded, and round-threaded.
 
-In the second place, instead of a single pin, other pins may be fixed to the follower opposite the other convolutions ; then, since each pin will receive an equal velocity from the revolving cylinder, the motion of the follower will be effected as before, with the advantage of an increased number of points of contact. But this series of pins may be replaced by a short comb or rack, the outline of which exactly fits that of the threads of the screw. This is the most ancient form in which the screw was employed.
+In the second place, instead of a single pin, other pins may be fixed to the follower opposite the other convolutions ; then, since each pin will receive an equal velocity from the revolving cylinder, the motion of the follower will be effected as before, with the advantage of an increased number of points of contact. But this series of pins may be replaced by a short comb or rack, the outline of which exactly fits that of the threads of the screw.. This is the most ancient form in which the screw was employed.
 
 Most commonly, however, the piece which receives the action of the screw is provided with a cavity embracing the screw, and fitting its thread completely ; being, in fact, a hollow screw corresponding in every respect to the solid screw. Such a piece is termed a 7iut, and the hollow screw an inside screw, the solid screw being then called an outside screw. These modifications are only introduced to distribute the pressure of the screw upon a greater surface ; for, as the action of the thread is exactly alike upon every section of the nut, the result of all these conspiring actions is the same ;
 
@@ -1636,7 +1646,7 @@ In fact, if we make a wheel tooth whose shape is continually changing in every s
 
 160. Practical Method of Cutting Wheel Teeth. — The practical difficulty of making the teeth of a wheel of which the form in every parallel section shall be different, is very simply overcome by making the screw cut the teeth.
 
-An exact copy of the tangent screw is made of steel, the edges of its threads are notched, and it is then hardened, so that it becomes a cutting tool. It is then mounted in a suitable frame, so as to gear with the roughly formed teeth on the wheel, and turned so as to drive them ; in the course of which operation it cuts them to the proper figure. The axis of the cutting screw is placed at first at a distance from the axis of the wheel somewhat greater than the intended per manent distance ; and, after each complete revolution of the wheel, the axes are brought nearer together, until the per manent distance is attained ; and, by turning the screw, in this last position, the shaping of the teeth is finished. An involute wheel tooth working with a screw tooth whose meridian section has straight, sloping sides, is the best
+An exact copy of the tangent screw is made of steel, the edges of its threads are notched, and it is then hardened, so that it becomes a cutting tool. It is then mounted in a suitable frame, so as to gear with the roughly formed teeth on the wheel, and turned so as to drive them ; in the course of which operation it cuts them to the proper figure. The axis of the cutting screw is placed at first at a distance from the axis of the wheel somewhat greater than the intended per manent distance ; and, after each complete revolution of the wheel, the axes are brought nearer together, until the per manent distance is attained ; and, by turning the screw in this last position, the shaping of the teeth is finished. An involute wheel tooth working with a screw tooth whose meridian section has straight, sloping sides, is the best
 
 combination, as the successive diminutions of the distance between the axes will not affect the velocity ratio (Art. 108). In order to secure a good arc of action, and diminish obliquity, such wheels should not be given less than about thirty teeth.
 
@@ -1650,13 +1660,13 @@ Such teeth are in contact along a line in the meridian plane of the screw, but d
 
 162. The endless screw falls under the case of two revolving pieces whose axes are not parallel and do not meet. It communicates motion very smoothly, and is equivalent to a wheel of a single tooth, because one revolution passes one tooth of the wheel across the line of centres ; but, generally speaking, it can be employed only as a driver, on account of the great obliquity of its action. A worm may be multiple-threaded, just like any other form of screw, and, in that case, will pass as many wheel teeth across the line of centres for every revolution of the worm as there are separate threads on the latter. The practical process of cutting the teeth is, however, the same as before.
 
-163. Screw to produce Variable Motion — In all the cases previously described, the screw has been supposed to have a uniform pitch, and hence to produce a uniform motion in the follower. But we may impart any motion whatever ; the only condition being, that the pitch of the follower must not deviate much from a straight line parallel to the axis of the screw. As the inclination of the spiral groove varies, the velocity of the follower changes ; a period of rest of the follower being obtained by making the inclination zero. A small intermittent motion may readily be obtained by making the groove in the shape of a simple ring, except at a certain portion, where it deviates the necessary amount.
+163. Screw to produce Variable Motion. — In all the cases previously described, the screw has been supposed to have a uniform pitch, and hence to produce a uniform motion in the follower. But we may impart any motion whatever ; the only condition being, that the pitch of the follower must not deviate much from a straight line parallel to the axis of the screw. As the inclination of the spiral groove varies, the velocity of the follower changes ; a period of rest of the follower being obtained by making the inclination zero. A small intermittent motion may readily be obtained by making the groove in the shape of a simple ring, except at a certain portion, where it deviates the necessary amount.
 
 If it be required that the follower shall move back and forth while the screw revolves continually in the same direction, the spiral must be cut in both directions ; in which case the follower cannot be a rack or nut or wheel, but must be a single pin or similar piece. On the cylinder of the screw are cut two complete spirals, one right-handed and the other left-handed, joined together at their ends ; so that the two screws form one continuous path, winding around the cylinder from one end to the other and back again continuously. When the cylinder revolves, the piece which lies in this
 
 groove, and is attached to the follower', will be carried backwards and forwards ; and each total oscillation will corre spond to as many revolutions of the cylinder as there are convolutions in the compound screw. As the screw grooves necessarily cross each other, the piece that slides in them must be made long, so as to occupy a considerable length of the groove ; thus making it impossible for it to quit one screw for the other at the crossing places. Also, as the inclina tions of the two screws are in opposite directions, it is neces sary to attach that piece to the follower by means of a pivot, so as to allow it to turn through a small arc as the inclina tion changes. By varying the inclination at different points, the velocity ratio may be varied at those points.
 
-164. Pin and Slotted Cranlc. —In Fig. 106, let .1 be the centre of rotation of an arm, AP, carrying at its extremity a pin, P, which slides freely in the slot in the piece BC. The latter lias its centre of rotation at B. If the arm AP be revolved uniformly, it will impart a variable velocity to the arm BO.
+164. Pin and Slotted Crank. —In Fig. 106, let .1 be the centre of rotation of an arm, AP, carrying at its extremity <sup>a</sup> pin, P, which slides freely in the slot in the piece BC. The latter lias its centre of rotation at B. If the arm AP be revolved uniformly, it will impart a variable velocity to the arm BO.
 
 Let Pa, perpendicular to AP, represent the linear- velocity of the pin in the circle MN. Draw an indefinite line per
 
@@ -1701,7 +1711,7 @@ hence
 
 $$v = V \sin PAB.$$
 
-When PAB is or 180°, i.e., when P is at D or E, we have <sup>V</sup> = Q\ when PAB = 90° or 270°, v = V.
+When PAB is or 180°, i.e., when P is at D or E, we have <sup>V</sup> = Q\ when PAB = 90° or 270°, <sup>v</sup> = V.
 
 This motion of B, varying between and F, and going from to F and from F to twice in each revolution of AP, is called harmonic motion.
 
@@ -1709,23 +1719,23 @@ The necessary length of slot is iAP + diameter of pin. The length of the path of
 
 This arrangement is much used in some varieties of pumps to connect the fly-wheel shaft with the piston rod.
 
-167. Cam and Slotted Sliding- Bar. — In Fig. 110 is shown an example of a cam which, by its uniform rotation, produces a motion similar to that of Fig. 109, but with intervals of complete rest. The cam consists of a triangular piece ; the sides of the triangle being three equal arcs, each described around the point of intersection of the other two. The cam revolves uniformly about one of its corners, as A.
+167. Cam and Slotted Sliding- Bar. — In Fig. <sup>110</sup> is shown an example of a cam which, by its uniform rotation, produces a motion similar to that of Fig. 109, but with intervals of complete rest. The cam consists of a triangular piece ; the sides of the triangle being three equal arcs, each described around the point of intersection of the other two. The cam revolves uniformly ahout one of its corners, as A.
 
 The follower is the slotted bar BB, and the cam acts upon the two straight edges of the slot, the distance between which is equal to the radius of curved edges of the cam.
 
-Consequently the slot will be in contact with an angle and a side of the cam in every position, and the motion produced is as follows : Let the circle described by the outer edge of tlie cam be divided into six equal parts, as in the figure. Tracing the motion as the angle m of the cam goes round the circle'in the direction of the numbers, it appears that no motion will be given to the bar while m is moving from 1 to 2. While m travels from 2 to 3, the face Am drives the upper side of the slot with an increasing radius ; and hence the bar begins to move, and its velocity gradually increases. While m travels from 3 to 4 the action is similar to that of Fig. 109, and the motion of the bar will gradually be decreased until m reaches 4, when the bar will come to rest.
+Consequently the slot will be in contact with an angle and a side of the cam in every position, and the motion produced is as follows : Let the circle described by the outer edge of tlie cam be divided into six equal parts, as in the figure. Tracing the motion as the angle m of the cam goes round the circle'in the direction of the numbers, it appears that no motion will be given to the bar while m is moving from <sup>1</sup> to 2. While m travels from <sup>2</sup> to 3, the face Am drives the upper side of the slot with an increasing radius ; and hence the bar begins to move, and its velocity' gradually increases. While m travels from <sup>3</sup> to <sup>4</sup> the action is similar to that of Fig. 109, and the motion of the bar will gradually be decreased until m reaches 4, when the bar will come to rest.
 
-As m moves from 4 to <sup>5</sup> the bar remains at rest; from <sup>5</sup> to <sup>6</sup> the bar begins to move with an increasing velocity; from <sup>6</sup> to 1 the bar moves with a decreasing velocity, coming to rest as m reaches 1. •
+As m moves from <sup>4</sup> to <sup>5</sup> the bar remains, at rest; from <sup>5</sup> to <sup>6</sup> the bar begins to move with an increasing velocity; from <sup>6</sup> to <sup>1</sup> the bar moves with a decreasing velocity, coming to rest as m reaches 1. •
 
-168. In case the direction of motion of the follower intersects the axis of motion of the cam, the latter may be made in the shape of a screw thread on a cone ; when the
+168. In case the direction of motion of the follower intersects the axis of motion of the cam, the latter may be made in the shape of <sup>a</sup> screw thread on <sup>a</sup> cone ; when the
 
 follower's direction neither intersects nor is parallel to the cam axis we may employ a screw thread on a hyperboloid of revolution.
 
 lu fact, almost any kind of motion may be obtained by means of a suitably shaped cam ; but the general principles employed in the various cases above treated of apply equally well to any other special cases.
 
-169. Oldham's Coupling. —In Fig. Ill is shown a method of communicating equal rotation by sliding contact between two axes whose directions are parallel. Aa and Bb are the axes, each of which is furnished with a forked end, terminated by sockets bored in a direction to intersect the respective axes at right angles. The whole is so adjusted that all four sockets lie in one plane perpendicular to both axes. A cross with straight cylindrical arms is fitted into the sockets in the manner shown in the figure, and its arms are of a diameter that allows them to slide freely in their respective sockets. If one of the axes be made to revolve, it will drive the other with the same angular velocity.
+169. Oldham's Coupling. —In Fig. Ill is shown <sup>a</sup> method of communicating equal rotation by sliding contact between two axes whose directions are parallel. Aa and Bb are the axes, each of which is furnished with a forked end, terminated by sockets bored in a direction to intersect the respective axes at right angles. The whole is so adjusted that all four sockets lie in one plane perpendicular to both axes. A cross with straight cylindrical arms is fitted into the sockets in the manner shown in the figure, and its arms are of a diameter that allows them to slide freely in their respective sockets. If one of the axes be made to revolve, it will drive the other with the same angular velocity.
 
-For let the sketch at the right be a section through the cross perpendicular to the two axes Aa and Bb, and let the large circles be those described by their respective sockets. Then, if C be a socket of Aa, the arm of the cross which passes through it must meet the centre A ; and in like man
+For let the sketch at the right be a section through the cross perpendicular to the two axes Aa and Bb, and let the large circles be those described by their respective sockets. Then, if C be <sup>a</sup> socket of Aa, the arm of the cross which passes through it must meet the centre A ; and in like man
 
 ner, if D be a socket of Bb, the arm DB must pass through the centre B. Also, if C move to C', the new position (dotted lines) of the cross will be found by drawing C'A through A, and BD' perpendicular to it through B. And it is evident that the angle C'AC = angle D'BD, hence the angular velocity is the same in both axes. In every position of the cross we will have the triangle APB, in which the side AB is constant, and the angle APB opposite to it is always a right angle. Hence the locus of P must be the circle whose diameter is AB; i.e., the centre of the cross will travel around the small dotted circle whose diameter is the distance between the axes. Also every arm will slide through its socket and back again during each revolution through a space equal to twice the distance between the axes.
 
@@ -1745,31 +1755,31 @@ This escapement, though but rarely used at the present day, is of interest as be
 
 172. Anchor Escapement. —In Figs. <sup>113</sup> and <sup>114</sup> are
 
-shown two forms of this escnpement. In Fig. 113 the wheel has long, slender teeth, and turns in the direction of the arrow. The vibrating axis B carries <sup>a</sup> two-armed piece having pallets G and D at its extremities, and resembling somewhat the form of an anchor, whence the name of the combination. When the tooth <sup>g</sup> presses against the pallet C, the normal at the point of contact passes on the same side of the centres A and B ; hence (Art. 30) the tooth will tend
+shown two forms of this escapement. In Fig. 113 the wheel has long, slender teeth, and turns in the direction of the arrow. The vibrating axis B carries a two-armed piece having pallets C and D at its extremities, and resembling somewhat the form of an anchor, whence the name of the combination. When the tooth g presses against the pallet C, the normal at the point of contact passes on the same side of the centres A and B ; hence (Art. 30) the tooth will tend
 
 to turn the pallet in the same direction as the wheel. BC will therefore turn upwards, and allow the tooth to escape from the pallet. At this instant the tooth h will begin to act on the pallet D ; and, as the normal here passes between the centres A and J3, BD will move in opposite direction to the wheel, and hence the tooth k will escape.
 
 The teeth in an anchor escapement are often replaced by pins, in which case the form of the anchor may be so altered that the action shall take place entirely on one side of the line of centres, as shown in Fig. 114. The rapidity of vibration is controlled by the inertia of a weight or pendulum
 
-attached to the verge. This very inertia, however, preventing the verge from being suddenly stopped and reversed in direction, causes a recoil action to be set up in the wheel, which materially diminishes the utility of this escapement for it is evident that, as the verge cannot be stopped suddenly, the wheel must of necessity give way and recoil at tlie first instant of each engagement between a tooth and its cor responding pallet. The greater the inertia due to the load attached to the verge, the more slowly will the escapement work, and the greater will be the amount of recoil.
+attached to the verge. This very inertia, however, preventing the verge from being suddenly stopped and reversed in direction, causes a recoil action to be set up in the wheel, which materially diminishes the utility of this escapement for it is evident that, as the verge cannot be stopped suddenly, the wheel must of necessity give way and recoil at the first instant of each engagement between a tooth and its corresponding pallet. The greater the inertia due to the load attached to the verge, the more slowly will the escapement work, and the greater will be the amount of recoil.
 
 Fig. 114
 
 173. Method of connecting Anchor and Pendulum. —There is one uniform method of connecting the anchor and the pendulum, which can be seen in almost any clock. The pendulum, consisting often of a compound metal rod with a heavy bob, is swung by a piece of flat steel spring, and vibrates in a vertical plane very near to that in which the anchor oscillates. To the centre of the anchor is attached a light vertical rod, having the end bent into a horizontal position, and terminating in a fork which embraces the pendulum rod. It follows that the anchor and the pendulum swing together, though each has a separate point of suspension.
 
-<sup>1</sup> 74. Action of Escapement on Pendulum,— — In Fig. 113, let the escape wheel tend to move in the direction of the arrow, so as to press its teeth slightly against the pallets of the anchor ; the pendulum being hung from its point of suspension by a thin strip of steel, and vibrating with the anchor in the manner already stated. Let the arc abecd be taken to represent the arc of swing of the centre of the bob of the pendulum. As the pendulum moves from d to b, the point g of the escape wheel rests upon the oblique lower surface of the pallet C, and presses the pendulum onward until the latter reaches 6, when the point of the tooth escapes at the end of the pallet. For an instant the escape wheel is free ; but a tooth is caught at once upon the opposite side by the oblique upper surface of D, and the escape wheel then presses against the pendulum, and tends to stop it, until finally the pendulum comes to rest at the point a, and commences the return swing. During the latter the pendulum is similarly at first urged on, and then held back by the action of the escape wheel.
+<sup>1</sup> 74. Action of Escapement on Pendulum, — In Fig. 113, let the escape wheel tend to move in the direction of the arrow, so as to press its teeth slightly against the pallets of the anchor ; the pendulum being hung from its point of suspension by a thin strip of steel, and vibrating with the anchor in the manner already stated. Let the arc abcd be taken to represent the arc of swing of the centre of the bob of the pendulum. As the pendulum moves from d to b, the point g of the escape wheel rests upon the oblique lower sur face of the pallet C, and presses the pendulum onward until the latter reaches 6, when the point of the tooth escapes at the end of the pallet. For an instant the escape wheel is free ; but a tooth is caught at once upon the opposite side by the oblique upper surface of D, and the escape wheel then presses against the pendulum, and tends to stop it, until finally the pendulum comes to rest at the point a, and com mences the return swing. During the latter the pendulum is similarly at first urged on, and then held back by the action of the escape wheel.
 
-This alternate action with and against the pendulum prevents the pendulum from being, as it should be, the exclusive regulator of the speed of revolution of the escape wheel ; for its own speed, instead of depending solely on its length, will also depend on the force urging the escape wheel round. Hence any variation in the maintaining force will disturb the rate of the clock.
+This alternate action with and against the pendulum pre vents the pendulum from being, as it should be, the exclusive regulator of the speed of revolution of the escape wheel ; for its own speed, instead of depending solely on its length, will also depend on the force urging the escape wheel round. Hence any variation in the maintaining force will disturb the rate of the clock.
 
-<sup>1</sup> 75. Dead-beat Escapement. — This objectionable feature is obviated in Graham's dead-beat escapement. Fig. 115. It is, however, most worthy of note that the change in construction which abolishes the defects due to the recoil, and gives the astronomer an almost perfect clock, separates the combination entirely from its original conception ; viz., that of an apparatus for converting circular into reciprocating motion. The improvemept consists in making the lower surface of the pallet C and the upper surface of the pallet D
+<sup>1</sup> 75. Dead-beat Escapement. — This objectionable feature is obviated in Graham's dead-beat escapement. Fig. 115. It is, however, most worthy of note that the change in construction which abolishes the defects due to the recoil, and gives the astronomer an almost perfect clock, separates the combination entirely from its original conception ; viz., that of an apparatus for converting circular into reciprocating motion. The improvement consists in making the lower surface of the pallet C and the upper surface of the pallet D
 
 arcs of circles, whose centre is at B. The oblique surfaces qm, np, complete the pallets. As long as the tooth is resting on the upper surface of D, the pendulum is free to move, and the escape wheel is locked ; hence in the portion ba of the swing, and back again through ab, there is no action against the pendulum except the very minute friction which takes place between the tooth of the escape wheel and the surface of the pallet. Through the space be the point of the escape wheel tooth is pressing against the oblique edge np, and is urging the pendulum forward.
 
-Then at <sup>c</sup> this tooth escapes, and the tooth upon the opposite side falls upon the lower surface of C, and the escape wheel is locked ; from <sup>c</sup> to d, and back again from d to c, there is the same friction which acted through ba and ab. From <sup>c</sup>to <sup>6</sup> the point of <sup>a</sup> tooth presses upon gm, and urges the pendulum onward ; at <sup>b</sup> this tooth escapes, another one
+Then at <sup>c</sup> this tooth escapes, and the tooth upon the opposite side falls upon the lower surface of C, and the escape wheel is locked ; from <sup>c</sup> to d, and back again from d to c, there is the same friction which acted through ba and ab. From <sup>c</sup>to <sup>6</sup> the point of a tooth presses upon gm, and urges the pendulum onward ; at b this tooth escapes, another one
 
 comes into contact, and so on. It follows that there is no recoil, and the only action against the pendulum is the very minute friction between the teeth and the pallets. The term "dead-beat" has been applied because the seconds hand, which is fitted to the escape wheel, stops so completely when the tooth falls on the circular portion of the pallet. There is none of that recoil or subsequent trembling which occurs in the other escapements.
 
-## CHAPTER X.
+# CHAPTER X.
 
 COMMUNICATION OF MOTION BY LINKWORK. VELOCITY RATIO AND DIRECTIONAL RELATION CONSTANT OR VARYING.
 
@@ -1783,7 +1793,7 @@ Classification. —Discussion of Various Classes. — Quick Return Motion. —Ho
 
 Examples of the first class are seen in slotting and shaping machines, power pumps, and in the usual forms of the steam engine ; of the second class, in steam engine valve motions, where a rocker shaft is employed ; and of the third class, in locomotive side rods.
 
-### CLASS L.
+## CLASS I.
 
 Transformation of Circular Motion into Rectilinear Reciprocation, and the Reverse.
 
@@ -1825,7 +1835,7 @@ make the link of the same length as the crank arm, as in Fig. 119, the point K (
 
 of Q is AL = 2R, as before. But Q is drawn toward AP so rapidly on account of the angularity of PQ, that when
 
-AP is perpendicular to AL, <sup>Q</sup> coincides with A and has completed its stroke. If we produce QP to V, making
+AP is perpendicular to AL, Q coincides with A and has completed its stroke. If we produce QP to V, making
 
 PV = PQ = AP (Fig. 120), it is evident that as AP revolves as indicated by the arrow, Q will move from L to A, and V will move from A to W. If now we continue the motion of AP, Q will be driven past A to M, and V will return to A. Thus, the revolution of AP will cause Q to move over the path LM, and V over the path WX. By this means, the arm AP can be made to move the two ends of a link of twice its length through paths at right angles, and each equal in length to 4AP.
 
@@ -1851,7 +1861,7 @@ $$ML = \sqrt{(l+R)^2 - e^2}.$$
 
 From these expressions, the distances QL and QK can be determined.
 
-181. By comparing Figs. 116 and 121, it will be seen, that, in the former, the outward and inward dead points, C and D, lie in one straight line; while in the latter, they depart from a straight line by the angle DAV = KAL.
+**181.** By comparing Figs. 116 and 121, it will be seen, that, in the former, the outward and inward dead points, C and D, lie in one straight line; while in the latter, they depart from a straight line by the angle DAV = KAL.
 
 This angle increases as AM is increased, and as the ratio  $\frac{R}{l}$
 
@@ -1863,7 +1873,7 @@ it is used as a substitute for small cranks on account of the practical difficul
 
 The term, throw of an eccentric, is given, by various authorities, either to the arm AP, or to twice that distance; and hence the meaning of the term is often ambiguous.
 
-### CLASS II.
+## CLASS II.
 
 Transformation of Continuous Rotation into Rotative Reciprocation, and the Reverse.
 
@@ -1890,7 +1900,7 @@ These conditions are fulfilled by the proportions employed in Fig. 123.
 
 In Fig. 124, <sup>d</sup> = <sup>I</sup> + <sup>r</sup> — R, and we have an outward dead point for r, simultaneously with an inward dead point for R. In Fig. 125, <sup>d</sup> = <sup>Z</sup> + i? — ?•, and we have an in ward dead point for r, simultaneously with an outward dead
 
-point for R. These two arrangements are therefore faulty ; since when r is at a dead point, we cannot control the direc tion of its motion, as it is free to move either up or down
+point for R. These two arrangements are therefore faulty ; since when r is at a dead point, we cannot control the direction of its motion, as it is free to move either up or down
 
 from that point. In Fig. 126, d is made still shorter, and it will be seen that r has dead points, G and G', when R is at Ag or Ag' respectively. Hence R cannot perform complete revolutions and drive r.
 
@@ -1900,13 +1910,13 @@ As R moves in either direction over the arc gEE'g', r may move in either directi
 
 arms and links which will cause the following arm BQ to oscillate between the positions BQ and BQ' when the driving arm AP makes continuous rotations. Assume any convenient length for the arm BQ, and strike an arc with that length as
 
-a radius about B, thus fixing the points Q and Q'. With A as a centre, draw the circular arcs Qq and Q'q'. Then we will have AQ = Aq = l - R; and AQ' = Aq' = l + R; $\therefore qq' = 2R$. Bisect qq' at a, then aq or aq' is the length of the arm AP to fulfil the conditions, and Aa is the length of the link PQ = l. If these results do not give convenient lengths for R and l, a longer or a shorter length should be taken for BQ.
+a radius about B, thus fixing the points Q and Q'. With A as a centre, draw the circular arcs Qq and Q'q'. Then we will have AQ = Aq = l - R; and AQ' = Aq' = l + R;  $\therefore qq' = 2R$ . Bisect qq' at a, then aq or aq' is the length of the arm AP to fulfil the conditions, and Aa is the length of the link PQ = l. If these results do not give convenient lengths for R and l, a longer or a shorter length should be taken for BQ.
 
 186. The velocity ratio in this class of linkwork is to be determined, as in Arts. 24 and 25, by the ratio of the perpendiculars let fall from the fixed centre upon the line of the link. When there are dead points, one or both of the perpendiculars disappear at the instant of passing these points; and this is just as it should be, for no motion is transmitted at that instant.
 
 When the shorter and rotating arm is the driver, its dead points occur, as shown in the figure, at the ends of the oscillations of the following arm, and this arrangement will work satisfactorily when the conditions of Art. 184 are complied with. In case the oscillating arm drive, however, the dead points of the follower must be overcome by the momentum of the rotating pieces, increased if necessary by the addition of a fly-wheel.
 
-### CLASS III.
+## CLASS III.
 
 Transmission of Continuous Rotation.
 
@@ -1926,13 +1936,19 @@ constructed, the arms are of the same length, and the centres A and B coincide.
 
 will give us the arrangement shown in Fig. 130. The arms have simultaneous dead points when lying in the direction of the line of centres. Hence if R performs complete revolutions, r may continue to rotate in the same direction, with a constant velocity ratio, or it may move from the dead point in the opposite direction, with a varying velocity ratio ; so that for a given position, AP, of B, <sup>r</sup> may occupy the position BQ or Bq. To insure continuous rotation, then, by this arrangement, it is necessary to provide some means of compelling r to continue its motion past the dead points. This may be accomplished by one of the following arrangements.
 
-189. We may connect the axes by other and similar systems, as shown in Figs. 131 and 132.
+189. We may connect the axes by other and similar sys tems, as shown in Figs. 131 and 132.
 
 When two systems of arms and links are employed, as in Fig. 131, they are generally placed with the arms at right angles.
 
 When three are used, as in Fig. 132, the arms are placed at angles of 120°.
 
-190. Another method consists in the use of a third rotating arm, connected to the same link, and so placed that the driving arm may lie between the following and the auxiliary arms. This arm must be equal in length to the other two, and must lie parallel to them in all positions. All three arms may be located on the same line of centres, as in Fig. 133; or the driving arm may be to one side of the line of centres of the other two, as in Fig. 134. In the latter case VT must be part of or be rigidly connected with PQ, so that the points P, V, Q will be the vertices of a rigid triangle.
+190. Another method consists in the use of a third rotat ing arm, connected to the same link, and so placed that the driving arm may lie between the following and the auxiliary
+
+arms. This arm must be equal in length to the other two, and must lie parallel to them in all positions. All three arms may be located on the same line of centres, as in Fig.
+
+133 ; or the driving arm may be to one side of the line of centres of the other two, as in Fig. 134. In the latter case
+
+VT must be part of or be rigidly connected with PQ, so that the points P, V, Q will be the vertices of a rigid triangle.
 
 191. Boehm's Coupling. —Another method, known as Boehm's link coupling, is shown in Fig. 135. Two discs placed in parallel planes are fixed to parallel shafts, and connected by two or more links which make an angle with the planes of the discs. The distance between the planes of the discs must be sufficient to enable the links to pass each other,
 
@@ -1940,7 +1956,7 @@ as shown. The velocity ratio in these three arrangements is constant.
 
 Various Applications of LINKWORK.
 
-192. Bell-Cranks. —A form of linkwork known as bell-cranks is largely used to change the direction of motion. In Fig. 136 let ab be the direction of a reciprocating motion which it is desired to change to the direction cd. In the angle bTd formed by these directions assume any convenient point A ; and from A draw perpendiculars AB and AC on ab and cd respectively. If we construct <sup>a</sup> rigid piece BAG, centred at A, we can by means of it produce the change in direction desired. This piece is termed a bell-crank, and such pieces are largely used in bell-hanging, in the mechanism of organs, etc. As the angular motion of the arms is small, their lengths are sensibly equal to the perpendiculars from A upon the lines of action, and hence the velocity ratio is sensibly constant.
+192. Bell-Cranks. —A form of linkwork known as bell-cranks is largely used to change the direction of motion. In Fig. 136 let ah be the direction of a reciprocating motion which it is desired to change to the direction cd. In the angle bTd formed by these directions assume any convenient point A ; and from A draw perpendiculars AB and AC on ah and cd respectively. If we construct <sup>a</sup> rigid piece BAG, centred at A, we can by means of it produce the change in direction desired. This piece is termed a bell-crank, and such pieces are largely used in bell-hanging, in the mechanism of organs, etc. As the angular motion of the arms is small, their lengths are sensibly equal to the perpendiculars from A upon the lines of action, and hence the velocity ratio is sensibly constant.
 
 It is clear that we may place the centre A in any one of the four angles about T made by the lines of action. If placed in the angle bTd or aTc, the direction of motion will be as indicated by the arrows; but if we place it in the angles aTd or bTc, the direction of motion along ab being still as indicated by the arrow, that along cd will be reversed.
 
@@ -1954,9 +1970,9 @@ or  $(8 + BC)^2 = 9 + (8 - BC)^2$ . Solving this equation for BC, we find  $BC =
 
 Therefore the length of the beam arm AE should be 8'  $3\frac{3}{8}$ ", in order that the connection E may deviate the smallest amount from the line of centres BP.
 
-194. To Multiply Oscillations by Linkwork. — In Fig. 138, let AP be an arm rotating about A, and connected by a link PC to an arm BC oscillating about B. For one revolution of AP, BC will move from the position BC to Bc and back again to BC. Now connect C by a link CE to an arm DE oscillating about D. Let AP turn from P to p, and move BC from c to c, then DE will be moved from E to E' and back again to E. Therefore during a complete revolution of AP, DE will perform two complete cycles of motion ; going from E to E' and back again to E during each half revolution of AP. If we connect DE to another oscillating arm KH in a similar manner, KH will perform two complete cycles for one of DE, and hence four complete cycles for one revolution of AP.
+194. To Multiply Oscillations by Linkwork. — In Fig. 138, let AP be an arm rotating about A, and connected by a link PC to an arm BC oscillating about B. For one revolution of AP, BC will move from the position BC to Bc and back again to BC. Now connect C by a link CE to an arm DE oscillating about D. Let AP turn from P to p, and move BC from C to c, then DE will be moved from E to E' and back again to E. Therefore during a complete revolution of AP, DE will perform two complete cycles of motion ; going from E to E' and back again to E during each half revolution of AP. If we connect DE to another oscillating arm KH in a similar manner, KH will perform two complete cycles for one of DE, and hence four complete cycles for one revolution of AP.
 
-The length of the are of oscillation of each arm depends on the length of the preceding arm, and on the versed sine of the angle through which the latter swings on each side of its mid-position.
+The length of the arc of oscillation of each arm depends on the length of the preceding arm, and on the versed sine of the angle through which the latter swings on each side of its mid-position.
 
 195. To Protluce a Kapidly Varying Velocity from Uniform Motion. — In Fig. <sup>139</sup> let AP be an arm oscillating with uniform velocity about A, and connected by a link PQ to an arm oscillating about <sup>a</sup> centre 5, placed so
 
@@ -1966,7 +1982,7 @@ that when P is at a dead point, BQ may be perpendicular to PQ. Starting from the
 
 Fig. 140
 
-uniform motion we wish to derive the motion of a second arm, such that its period of advance shall be equal, say, to twice its period of return. On a circle about A, lay off the arc PCp = one-third of the circumference; i.e., angle PAp = 120 degrees; then AP and Ap must be the positions of the driving arm when the following arm is at the ends of its stroke, and the driver is at its dead points.
+uniform motion we wish to derive the motion of a second arm, such that its period of advance shall be equal, say, to twice its period of return. On a circle about A, lay off the arc PCp = one-third of the circumference; i.e., angle PAp = 120 degrees ; then AP and Ap must be the posi- tions of the driving arm when the following arm is at the ends of its stroke, and the driver is at its dead points.
 
 On PA and Ap produced, lay off PQ = pq = proposed length of link. Then Qq must be the chord of the arc of oscillation of BQ, and the centre B must lie in the perpendicular bisecting this chord. BQ may be of any length to
 
@@ -1978,7 +1994,7 @@ In Fig. 141, A and B are the two shafts having semicircular jaws at their ends. 
 
 QPpq is formed with its four arms at right angles and in the same plane. The centre of the cross is at O, the intersection of the axes. All four arms are of the same length, and turn in bearings at P, p, Q, and q. Let the shaft A be the driver, then the ends of the arms, P and p, move in a circle whose plane is perpendicular to the axis of A; and the ends, Q and q, move in a circle whose plane is perpendicular to the axis of B. We will term these arms the driving and following arms respectively. The planes of the circles evidently intersect in a line through O, perpendicular to the plane of the axes, and the angle between the planes is equal to the angle between the axes  $= \beta$ .
 
-198. Let a plane through O, and perpendicular to the driving axis, be taken as the plane of projection. Then, Fig. 142, the circle described with radius OP = Op about O as a centre, will represent the path of the points P and p. Let the plane of the axes A and B be perpendicular to the paper, intersecting it in OE. Then COD, perpendicular to OE, will be the intersection of the planes of rotation of the
+198. Let a plane through O, and perpendicular to the driving axis, be taken as the plane of projection. Then, Fig. 142, the circle described with radius OP = Op about as a centre, will represent the path of the points P and p. Let the plane of the axes A and B be perpendicular to the paper, intersecting it in OE. Then COD, perpendicular to OE, will be the intersection of the planes of rotation of the
 
 driving and following arms. Draw the radius OF, making the angle  $EOF = \beta =$  the acute angle between the axes; and from F draw a line parallel to COD, and intersecting OE in K. Then
 
@@ -2016,7 +2032,7 @@ Starting with <sup>a</sup> driving arm at 00 and <sup>a</sup> following arm at O
 
 Maximum values occur when  $\sin \theta = 1$ ;  $\cos \phi = 0$ . In this case  $\frac{a'}{a} = \frac{1}{\cos \beta}$ , and  $\theta$  and  $\phi$  both  $= \frac{\pi}{2}, \frac{3\pi}{2}$ , etc. That is, the velocity ratio has its maximum value when the driving arm is at OE or EO produced, and the following arm is at OD or OC.
 
-Hence we see that during each revolution there are two maximum and two minimum values of the velocity ratio, and that it varies between the values  $\frac{1}{\cos \beta}$  and  $\cos \beta$ .
+Hence we see that during each revolution there are two maximum and two minimum values of the velocity ratio, and that it varies between the values $\frac{1}{\cos \beta}$ and $\cos \beta$.
 
 Between the maximum and minimum points there are four points where the ratio is unity.
 
@@ -2040,13 +2056,13 @@ $$\frac{a'}{a}=1.$$
 
 It will be clear upon examination that the variations thus balance each other throughout the revolution, so that — is <sup>a</sup> always unity ; in other words, the velocities of the two principal axes are always equal. If the cross ends of ab are in planes perpendicular to each other, the variations, instead of neutralizing each other, will evidently act together, and make the total variation in velocity of the two principal axes greater than if one joint only were employed.
 
-### Intermittent Linkwork.
+## Intermittent Linkwork.
 
 201. Click and Ratchet. — An example of intermittent linkwork is the click a,nd ratchet-wheel^ a simple form of which is shown in Fig. 144. An arm AB oscillating about A has jointed to it at i? a click or catch BC. Turning about Z) is a ratchet-wheel Cc, having teeth generally of the shape shown. When the arm AB moves as indicated by the arrow, the end C of the click presses against the straight side of <sup>a</sup> tooth,
 
-and thus moves the wheel. Centred at the fixed point <sup>6</sup> is a pawl or detent, bc, which either rests on the teeth by its weight, or is pressed against them by a spring. This serves, as shown, to hold the wheel, and prevent its backward motion during the back stroke of AB, but offers little or no resist ance during the forward motion of AB. The pawl and tooth act upon each other by sliding contact ; and the direction of the line of action, or of the pressure between them, is a nor mal to the straight face of the tooth and end of the pawl.
+and thus moves the wheel. Centred at the fixed point <sup>6</sup> is a pawl or detent, he, which either rests on the teeth by its weight, or is pressed against them by a spring. This serves, as shown, to hold the wheel, and prevent its backward motion during the back stroke of AB, but offers little or no resist ance during the forward motion of AB. The pawl and tooth act upon each other by sliding contact ; and the direction of the line of action, or of the pressure between them, is a nor mal to the straight face of the tooth and end of the pawl.
 
-Let eg be this normal, and let fall upon it the perpendiculars hg and DC. Then, if the wheel tend to turn backwards, that is, in the direction eg, the pawl will tend to turn about h in the same direction, eg, or towards the wheel. That is, the tendency is to force the pawl and the tooth into closer contact, which is as it should be. But if the shape of the face of tooth and pawl is such that the normal occupies some position beyond b, as eh, the tendency is to turn the pawl outward, or to cause it to slide off the tooth. Hence, with a straight pawl or click, as shown in this figure, the normal to the face of the tooth should pass between the centres
+Let eg be this normal, and let fall upon it the perpendiculars hg and Do. Then, if the wheel tend to turn backwards, that is,' in the direction eg, the pawl will tend to turn about h in the same direction, eg, or towards the wheel. That is, the tendency is to force the pawl and the tooth into closer contact, which is as it should be. But if the shape of the face of tooth and pawl is such that the normal occupies some position beyond b, as eh, the tendency is to turn the pawl outward, or to cause it to slide off the tooth. Hence, with a straight pawl or click, as shown in this figure, the normal to the face of the tooth should pass between the centres
 
 of the wheel and of the pawl. And, by similar reasoning, in the cases in which we have a hooked pawl, as in Fig. 148, the normal should pass outside of or beyond the centre of motion of the pawl.
 
@@ -2060,13 +2076,13 @@ slightly greater than some multiple of the pitch arc; the excess being simply to
 
 204. Silent Click. — This contrivance (Fig. 146) avoids the clicking noise and the consequent wear of a common click. BC is the click, which, in this figure, is made to push the teeth.
 
-It is carried by one arm, AB, of a bell-crank lever, which has the same centre of motion, A, as the ratchet-wheel. The other arm of the lever has two studs, E and E'. Between these pins is the driving arm AF, also centred at A, and con nected by <sup>a</sup> link GH to the click. The motion of this arm in the direction of the arrow drives the wheel in the same direction. When the motion of the arm is reversed, it at fi‑st moves back against E' before it can move the bell-crank lever ; and, during this motion, the link GH lifts the click
+It is carried by one arm, AB, of a bell-crank lever, which has the same centre of motion, A, as the ratchet-wheel. The other arm of the lever has two studs, E and E'. Between these pins is the driving arm AF, also centred at A, and con nected by <sup>a</sup> link OH to the click. The motion of this arm in the direction of the arrow drives the wheel in the same direction. When the motion of the arm is reversed, it at fi'-st moves back against E' before it can move the bell-crank lever ; and, during this motion, the link GH lifts the click
 
 clear of the teeth. Then, by pressing against the pin E', it moves the bell-crank back to the position shown in dotted lines. The driving arm then moves ahead again against the pin E, pulling the click into gear with the teeth, as shown and then, by means of the pin E, drives the wheel ahead, as before.
 
 205. Double-acting Click. —This arrangement, shown in Figs. 147 and 148, may be used when it is desired to drive the wheel ahead during both strokes of the driving arm.
 
-To accomplish this result, the driving arm in Fig. 147 carries two pushing clicks ; and that in Fig. 148, two pulling clicks. The former is the stronger arrangement, and is therefore used wherever great strength is required, as in ships' windlasses. The centre G being located, the arms GK and GH are made equal, and so placed that in their midpositions they will be perpendicular to the lines of action of the respective clicks. "With these arrangements, two or more
+To accomplish this result, the driving arm in Fig. 147 carries two pushing clicks ; and that in Fig. 148, two pulling clicks. The former is the stronger arrangement, and is therefore used wherever great strength is required, as in ships' windlasses. The centre O being located, the arms GK and GH are made equal, and so placed that in their midpositions they will be perpendicular to the lines of action of the respective clicks. "With these arrangements, two or more
 
 detents or pawls are used, so placed that they will prevent the ratchet-wheel from turning back more than one-third or one-half the pitch.
 
@@ -2080,7 +2096,7 @@ A similar frictional catch, not shown, hanging from a socket on a fixed instead 
 
 detent, to hold the wheel still during the return stroke of the movable arm.
 
-**207.** The following is the graphic construction for determining the proper position of the studs G and H:— Multiply the radii of the outer and inner surfaces, BB and CC, of the rim of the wheel, by a coefficient a little less than the sine of the angle of repose, — say one-seventh, — and with the lengths so found, as radii, describe two circular arcs about A; the greater (marked E) lying in the direction of forward motion, and the less (marked F) in the contrary direction. From D, the centre of the pin, draw DE and DF tangent to these arcs. Then G, where DE cuts BB, and H, where DF cuts CC, will be the proper positions for the points of contact of the two studs with the rim of the wheel.
+**207.** The following is the graphic construction for determining the proper position of the studs G and H:— Multiply the radii of the outer and inner surfaces, BB and GG, of the rim of the wheel, by a coefficient a little less than the sine of the angle of repose, — say one-seventh, — and with the lengths so found, as radii, describe two circular arcs about A; the greater (marked E) lying in the direction of forward motion, and the less (marked F) in the contrary direction. From D, the centre of the pin, draw DE and DF tangent to these arcs. Then G, where DE cuts BB, and H, where DF cuts CC, will be the proper positions for the points of contact of the two studs with the rim of the wheel.
 
 The stiffness of the spring ought to be sufficient to bring the catch quickly into the holding position at the end of each return stroke.
 
@@ -2092,7 +2108,7 @@ An arm AB, centred at C, rides on a saddle which slides on the rim NN of the whe
 
 one end of the arm, and admits of being pressed firmly against the inside of the rim NN. When the end B is moved as indicated, the rim NN will be firmly grasped or nipped between the saddle and the piece EE, and will be forced to move to the right. When B is pushed back, a stop prevents BCA from turning more than is sufficient to loosen the hold of EE, and the saddle slides freely on the rim. A screw F may be employed to bring up a stop H towards the arm ACB, and so to prevent the arm from twisting into the position which gives rise to the grip of EE. No motion will then be imparted to the wheel, a result which is obtained in any ordinary ratchet-wheel by throwing the click off the teeth.
 
-## CHAPTER XI.
+# CHAPTER XI.
 
 COMMUNICATION OF MOTION BY WRAPPING CONNECTORS. VELOCITY RATIO CONSTANT. DIRECTIONAL RELATION CONSTANT.
 
@@ -2106,7 +2122,7 @@ ous, the ends of the wrapping connector are fastened together, forming an endles
 
 Where a direct or open band is used, as in Fig. 151, the direction of rotation of driver and follower is the same ; but when the band is crossed, as in Fig. 152, the rotations take place in opposite directions.
 
-210. Forms of Connectors and Pullej's. —Various materials are in use for wrapping connectors, the material depending to a certain extent upon the character and location of the machinery. The form of the pulleys depends largely upon the material of the connector. For very light machinery, such as sewing machines, the bands are usually round, and are made of leather, catgut, or woven cord. The pulleys
+210. Forms of Connectors and Pulleys. —Various materials are in use for wrapping connectors, the material depending to a certain extent upon the character and location of the machinery. The form of the pulleys depends largely upon the material of the connector. For very light machinery, such as sewing machines, the bands are usually round, and are made of leather, catgut, or woven cord. The pulleys
 
 used with such bands are grooved as illustrated by Fig. 153, the band running in this groove. For other machinery, where the distance between driver and follower is not very great, flat belts are used together with smooth pulleys. These pulleys are true cylinders in some cases, but are usually rounded to some extent as illustrated by Fig. 154. The amount of this convexity, or increase of radius from edge to centre of face, varies, according to different authorities, from nothing to one-half inch per foot of width of face of pulley. Average practice would seem to authorize one-eighth inch rise per foot of width.
 
@@ -2122,7 +2138,7 @@ Fig. 158
 
 Where great strength is required in small compass, iron chains are used. The links of the chains are of various shapes. The pulleys are formed to fit the links more or less nearly, or with teeth to enter the links, and thus prevent slipping. Figs. 156, 157, and 158 illustrate forms of chains and pulleys.
 
-211. Tightening Pulleys. —When smooth pulleys are used, the motion is transmitted directly by the friction between the belts or bands and the pulleys. Ordinarily the tension of a belt, properly fitted, is sufficient to produce the necessary adhesion. But in some cases, tightening pulleys are employed to prevent slipping ; as, for example, they are frequently employed for this purpose on the driving belts of stationary steam-engines. These tightening pulleys are pressed against the belt by weights or springs, and thus maintain a constant tension, or are mounted in a frame which can be adjusted in position by screws.
+211. Tightening Pulleys. —When smooth pulleys are used, the motion is transmitted directly by the friction be tween the belts or bands and the pulleys. Ordinarily the tension of a belt, properly fitted, is sufficient to produce the necessary adhesion. But in some cases, tightening pulleys are employed to prevent slipping ; as, for example, they are frequently employed for this purpose on the driving belts of stationary steam-engines. These tightening pulleys are pressed against the belt by weights or springs, and thus maintain a constant tension, or are mounted in a frame which can be adjusted in position by screws.
 
 212. Shifting Belts. —A flat belt may be easily shifted from one position on a cylindrical pulley to another position
 
@@ -2138,7 +2154,7 @@ Fig. 161
 
 edge D will evidently be greater than at the edge F. Consequently the tendency will be to throw the belt into the position shown dotted. If we now rotate the pulley, the belt will, as shown in the preceding article, be moved to the left or towards the largest diameter of the pulley. It is for this reason that the convexity is given to pulleys, so that if for any reason the belt commences to come off, the increased tension of one part will bring it back to a central position.
 
-**214.** Twisted Belt. — In Fig. 161, let A be a fixed axis carrying the pulley D, and let B be an axis carrying the pulley E. At first consider the axis B and pulley E to occupy the position shown dotted, so that A and B are parallel, and D and E are in the same plane. Let SS be the common tangent to the two pulleys, drawn on the sides from which the belt is delivered, and in the central planes of the pulleys. Now, let axis B and pulley E be turned about SS into some other position such as that shown in full lines. Then SS will be the intersection of the central planes
+214. Twisted Belt. — In Fig. 161, let A be a fixed axis carrying the pulley D, and let B be an axis carrying the pulley E. At first consider the axis B and pulley E to occupy the position shown dotted, so that A and B are parallel, and D and E are in the same plane. Let SS be the common tangent to the two pulleys, drawn on the sides from which the belt is delivered, and in the central planes of the pulleys. Now, let axis B and pulley E be turned about SS into some other position such as that shown in full lines. Then SS will be the intersection of the central planes
 
 of the pulley. If, now, the pulleys be rotated as indicated by the arrows, it follows, that since the points a and <sup>6</sup> are in the central plane of E, and a' and 6' are in the central plane of D, the advancing side of the belt is in each case in the central plane of the pulley considered, and the belt will not tend to run off (Art. 212). But if the pulleys be rotated in the opposite direction, the belt will immediately run off. Hence
 
@@ -2152,7 +2168,7 @@ by means of this pulley the desired change may be effected. If the directions do
 
 be rotated in either direction. In Fig. 164, 8S is the intersection of the central planes of the pulleys A and B. Assume
 
-points <sup>c</sup> and c' in this line, and draw tangents to the pulleys A and B. Then the guide pulleys C and C' should evidently be placed in the planes of these tangents, and so as to be tangent to ca, cb, and c'a', c'a', respectively. By this arrangement the direction of the belt where it leaves a pulley is always in the central plane of the next pulley, and. hence the belt can be run in either direction without tending to leave the pulleys.
+points <sup>c</sup> and c' in this line, and draw tangents to the pulleys A and B. Then the guide pulleys C and C' should evidently be placed in the planes of these tangents, and so as to be tangent to ca, cb, and c'a', cb, respectively. By this arrangement the direction of the belt where it leaves a pulley is always in the central plane of the next pulley, and. hence the belt can be run in either direction without tending to leave the pulleys.
 
 217. In Figs. 165 and 166 are shown applications of guide pulleys, the rotation being always in the same direction. In Fig. 165, two axes which lie in the same plane and make a small angle with each other are connected, so as to
 
@@ -2160,11 +2176,11 @@ Fig. 165
 
 be capable of rotation in the direction of the arrow. One guide pulley is used, and the arrangement depends on the principles of Art. 214.
 
-In Fig. 166, two pulleys on parallel shafts, but not in the same plane, are connected, so as to be capable of rotation in one direction by means of two guide pulleys fixed on the same shaft. The diameter of the guide pulleys should be
+In P''ig. 166, two pulleys on parallel shafts, but not in the same plane, are connected, so as to be capable of rotation in one direction by means of two guide pulleys fixed on the same shaft. The diameter of the guide pulleys should be
 
 equal to the distance between the central \_planes of the driving and following pulleys.
 
-218. Length of Belt. — The actual length of belt required in every case is best determined by actual measurement over the pulleys, or by measurement on a scale drawing. It may, however, be calculated in the following manner. In Figs. 167 and 1C8, let A and B be the axes of two pulleys
+218. Length of Belt. — The actual length of belt re quired in every case is best determined by actual measurement over the pulleys, or by measurement on a scale drawing. It may, however, be calculated in the following manner. In Figs. <sup>167</sup> and 1C8, let A and B be the axes of two pulleys
 
 connected by belts, KP and kp being the straight parts of the belt. Draw hAH and gBG perpendicular to AB; AK and Ak, BP and Bp, radii of the pulleys to the points of
 
@@ -2199,7 +2215,7 @@ $$L = 2\sqrt{d^2 - (R-r)^2}$$
 
 +  $\pi(R+r) + 2(R-r) \arcsin \frac{R-r}{d}$ .
 
-It is to be noted, that, for a given value of d, the length of a crossed belt depends upon the sum of the radii of the pulleys, while the length of an open belt depends both upon the sum and difference of the radii. It follows from this, that one crossed belt can be used to transmit different velocity ratios between two shafts, with the single condition that the sum of the radii of each pair of pulleys must be the same. For example : with any given value of d, the same belt, crossed, will exactly fit pulleys having diameters of 4 and 16, 6 and 14, 8 and 12, 10 and 10; the value of R + r in each case being 10. But these pulleys could not be exactly fitted with the same length of open belt.
+It is to be noted, that, for a given value of d, the length of a crossed belt depends upon the sum of the radii of the pulleys, while the length of an open belt depends both upon the sum and difference of the radii. It follows from this, that one crossed belt can be used to transmit different velocity ratios between two shafts, with the single condition that the sum of the radii of each pair of pulleys must be the same. For example : with any given value of d, the same belt, crossed, will exactly fit pulleys having diameters of 4 and 16, 6 and 14, 8 and 12, 10 and 10; the value of R + <sup>r</sup> in each case being 10. But these pulleys could not be exactly fitted with the same length of open belt.
 
 219. Approximate Formulae. — As the above exact formulae are cumbersome, the following approximate equations are introduced. All dimensions are best taken in inches, and the signification of the letters is the same as above. The formulae will give results which are safe within the prescribed limits.
 
@@ -2213,7 +2229,7 @@ To be used when
 $$\frac{R-r}{d}$$
  does not exceed 0.16.
 
-Within these limits the results are a trifle large, while beyond them they fall short.
+AVithin these limits the results are a trifle large, while beyond them they fall short.
 
 220. Wrapping connectors may be used to transmit motion when the directional relation or the velocity ratio, or both, are variable. The result is obtained by using non-circular pulleys, or by winding the band in a spiral groove of variable radius.
 
@@ -2221,17 +2237,17 @@ In such cases the length of the band is not usually constant, and tightening pul
 
 In practice, variable conditions are so much better met by other modes of connection, that wrapping connectors are scarcely ever used for this purpose ; and hence no discussion of such use is here given.
 
-## CHAPTER XII.
+# CHAPTER XII.
 
-### TRAINS OF MECHANISM.
+## TRAINS OF MECHANISM.
 
-Value of a Train. — Directional Relation in Trains. — Clockwork. — Notation. — Method of designing Trains. — Approximate Numbers for Trains.
+Value of <sup>a</sup> Train. — Directional Relation in Trains. — Clockwork. — Notation. — Method of designing Trains. — Approximate Numbers for Trains.
 
 221. The required velocity ratio of two motions being given, it is always theoretically possible to obtain this ratio by the use of one of the elementary combinations described in the previous chapters. It often happens, however, that this ratio is so small, or so large, that, practically, the motion is better communicated by a train of such combinations ; each piece being at the same time the follower of the piece that drives it, and the driver of the piece that follows it.
 
 For convenience, let us first consider the case in which all the pieces are circular wheels revolving about fixed axes. The usual arrangement in such cases is to secure two unequal wheels upon each axis, except the first and last, and to make the larger wheel on each axis gear with the smaller wheel on the next axis.
 
-222. Value of a Train Let there be m such axes, and let us designate by <sup>e</sup>the value of the train ; that is, the ratio of the angular velocities of the first and last axes, or, what amounts to the same thing, the ratio of their synchronal rotations.
+222. Value of <sup>a</sup> Train Let there be m such axes, and let us designate by <sup>e</sup>the value of the train ; that is, the ratio of the angular velocities of the first and last axes, or, what amounts to the same thing, the ratio of their synchronal rotations.
 
 Let  $a_1, a_2, a_3, \ldots a_n$  be the angular velocities of the successive axes. Then we have
 
@@ -2291,7 +2307,7 @@ Hence, if the train consists of an odd number of axes, the first and last axes w
 
 In this connection, it must be remembered that an annular wheel (Art. 36) revolves in the same direction as its pinion.
 
-When the axes in <sup>a</sup> train are not parallel, the directional relation of the extreme axes can only be ascertained by tracing the separate directional relations of each successive pair of axes in order.
+When the axes in <sup>a</sup> train are not parallel, the directional relation of the extreme axes can only be ascertained by tra cing the separate directional relations of each successive pair of axes in order.
 
 Two separate wheels in a train may revolve concentrically about the same axis ; as, for example, the wheels to which are attached the hands of a clock. In this case, one of the wheels is fixed on the axis as usual, and the other is fixed on a tube, or cannon as it is sometimes called, which revolves freely on the first axis.
 
@@ -2317,8 +2333,8 @@ $$\epsilon = \frac{\alpha_3}{\alpha_1} = \frac{L_3}{L_1} = \frac{48 \times 45}{6
 
 That is, the escapement axis (or arbor, using the term employed by clockmakers) will make sixty revolutions while the barrel arbor makes one. Hence the barrel arbor will revolve once in sixty minutes, or one hour. The barrel  $\Delta$  is not permanently secured to this arbor, but is connected to it, or to the wheel B, by means of a click and ratchet (Art. 201); so that, while it is free to move in one direction, its rotation in the other direction compels the wheel B to rotate with it. This arrangement permits the barrel to be rotated so as to wind up the cord without affecting the rest of the train. The number of times that the cord is wound round the barrel evidently depends on the length of time that the clock is to run without being wound. Generally not over sixteen coils of cord are so employed, which, in our clock, as the barrel arbor revolves once an hour, would be sufficient to make the clock run sixteen hours without re-winding.
 
-227. The train of wheel-work just described is solely destined for the purpose of communicating the action of the weight to the pendulum in such a manner as to supply the loss of motion from friction and the resistance of the air. But besides this, the clock is required to indicate the hours and minutes by the rotation of two separate hands, and accordingly two other trains of wheel-work are employed for this purpose. The train just described is generally contained in a frame, consisting of two plates, shown edgewise at kl, mn, which are kept parallel and at the proper distance by means of three or four pillars not shown in the diagram. Opposite holes are drilled in these plates, which receive the pivots of the axes or arbors already described. But the axis which carries A and B projects through the plate, and other wheels E and F are fixed to it. Below this axis, and parallel to it, a stout pin or stud is fixed to the plate. On this stud revolves a tube, to one end of which is fixed the minute-hand M, and to the other the wheel e in gear with E. In our present clock, the wheel E, being fixed to the barrel arbor, revolves once an hour; and as the minute-hand must also revolve once in that period, the wheel E and e must be equal. A second and shorter tube is fitted upon the tube of the minute-hand so as to revolve freely, and this carries at one end the hour-hand H, and at the other a wheel, f, which is driven by the pinion F. As f must revolve once in twelve hours, it must have twelve times as many teeth as F.
-228. Notation. — In discussing problems concerning trains of mechanism, we soon feel the need of some scheme of notation, whereby we may show, clearly and concisely, all the facts concerning the train which affect the transmission of motion. It is desirable to show, primarily, the order and nature of the several parts, and the manner in which the motion is transmitted; but such a scheme should also admit of the addition of dimensions and nomenclature, and should afford a ready means of calculating the velocity ratio.
+227. The train of wheel-work just described is solely destined for the purpose of communicating the action of the weight to the pendulum in such a manner as to supply the loss of motion from friction and the resistance of the air. But besides this, the clock is required to indicate the hours and minutes by the rotation of two separate hands, and accordingly two other trains of wheel-work are employed for this purpose. The train just described is generally contained in a frame, consisting of two plates, shown edgewise at kl, mn, which are kept parallel and at the proper distance by means of three or four pillars not shown in the diagram. Opposite holes are drilled in these plates, which receive the pivots of the axes or arbors already described. But the axis which carries A and B projects through the plate, and other wheels E and F are fixed to it. Below this axis, and parallel to it, a stout pin or stud is fixed to the plate. On this stud revolves a tube, to one end of which is fixed the minute-hand M, and to the other the wheel e in gear with E. our present clock, the wheel E, being fixed to the barrel arbor, revolves once an hour; and as the minute-hand must also revolve once in that period, the wheel E and e must be equal. A second and shorter tube is fitted upon the tube of the minute-hand so as to revolve freely, and this carries at one end the hour-hand H, and at the other a wheel, f, which is driven by the pinion F. As f must revolve once in twelve hours, it must have twelve times as many teeth as F.
+228. Notation. In discussing problems concerning trains of mechanism, we soon feel the need of some scheme of notation, whereby we may show, clearly and concisely, all the facts concerning the train which affect the transmission of motion. It is desirable to show, primarily, the order and nature of the several parts, and the manner in which the motion is transmitted; but such a scheme should also admit of the addition of dimensions and nomenclature, and should afford a ready means of calculating the velocity ratio.
 
 Let the wheels be represented by their numbers of teeth, and write these numbers, beginning with the first driver, in horizontal lines; all the wheels that are on the same axis having their numbers written on the same horizontal line, and all the wheels that are in gear having the numbers of the followers written vertically below those of the respective drivers.
 
@@ -2342,7 +2358,7 @@ The value of  $\epsilon$  being given in this shape, an equal fraction must be f
 
 The value of m, that is, the number of axes, is sometimes given with the other data of the problem, but more usually it is one of the quantities that are to be determined.
 
-The order of succession of the drivers and followers is a matter of indifference, so far as the velocity ratio is concerned ; for the value of the above fraction will evidently not vary with any variation in the order of the factors of either the numerator or denominator.
+The order of succession of the drivers and followers is a matter of indifference, so far as the velocity ratio is con cerned ; for the value of the above fraction will evidently not vary with any variation in the order of the factors of either the numerator or denominator.
 
 231. Least Number of Axes. — The number of axes will evidently depend upon the limits between which the numbers of teeth are to be allowed to vary.
 
@@ -2350,11 +2366,11 @@ For instance, let w be the greatest number of teeth that can be conveniently ass
 
 $$\epsilon = \frac{L_m}{L_1} = \frac{N_1 \times N_2 \times N_3 \times \dots N_{m-1}}{n_2 \times n_3 \times n_4 \times \dots n_m} = \frac{w \times w \times w \text{ to } (m-1) \text{ factors}}{p \times p \times p \text{ to } (m-1) \text{ factors}} = \left(\frac{w}{p}\right)^{m-1}; \tag{5}$$
 
-whence loge = (m — 1) (logw — log p),
+whence loge = (m — 1) (logw — log^),
 
 $$\therefore m = 1 + \frac{\log \epsilon}{\log w - \log p} \tag{6}$$
 
-The least number of axes, under the assigned conditions of w and p is evidently the value of m thus found, if this value is a whole number ; or the whole number next larger than this value of m, if the latter is fractional. No general rule can be given for determining the values of w and p, which are governed by considerations that vary according to the nature of the proposed machine ; also, it will rarely happen
+The least number of axes, under the assigned conditions of w and p^ is evidently the value of m thus found, if this value is a whole number ; or the whole number next larger than this value of m, if the latter is fractional. No general rule can be given for determining the values of w and p, which are governed by considerations that vary according to the nature of the proposed machine ; also, it will rarely happen
 
 that the fraction will admit of being divided into factors so nearly equal as to limit the number of axes to the smallest value so assigned.
 
@@ -2364,7 +2380,7 @@ Consequently
 
 $$\epsilon = \frac{L_m}{L_1} = \frac{60}{1} = \frac{N_1 \times N_2 \times \dots N_{m-1}}{n_2 \times n_3 \times \dots n_m}$$
 
-Let D be the numerator of this fraction, i.e., the continued product of all the drivers, and let F be the denominator, i.e., the continued product of all the followers.
+Let D be the numerator of this fraction, i.e., the continued product of ail the drivers, and let F be the denominator, i.e., the continued product of all the followers.
 
 Then
 
@@ -2383,7 +2399,7 @@ We can then determine the value of m by means of Equation (6) ; or, what is much
 
 value of m-1 from the above expression. The latter method is to be preferred, as the *exact* value of m-1, if it be fractional, is of no consequence, it being simply necessary to determine the next greater whole number.
 
-Thus, in our example, it is evident, as 60 lies between  $10^1$ and $10^2$ , that m-1 must lie between 1 and 2, consequently m must lie between 2 and 3; and, taking the next larger whole number, we fix on m=3, as the least number of axes. Consequently there will be two wheels and two pinions. Taking the pinions at six teeth each, we have
+Thus, in our example, it is evident, as 60 lies between  $10^1$  and  $10^2$ , that m-1 must lie between 1 and 2, consequently m must lie between 2 and 3; and, taking the next larger whole number, we fix on m=3, as the least number of axes. Consequently there will be two wheels and two pinions. Taking the pinions at six teeth each, we have
 
 $$\epsilon = 60 = \frac{D}{F} = \frac{D}{6 \times 6}$$
 
@@ -2407,7 +2423,7 @@ $$(2 \times 2 \times 3 \times 3)$$
 
 The first group will give us the two wheels that are most
 
-nearly equal, which is a sufficient reason for selecting that pair for our train. We now have
+nearly equal, whick is a sufficient reason for selecting that pair for our train. We now have
 
 $$\frac{D}{F} = \frac{48 \times 45}{6 \times 6}.$$
 
@@ -2486,9 +2502,9 @@ For example, let the clock be required to go 8 days without re-winding; then, wi
 |               |    |   | 12 | _ | 96 |   |            |    |     |     |    |    | 8 minutes. |
 | Minute arbor  |    |   |    |   | 12 | _ | <b>30,</b> | sw | ing | ζ-W | he | el | 1 minute.  |
 
-It is often convenient to add to the notation the periods of the different arbors, as has been done in this case.
+It is often convenient to add to the notation the periods of the different arbors, as has been done in this ease.
 
-236. Month Clock. — Let the clock be required to run 32 days without re-winding, and let there be 16 coils on the barrel as before; then the latter must revolve once in  $\frac{32 \times 24}{16} = 48$  honrs. The train from the barrel to the
+236. Month Clock. — Let the clock be required to run 32 days without re-winding, and let there be 16 eoils on the barrel as before; then the latter must revolve once in  $\frac{32 \times 24}{16} = 48$  hours. The train from the barrel to the
 
 hour arbor is  $\frac{D}{F}$  = 48, which will require an intermediate axis.
 
@@ -2502,7 +2518,7 @@ Letting w = 100, and p = 12, we may employ the following train:—
 |               |    |        |   | 12 | <br>96 |          |     |    |     |    |     |     | 8 minutes. |
 | Minute arbor  |    |        |   |    | 12     | <u> </u> | 30. | sw | ing | -w | hee | el. | 1 minute.  |
 
-237. Now, in the clock (Fig. 169), the arbor of A is made to revolve in one hour, because the wheels E and e are equal. By making these wheels of different numbers, we get rid of the necessity of providing, in the principal train, an arbor that shall revolve in one hour; and we may thus, in many eases, distribute the wheels more equally. For example, in an eight-day clock let the swing-wheel revolve once
+237. Now, in the clock (Fig. 169), the arbor of A is made to revolve in one hour, because the wheels E and e are equal. By making these wheels of different numbers, we get rid of the necessity of providing, in the principal train, an arbor that shall revolve in one hour; and we may thus, in many cases, distribute the wheels more equally. For example, in an eight-day clock let the swing-wheel revolve once
 
 per minute, and let the train from the barrel-arbor to this minute-arbor be
 
@@ -2531,7 +2547,7 @@ $$\epsilon = \frac{D}{F} = \frac{13}{2} = \frac{130 \times 90}{20 \times 90},$$
 
 which is a good train for the purpose. The wheels for forming a series of such trains, calculated for the different numbers of threads to be produced, are known as a set of *change-wheels*; and tables for the use of such wheels are furnished by lathe-manufacturers with all screw-cutting lathes.
 
-**239.** Frequency of Contact between Teeth.—It is sometimes a matter of interest to know how often any two given teeth will come into contact as the wheels run upon each other. We will take the case of a wheel of A teeth driving one of B teeth, where A is greater than B, and let  $\frac{A}{B} = \frac{a}{b}$  when reduced to its lowest terms.
+**239.** Frequency of Contact between Teeth.—It is sometimes a matter of interest to know how often any two given teeth will come into contact as the wheels rnn upon each other. We will take the case of a wheel of A teeth driving one of B teeth, where A is greater than B, and let  $\frac{A}{B} = \frac{a}{b}$  when reduced to its lowest terms.
 
 It is evident that the same points of the two pitch circles would be in contact after a revolutions of B, or b revolutions of A. Hence, the smaller the numbers which express the velocity ratio of the two axes, the more frequently will the contact of the same teeth occur.
 
@@ -2555,11 +2571,11 @@ The insertion of a tooth in this manner was an old contrivance of millwrights to
 
 Clockmakers, on the contrary, appear to have adopted the opposite principle; though it has probably been partly forced on them, as the velocity ratio of the clock arbors must necessarily be exact.
 
-**240.** Approximate Numbers for Trains.—If  $\frac{L_m}{L_1}$  = k, when k is a prime number, or one whose prime factors are too large to be conveniently employed in wheel-work, an approximation may be resorted to. For example, assume  $\frac{L_m}{L_1} = k \pm h$ . This will introduce an error of  $\pm h$  revolutions of the last axis during one of the first, and the
+**240.** Approximate Numbers for Trains.—If $\frac{L_m}{L_1}$ = k, when k is a prime number, or one whose prime factors are too large to be conveniently employed in wheel-work, an approximation may be resorted to. For example, assume $\frac{L_m}{L_1} = k \pm h$. This will introduce an error of $\pm h$  revolutions of the last axis during one of the first, and the
 
 revolutions of the last axis during one of the first, and the nature of the machinery in question can alone determine whether such a variation is permissible.
 
-For example, let  $\epsilon = \frac{L_m}{L_1} = 269$ , which is a prime number. Take  $\epsilon = 269 + 1 = 270$ , which can readily be factored into  $6 \times 5 \times 9$ ; and we may employ the train  $\frac{D}{F} = \frac{72 \times 60 \times 90}{12 \times 12 \times 10}$ . This train will cause an error of one revolution of the last axis for every revolution of the first axis, the altered value of  $\epsilon$  varying less than two-fifths of one per cent from the correct value.
+For example, let $\epsilon = \frac{L_m}{L_1} = 269$, which is a prime number. Take $\epsilon = 269 + 1 = 270$, which can readily be factored into $6 \times 5 \times 9$; and we may employ the train $\frac{D}{F} = \frac{72 \times 60 \times 90}{12 \times 12 \times 10}$. This train will cause an error of one revolution of the last axis for every revolution of the first axis, the altered value of $\epsilon$  varying less than two-fifths of one per cent from the correct value.
 
 **241.** But we may obtain a better approximation than this, without unnecessarily increasing the number of axes in the train; for, determine, in the manner already explained, the least number m of axes that would be necessary if k were decomposable, and the number of teeth that the nature of the machine makes it practicable to give to the pinions, and let F be the product of the pinions so determined; hence
 
@@ -2578,7 +2594,7 @@ $$\frac{L_1}{L_m} = \frac{Dk \pm h}{D};$$
 
 and there will then be an error of  $\frac{\pm h}{D}$  revolutions in the first
 
-axis during one revolution of the last axis. Let us take, as in the previous example,  $\epsilon = 269$ . Let w = 90, and p = 10; then
+axis during one revolution of the last axis. Let us take, as in the previous example, $\epsilon = 269$. Let w = 90, and p = 10; then
 
 $$269 = (9)^{m-1},$$
 
@@ -2606,9 +2622,9 @@ $$\frac{42524+1}{720} = \frac{60\times63}{8\times8},$$
 
 giving a good train, with an error of one minute in a lunation.
 
-## CHAPTER XIII.
+# CHAPTER XIII.
 
-### AGGREGATE COMBINATIONS.
+## AGGREGATE COMBINATIONS.
 
 Differential Pulley. — Differential Screw Feed Motions. — Epicyclic Trains. — Parallel Motions. — Trammel. — Oval Chuck.
 
@@ -2616,21 +2632,21 @@ Differential Pulley. — Differential Screw Feed Motions. — Epicyclic Trains. 
 
 Such combinations enable us to produce by simple means very rapid or very slow *velocities*, and complex *paths*, which could not well be obtained directly from a single driver. These combinations may be divided into two classes, according as *velocity* or *path* is the principal object to be attained; and we will consider these two classes separately.
 
-### AGGREGATE VELOCITIES.
+## AGGREGATE VELOCITIES.
 
 **243.** By Linkwork. — In Figs. 170 and 171, let AB be a rigid link, and let the point A be given a velocity a, while the point B is given the velocity b. Then it is required to determine the motion of an intermediate point, C, which is affected by the motions of both A and B. These motions are generally perpendicular to AB, or so nearly so that the
 
 error in their comparative motions will not generally be practically appreciable.
 
-If we consider the motion of A alone, regarding B as stationary, C will move with a velocity  $= a \cdot \frac{BC}{AB}$ . If we consider the effect of the motion of B alone, regarding A as stationary, we have the velocity of  $C = b \cdot \frac{AC}{AB}$ . Considering motion in one direction as positive, and in the opposite direction as negative, we have for the resultant motion of C from both A and B,  $c = \frac{a \cdot BC + b \cdot AC}{AB}$ , or the algebraic sum of the two component velocities.
+If we consider the motion of A alone, regarding B as stationary, C will move with a velocity $= a \cdot \frac{BC}{AB}$. If we consider the effect of the motion of B alone, regarding A as stationary, we have the velocity of $C = b \cdot \frac{AC}{AB}$. Considering motion in one direction as positive, and in the opposite direction as negative, we have for the resultant motion of C from both A and B, $c = \frac{a \cdot BC + b \cdot AC}{AB}$ , or the algebraic sum of the two component velocities.
 
 This result may be represented graphically, as follows: Perpendicularly to AB draw AA' and BB' to represent in length and direction the velocities of A and B respectively. Draw AB'. Then CC' drawn through C perpendicularly to AB will represent in length and direction the resultant velocity of the point C.
 
 Examples of aggregate motion by linkwork are to be seen
 
-in the several forms of " link motion " valve gears of reversible steam-engines. In these, motion is given by eccentrics or cranks to points such as A and B in the figures, and the steam-valve receives its motion from some intermediate point,' the distance of which from the ends can be varied. As will be seen from the figures, if C is nearer A than B, for instance, its motion will be derived to <sup>a</sup> greater extent from A than from B. If it is midway between these points, it will re ceive an equal proportion from each.
+in the several forms of " link motion " valve gears of reversible steam-engines. In these, motion is given by eccentrics or cranks to points such as A and B in the figures, and the steam-valve receives its motion from some intermediate point,' the distance of which from the ends can be varied. As will be seen from the figures, if C is nearer A than B, for instance, its motion will be derived to a greater extent from A than from B. If it is midway between these points, it will re ceive an equal proportion from each.
 
-**244.** Differential Pulley. In Weston's differential pulley, illustrated by Fig. 172, the principle of aggregate
+244. Differential Pulley. — In Weston's differential pulley, illustrated by Fig. 172, the principle of aggregate
 
 velocities is made use of for lifting heavy weights by the application of a small amount of force. It consists of a single movable pulley, D, from the axis of which the weight to be lifted is suspended; a fixed pulley, C, having two circumferential grooves, the diameter of one being somewhat less than that of the other; and an endless chain passing around the pulleys, as shown in the figure. The combination is operated by hauling upon the chain LN in the direction indicated by the arrow. The velocity of the pitch circle, EL, is evidently equal to that of the hauling part of the chain. Let l, k, denote the velocities of the pitch circles EL and HK respectively, and b the velocity of BP.
 
@@ -2672,18 +2688,18 @@ Epicyclic trains are used: (1) To produce an aggregate motion of the last wheel 
 
 and E the axis of a wheel F carried by the arm and connected to C by a train of mechanism. Suppose that while A turns about B to some other position A', a point a, on wheel
 
-C, moves to 6 from any external cause, and that a point d, on wheel jP, moves to <sup>e</sup> by reason of its connection with G. For simplicity, all are supposed to turn in the same direction. Draw TE'V parallel to EB. Then aBh and hE'e are the absolute angular motions of C and F respectively, and cBb and gE'e are their angular motions relatively to the arm A.
+C, moves to 6 from any external cause, and that a point d, on wheel F, moves to e by reason of its connection with C. For simplicity, all are supposed to turn in the same direction. Draw TE'V parallel to EB. Then aBh and hE'e are the absolute angular motions of C and F respectively, and cBb and gE'e are their angular motions relatively to the arm A.
 
 $$hE'g=aBc=$$
-= aBc = angular motion of the arm.
+ angular motion of the arm.
  $aBb=aBc+cBb.$
  $hE'e=hE'g+gE'e=aBc+gE'e.$
 Or,
-$cBb=aBb-aBc;$;   $gE'e=hE'e-aBc.$
+ $cBb=aBb-aBc;$   $gE'e=hE'e-aBc.$
 
 These equations are true for angles of any magnitude, and hence for complete revolutions since the velocity ratio is constant.
 
-Let a, m, and n be the synchronal absolute rotations of the arm, of the first wheel C, and of the last wheel irrespectively. Let <sup>e</sup> be the value of the train between C and F, that is the quotient which has been represented by —<sup>s</sup> = in Chap.
+Let a, m, and n be the synchronal absolute rotations of the arm, of the first wheel C, and of the last wheel F respectively. Let e be the value of the train between C and F, that is the quotient which has been represented by —<sup>s</sup> = in Chap.
 
 XII. Then the rotations of the first wheel relatively to the arm = m — a, and the rotations of the last wheel relatively to the arm <sup>=</sup> <sup>n</sup> — a. Therefore <sup>e</sup> <sup>=</sup> , which is the <sup>m</sup> — <sup>a</sup> general equation for epicyclic trains.
 
@@ -2726,7 +2742,7 @@ Let
 $$C = E,$$
 then  $\epsilon = -1$ ,  $m = a \left(1 - \frac{1}{-1}\right) = \epsilon a$ .
 
-Or, for one revolution of the train arm OD corresponding to an up-and-down stroke of ttie piston, C malies two revolutions. Thus by this a,rrangenient the shaft rotates twice as fast as it would with the ordinary crank connection. If G lias twice as many teeth as .B, £ = —2, and m = all = - a, or C revolves three times while OD revolves twice. :^) If <sup>E</sup> has twice as many teeth as C, <sup>e</sup> <sup>=</sup> —-J, <sup>m</sup> <sup>=</sup> a(l -|- 2) <sup>=</sup> 3a, or <sup>G</sup> revolves three times for one revolution of OD.
+Or, for one revolution of the train arm OD corresponding to an up-and-down stroke of the piston, C makes two revolutions. Thus by this arrangement the shaft rotates twice as fast as it would with the ordinary crank connection. If G lias twice as many teeth as .B, £ = —2, and m = all = - a, or C revolves three times while OD revolves twice.  If E has twice as many teeth as C, <sup>e</sup> <sup>=</sup> —-J, <sup>m</sup> <sup>=</sup> a(l -|- 2) <sup>=</sup> 3a, or <sup>G</sup> revolves three times for one revolution of OD.
 
 261. Epieyclie trains are used in some forms of rope making machinery. In order that a rope shall not untwist, it is necessary that the separate strands shall either be laid together without any twist, as in wire rope, or that they shall
 
@@ -2743,21 +2759,21 @@ and n=0, or the wheels D have no absolute rotation, and consequently there is no
 
 ### Aggregate Paths.
 
-253. Parallel Motions. —The most important application of aggregate combinations in which the path is the immediate object sought, is to give motion to a piece such tliat a point in it shall move in a straight liue. Such combinations are commonly called "parallel motions," although "straight-line motion" would be a more correct and descriptive name.
+253. Parallel Motions. —The most important application of aggregate combinations in which the path is the immediate object sought, is to give motion to a piece such that a point in it shall move in a straight line. Such combinations are commonly called "parallel motions," although "straight-line motion" would be a more correct and descriptive name.
 
-Some of these combinations give an exact straight-line motion, but in most of them the motion is only approximate. We have seen an example of exact straight-line motion in the case of a point on the circumference of a circle roll ing within another circle of twice its diameter, being in fact a special case of the hypocycloid. By means of accurately cut gears, this could, of course, be applied to machinery.
+Some of these combinations give an exact straight-line motion, but in most of them the motion is only approximate. We have seen an example of exact straight-line motion in the case of a point on the circumference of a circle rolling within another circle of twice its diameter, being in fact a special case of the hypocycloid. By means of accurately cut gears, this could, of course, be applied to machinery.
 
 In the parallel motions in general use, the straight-line path is produced by combinations of links, and such combinations will be now considered.
 
-254. Peaucellier's Exact Straight-Line Motion. — In Fig. 181 is sliown the general arrangement of Peaucellier's exact straight-line motion. It consists of seven movable links connected as shown. Two long links AD, AE, oscillate about a fixed centre A, and are jointed at the ends D and E to opposite angles of <sup>a</sup> rhombus, CDPE, composed of four shorter links. At C is connected <sup>a</sup> link BO, oscillating about <sup>a</sup> fixed centre B, so located that AB = BC.
+254. Peaucellier's Exact Straight-Line Motion. — In Fig. 181 is shown the general arrangement of Peaucellier's exact straight-line motion. It consists of seven movable links connected as shown. Two long links AD, AE, oscillate about a fixed centre A, and are jointed at the ends D and E to opposite angles of <sup>a</sup> rhombus, CDPE, composed of four shorter links. At C is connected <sup>a</sup> link BC, oscillating about <sup>a</sup> fixed centre B, so located that AB = BC.
 
 Then the point P will describe <sup>a</sup> straight line perpendicular toAB.
 
 From the symmetrical construction of the combination it is evident that the points A, C, and P must always lie in one straight line. Let the combination be moved, Fig. 182,
 
-from the central position shown dotted, to some other position, such as that shown in full lines, the point P occupying the position P'. Draw AP, AP', and CC ; also DL per
+from the central position shown dotted, to some other position, such as that shown in full lines, the point P occupying the position P'. Draw AP, AP', and CC'; also DL per-
 
-pendicular to AP, and D'K perpendicular to AP'. From the construction, P'K = KC', and PL = LC. Then,
+pendicular to AP, and D'K perpendicular to AP'. From the construction, P'K = KC, and PL = LC. Then,
 
 $$\overline{AD'^2} = \overline{AK^2} + \overline{KD'^2} = \overline{AK^2} + (\overline{D'C'^2} - \overline{KC'^2});$$
 
@@ -2768,7 +2784,7 @@ $$\overline{AD}^2 = \overline{AL}^2 + \overline{DL}^2 = \overline{AL}^2 + (\over
 
 $$\overline{A}\overline{D}^2 - \overline{D}\overline{C}^2 = \overline{A}\overline{L}^2 - \overline{L}\overline{C}^2$$
 
-=  $(AL - LC)(AL + LC) = AC \times AP$ .
+$(AL - LC)(AL + LC) = AC \times AP$
 
 $$AC \times AP = AC' \times AP';$$
 
@@ -2797,17 +2813,17 @@ AO =Ii,BD = r, CAc = 6, DBb = 0, CD = e, and cP = x. Drawing ce and dg parallel 
 
 $$\frac{cP}{dP} = \frac{x}{e - x} = \frac{ce}{dg} = \frac{R(1 - \cos\theta)}{r(1 - \cos\phi)} = \frac{2R\sin^2\frac{\theta}{2}}{2r\sin^2\frac{\phi}{2}} = \frac{r}{R} \cdot \frac{R^2\sin^2\frac{\theta}{2}}{r^2\sin^2\frac{\phi}{2}}.$$
 
-which in an engine should coincide with the centre line of the cylinder or pump. This line should bisect the distances Ce and Df which are the versed sines of the maximum values of the angles  $\theta$  and  $\phi$ . The ends C and D of the link will then evidently deviate equal amounts on each side of SS. Drawing d'h and dg perpendicular to SS, and Cn parallel to SS, we have three equal triangles, c'd'h, CDn, and cdg. Therefore, c'p' = CP = cp, or the mid and extreme positions of the guided point P are exactly on SS.
+which in an engine should coincide with the centre line of the cylinder or pump. This line should bisect the distances Ce and Df which are the versed sines of the maximum values of the angles $\theta$ and $\phi$. The ends C and D of the link will then evidently deviate equal amounts on each side of SS. Drawing d'h and dg perpendicular to SS, and Cn parallel to SS, we have three equal triangles, c'd'h, CDn, and cdg. Therefore, c'p' = CP = cp, or the mid and extreme positions of the guided point P are exactly on SS.
 
 The greatest deviation of the guided point from SS occurs when CD is parallel to SS, and is best determined in any case by drawing the combination to a large scale, and finding the parallel position by trial.
 
 **259. Problem.** — In Fig. 186, let CA be an arm as before, cA its extreme position, and SS the line of stroke. Bisect Ce. Join Cc, and draw AN perpendicular to it. N bisects Cc, since the latter is the chord of the angle CAc, and hence is on the line SS. Also  $MN = \frac{1}{2}ec$ , or, since ec may be taken as  $\frac{1}{2}$  the stroke,  $MN = \frac{1}{4}$  the stroke.
 
-Therefore, if we have given the length of stroke and direction, SS, the centre of one arm A, and mid position of the guided point P, we can construct the remainder of the motion as follows: Draw AR perpendicular to SS, lay off  $MN = \frac{1}{4}$  stroke, draw AN, and perpendicular to the latter draw NC. Where this line intersects AR at C, will be the end of the arm AC. CP will be the direction of the link in mid position. If we assume, or have located, the point H where the mid position of the second arm cuts SS, draw an indefinite straight line, FH, through this point perpendicular to SS. The point D, where CP produced cuts FH, is the extremity of the second arm. Then, since HD must be  $\frac{1}{2}$  the versed sine of the arc through which D moves in either direction, we can find the centre B by laying off  $HT = \frac{1}{4}$  stroke, and drawing TB perpendicular to TD.
+Therefore, if we have given the length of stroke and direction, SS, the centre of one arm A, and mid position of the guided point P, we can construct the remainder of the motion as follows: Draw AR perpendicular to SS, lay off $MN = \frac{1}{4}$ stroke, draw AN, and perpendicular to the latter draw NC. Where this line intersects AR at C, will be the end of the arm AC. CP will be the direction of the link in mid position. If we assume, or have located, the point H where the mid position of the second arm cuts SS, draw an indefinite straight line, FH, through this point perpendicular to SS. The point D, where CP produced cuts FH, is the extremity of the second arm. Then, since HD must be $\frac{1}{2}$ the versed sine of the arc through which D moves in either direction, we can find the centre B by laying off $HT = \frac{1}{4}$ stroke, and drawing TB perpendicular to TD.
 
 260. Practical Form of Watt's Motion. — We have thus found the proper proportions for the simplest form of the motion; but, as usually constructed, the motion is of the form shown in Fig. 187. AE is one arm of the main beam
 
-of an engine, and turns about the centre A. EF is the  $main\ link$ , connecting AE with the piston-rod FS. CD is the back-link equal and parallel to EF. FD is the parallel-bar equal and parallel to EC. BD is the  $radius\ bar$ , or bridle. The point P, in CD, is the guided point whose motion we have discussed. If we draw AP, and produce it until it cuts EF in F, the latter point will have a motion similar to P. This will be clear when we consider that in all positions EF is parallel to CP; then, since AE and AC are fixed lengths, we have for any position two similar triangles ACP and AEF; hence  $\frac{AP}{AF} = \frac{AC}{AE} = \text{constant}$ . So
+of an engine, and turns about the centre A. EF is the  $main\ link$ , connecting AE with the piston-rod FS. CD is the back-link equal and parallel to EF. FD is the parallel-bar equal and parallel to EC. BD is the  $radius\ bar$ , or bridle. The point P, in CD, is the guided point whose motion we have discussed. If we draw AP, and produce it until it cuts EF in F, the latter point will have a motion similar to P. This will be clear when we consider that in all positions EF is parallel to CP; then, since AE and AC are fixed lengths, we have for any position two similar triangles ACP and AEF; hence $\frac{AP}{AF} = \frac{AC}{AE} = \text{constant}$. So
 
 that, if P describes a straight line, F will also move in a straight line parallel to the path of P.
 
@@ -2815,23 +2831,23 @@ that, if P describes a straight line, F will also move in a straight line parall
 
 classed as an exact straight-line motion. In that figure, if the point Q be compelled to move in straight guides along AL, the point Fwill move in a straight path AV, the arm AP oscillating instead of performing complete revolutions. This would scarcely seem to be entitled to the term " exact motion," since it depends upon the accuracy of the guides at Q, the necessity of which it is the object of straight-line motions to avoid.
 
-262. Grasshopper Motion.—A form of the above motion in which the guides are replaced by a comparatively long radius-rod perpendicular to AL in mid position, and connected to Q, is approximate, and is known as the "Grasshopper Motion."
+262. Grasshopper Motion. — A form of the above motion in which the guides are replaced by a comparatively long radius-rod perpendicular to AL in mid position, and connected to Q, is approximate, and is known as the "Grasshopper Motion."
 
-In Fig. 188, let p, P, and p' be the extreme and middle positions of the guided point, lying in one straight line. Draw the straight line DPB, perpendicular to pPp' ; and lay off pa = p'a = PA = the proposed length of the guid-
+In Fig. 188, let p, P, and p' be the extreme and middle positions of the guided point, lying in one straight line. Draw the straight line DPB, perpendicular to pPp' ; and lay off pa = p'a = PA = the proposed length of the guid
 
 ing bar, so as to find the extreme positions A and  $\alpha$  of its farther end. This end is to be guided by a lever centred at C; that lever being so long as to make the point A describe a very flat circular arc, deviating very little from a straight line.
 
 Choose a convenient point b for the attachment of the bridle to the bar AB, and lay off pb = p'b' = PB, so as to find the extreme and middle positions of that point. Next find the centre D of a circular arc passing through b, B, and b'; then D will be the axis of motion of the bridle Db. The error of this parallel motion is less, as b is nearer the middle of pa.
 
-263. Robert's Approximate Straight-Line Motion. —Fig. 189 illustrates Robert's parallel motion. Two equal arms AC and BD are jointed to fixed centres at one end,
+263. Robert's Approximate Straight-Line Motion. — Fig. 189 illustrates Robert's parallel motion. Two equal arms AC and BD are jointed to fixed centres at one end,
 
 connected at the other end to the ends of the base of a rigid isosceles triangle CPD. In this triangle, CP = DP = AC = BD, and  $CD = \frac{1}{2}AB$ . It is evident that in the mid position shown, the point P is in the straight line AB; also, that it will lie in this line when PD coincides with BD at one
 
 end of the stroke, and when PC coincides with AC at the other end of the stroke. Between these positions, however, P deviates slightly from AB.
 
-**264.** Tchebicheff's Approximate Straight-Line Motion. — Another close approximation to a straight-line motion is that due to Prof. Tchebicheff of St. Petersburg, and illustrated by Fig. 190. The arms are of the following proportions: Let AB = 4, then AC = BD = 5, and CD = 2.
+264. Tchebiclieff's Approximate Straight - Ivine Motion. — Another close approximation to a straight-line motion is that due to Prof. Tchebicheff of St. Petersburg, and illustrated by Fig. 190. The arms are of the following proportions: Let AB = 4, then AC = BD = 5, and GD = 2.
 
-The path of the guided point P, midway between C and D, will then closely approximate to a straight line parallel to AB. It may be easily proved that the distance of P from AB is the same at the ends of the stroke, where P is in the perpendiculars to AB through A and B, and in the mid position being that shown in the figure. In intermediate positions P deviates slightly from a straight line. Both this and the preceding motion give a closer approximation than can be obtained by Watt's motion.
+The path of the guided point P, midway between C and D, will then closely approximate to a straight line parallel to AB. It maj' be easily proved that the distance of P from AB is the same at the ends of the stroke, where P is in the perpendiculars to AB through A and B, and in the mid position being that shown in the figure. In intermediate positions P deviates slightly from a straight line. Both this and the preceding motion give a closer approximation than can be obtained by Watt's motion.
 
 265. A Trammel is a device for drawing ellipses. It consists (Fig. 191) of a bar, PCD, carrying a pencil at P, and fitted with pins, or pieces mounted on pins, which slide in grooves, as shown in the figure. The grooves are usually at right angles with each other, and the cross-shaped piece
 
@@ -2849,7 +2865,7 @@ which is the equation of an ellipse. By varying the lengths PC and PD, ellipses 
 
 before. This fact is taken advantage of in the so-called "oval" chuck for turning ellipses, and of whicli Fig. 192 illustrates the principle. In this figure P is the cutting tool, C the centre of the mandrel of the lathe, and D the centre of a circular piece whicli is fixed to the headstock of the lathe. One part of the chuck is fixed to the mandrel, and has cut in it a diametral slot represented by aCb. A second
 
-part of the chuck, being that which carries the piece to be turned, has two lugs which project through the slot aCb and form part of two straight pieces, represented by ad and be, which slide on the circular piece previously referred to. The result is, that, as the mandrel revolves, the piece being turned, or the work, receives a combination of this motion of rotation and a reciprocating motion in the slot, by which the distance of the centre of the work from the tool is varied in the manner necessary to form an ellipse. Draw De parallel to Ga, and CO perpendicular to Ga. Then when the work has been turned about G through the angle a'Ca, it has also been moved through G the distance OD. We now see that the triangle GOD of Fig. i92 corresponds to GOD
+part of the chuck, being that which carries the piece to be turned, has two lugs which project through the slot aCb and form part of two straight pieces, represented by ad and bc, which slide on the circular piece previously referred to. The result is, that, as the mandrel revolves, the piece being turned, or the work, receives a combination of this motion of rotation and a reciprocating motion in the slot, by which the distance of the centre of the work from the tool is varied in the manner necessary to form an ellipse. Draw De parallel to Ca, and CO perpendicular to Ca. Then when the work has been turned about G through the angle a'Ga, it has also been moved through G the distance OD. We now see that the triangle GOD of Fig. i92 corresponds to GOD
 
 of Fig. 191, and drawing PM perpendicular to De, we have, as before,
 
@@ -2857,26 +2873,26 @@ $$\frac{PM}{PD} = \sin PDM = \sin \phi;$$
 
 $$\frac{OM}{PC} = \cos PDM = \cos \phi;$$
 
-or O is for the instant the centre of the ellipse. Evidently since P, C, and D are fixed, the position of this centre is constantly changing, lying always at the junction of a perpendicular to aCb through C, and a parallel to aCb through D.
+or O is for the instant the centre of the ellipse. Evidently since P, G, and D are fixed, the position of this centre is constantly changing, lying always at the junction of a perpendicular to aCb through C, and a parallel to aCb through D.
 
 ### PEOBLEMS.
 
-1. An "engine makes 600 strokes per minute. Fly-wheel is on the crank shaft. Find the linear and angular velocity of a point in the fly-wheel 3 feet from the centre of the shaft.
+1. An "engine makes <sup>600</sup> strokes per minute. Fly-wheel is on the crank shaft. Find the linear and angular velocity of a point in the fly-wheel 3 feet from the centre of the shaft.
 
 Ans. <sup>a</sup> = 1884.96; V = 5654.88 feet per minute.
 
 2. The speed of the periphery of a wheel 8 feet in diameter is 4,000 feet per minute. Find the linear velocity of a point 3½ feet from the centre.
-3. A point in <sup>a</sup> fly-wheel, <sup>4</sup> feet from the centre of the wheel, moves through 2,500 feet per minute. The stroke of the engine being 2 feet, find the mean piston speed.
+3. A point in a fly-wheel, 4 feet from the centre of the wheel, moves through 2,500 feet per minute. The stroke of the engine being 2 feet, find the mean piston speed.
 
 Ans. V = 39Y.89 feet per minute.
 
-4. A locomotive moving at the rate of <sup>35</sup> miles per hour, has driving wheels 63 inches in diameter and cylinders 24 inches stroke. Find the linear and angular velocities of the crank-pins relatively to the frame of the engine.
+4. A locomotive moving at the rate of 35 miles per hour, has driving wheels 63 inches in diameter and cylinders 24 inches stroke. Find the linear and angular velocities of the crank-pins relatively to the frame of the engine.
 5. Two shafts are centred 4 feet apart. Find the diameters of wheels to work by rolling contact, so that the driving shaft will make 5 revolutions while the following shaft makes 7 revolutions.
 
 Ans. Driver, 28 inches; follower, 20 inches.
 
-6. The distance between the centres of two shafts = <sup>54</sup> inches. The driving-shaft makes 80 revolutions per minute. The follower is to make 100 revolutions per minute. Find the diameter of wheels for rolling contact.
-7. A shaft making <sup>120</sup> revolutions per minute is to drive by spur gearing a second shaft 28 inches from it at a speed of 300 revolutions per minute.' Find diameters of pitch circles.
+6. The distance between the centres of two shafts = 54 inches. The driving-shaft makes 80 revolutions per minute. The follower is to make 100 revolutions per minute. Find the diameter of wheels for rolling contact.
+7. A shaft making 120 revolutions per minute is to drive by spur gearing a second shaft 28 inches from it at a speed of 300 revolutions per minute. Find diameters of pitch circles.
 
 **8.** Velocity ratio to be transmitted =  $\frac{3}{4} = \frac{a'}{a}$ . Diameter of the driver is 15 inches. Find the diameter of the follower, and the distance between parallel axes. (Direct contact.)
 
@@ -2885,7 +2901,7 @@ Ans. Diameter, 20 inches; distance, 174 inches.
 9. A wheel 32 inches in diameter is fixed on a shaft making 325 revolutions in 5 minutes. This wheel and shaft are to drive a second wheel by rolling contact, so that the latter will make 52 revolutions per minute. Find the size of the second wheel, and the distance between the centres of the wheels.
 10. Given two intersecting axes at right angles, velocity ratio  $\frac{a'}{a} = \frac{4}{3}$ . Show how to find the pitch cones graphically.
 11. The angle between two intersecting axes is 75°. Show how to find graphically the sizes and positions of conical frusta which will transmit a velocity ratio  $\frac{a'}{a} = \frac{65}{80}$ .
-    - 12. P = circular pitch, N = number of teeth. D = pitch diameter, M = diametral pitch.
+12. P = circular pitch, N = number of teeth. D = pitch diameter, M = diametral pitch.
       - (1). Given  $P = 2\frac{1}{2}$  inches, N = 40. Find D.
       - (2). Given  $P = 1\frac{1}{2}$  inches, N = 75. Find D.
       - (3). Given  $P = \frac{3}{4}$  inch, D = 12 inches. Find N.
@@ -2899,7 +2915,7 @@ Ans. Diameter, 20 inches; distance, 174 inches.
 - **13.** Two axes 27 inches apart are to be connected by two 3 pitch wheels. Velocity ratio  $\frac{7}{6}$ . Find diameters of pitch circles and numbers of teeth.
 
 Ans. Numbers of teeth 63 and 45.
-- 14. Construct a cam on a base circle of 3 inches diameter, to revolve once per minute, and give to a bar, whose line of motion passes through the centre of motion of the cam, a stroke of 2 inches. The bar rises during 25 seconds with a uniform velocity; remains at rest 20 seconds; and descends during the remainder of the revolution with a uniformly accelerated velocity.
+14. Construct a cam on a base circle of 3 inches diameter, to revolve once per minute, and give to a bar, whose line of motion passes through the centre of motion of the cam, a stroke of 2 inches. The bar rises during 25 seconds with a uniform velocity; remains at rest 20 seconds; and descends during the remainder of the revolution with a uniformly accelerated velocity,
 
 15. Draw a cam, which, by oscillating through an angle of 60°, shall give a uniform ascending and descending motion to a bar whose line of motion passes 4 inches to right of the centre of the cam. Stroke of the bar, 3 inches.
 16. Design a cam on a base circle of 3 inches diameter, to raise a point whose line of motion passes one inch to the right of the centre of motion of the cam, by a uniform step-by-step motion, during  $\frac{3}{4}$  of a revolution of the cam, and allow it to descend with uniform velocity during the remaining  $\frac{1}{4}$  of the revolution.
@@ -2943,7 +2959,7 @@ Given E = 30 inches diameter, F = 10 inches diameter.
 Find number of revolutions per minute of F, and direction of rotation relatively to A.
 
 - 29. An engine of 3 feet stroke, piston speed of 360 feet per minute, has a main driving pulley 8 feet in diameter, from which is driven a pulley 4 feet in diameter. A pump having a plunger displacement of 2 gallons, is to be driven from the shaft carrying the 4-feet pulley, and is to pump 5,000 gallons per hour. Find arrangement of the connecting train of mechanism, by belts or gearing.
-- **30.** A lathe has a set of change wheels whose pitch diameters are 2 inches, 3 inches, 5 inches, 6 inches,  $7\frac{1}{2}$  inches, and 9 inches respectively. Leading screw has 4 threads to the inch, and is right-handed. Distance between the centres of mandrel and leading screw is 16 inches. Select and arrange wheels to cut a left-handed screw of 6 threads to the lnch.
+- **30.** A lathe has a set of change wheels whose pitch diameters are 2 inches, 3 inches, 5 inches, 6 inches,  $7\frac{1}{2}$  inches, and 9 inches respectively. Leading screw has 4 threads to the inch, and is right-handed. Distance between the centres of mandrel and leading screw is 16 inches. Select and arrange wheels to cut a left-handed screw of 6 threads to the inch.
 
 - 31. A lathe has 4 threads per inch on a right-handed leading screw. Find the sizes of least number of change wheels to cut right-handed threads of 5, 6, 8, 9, and 10 to the inch. Smallest wheel to have 20 teeth. Arrange table for change wheels for the various cuts.
 - **32.** Find trains for an 8-day clock, 16 turns of weight cord on barrel. The escape wheel has 30 teeth.
@@ -3033,7 +3049,7 @@ Required hour, minute, and seconds hands.
 | Cycle , 6 | Feed, automatic drill 267 |
 | Cycloid, construction of 79 | Ferguson's paradox |
 | Cylinders, rolling 27 | Flank of tooth |
-| ojimaois, tomagi v v v v v v i | Follower |
+| ojimaois, tomagivvvvvvi | Follower |
 | Dead-beat escapement 190 | " for given driver, least 144 |
 | Derived tooth outline, pin gearing . 133 | Frequency of contact between teeth . 259 |
 | Describing circle, size of 94 | Friction gearing 44 |
@@ -3211,14 +3227,14 @@ Required hour, minute, and seconds hands.
 |-------------------------------------|--------------------------------------|
 | PAGE                                | PAGE                                 |
 | Wheel, worm and 174                 | Worm and wheel 174                   |
-| Whitworth's quick return motion 181 | " rour-glass 177                     |
+| Whitworth's quick return motion 181 | " hour-glass 177                     |
 | Willis' method of approximation by  | Wrapping-connectors 15, 227          |
 | circular arcs                       | Wrapping connectors, directional re- |
 | Willis' odontograph 119             | lation in 21                         |
 | " " improved 122                    | Wrapping connectors, velocity ratio  |
 | Wipers 165                          | in                                   |
 
-# CATALOGUE
+### CATALOGUE
 
 OF THE
 
@@ -3226,7 +3242,7 @@ OF THE
 
 OF
 
-## D. VAN NOSTRAND,
+# D. VAN NOSTRAND,
 
 23 Murray Street and 27 Warren Street, New York.
 
@@ -3237,8 +3253,8 @@ OF
 | From Official Reports and other Documents. Compiled by Capt. Richard S. Collum. 8vo, cloth. 2 50 |
 | ALEXANDER, J. H.—Universal Dictionary of Weights and Measures, Ancient and Modern, reduced to the Standards of the United States of America. |
 | New edition, enlarged. 8vo, cloth |
-| Artillery.  Translated from the French, and arranged for the Army and Militia of the United States. Published by order of the War Department. 33 plates. 24mo, cloth |
-| ANDREWS, Maj.-Gen. C. C.—Campaign of Mobile. |
+| tillery.  Translated from the French, and arranged for the Army and Militia of the United States. Published by order of the War Department. 33 plates. 24mo, cloth |
+| ANDREWS, MajGen. C. C.—Campaign of Mobile. |
 | Including the Co-operation of General Wilson's Cavalry in Alabama. With five maps and views. 8vo, cloth |
 | Hints to Company Officers on their Military Duties.  18mo, cloth |
 | ARNOLD, Maj. A. K.—Cavalry Service.  Notes on Horses for Cavalry Service, embodying the Quality, Purchase, Care, and Diseases most frequently encountered, with Lessons for Bitting the Horse and Bending the Neck. Illustrated. 18mo, cloth 75 |
@@ -3248,24 +3264,24 @@ OF
 | Crown 8vo, limp cloth \$2 00 |
 | ATWOOD, Geo.—Practical Blow-Pipe Assaying. |
 | 12mo, cloth, illustrated 2 00 |
-| AUCHINCLOSS, W. S.—Link and Valve Motions Simplified. |
+| AUCHINCLOSS, W. SLink and Valve Motions Simplified. |
 | Illustrated with 37 wood-cuts and 21 lithographic plates, together with a Travel Scale and numerous useful tables. 8vo, cloth |
 | AXON, W. E. A.—The Mechanic's Friend. |
 | A Collection of Receipts and Practical Suggestions Relating to Aquaria—Bronzing—Cements—Drawing—Dyes—Electricity—Gilding—Glass-working—Glues—Horology—Lacquers—Locomotives—Magnetism—Metalworking—Modelling—Photography—Pyrotechny—Railways—Solders—Steam-Engine—Telegraphy—Taxidermy—Varnishes—Waterproofing, and Miscellaneous Tools, Instruments, Machines, and Processes connected with the Chemical and Mechanic Arts. With numerous diagrams and wood-cuts. Fancy cloth |
 | BACON, F. W.—A Treatise on the Richards Steam-Engine Indicator, with directions for its use. |
-| By Charles T. Porter. Revised, with notes and large additions as developed by American practice; with an appendix containing useful formula and rules for engineers. Illustrated. Fourth edition. 12mo cloth |
+| By Charles T. Porter. Revised, with notes and large additions as developed by American practice; with an appendix containing useful formulæ and rules for engineers. Illustrated. Fourth edition. 12mo, cloth |
 | BARBA, J.—The Use of Steel for Constructive Purposes;  Method of Working, Applying, and Testing Plates and Brass. With a Preface by A. L. Holley, C.E. 12mo, cloth |
-| BARNARD, Maj.-Gen. J. G.—The "C. S. A." and the Battle of<br>Bull Run. |
+| BARNARD, MajGen. J. G.—The "C. S. A." and the Battle of<br>Bull Run. |
 | 8vo, eloth |
 | The Peninsular Campaign and its Antecedents, |
-| As developed by the Report of Maj.-Gen. Geo. B. McClellan and other published Documents. 8vo, cloth |
+| As developed by the Report of MajGen. Geo. B. McClellan and other published Documents. 8vo, cloth |
 | ——— Notes on Sea-Coast Defence. |
 | Consisting of Sea-Coast Fortification; the Fifteen-Inch Gun; and Case mate Embrasure. With an engraved plate of the Fifteen-Inch Gun. 8vo, cloth |
 | BARNARD, MajGen. J. G., and BARRY, MajGen. W. F.—Report of the Engineer and Artillery Operations of the Army of the Potomac, |
 | From its Organization to the Close of the Peninsular Campaign. Illustrated by 18 maps, plans, etc. 8vo, cloth |
-| BARNES, Lieut.-Com. JOHN S.—Submarine Warfare, Defensive and Offensive. |
+| BARNES, LieutCom. JOHN S.—Submarine Warfare, Defensive and Offensive. |
 | Comprising a full and complete History of the invention of the Torpedo its employment in War, and results of its use. Descriptions of the various forms of Torpedoes, Submarine Batteries, and Torpedo Boats actual by read in War. With 90 liths and its war. |
-| ly used in War. With 20 lithographic plates and many wood-cuts. 8vo cloth |
+| ly used in War. With 20 lithographic plates and many wood-ents. 8vo, cloth |
 
 | BARRE DUPARCQ, EDWARD DE LA.—Elements of Military<br>Art and History.  Translated by Col. Geo. W. Cullum, U.S.E. 8vo, cloth |
 |---|
@@ -3306,7 +3322,7 @@ OF
 | For all Company Movements in the Field. In box |
 | BRINKERHOFF, Capt. R.—The Volunteer Quartermaster. |
 | BUCKNER, Lieut. W. P.—Calculated Tables of Ranges for Navy |
-| and Army Guns. 8vo. cloth |
+| and Army Guns. 8vo, cloth |
 | BURGH, N. P.—Modern Marine Engineering, |
 | Applied to Paddle and Screw Propulsion. Consisting of 36 colored plates, 259 practical wood-cut illustrations, and 403 pages of descriptive matter, the whole being an exposition of the present practice of James Watt & Co., J. & G. Rennie, R. Napier & Sons, and other celebrated firms. Thick 4to vol., cloth |
 | BURT, W. A.—Key to the Solar Compass, and Surveyor's Companion. |
@@ -3320,7 +3336,7 @@ OF
 | CAMPIN, FRANCIS.—On the Construction of Iron Roofs. |
 | 8vo, with plates, cloth |
 
-| CASEY, Brig.-Gen. SILAS.—U. S. Infantry Tactics. |
+| CASEY, BrigGen. SILAS.—U. S. Infantry Tactics. |
 |---|
 | Vol. I.—School of the Soldier; School of the Company; Instruction for Skirmishers. Vol. II.—School of the Battalion, Vol. III.—Evolutions of a Brigade; Evolutions of a Corps d'Armée. Lithographed plates. 3 vols. 24mo, cloth |
 | CHAUVENET, Prof. W.—New Method of Correcting Lunar Distances, and Improved Method of Finding the Error and Rate of a Chronometer, by Equal Altitudes.  8vo, cloth |
@@ -3349,8 +3365,8 @@ OF
 | CRAIG, Prof. THOS.—Elements of the Mathematical Theory of Fluid Motion. |
 | 16mo, cloth |
 | CRAIGHILL, WM. P.—The Army Officer's Companion. |
-| Principally designed for Staff Officers in the Field. Partly translated from the French of M. de Rouvre, Lieut.-Col. of the French Staff Corps, with additions from Standard American, French, and English authorities. 18mo, full roau |
-| CULLUM, Col. GEORGE WMilitary Bridges. |
+| Principally designed for Staff Officers in the Field. Partly translated from the French of M. de Rouvre, LieutCol. of the French Staff Corps, with additions from Standard American, French, and English authorities. 18mo, full roan |
+| CULLUM, Col. GEORGE W.—Military Bridges. |
 | Systems of Military Bridges in use by the U. S. Army; those adopted by the Great European Powers; and such as are employed in British India. With Directions for the Preservation, Destruction, and Re-establishment of Bridges. With 7 folding plates. 8vo, cloth |
 | DAVIS, C. B., and RAE, F. B.—Hand-Book of Electrical Diagrams and Connections. |
 | Illustrated with 32 full-page illustrations. Second edition. Oblong 8vo, cloth extra |
@@ -3388,7 +3404,7 @@ Consisting of—Part I. Ponton Drill: II. Practical Operations of a Siege; III. 
 | FOYE, Prof. J. C.—Chemical Problems. |
 | With brief Statements of the Principles involved. Second edition, revised and enlarged. 16mo, boards |
 | FRANCIS, JAS. B., C. E.—Lowell Hydraulic Experiments: |
-| Being a selection from Experiments on Hydraulic Motors, on the Plow of Water over Weirs, in Open Canals of Uniform Rectangular Section, and through submerged Orifices and diverging Tubes. Made at Lowell, Massachusetts. Fourth edition, revised and enlarged, with many new experiments, and illustrated with twenty-three copperplate engravings. |
+| Being a selection from Experiments on Hydraulic Motors, on the Flow of Water over Weirs, in Open Canals of Uniform Rectangular Section, and through submerged Orifices and diverging Tubes. Made at Lowell, Massachusetts. Fourth edition, revised and enlarged, with many new experiments, and illustrated with twenty-three copperplate engravings. |
 
 4to, cloth....................................
 
@@ -3396,8 +3412,8 @@ Consisting of—Part I. Ponton Drill: II. Practical Operations of a Siege; III. 
 |---|
 | A Guide to Ornamental Figure and Landscape Drawing. By an Art Student. 18mo, boards |
 | FRY, Brig.-Gen. JAMES B.—Army Sacrifices; or, Briefs from Official Pigeon-Holes. |
-| Sketches based on Official Reports, grouped together for piirpose of illustrating the Services of the Regular Army of the United States on th& Indian Frontier. 16mo |
-| The History and Legal Effects of BflEeots in the Armies of Great Britain and the United States, from the origin in 1692 until the present time. Crown 8vo, extra cloth |
+| Sketches based on Official Reports, grouped together for the purpose of illustrating the Services of the Regular Army of the United States on the Indian Frontier. 16mo |
+| The History and Legal Effects of Brevets in the Armies of Great Britain and the United States, from the origin in 1692 until the present time. Crown 8vo, extra cloth |
 | GILLMORE, Gen. Q. A.—Treatise on Limes, Hydraulic Cements, and Mortars. |
 | Papers on Practical Engineering, U. S. Engineer Department, No. 9, containing Reports of numerous Experiments conducted in New York City during the years 1858 to 1861, inclusive. With numerous illustrations. 8vo, cloth |
 | —— Practical Treatise on the Construction of Roads, Streets, |
@@ -3407,14 +3423,14 @@ Consisting of—Part I. Ponton Drill: II. Practical Operations of a Siege; III. 
 | —— Coignet Beton and other Artificial Stone. |
 | 9 plates, views, etc. 8vo, cloth |
 | —— Fort Sumter. |
-| Official Report of Operations against the Defences of Charleston Harbor, 1863. Comprising the descent upon Morris Island, the Demolition of Fort Sumter, and the siege and reduction of Forts Wagner and Gregg. With 76 lithographic plates, views, maps, etc. ,8vo, cloth |
+| Official Report of Operations against the Defences of Charleston Harbor, 1863. Comprising the descent upon Morris Island, the Demolition of Fort Sumter, and the siege and reduction of Forts Wagner and Gregg. With 76 lithographic plates, views, maps, etc. 8vo, cloth |
 | - Supplementary Report on Fort Sumter. |
 | Supplementary Report to the Engineer and Artillery Operations against the Defences of Charleston Harbor in 1863. With 7 lithographed maps and views. 8vo, cloth |
 | Siege and Reduction of Fort Pulaski, Georgia.  Illustrated by maps and views. 8vo, cloth |
 | GOODEVE, T. M.—A Text-Book on the Steam-Engine. |
 | 143 illustrations. 12mo, cloth |
 | GORDON, J. E. H.—Four Lectures on Static Induction.  12mo, cloth |
-| GRAFTON, Capt. HENRY D.—A A Treatise on the Camp and |
+| GRAFTON, Capt. HENRY D.—A Treatise on the Camp and |
 | March.  With which is connected the Construction of Field-Works and Military |
 | Bridges. 12mo, cloth |
 
@@ -3425,7 +3441,7 @@ Consisting of—Part I. Ponton Drill: II. Practical Operations of a Siege; III. 
 | GUIDE TO WEST POINT and the U. S. Military Academy. With maps and engravings. 18mo, flexible cloth |
 | HALF-HOURS WITH MODERN SCIENTISTS.—Lectures and |
 | Essays, |
-| By Professors Huxley, Barker, Stirling, Cope, Tyndall, Wallace, Roscoe, Huggius, Lookyer, Young, Mayer, and Reed. Being the University Series bound up. With a general introduction by Noah Porter, President of Yale College. 2 vols. 12mo, cloth, Dlustrated |
+| By Professors Huxley, Barker, Stirling, Cope, Tyndall, Wallace, Roscoe, Huggius, Lockyer, Young, Mayer, and Reed. Being the University Series bound up. With a general introduction by Noah Porter, President of Yale College. 2 vols. 12mo, cloth, illustrated |
 | HAMERSLY, LEWIS B.—The Records of Living Officers of the U. S. Navy and Marine Corps.  Compiled from Official Sources. Third edition. Cloth, 8vo 2 50 |
 | HAMILTON, W. G.—Useful Information for Railway Men.  Sixth edition, revised and enlarged. 562 pages, pocket form. Morocco, gilt |
 | HARRISON, Col. WALTER.—Pickett's Men. |
@@ -3446,7 +3462,7 @@ Consisting of—Part I. Ponton Drill: II. Practical Operations of a Siege; III. 
 | HENRICI, OLAUS.—Skeleton Structures, especially in their application to the Building of Steel and Iron Bridges.  With folding plates and diagrams. 8vo, cloth |   |
 |---|---|
 | HENRY, GUY V.—Military Record of Civilian Appointments in the United States Army.  2 vols. 8vo, cloth | plication to the Building of Steel and Iron Bridges. |
-| HETH, Capt. HENRY.—System of Target Practice.  For the Use of Troops when armed with the Musket, Rifle-Musket, Rifle, or Carbine. Prepared principally from the French. 18mo, cloth | HENRY, GUY V.—Military Record of Civilian Appointments in<br>the United States Army. |
+| HETH, Capt. HENRY.—System of Target Practice.  For the Use of Troops when armed with the Musket, Bifle-Musket, Rifle, or Carbine, Prepared principally from the Frencli. 18mo, cloth | HENRY, GUY V.—Military Record of Civilian Appointments in<br>the United States Army. |
 | For the Use of Troops when armed with the Musket, Rifle-Musket, Rifle, or Carbine. Prepared principally from the French. 18mo, cloth |   |
 | Rifle, or Carbine. Prepared principally from the French. 18mo, cloth. 50  HEWSON, WM.—Principles and Practice of Embanking Lands from River Floods, as applied to the Levees of the Mississippi. 8vo, cloth. 200  HOLLEY, ALEXANDER L.—A Treatise on Ordnance and Armor. Embracing descriptions, discussions, and professional opinions concerning the materials, fabrication, requirements, capabilities, and endurance of European and American Guns, for Naval, Sea-Coast, and Iron-Clad Warfare, and their Riffing, Projectiles, and Breech-Loading; also, results of experiments against armor, from official records, with an appendix referring to Gun-Cotton, Hooped Guns, etc., etc. 948 pages, 493 engravings, and 147 Tables of Results, etc. 8vo, half roan. 750 Half Russia. 1000  Railway Practice.  American and European Railway Practice in the economical Generation of Steam, including the Materials and Construction of Coal-burning Boilers, Combustion, the Variable Blast, Vaporization, Circulation, Superheating, Supplying and Heating Feed-water, etc., and the Adaptation of Wood and Coke-burning Engines to Coal-burning; and in Permanent Way, including Road-bed, Sleepers, Rails, Joint-fastenings, Street Railway, etc. etc. With 77 lithographed plates. Folio, cloth. 1200  HOTCHKISS, JED., and ALLAN, WILLIAM.—The Battle-Fields of Virginia.  Chancellorsville, embracing the Operations of the Army of Northern Virginia, from the First Battle of Fredericksburg to the Death of LtGen. T. J. Jackson. Illustrated with five maps and portrait of Stonewall Jackson. 8vo, cloth. 350  HOWARD, C. R.—Earthwork Mensuration on the Basis of the Prismoidal Formulæ.  Containing simple and labor-saving method of obtaining Prismoidal Contents directly from End Areas. Illustrated by Examples, and accompanied by Plain Rules for Practical Uses. Illustrated. 8vo, cloth. 150  HUNTER, Capt. R. F.—Manual for Quartermasters and Commissaries.  Containing Instructions in the Preparation of Vouchers, Abstracts, Returns, etc. 12mo, cloth. 150  INDUCTION-COILS.—How Made and | HETH, Capt. HENRY.—System of Target Practice. |
 | from River Floods, as applied to the Levees of the Mississippi.  8vo, cloth | Rifle, or Carbine. Prepared principally from the French. 18mo, |
@@ -3455,8 +3471,8 @@ Consisting of—Part I. Ponton Drill: II. Practical Operations of a Siege; III. 
 | the materials, fabrication, requirements, capabilities, and endurance of European and American Guns, for Naval, Sea-Coast, and Iron-Clad Warfare, and their Rifling, Projectiles, and Breech-Loading; also, results of experiments against armor, from official records, with an appendix referring to Gun-Cotton, Hooped Guns, etc., etc. 948 pages, 493 engravings, and 147 Tables of Results, etc. 8vo, half roan |   |
 | American and Enropean Railway Practice in the economical Generation of Steam, including the Materials and Construction of Coal-burning Boilers, Combustion, the Variable Blast, Vaporization, Circulation, Supprheating, Supplying and Heating Feed-water, etc., and the Adaptation of Wood and Coke-burning Engines to Coal-burning; and in Permanent Way, including Road-bed, Sleepers, Rails, Joint-fastenings, Street Railways, etc., etc. With 77 lithographed plates. Folio, cloth | the materials, fabrication, requirements, capabilities, and endurance of European and American Guns, for Naval, Sea-Coast, and Iron-Clad Warfare, and their Rifling, Projectiles, and Breech-Loading; also, results of experiments against armor, from official records, with an appendix referring to Gun-Cotton, Hooped Guns, etc., etc. 948 pages, 493 engravings, and 147 Tables of Results, etc. 8vo, half roan |
 | Steam, including the Materials and Construction of Coal-burning Boilers, Combustion, the Variable Blast, Vaporization, Circulation, Superheating, Supplying and Heating Feed-water, etc., and the Adaptation of Wood and Coke-burning Engines to Coal-burning; and in Permanent Way, including Road-bed, Sleepers, Rails, Joint-fastenings, Street Railways, etc., etc. With 77 lithographed plates. Folio, cloth |   |
-| of Virginia.  Chancellorsville, embracing the Operations of the Army of Northern Virginia, from the First Battle of Fredericksburg to the Death of Lt.-Gen. T. J. Jackson. Illustrated with five maps and portrait of Stonewall Jackson. 8vo, cloth. 3 50  HOWARD, C. R.—Earthwork Mensuration on the Basis of the Prismoidal Formulæ.  Containing simple and labor-saving method of obtaining Prismoidal Contents directly from End Areas. Illustrated by Examples, and accompanied by Plain Rules for Practical Uses. Illustrated. 8vo, cloth. 1 50  HUNTER, Capt. R. F.—Manual for Quartermasters and Commissaries.  Containing Instructions in the Preparation of Vouchers, Abstracts, Returns, etc. 12mo, cloth. 1 00  Flexible morocco. 1 50  INDUCTION-COILS.—How Made and How Used. | Steam, including the Materials and Construction of Coal-burning Boilers, Combustion, the Variable Blast, Vaporization, Circulation, Superheating, Supplying and Heating Feed-water, etc., and the Adaptation of Wood and Coke-burning Engines to Coal-burning; and in Permanent Way, including Road-bed, Sleepers, Rails, Joint-fastenings, Street Railways, etc., |
-| Gen. T. J. Jackson. Illustrated with five maps and portrait of Stone- wall Jackson. 8vo, cloth. 3 50  HOWARD, C. R.—Earthwork Mensuration on the Basis of the Prismoidal Formulæ.  Containing simple and labor-saving method of obtaining Prismoidal Contents directly from End Areas. Illustrated by Examples, and accompanied by Plain Rules for Practical Uses. Illustrated. 8vo, cloth. 1 50  HUNTER, Capt. R. F.—Manual for Quartermasters and Commissaries.  Containing Instructions in the Preparation of Vouchers, Abstracts, Returns, etc. 12mo, cloth. 1 00  Flexible morocco. 1 50  INDUCTION-COILS.—How Made and How Used. | of Virginia. |
+| of Virginia.  Chancellorsville, embracing the Operations of the Army of Northern Virginia, from the First Battle of Fredericksburg to the Death of ItGen. T. J. Jackson. Illustrated with five maps and portrait of Stonewall Jackson. 8vo, cloth. 3 50  HOWARD, C. R.—Earthwork Mensuration on the Basis of the Prismoidal Formulæ.  Containing simple and labor-saving method of obtaining Prismoidal Contents directly from End Areas. Illustrated by Examples, and accompanied by Plain Rules for Practical Uses. Illustrated. 8vo, cloth. 1 50  HUNTER, Capt. R. F.—Manual for Quartermasters and Commissaries.  Containing Instructions in the Preparation of Vouchers, Abstracts, Returns, etc. 12mo, cloth. 1 00  Flexible morocco. 1 50  INDUCTION-COILS.—How Made and How Used. | Steam, including the Materials and Construction of Coal-burning Boilers, Combustion, the Variable Blast, Vaporization, Circulation, Superheating, Supplying and Heating Feed-water, etc., and the Adaptation of Wood and Coke-burning Engines to Coal-burning; and in Permanent Way, including Road-bed, Sleepers, Rails, Joint-fastenings, Street Railways, etc., |
+| Gen. T. J. Jackson. Illustrated with five maps and portrait of Stone-wall Jackson. 8vo, cloth. 3 50  HOWARD, C. R.—Earthwork Mensuration on the Basis of the Prismoidal Formulæ.  Containing simple and labor-saving method of obtaining Prismoidal Contents directly from End Areas. Illustrated by Examples, and accompanied by Plain Rules for Practical Uses. Illustrated. 8vo, cloth. 1 50  HUNTER, Capt. R. F.—Manual for Quartermasters and Commissaries.  Containing Instructions in the Preparation of Vouchers, Abstracts, Returns, etc. 12mo, cloth. 1 00  Flexible morocco. 1 50  INDUCTION-COILS.—How Made and How Used. | of Virginia. |
 | Prismoidal Formulæ.  Containing simple and labor-saving method of obtaining Prismoidal Contents directly from End Areas. Illustrated by Examples, and accompanied by Plain Rules for Practical Uses. Illustrated. 8vo, cloth. 1 50 HUNTER, Capt. R. F.—Manual for Quartermasters and Commissaries.  Containing Instructions in the Preparation of Vouchers, Abstracts, Returns, etc. 12mo, cloth. 1 00 Flexible morocco. 1 50 INDUCTION-COILS.—How Made and How Used. | Gen. T. J. Jackson. Illustrated with five maps and portrait of Stone- |
 | tents directly from End Areas. Illustrated by Examples, and accompanied by Plain Rules for Practical Uses. Illustrated. 8vo, cloth. 1 50  HUNTER, Capt. R. F.—Manual for Quartermasters and Commissaries.  Containing Instructions in the Preparation of Vouchers, Abstracts, Returns, etc. 12mo, cloth. 1 00  Flexible morocco. 1 50  INDUCTION-COILS.—How Made and How Used. | HOWARD, C. R.—Earthwork Mensuration on the Basis of the Prismoidal Formulæ. |
 | saries.  Containing Instructions in the Preparation of Vouchers, Abstracts, Returns, etc. 12mo, cloth | tents directly from End Areas. Illustrated by Examples, and accompa- |
@@ -3465,10 +3481,10 @@ Consisting of—Part I. Ponton Drill: II. Practical Operations of a Siege; III. 
 
 | INSTRUCTIONS FOR FIELD ARTILLERY. |
 |---|
-| Prepared by a Board of Artillery Officers. To which is added the "Evolutions of Batteries." Translated from the French by Brig.-Gen. E. Anderson, U. S. A. 122 plates. 12mo, cloth |
+| Prepared by a Board of Artillery Officers. To which is added the "Evolutions of Batteries." Translated from the French by Brig.-Gen. R. Anderson, U. S. A. 122 plates. 12mo, cloth |
 | ISHERWOOD, B. F.—Engineering Precedents for Steam Machinery. |
 | Arranged in the most practical and useful manner for Engineers. With illustrations. Two volumes in one. 8vo, cloth |
-| IVES, Lieut. R. AMilitary Law. |
+| IVES, Lieut. R. E. A.—Military Law. |
 | A Treatise on Military Law, and the Jurisdiction, Constitution, and Procedure of Military Courts. With a Summary of the Rules of Evidence as applicable to such Courts. 400 pages. 8vo, law-sheep. 400 |
 | JANNETTAZ, EDWARD.—A Guide to the Determination of Rocks: |
 | Being an Introduction to Lithology. Translated from the French by G. W. Plympton, Professor of Physical Science at Brooklyn Polytechnic Institute. 12mo, cloth |
@@ -3480,15 +3496,15 @@ Consisting of—Part I. Ponton Drill: II. Practical Operations of a Siege; III. 
 | Illustrated by a Critical and Military History of the Wars of Frederick the |
 | of War. Illustrated by maps and plans. Translated from the French |
 | by Col. S. B. Holabird, U. S. A. 2 vols. 8vo and Atlas. Cloth. 15 00 |
-| Illustrated by a Critical and Military History of the Wars of Frederick the Great. With a Summary of the Most Important Principles of the Art of War. Illustrated by maps and plans. Translated from the French by Col. S. B. Holabird, U. S. A. 2 vols. 8vo and Atlas. Cloth. 15 00 Half calf or morocco. 21 00 Half Russia. 22 50 |
+| Illustrated by a Critical and Military History of the Wars of Freedrick the Great. With a Summary of the Most Important Principles of the Art of War. Illustrated by maps and plans. Translated from the French by Col. S. B. Holabird, U. S. A. 2 vols. 8vo and Atlas. Cloth. 15 00 Half calf or morocco. 21 00 Half Russia. 22 50 |
 | JONES, H. CHAPMAN.—Text-Book of Experimental Organic Chemistry for Students. |
 | 18mo, cloth |
 | JOYNSON, F. H.—The Metals used in Construction: Iron, Steel,<br>Bessemer Metal, etc., etc. |
 | Illustrated, 12mo, cloth |
 | —— Designing and Construction of Machine Gearing.  Illustrated. 8vo, cloth |
 | Illustrated. 8vo, cloth |
-| men a set to Dominon of the Missouri River and a describ- |
-| tion of the methods used for Founding in that River. By O. Chanute |
+| men of the Missouri River, and a _^desonp |
+| tion of the methods used for Founding in that River. By O. Change, |
 | with five lithographic views and twelve plates of plans. 40, cloth. |
 | KELTON, Gen. J. C.—New Bayonet Exercise.  A New Manual of the Bayonet, for the Army and Militia of the United |
 | States. With 40 beautifully engraved plates. Fifth edition. Revised. 12mo, cloth |
@@ -3496,7 +3512,7 @@ Consisting of—Part I. Ponton Drill: II. Practical Operations of a Siege; III. 
 | KING, W. H.—Lessons and Practical Notes on Steam,  The Steam-Engine, Propellers, etc., etc., for young Marine Engineers, Students, and others. Revised by Chief-Engineer J. W. King, U. S. Navy. Nineteenth edition, cnlarged. 8vo, cloth |
 |---|
 | KIRKWOOD, JAS. P.—Report on the Filtration of River Waters for the supply of Cities,  As practised in Europe, made to the Board of Water Commissioners of the City of St. Louis. Illustrated by 30 double-plate engravings. 4to, cloth |
-| LARRABEE, C. S.—Cipher and Secret Latter and Telegraphic Code, with Hogg's Improvements.  The most perfect secret code ever invented or discovered. Impossible to read without the key. 18mo, cloth |
+| LARRABEE, C. S.—Cipher and Secret Letter and Telegraphic Code, with Hogg's Improvements.  The most perfect secret code ever invented or discovered. Impossible to read without the key. 18mo, cloth |
 | LAZELLE, Capt. H. M., U. S. A.—One Law in Nature.  A New Corpuscular Theory, comprehending Unity of Force, Identity of Matter and its Multiple Atom Constitution; applied to the Physical Affections, or Modes of Energy. 12mo |
 | LECOMTE, FERDINAND.—The War in the United States.  A Report to the Swiss Military Department. Translated from the French by a Staff Officer. 12mo, cloth |
 | LE GAL, Col. EUGENE.—School of the Guides.  Designed for the use of the Militia of the United States. 16mo, cloth |
@@ -3504,28 +3520,28 @@ Consisting of—Part I. Ponton Drill: II. Practical Operations of a Siege; III. 
 | LEVY, Com. U. P.—Manual of Internal Rules and Regulations for Men-of-War.  Third edition, revised and enlarged. 18mo, flexible cloth 30 |
 | LIEBER, FRANCIS, LL.D.—Instructions for Armies.  Instructions for the Government of Armies of the United States in the Field. 12mo, paper |
 | LIPPITT.—Special Operations of War.       12mo, cloth |
-| LOCK, C. G., WIGNER, G. W., and HARLAND, R. H.—Sugar<br>Growing and Refining.  Treatise on the Culture of Sugar-Yielding Planes, and the Manufac-<br>ture and Refining of Cane, Beet, and other sugars. 8vo, cloth, illus-<br>trated |
+| LOCK, C. G., WIGNER, G. W., and HARLAND, R. H.—Sugar<br>Growing and Refining.  Treatise on the Culture of Sugar-Yielding Plants, and the Manufac-<br>ture and Refining of Cane, Beet, and other sugars. 8vo, cloth, illus-<br>trated |
 | LOCKWOOD, THOS. D.—Electricity, Magnetism, and Electro-Telegraphy.  A Practical Guide for Students, Operators, and Inspectors. 8vo, cloth |
 
 | TOPING A F A Word Pools on the Theta Market The |
 |---|
-| LORING, A. EA Hand-Book on the Electro-Magnetic Telegraph. |
+| LOKING, A. E.—A Hand-Book on the Electro-Magnetic Telegraph. |
 | Paper boards \$0 50 |
 | Cloth.         75           Morocco.         1 00 |
 | LUCE, Com. S. P.—Text-Book of Seamanship. |
 | The Equipping and Handling of Vessels under Sail or Steam. For the |
 | use of the U.S. Naval Academy. Revised and enlarged by Lieut. Aaron Ward, U.S.N. With illustrations drawn by Lieut. S. Seabury, U.S.N. 8vo, eloth |
 | Naval Light Artillery. |
-| By Lient. W. H. Parker, U. S. N. Third edition, revised by Capt. S. B. Luce, Assistant Instructor of Gunnery and Tactics at the U. S. Naval Academy. 22 plates. 8vo. cloth |
+| By Lieut. W. H. Parker, U. S. N. Third edition, revised by Capt. S. B. Luce, Assistant Instructor of Gunnery and Tactics at the U. S. Naval Academy. 22 plates. 8vo. cloth |
 | MacCORD, Prof. C. W.—A Practical Treatise on the Slide-Valve by Eccentrics, |
 | Examining by methods the action of the Eccentric upon the Slide-Valve, |
 | and explaining the practical processes of laying out the movements, adapting the valve for its various duties in the steam-engine. Second |
 | edition. Illustrated. 4to, cloth |
-| McCLELLAN, Gen. GEO. B Report of the Army of the Potomac, |
+| McCLELLAN, Gen. GEO. B.—Report of the Army of the Potomac, |
 | Of its operations while under his command. With maps and plans. |
 | 8vo, cloth       1 00         Paper       50 |
 | McCULLOCH, Prof. R. S.—Elementary Treatise on the Mechanical Theory of Heat, and its application to Air and Steam Engines. |
-| 8vo, clotb |
+| 8vo, cloth |
 | MANUAL OF BOAT EXERCISE |
 | At the U. S. Naval Academy, designed for the practical instruction of the Senior Class in Naval Tactics. 18mo, flexible cloth 50 |
 | MENDELL, G. H.—Military Surveying. |
@@ -3535,9 +3551,9 @@ Consisting of—Part I. Ponton Drill: II. Practical Operations of a Siege; III. 
 | MICHAELIS, Capt. O. E.—The Le Boulenge Chronograph. |
 | With three lithographed folding plates of illustrations. 4to, illustrated, cloth |
 | MICHIE, Prof. P. S.—Elements of Wave Motion relating to Sound |
-| and Light.  Text-Rook for the U.S. Military Academy. 8vo, cloth, illustrated. 500 |
+| and Light.  To-s-t-Rnnlc for the U.S. Military Academy. 8vo, cloth, illustrated. 500 |
 
-### MINIFIE, WM.—Mechanical Drawing.
+## MINIFIE, WM.—Mechanical Drawing.
 
 A Text-Book of Geometrical Drawing for the use of Mechanics and Schools, in which the Definitions and Rules of Geometry are familiarly explained; the Practical Problems are arranged, from the most simple to the more complex, and in their description technicalities are avoided as much as possible. With illustrations for Drawing Plans, Sectious, and Elevations of Railways and Machinery; an Introduction to Isometrical Drawing, and an Essay on Linear Perspective and Shadows. Illustrated with over 200 diagrams engraved on steel. Ninth edition. With an Appendix on the Theory and Application of Colors. 8vo, cloth..... \$4 00
 
@@ -3565,7 +3581,7 @@ A Biographical Record. Illustrated with 60 fine portraits on steel.
 
 1 vol. 8vo, cloth . . . . . . . . . . . . . . . . . . .
 
-Half Russia.
+Half Russia....
 
 # MORRIS, E.—Easy Rules for the Measurement of Earthworks, by Means of the Prismoidal Formula.
 
@@ -3610,9 +3626,9 @@ MOTT, H. A., Jr.-A Practical Treatise on Chemistry
 | Or, Light and Sight, theoretically and practically treated, with the application to Fine Art and Industrial Pursuits. With 103 illustrations. |
 | 12mo, cloth |
 | Part I. Relating to the Preparation of Vessels of War for Battle, and to the Duties of Officers and others when at Quarters. Part II. The Equipment and Manœuvre of Boats, and Exercise of Howitzers. Part III. Ordnance and Ordnance Stores. Published by order of the Navy Department. Illustrated. 8vo, cloth |
-| ORDRONAUX, JOHN.—Manual for Military Surgeons. |
+| ORDRONAUX, JOHNManual for Military Surgeons. |
 | Manual of Instructions for Military Surgeons in the Examination of Recruits and Discharge of Soldiers. Prepared at the request of the United States Sanitary Commission. 12mo, half morocco 100 |
-| OSBON, B. S.—Hand-Book of the United States Navy. |
+| OSBON, B. SHand-Book of the United States Navy. |
 | Being a compilation of all the principal events in the history of every vessel of the United States Navy from April, 1861, to May, 1864. 12mo, cloth |
 | OUR NAVAL SCHOOL AND NAVAL OFFICERS. |
 | A Glance at the Condition of the French Navy prior to the Franco-German War. Translated from the French of M. De Crisenoy by Commander R. W. Meade, U. S. N. 12mo, cloth |
@@ -3649,10 +3665,10 @@ MOTT, H. A., Jr.-A Practical Treatise on Chemistry
 | PEIRCE, B.—System of Analytic Mechanics. |
 | 4to, cloth |
 | PLANE TABLE, The. |
-| Its Uses in Tonographical Surveying From the Danger of the U.S. |
+| Its Uses in Topographical Surveying From the Papers of the U.S. |
 | Its Uses in Topographical Surveying. From the Papers of the U. S. Coast Survey. Illustrated. 8vo, cloth |
 | "This work gives a description of the Plane Table employed at the |
-| "This work gives a description of the Plane Table employed at the U. S. Coast Survey office, and the manner of using it." |
+| "This work gives a description of the Plane Table employed at the U.S. Coast Survey office, and the manner of using it." |
 | PLATTNER.—Manual of Qualitative and Quantitative Analysis with the Blow-Pipe. |
 | From the last German edition, revised and enlarged. By Prof. Th. Richter, of the Royal Saxon Mining Academy. Translated by Prof. H. |
 | B. Cornwall, assisted by John H. Caswell. Illustrated with 87 wood-cuts |
@@ -3691,7 +3707,7 @@ MOTT, H. A., Jr.-A Practical Treatise on Chemistry
 | RANDALL, P. M.—Quartz Operator's Hand-Book. |
 | New edition, revised and enlarged, fully illustrated. 12mo, cloth. 2 00 |
 
-| REID, Lt.-Col. W.—Law of Storms. |
+| REID, LtCol. W.—Law of Storms. |
 |---|
 | An Attempt to Develop the Law of Storms by means of Facts, arranged |
 | according to Place and Time, and hence to point out a Cause for the |
@@ -3703,7 +3719,7 @@ MOTT, H. A., Jr.-A Practical Treatise on Chemistry
 | ROBERTS, Col. WM. H.—Hints and Helps for National Guards- |
 | men. |
 | A Hand-Book for the Militia. 12mo 1 25 |
-| ROBERTS, Lt.-Col. JOSEPH.—Hand-Book of Artillery. |
+| ROBERTS, LtCol. JOSEPH.—Hand-Book of Artillery. |
 | For the service of the United States Army and Militia. Tenth edition, |
 | revised and greatly enlarged. 16mo, morocco clasp 2 00 |
 | RODENBOUGH, Col. THEO. F.—Everglade to Canon |
@@ -3760,7 +3776,7 @@ MOTT, H. A., Jr.-A Practical Treatise on Chemistry
 | SHIELDS, J. E.—Notes on Engineering Construction. |
 | Embracing Discussions of the Principles involved, and Descriptions of the Material employed in Tunnelling, Bridging, Canal and Road Building, etc., etc. 12mo, cloth |
 
-## SHOCK, Chief-Eng. W. H .- Steam-Boilers:
+#### SHOCK, Chief-Eng. W. H .- Steam-Boilers:
 
 Their Design, Construction, and Management. 450 pages text. Illustrated with 150 wood-cuts and 36 full-page plates (several double). Quarto. Half morocco.................................
 
@@ -3818,7 +3834,7 @@ With 9 finely executed portraits of eminent engineers, and illustrated by engrav
 | VAN NOSTRAND'S ENGINEERING MAGAZINE.  Large 8vo, monthly. Price, per year |
 | VAN WAGENEN, T. F.—Manual of Hydraulic Mining, For the use of the Practical Miner. 12mo, cloth 1 00 |
 
-| VIELE, Brig.-Gen. EGBERT L.—Hand-Book for Active Service. |
+| VIELE, BrigGen. EGBERT L.—Hand-Book for Active Service. |
 |---|
 | Containing Practical Instructions in Campaign Duties. For the use of Volunteers. 12mo, cloth |
 | WAINWRIGHT, Col. WM. P.—Animal Locomotion. |
@@ -3830,7 +3846,7 @@ With 9 finely executed portraits of eminent engineers, and illustrated by engrav
 | WANKLYN, J. A.—A Practical Treatise on the Examination of<br>Milk and its Derivatives, Cream, Butter, and Cheese. |
 | 12mo, eloth |
 | WARD, JAMES H.—Naval Tactics. |
-| Manual of Naval Tactics. Together with a Brief Critical Analysis of<br>the Principal Modern Naval Battles. With an Appendix, being an ex-<br>tract from Sir Howard Douglas's "Naval Warfare with Steam." 8vo,<br>cloth |
+| Manual of Naval Tactics. Together with a Brief Critical Analysis of<br>the Principal Modern Naval Battles. With an Appendix, being an ex-<br>tract from Sir Howard Donglas's "Naval Warfare with Steam." 8vo,<br>cloth |
 | WATT, ALEX.—Electro-Metallurgy, Practically Treated. |
 | Sixth edition, with considerable additions. 12mo, cloth 100 |
 | WEISBACH, JULIUS.—A Manual of Theoretical Mechanics. |
@@ -3840,38 +3856,38 @@ With 9 finely executed portraits of eminent engineers, and illustrated by engrav
 | WEYRAUCH, J. J.—Strength and Calculations of Dimensions of<br>Iron and Steel Construction, |
 | With reference to the Latest Experiments. 12mo, cloth, plates 100 |
 | WHEELER, Prof. J. B.—Art of War, |
-| A Course of Instruction in the Elements of the Art and Science of War for the use of the Cadets of the U.S. Military Academy, West Point, N. Y. 12mo, cloth |
+| A Course of Instruction in the Elements of the Art and Science of War for the use of the Cadets of the U.S. Military Academy, West Point N.Y. 12mo, cloth |
 | —— Field Fortifications. |
 | The Elements of Field Fortifications, for the use of the Cadets of the U. S. Military Academy, West Point, N. Y. 12mo |
-| WILCOX, Capt. C. M.—Rifles and Rifle Practice |
+| WILCOX, Capt. C. M.—Rifles and Rifle Practice. |
 
 An Elementary Treatise on the Theory of Rifle-Firing; with descriptions of the Infantry Rifles of Europe and the United States, their Balls and Cartridges. New edition. Illustrated. 8vo, cloth....................................
 
-| WILLIAMSON,<br>S.—On<br>Barometer<br>R.<br>the<br>use<br>the<br>on<br>Surveys<br>of<br>and<br>Eeconnoissances. |
+| WILLIAMSON, R. S.—On the use of the Barometer on Surveys<br>and Reconnoissances. |
 |---|
 | Part<br>Meteorology<br>Connection<br>Hypsometry.<br>in<br>with<br>Part<br>its<br>I.<br>II.<br>With<br>Barometric<br>Hypsometry.<br>and<br>Tables<br>Illustrative<br>Engravings.<br>\$15<br>cloth<br>00<br>4to, |
 | Meteorology<br>and<br>Hypsometry,<br>Tables<br>Practical<br>in<br>Barometer.<br>In<br>connection<br>with<br>the<br>use<br>the<br>of<br>cloth<br>2<br>50<br>4to, |
 | WOOD,<br>E.—The<br>West<br>Point<br>Scrap-Book.<br>Lieut.<br>0. |
-| With<br>Being<br>a<br>Legends,<br>Songs,<br>wood<br>Collection<br>of<br>69<br>Stories,<br>etc.<br>on<br>cut<br>Beautifully<br>printed<br>tinted<br>paper.<br>extra<br>8vo,<br>illustrations.<br>3<br>50<br>cloth |
-| YOUNG<br>MANUAL.<br>SEAMAN'S |
+| Being a Collection of Legends, Stories, Songs, etc. With 69 wood-<br>cut illustrations. Beautifully printed on tinted paper. 8vo, extra<br>cloth.......................................................... 3 50 |
+| YOUNG SEAMAN'S MANUAL. |
 
 Compiled from various authorities, and illustrated with numerous origi nal and select designs. For the use of the U. S. Training Ships and the Marine Schools. 8vo, half roan. .- 3 00
 
-# VAN NOSTRAND'S SCIENCE SERIES.
+## VAN NOSTRAND'S SCIENCE SERIES.
 
 It is the intention of the Publisher of this Series to issue them at intervals of about a month. They will be put up in a uniform, neat, and attractive form, 18mo, fancy boards. The subjects will be of an eminently scientific character, and embrace as wide a range of topics as possible, all of the highest character.
 
-## Price, 50 Cents Each.
+### Price, 50 Cents Each.
 
 - I. CHIMNEYS for Furnaces, Fire-places, and Steam Boilers. By B. Armstrong, C.E.
-- II. Steam Boiler Explosions. By Zerah Colburn.
-- III. Practical Designing OF Retaining Walls. By Arthur Jacob A.B. With Illustrations.
-- IV. Proportions OF Pins Used in Bridges. By Charles E Bender, C.E. With Illustrations.
-- V. Ventilation OF Buildings. By W. F. Butler. With Illustrations.
+- II. STEAM BOILER EXPLOSIONS. By Zerah Colburn.
+- III. Practical DESIGNING OF Retaining Walls. By Arthur Jacob A.B. With Illustrations.
+- IV. PROPORTIONS OF PINS USED in Bridges. By CHARLES E Bender, C.E. With Illustrations.
+- V. VENTILATION OF Buildings. By W. F. Butler. With Illustrations.
 - VI. On the Designing and Construction of Storage Reservoirs. By Arthur Jacob. With Illustrations.
-- VII. Surcharged and Different Forms OF Retaining Walls By JAMES S. Tate, C.E.
-- VIII. A Treatise on the Compound Engine. By John Turnbull. With Illustrations.
+- VII. Surcharged and Different Forms OF RETAINING Walls By JAMES S. Tate, C.E.
+- VIII. A Treatise on the Compound Engine. By John TURNBULL. With Illustrations.
 - IX. Fuel. By C. William Siemens, to which is appended the value of Artificial Fuels as Compared with Coal. By John WORM- ALD, C.E.
 - X. Compound Engines. Translated from the French of A. Mallet. Illustrated.
-- XL Theory OF Arches. By Prof. W. Allan, of the Washington and Lee College. Illustrated.
-- XII. A Practical Theory OF Voussoir Arches. By William CAID, C.E. Illustrated.
+- XL THEORY OF Arches. By Prof. W. Allan, of the Washington and Lee College. Illustrated.
+- XII. A PRACTICAL THEORY OF Voussoir Arches. By William CAIN, C.E. Illustrated.

@@ -12,8 +12,8 @@ Each file is the complete result for the whole source document. The sources are 
 
 | Result | Source | Pages | Engine | Source license | Result license |
 |---|---|---|---|---|---|
-| `book.md` | scanned PDF | 344 | `marker` | Public Domain Mark | AI Pubs OpenRAIL-M (modified), Datalab |
-| `thesis.md` | born-digital PDF | 230 | `marker` | CC0 1.0 | AI Pubs OpenRAIL-M (modified), Datalab |
+| `book.md` | scanned PDF | 344 | `raw2md-engine` | Public Domain Mark | AI Pubs OpenRAIL-M (modified), Datalab |
+| `thesis.md` | born-digital PDF | 230 | `raw2md-engine` | CC0 1.0 | AI Pubs OpenRAIL-M (modified), Datalab |
 | `report.md` | DOCX | – | `pandoc` | CC0 1.0 | CC0 1.0 |
 
 The source license is the license that the repository record of the source states.
@@ -32,7 +32,7 @@ The `source_hash` field in the header of each result holds the same checksum in 
 
 ## Conversion
 
-raw2md 0.1.0 made all three results with this command:
+raw2md 0.2.0 made all three results with this command:
 
 ```bash
 raw2md SOURCE -i gemini_api -p gemini_api --disable-image-extraction
@@ -40,9 +40,9 @@ raw2md SOURCE -i gemini_api -p gemini_api --disable-image-extraction
 
 | Result | Time | Machine |
 |---|---|---|
-| `book.md` | 16 min 25 s | Ubuntu 22.04, NVIDIA RTX A5000, CUDA 13.0 |
-| `thesis.md` | 6 min 22 s | Ubuntu 22.04, NVIDIA RTX A5000, CUDA 13.0 |
-| `report.md` | 7 s | Windows 10, NVIDIA T1200 Laptop GPU |
+| `book.md` | 29 min 21 s | Ubuntu 22.04, NVIDIA RTX A5000, CUDA 13.2 |
+| `thesis.md` | 11 min 28 s | Ubuntu 22.04, NVIDIA RTX A5000, CUDA 13.2 |
+| `report.md` | 14 s | Windows 10, NVIDIA T1200 Laptop GPU |
 
 Key:
 
@@ -53,6 +53,6 @@ Key:
 
 ## License of the results
 
-`book.md` and `thesis.md` are output of the `marker` models by Datalab. The models are licensed under a modified AI Pubs OpenRAIL-M license, and the license applies to their output too. The license text is in [`MODEL_LICENSE`](MODEL_LICENSE). The models are available at <https://github.com/datalab-to/marker/tree/v1.10.2>. raw2md cleaned the output of the models and changed the text.
+`raw2md-engine` made `book.md` and `thesis.md` with the unchanged `surya` weights by Datalab. The weights are licensed under a modified AI Pubs OpenRAIL-M license, and the license applies to their output too. The license text is in [`MODEL_LICENSE`](MODEL_LICENSE). The weights are available at <https://github.com/datalab-to/surya/tree/v0.17.1>. raw2md cleaned the output of the models and changed the text.
 
 The `pandoc` converter made `report.md` from the DOCX source. The result is dedicated to the public domain under CC0 1.0, as the source is.
