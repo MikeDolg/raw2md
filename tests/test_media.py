@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import logging
 import random
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -592,3 +593,23 @@ def test_media_path_joins_a_name_inside_the_folder(tmp_path: Path, name: str) ->
     media_dir = tmp_path / "doc"
 
     assert media_path(media_dir, name) == media_dir / name
+
+
+def test_media_path_refuses_a_name_that_escapes_through_a_link(
+    tmp_path: Path,
+) -> None:
+    media_dir = tmp_path / "doc"
+    media_dir.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    link = media_dir / "media"
+    # A junction needs no privilege on Windows; a symlink does.
+    if sys.platform == "win32":
+        import _winapi
+
+        _winapi.CreateJunction(str(outside), str(link))
+    else:
+        link.symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(ConversionError, match="unsafe media asset name"):
+        media_path(media_dir, "media/escape.png")
