@@ -2,7 +2,7 @@ name: CI
 
 on:
   # No test reads these paths, and docs.yml lints the Markdown. A run holds
-  # four runners for minutes, and the next push queues behind it.
+  # eight runners for minutes, and the next push queues behind it.
   # tests/corpus/ Markdown is absent on purpose: the fast layer reads it. A
   # new top-level folder joins the list only if no test reads it. The list is
   # written twice: GitHub Actions does not resolve YAML anchors.
@@ -36,25 +36,19 @@ concurrency:
 
 jobs:
   fast:
-    # Python versions fan out on fast Linux jobs, from the floor to the
-    # ceiling in pyproject.toml. One Windows job, the slowest of the set, runs
-    # the tests for the OS-specific behavior (the lock, the temp root, paths).
-    # The linters and the coverage report run once.
+    # Every OS runs every Python version, from the floor to the ceiling in
+    # pyproject.toml, because OS-specific behavior (the lock, the temp root,
+    # paths, the standard library) differs per version. The linters and the
+    # coverage report run once, on Linux with Python 3.12.
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-24.04, windows-2025]
+        python: ["3.11", "3.12", "3.13", "3.14"]
         include:
-          - os: ubuntu-24.04
-            python: "3.11"
           - os: ubuntu-24.04
             python: "3.12"
             lint: true
-          - os: ubuntu-24.04
-            python: "3.13"
-          - os: ubuntu-24.04
-            python: "3.14"
-          - os: windows-2025
-            python: "3.12"
     runs-on: ${{ matrix.os }}
     # id-token lets the Codecov upload authenticate through OIDC instead of a
     # repository secret. Permissions are per job, not per matrix entry, so the
