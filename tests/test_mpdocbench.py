@@ -10,6 +10,7 @@ import sys
 import zipfile
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pypdfium2
@@ -329,18 +330,18 @@ def _built_run(tmp_path: Path, **record: Any) -> RunDir:
     return run
 
 
-def _fake_run(returncode: int) -> Any:
+def _fake_subprocess(returncode: int) -> SimpleNamespace:
     def run(command: list[str], **_: Any) -> subprocess.CompletedProcess[str]:
         return subprocess.CompletedProcess(command, returncode)
 
-    return run
+    return SimpleNamespace(run=run)
 
 
 def test_convert_adds_a_session_to_the_record(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     run = _built_run(tmp_path)
-    monkeypatch.setattr("subprocess.run", _fake_run(1))
+    monkeypatch.setattr(convert, "subprocess", _fake_subprocess(1))
     monkeypatch.setattr(convert, "gpu_name", lambda: "Test GPU")
     record = convert.convert(run, None)
     assert record["command"] == "raw2md <pdf> -d -s -e raw2md-engine"
@@ -354,7 +355,7 @@ def test_convert_stops_on_an_exit_code_that_converted_nothing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     run = _built_run(tmp_path)
-    monkeypatch.setattr("subprocess.run", _fake_run(3))
+    monkeypatch.setattr(convert, "subprocess", _fake_subprocess(3))
     with pytest.raises(BenchmarkError, match="missing dependency"):
         convert.convert(run, None)
 
