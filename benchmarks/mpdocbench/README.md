@@ -15,7 +15,7 @@
 ## Run
 
 ```bash
-git clone --depth 1 --branch v0.1.0 https://github.com/MikeDolg/raw2md
+git clone --depth 1 --branch v0.2.0 https://github.com/MikeDolg/raw2md
 bash raw2md/benchmarks/mpdocbench/run.sh [options]
 ```
 
