@@ -8,6 +8,7 @@ of the version carries the same text.
 ### Security
 
 - Require fixed certifi and keep dev lock files out of the sdist ([#20](https://github.com/MikeDolg/raw2md/pull/20))
+- Require Pillow 13.0.0 ([#22](https://github.com/MikeDolg/raw2md/pull/22))
 
 Full changelog: <https://github.com/MikeDolg/raw2md/compare/v0.2.0...v0.2.1>
 
