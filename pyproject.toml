@@ -130,6 +130,16 @@ torch = [
     { index = "pytorch-cu130", marker = "(sys_platform == 'linux' and platform_machine == 'x86_64') or (sys_platform == 'win32' and platform_machine == 'AMD64')" },
 ]
 
+[tool.hatch.build.targets.sdist]
+# Dev lock files and lint config stay out: scanners read them as the
+# dependencies of the package.
+exclude = [
+    "/uv.lock",
+    "/package.json",
+    "/package-lock.json",
+    "/.markdownlint-cli2.jsonc",
+]
+
 [tool.hatch.build.targets.wheel]
 # Two top-level packages: the tool and the engine copy.
 packages = ["src/raw2md", "src/raw2md_engine"]

@@ -58,6 +58,13 @@ jobs:
       - run: uv build --no-sources
       - run: uvx twine check --strict dist/*
 
+      - name: Check the sdist holds no dev lock files
+        run: |
+          if tar -tzf dist/*.tar.gz | grep -E '/(uv\.lock|package\.json|package-lock\.json|\.markdownlint-cli2\.jsonc)$'; then
+            echo "sdist holds dev lock or lint files" >&2
+            exit 1
+          fi
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: dist
