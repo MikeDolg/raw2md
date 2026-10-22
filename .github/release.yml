@@ -1,7 +1,10 @@
-# Categories of the generated release notes, one for each issue form label.
-# The catch-all keeps a pull request without a form label in the notes.
+# Categories of the generated release notes: one for each issue form label,
+# and one for security fixes, which have no issue form.
+# The catch-all keeps a pull request without a known label in the notes.
 changelog:
   categories:
+    - title: Security
+      labels: [security]
     - title: Bug fixes
       labels: [bug]
     - title: Conversion quality
