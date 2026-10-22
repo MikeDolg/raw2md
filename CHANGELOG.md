@@ -3,6 +3,14 @@
 Each section holds the notes of one release, newest first. The GitHub release
 of the version carries the same text.
 
+## v0.2.1 - 2026-10-22
+
+### Security
+
+- Require fixed certifi and keep dev lock files out of the sdist ([#20](https://github.com/MikeDolg/raw2md/pull/20))
+
+Full changelog: <https://github.com/MikeDolg/raw2md/compare/v0.2.0...v0.2.1>
+
 ## v0.2.0 - 2026-10-20
 
 ### Bug fixes
