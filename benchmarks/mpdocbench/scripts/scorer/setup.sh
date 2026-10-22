@@ -19,6 +19,7 @@ FONT_RELEASE_TAG="2.005R"
 FONT_ASSET="09_SourceHanSansSC.zip"
 MAGICK_RELEASE_TAG="7.1.2-31"
 MAGICK_ASSET="ImageMagick-${MAGICK_RELEASE_TAG}-gcc-x86_64.AppImage"  # archive/binaries/ 404s; a pinned release asset does not
+SCORER_PYTHON="3.14"                    # the pins of requirements.txt are verified against it
 WORKDIR="${2:-$HOME/mpdocbench-scorer}"  # holds the venv of the scorer
 
 # A container runs as root and often carries no sudo, while a workstation is
@@ -32,11 +33,10 @@ else
     exit 1
 fi
 
-# The pins of requirements.txt are verified against this interpreter,
-# and the apt package below exists for it on Ubuntu 22.04 alone. Say so here
-# rather than through an apt error halfway through the install.
-if ! command -v python3.10 >/dev/null; then
-    echo "python3.10 is not on this image; the scorer pins are read for 3.10" >&2
+# apt on Ubuntu 22.04 has no Python new enough for the pins, so uv installs
+# the interpreter. Say so here rather than halfway through the install.
+if ! command -v uv >/dev/null; then
+    echo "uv is not on PATH; it installs Python $SCORER_PYTHON for the scorer" >&2
     exit 1
 fi
 
@@ -56,7 +56,7 @@ $SUDO apt-get update
 # fails and CDM answers zero for each formula.
 $SUDO env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     texlive-xetex texlive-latex-recommended texlive-fonts-recommended \
-    texlive-lang-chinese fontconfig curl unzip python3.10-venv \
+    texlive-lang-chinese fontconfig curl unzip \
     libfribidi0 nodejs ghostscript
 
 # The portable AppImage, not the from-source build the CDM README asks for:
@@ -106,9 +106,59 @@ fc-cache -f ~/.fonts
 fc-list | grep -i "Source Han Sans SC" || echo "WARNING: font family not registered under the expected name"
 
 mkdir -p "$WORKDIR"
-python3.10 -m venv "$WORKDIR/.venv-scorer"
-"$WORKDIR/.venv-scorer/bin/pip" install --upgrade pip
-"$WORKDIR/.venv-scorer/bin/pip" install -r "$(dirname "$0")/requirements.txt"
+uv python install "$SCORER_PYTHON"
+uv venv --clear --managed-python --python "$SCORER_PYTHON" "$WORKDIR/.venv-scorer"
+uv pip install --python "$WORKDIR/.venv-scorer/bin/python" \
+    -r "$(dirname "$0")/requirements.txt"
+
+# The harness is written for scikit-image 0.20, and the current release breaks
+# it in two ways. ransac() no longer takes random_state; rng seeds the same
+# generator. ransac() now builds a model through a from_estimate class method,
+# and a model whose estimate() returns None counts as failed, so CDM would
+# match no boxes and score a formula near zero without an error. The added
+# from_estimate keeps every estimate a success, as 0.20 read None. mmeval goes
+# from the module level into the detection task, the one place that uses it.
+# Each patch applies to the pinned file, which checkout restores first, so a
+# second run patches again instead of failing on its own edit.
+HARNESS_PATCHED=(
+    metrics/cdm_metric.py
+    metrics/cdm/modules/visual_matcher.py
+    dataset/detection_dataset.py
+)
+git -C "$CLONE/MPDocBench" checkout -- "${HARNESS_PATCHED[@]}"
+"$WORKDIR/.venv-scorer/bin/python" - "$CLONE/MPDocBench" <<'PY'
+import pathlib
+import sys
+
+harness = pathlib.Path(sys.argv[1])
+patches = [
+    ("metrics/cdm_metric.py", "random_state=42", "rng=42"),
+    (
+        "metrics/cdm/modules/visual_matcher.py",
+        "    def estimate(self, src, dst):\n",
+        "    @classmethod\n"
+        "    def from_estimate(cls, src, dst):\n"
+        "        model = cls()\n"
+        "        model.estimate(src, dst)\n"
+        "        return model\n"
+        "\n"
+        "    def estimate(self, src, dst):\n",
+    ),
+    ("dataset/detection_dataset.py", "from mmeval import COCODetection\n", ""),
+    (
+        "dataset/detection_dataset.py",
+        "        self.coco_det_metric = COCODetection(",
+        "        from mmeval import COCODetection\n"
+        "        self.coco_det_metric = COCODetection(",
+    ),
+]
+for name, old, new in patches:
+    path = harness / name
+    text = path.read_text(encoding="utf-8")
+    if text.count(old) != 1:
+        sys.exit(f"{name}: want one {old.strip()!r}, found {text.count(old)}")
+    path.write_text(text.replace(old, new), encoding="utf-8")
+PY
 
 # Named rather than left to the self-check below: `node` changes the score of
 # a changed pair without breaking it, so its absence hides inside a plausible
