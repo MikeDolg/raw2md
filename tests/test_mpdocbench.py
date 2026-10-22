@@ -494,6 +494,82 @@ def test_score_counts_only_the_documents_a_trial_run_chose(tmp_path: Path) -> No
     assert documents["chosen"] == ["done"]
 
 
+def _whole_set_run(tmp_path: Path) -> tuple[Pins, DataDir, RunDir]:
+    pins, data, run = _scorable(tmp_path)
+    _annotation(
+        data.annotation(pins),
+        [
+            _entry("done", [1, 2]),
+            _entry("failed", [1]),
+            _entry("gone", [1]),
+            _entry("other", [1], "chinese"),
+        ],
+    )
+    record = yaml.safe_load(run.record.read_text(encoding="utf-8"))
+    dump_yaml(run.record, {**record, "language": "all"})
+    return pins, data, run
+
+
+def test_score_narrows_a_whole_set_run_to_a_language(tmp_path: Path) -> None:
+    pins, data, run = _whole_set_run(tmp_path)
+    result = scoring.score(pins, data, run, Path(sys.executable), language="english")
+    assert result["language"] == "english"
+    assert result["documents"]["annotated"] == 3
+    assert result["documents"]["comparable_with_leaderboard"] is False
+    assert any("whole set" in note for note in result["notes"])
+    saved = yaml.safe_load(run.results_for("english").read_text(encoding="utf-8"))
+    assert saved == result
+    assert not run.results.exists()
+    config = yaml.safe_load(
+        (run.scoring / "english" / "result" / "config.yaml").read_text(encoding="utf-8")
+    )
+    assert config["end2end_eval"]["dataset"]["filter"] == {"language": "english"}
+    assert (run.scoring / "english" / "result" / "run-english-result").is_dir()
+
+
+def test_score_keeps_the_whole_set_apart_from_its_subset(tmp_path: Path) -> None:
+    pins, data, run = _whole_set_run(tmp_path)
+    scoring.score(pins, data, run, Path(sys.executable), language="english")
+    whole = scoring.score(pins, data, run, Path(sys.executable))
+    assert whole["language"] == "all"
+    assert whole["documents"]["annotated"] == 4
+    assert run.results.is_file()
+    assert run.results_for("english").is_file()
+
+
+def test_score_refuses_to_narrow_what_is_not_the_whole_set(tmp_path: Path) -> None:
+    pins, data, run = _scorable(tmp_path)
+    with pytest.raises(BenchmarkError, match="only a run of the whole set"):
+        scoring.score(pins, data, run, Path(sys.executable), language="all")
+    pins, data, run = _whole_set_run(tmp_path / "trial")
+    record = yaml.safe_load(run.record.read_text(encoding="utf-8"))
+    dump_yaml(run.record, {**record, "documents": ["done"]})
+    with pytest.raises(BenchmarkError, match="chosen documents"):
+        scoring.score(pins, data, run, Path(sys.executable), language="english")
+
+
+def test_cli_score_names_the_subset_result(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    pins, data, run = _whole_set_run(tmp_path)
+    monkeypatch.setattr(cli, "load_pins", lambda: pins)
+    arguments = ["--data", str(data.root), "--run", str(run.root)]
+    code = cli.main(
+        [
+            "score",
+            *arguments,
+            "--scorer-python",
+            sys.executable,
+            "--language",
+            "english",
+        ]
+    )
+    assert code == 0
+    assert f"result written to {run.results_for('english')}" in capsys.readouterr().out
+
+
 def test_select_documents_refuses_a_name_outside_the_set() -> None:
     documents = [Document("a", (), "english"), Document("b", (), "english")]
     assert select_documents(documents, None) == documents

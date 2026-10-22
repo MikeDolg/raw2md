@@ -341,15 +341,33 @@ def score(
     run: RunDir,
     scorer_python: Path,
     skip_metrics: Sequence[str] = (),
+    language: str | None = None,
 ) -> dict[str, Any]:
-    """Score both stages of a run and write `results.yaml`. Return it."""
+    """Score both stages of a run and write `results.yaml`. Return it.
+
+    A run of the whole set also scores one language subset: the documents of
+    that language were converted already, so the subset needs no conversion.
+    Its result goes to `results-<language>.yaml`, and its scorer folders stay
+    apart from those of the whole set.
+    """
     if not data.record.is_file():
         raise BenchmarkError(f"{data.root} holds no fetch.yaml; run fetch first")
     if not run.record.is_file() or not load_yaml(run.record).get("sessions"):
         raise BenchmarkError(f"{run.root} holds no conversion; run convert first")
     fetched = load_yaml(data.record)
     run_record = load_yaml(run.record)
-    language = str(run_record["language"])
+    converted = str(run_record["language"])
+    language = language or converted
+    narrowed = language != converted
+    if narrowed and (converted != "all" or run_record.get("documents")):
+        raise BenchmarkError(
+            f"{run.root} converted {converted!r}"
+            f"{' for chosen documents' if run_record.get('documents') else ''};"
+            f" only a run of the whole set narrows to {language!r}"
+        )
+    run_record = {**run_record, "language": language}
+    prefix = f"{run.root.name}-{language}" if narrowed else run.root.name
+    scoring_root = run.scoring / language if narrowed else run.scoring
     harness = data.harness(pins).resolve()
     annotation = data.annotation(pins).resolve()
 
@@ -375,11 +393,11 @@ def score(
     scores: dict[str, dict[str, Any]] = {}
     fallbacks: dict[str, int] = {}
     for stage in STAGES:
-        stage_dir = run.scoring.resolve() / stage
+        stage_dir = scoring_root.resolve() / stage
         # The scorer names its output folder after the prediction folder, so
         # the name carries the run: two runs scored from one clone would
         # otherwise overwrite each other's output.
-        predictions = stage_dir / f"{run.root.name}-{stage}"
+        predictions = stage_dir / f"{prefix}-{stage}"
         layout_predictions(run.outputs, predictions, census.scored, stage)
         print(f"{stage}: scoring {len(census.scored)} documents", flush=True)
         config = stage_dir / _CONFIG
@@ -411,5 +429,10 @@ def score(
         scoring_minutes=(time.monotonic() - started) / 60,
         missing_reason=fetched.get("missing_reason"),
     )
-    dump_yaml(run.results, result)
+    if narrowed:
+        result["notes"].append(
+            f"Scored from a conversion of the whole set: conversion_minutes"
+            f" covers every document, not only the {language} ones."
+        )
+    dump_yaml(run.results_for(language) if narrowed else run.results, result)
     return result

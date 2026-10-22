@@ -180,6 +180,10 @@ class RunDir:
     def results(self) -> Path:
         return self.root / "results.yaml"
 
+    def results_for(self, language: str) -> Path:
+        """The result of the language subset of a whole-set run."""
+        return self.root / f"results-{language}.yaml"
+
 
 def load_yaml(path: Path) -> dict[str, Any]:
     try:

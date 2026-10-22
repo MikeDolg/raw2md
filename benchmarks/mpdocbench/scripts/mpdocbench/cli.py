@@ -62,9 +62,16 @@ def _convert(args: argparse.Namespace, _pins: Pins) -> None:
 def _score(args: argparse.Namespace, pins: Pins) -> None:
     run = RunDir(args.run)
     result = scoring.score(
-        pins, DataDir(args.data), run, args.scorer_python, args.skip_metric
+        pins,
+        DataDir(args.data),
+        run,
+        args.scorer_python,
+        args.skip_metric,
+        args.language,
     )
-    print(f"result written to {run.results}\n")
+    narrowed = result["language"] != load_yaml(run.record)["language"]
+    written = run.results_for(result["language"]) if narrowed else run.results
+    print(f"result written to {written}\n")
     print(report.render([result], pins))
 
 
@@ -149,9 +156,15 @@ def _parser() -> argparse.ArgumentParser:
     )
     add_language(add("build", "assemble one PDF per document", data=True, run=True))
     add_llm(add("convert", "convert the PDFs with raw2md", data=False, run=True))
-    add_scorer(
-        add("score", "score the run and write results.yaml", data=True, run=True)
+    scored = add("score", "score the run and write results.yaml", data=True, run=True)
+    scored.add_argument(
+        "--language",
+        choices=LANGUAGES,
+        help="score this language subset of a run of the whole set;"
+        " the result goes to results-<language>.yaml"
+        " (default: the language of the run)",
     )
+    add_scorer(scored)
     every = add("all", "fetch, build, convert, and score", data=True, run=True)
     add_language(every)
     add_llm(every)
