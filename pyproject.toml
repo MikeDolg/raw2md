@@ -69,6 +69,10 @@ dependencies = [
     # raw2md.katex catches its abort by type. Unpinned: the quickjs-rs pin
     # decides which build installs.
     "wasmtime",
+    # Reaches the TLS stack through httpx. 2026.10.19 is the first release
+    # outside the published advisory on a compromised root in the bundle. No
+    # upper bound: releases are calendar-dated.
+    "certifi>=2026.10.19",
     # The imports of the engine copy in src/raw2md_engine. A package that its
     # upstream declares keeps that range; one it imports without a declaration
     # takes the range of the package that installs it.
