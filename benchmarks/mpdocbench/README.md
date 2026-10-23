@@ -5,8 +5,8 @@
 - Ubuntu 22.04.
 - raw2md installed.
 - An NVIDIA GPU with CUDA with 24 GB of VRAM or more.
-- `uv`, `git`, `python3.10`, and root or `sudo`: the scorer setup installs
-  TeX Live, ImageMagick, Ghostscript, and Node.js.
+- `uv`, `git`, and root or `sudo`: the scorer setup installs TeX Live,
+  ImageMagick, Ghostscript, Node.js, and, through `uv`, Python 3.14.
 - About 4 GB of free disk space.
 - For 11 documents from SlideVQA: accept its terms on the
   [Hub page](https://huggingface.co/datasets/NTT-hil-insight/SlideVQA) and log
@@ -15,7 +15,7 @@
 ## Run
 
 ```bash
-git clone --depth 1 --branch v0.2.0 https://github.com/MikeDolg/raw2md
+git clone --depth 1 --branch v0.2.2 https://github.com/MikeDolg/raw2md
 bash raw2md/benchmarks/mpdocbench/run.sh [options]
 ```
 

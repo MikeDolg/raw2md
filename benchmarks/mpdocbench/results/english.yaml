@@ -1,9 +1,9 @@
 benchmark: MPDocBench-Parse
-raw2md: 0.1.1
+raw2md: 0.2.1
 command: raw2md <pdf> -d -s -e raw2md-engine
 llm: null
 language: english
-scored_at: '2026-10-20'
+scored_at: '2026-10-23'
 pins:
   upstream_commit: 4e5aee32280febb7b0844237ba087f837e3c8905
   dataset_sha256: 212d3af3ecea9a095ba61234f58a8c3e99a2ab3bdda6757d71121c6eaedf254d
@@ -14,8 +14,8 @@ machine:
   scoring_cpus: 96
   scoring_platform: Ubuntu 22.04.5 LTS
 time:
-  conversion_minutes: 214.6
-  scoring_minutes: 42.3
+  conversion_minutes: 362.6
+  scoring_minutes: 34.8
 documents:
   annotated: 193
   missing: 0
@@ -66,3 +66,5 @@ notes:
   and raw2md writes a table as Markdown.'
 - The engine text match fell back to the simple algorithm on 2 documents.
 - The result text match fell back to the simple algorithm on 2 documents.
+- 'Scored from a conversion of the whole set: conversion_minutes covers every document, not only the english
+  ones.'

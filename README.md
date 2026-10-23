@@ -13,7 +13,7 @@
 
 **raw2md** is an open-source Python command-line tool that converts PDF, DjVu, and DOCX documents into clean Markdown for retrieval-augmented generation (RAG) and other large language model (LLM) pipelines. It runs the conversion with its built-in engine `raw2md-engine`, with `pandoc`, or with Gemini, then repairs the defects that these engines leave in headings, tables, formulas, lists, and text. Markdown from another converter goes through the same cleaning.
 
-The cleaning uses deterministic rules and no LLM, so the same input always gives the same cleaned text. On the MPDocBench-Parse benchmark, the cleaning alone raises the aggregate score of the `marker` output by 3.1%.
+The cleaning uses deterministic rules and no LLM, so the same input always gives the same cleaned text. On the MPDocBench-Parse benchmark, the cleaning alone raises the aggregate score of the `raw2md-engine` output by 3.1%.
 
 Two optional LLM stages repair what the rules leave: inspection corrects recognition errors against the source pages, and post-processing repairs damaged markup.
 
@@ -42,12 +42,12 @@ raw2md is built for large, mixed collections of long documents:
 
 ## What's the impact?
 
-On the full [MPDocBench-Parse](https://arxiv.org/abs/2605.22100) set, the deterministic cleaning alone, with no LLM stage involved, lifts the seven-metric aggregate score of the underlying `marker` output from 67.14 to 69.22. That is a gain of 2.08 points, or 3.1% relative. The score follows the leaderboard formula, a normalized mean of the task scores, but without Figure F1: raw2md cannot be scored on that task. Therefore, the score is not comparable with the Overall column of the leaderboard.
+On the full [MPDocBench-Parse](https://arxiv.org/abs/2605.22100) set, the deterministic cleaning alone, with no LLM stage involved, lifts the seven-metric aggregate score of the underlying `raw2md-engine` output from 67.18 to 69.25. That is a gain of about 2.1 points, or 3.1% relative. The score follows the leaderboard formula, a normalized mean of the task scores, but without Figure F1: raw2md cannot be scored on that task. Therefore, the score is not comparable with the Overall column of the leaderboard.
 
 Most of the improvement lands in the document structure:
 
 - table TEDS: 0.652 → 0.698 (+7%)
-- merged-table TEDS: 0.488 → 0.553 (+13%)
+- merged-table TEDS: 0.489 → 0.553 (+13%)
 - heading TEDS: 0.371 → 0.408 (+10%)
 
 Plain text, on the other hand, loses a little: the text edit distance grows from 0.122 to 0.130. You can find every metric in the [benchmark results](https://github.com/MikeDolg/raw2md/blob/main/benchmarks/README.md).
