@@ -45,8 +45,9 @@ classifiers = [
     "Topic :: Utilities",
 ]
 # quickjs-rs sets the floor at 3.11, one step above the engine copy's own
-# 3.10. torch sets the ceiling: 2.14 is the first release with 3.15 wheels,
-# and it changes the engine output. Lift the ceiling with the torch cap below.
+# 3.10. uv ignores this ceiling, so the torch cap below holds it: 2.14 is the
+# first release with 3.15 wheels, and it changes the engine output. Lift both
+# together.
 requires-python = ">=3.11,<3.15"
 # Upper bounds guard `uv tool install`, which never reads uv.lock and could
 # pick an incompatible future release. tzdata and wasmtime carry none; the

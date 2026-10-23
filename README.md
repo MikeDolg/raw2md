@@ -92,7 +92,7 @@ raw2md needs Python 3.11 to 3.14. For `raw2md-engine`, you need an NVIDIA GPU of
 Install the tool with [uv](https://docs.astral.sh/uv/getting-started/installation/):
 
 ```bash
-uv tool install raw2md --torch-backend cu130
+uv tool install --python ">=3.11,<3.15" raw2md --torch-backend cu130
 ```
 
 Or with `pip`:
@@ -104,8 +104,10 @@ pip install raw2md --extra-index-url https://download.pytorch.org/whl/cu130
 Or straight from GitHub:
 
 ```bash
-uv tool install git+https://github.com/MikeDolg/raw2md.git
+uv tool install --python ">=3.11,<3.15" git+https://github.com/MikeDolg/raw2md.git
 ```
+
+Do not skip `--python` in the `uv` commands. Without it, `uv` takes the default Python. If that Python is newer than 3.14, the install fails or picks an old raw2md release, because `uv` ignores the upper bound of `requires-python`.
 
 On Windows, do not skip `--torch-backend cu130` or `--extra-index-url`: without them, you get a `torch` build with no CUDA support, and `raw2md-engine` can then run on the CPU only.
 
