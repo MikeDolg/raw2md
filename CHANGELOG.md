@@ -3,6 +3,18 @@
 Each section holds the notes of one release, newest first. The GitHub release
 of the version carries the same text.
 
+## v0.2.2 - 2026-10-23
+
+### Bug fixes
+
+- Pin the Python range in the `uv tool install` commands, so that a default Python newer than 3.14 no longer picks an old release
+
+### Maintenance
+
+- Move the MPDocBench scorer to Python 3.14 and current pins ([#24](https://github.com/MikeDolg/raw2md/pull/24))
+
+Full changelog: <https://github.com/MikeDolg/raw2md/compare/v0.2.1...v0.2.2>
+
 ## v0.2.1 - 2026-10-22
 
 ### Security
