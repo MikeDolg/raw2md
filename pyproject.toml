@@ -50,8 +50,8 @@ classifiers = [
 # together.
 requires-python = ">=3.11,<3.15"
 # Upper bounds guard `uv tool install`, which never reads uv.lock and could
-# pick an incompatible future release. tzdata and wasmtime carry none; the
-# reasons are next to them.
+# pick an incompatible future release. tzdata, wasmtime, certifi, and regex
+# carry none; the reasons are next to them.
 dependencies = [
     "pyyaml>=6.0,<7",
     "img2pdf>=0.5,<0.7",

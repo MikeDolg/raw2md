@@ -2440,11 +2440,11 @@ def resolve_unclosed_environment_spans(
 
     A truncated argument with no head before it is a bare preamble, and the span
     is dropped. A head with a letter or digit stays and the environment goes;
-    such lines are returned for a `broken-formula` anchor. Anything else, such
+    such lines are returned for a `broken-formula` finding. Anything else, such
     as a `\begin{pmatrix}` whose rows were cut, is left for the detector.
     """
     out: list[Segment] = []
-    needs_anchor: set[int] = set()
+    kept_heads: set[int] = set()
     for idx, (line, protected) in enumerate(seg_list):
         if protected or "$" not in line:
             out.append((line, protected))
@@ -2452,8 +2452,8 @@ def resolve_unclosed_environment_spans(
         fixed, kept_head = _resolve_unclosed_environment_line(line)
         out.append((fixed, False))
         if kept_head:
-            needs_anchor.add(idx)
-    return out, needs_anchor
+            kept_heads.add(idx)
+    return out, kept_heads
 
 
 def _resolve_unclosed_environment_line(line: str) -> tuple[str, bool]:
