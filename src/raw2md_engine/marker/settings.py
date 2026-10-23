@@ -1,4 +1,3 @@
-import torch
 import os
 
 
@@ -19,6 +18,10 @@ class Settings:
 
     @property
     def TORCH_DEVICE_MODEL(self) -> str:
+        # The rendering and the text processors import this module, and they
+        # run without torch.
+        import torch
+
         if torch.cuda.is_available():
             return "cuda"
 

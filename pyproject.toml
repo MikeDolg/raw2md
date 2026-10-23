@@ -154,7 +154,8 @@ dev = ["ruff", "mypy", "pytest", "pytest-cov", "types-pyyaml", "pikepdf", "fpdf2
 [tool.ruff]
 target-version = "py311"
 line-length = 88
-# The engine copy is third-party code kept close to its upstream.
+# The engine copy is raw2md code, edited in place with minimal diffs. Ruff
+# takes it on one subpackage at a time.
 extend-exclude = ["src/raw2md_engine"]
 
 [tool.ruff.lint]
@@ -232,7 +233,7 @@ warn_unused_ignores = true
 # syntax are not parsed under the 3.11 target.
 follow_imports_for_stubs = true
 files = ["src", "tests", "benchmarks"]
-# The engine copy is third-party code kept close to its upstream.
+# The engine copy is mostly unannotated, so strict mode does not check it.
 exclude = ["^src/raw2md_engine/"]
 # The benchmark runner is not installed; the package is read from src/,
 # ahead of its editable install, which carries no py.typed.
