@@ -1,11 +1,9 @@
-from typing import Optional
-
 import torch
 from transformers.utils import is_flash_attn_2_available
 
 from raw2md_engine.surya.common.load import ModelLoader, restore_buffers
-from raw2md_engine.surya.common.surya.config import SuryaModelConfig
 from raw2md_engine.surya.common.surya import SuryaModel, SuryaXLAModel
+from raw2md_engine.surya.common.surya.config import SuryaModelConfig
 from raw2md_engine.surya.common.surya.processor import SuryaOCRProcessor
 from raw2md_engine.surya.common.surya.processor.tokenizer import SuryaOCRTokenizer
 from raw2md_engine.surya.common.util import is_flash_attn_2_supported
@@ -17,7 +15,7 @@ logger = get_logger()
 
 
 class FoundationModelLoader(ModelLoader):
-    def __init__(self, checkpoint: Optional[str] = None):
+    def __init__(self, checkpoint: str | None = None):
         super().__init__(checkpoint)
 
         if self.checkpoint is None:
@@ -27,7 +25,7 @@ class FoundationModelLoader(ModelLoader):
         self,
         device=settings.TORCH_DEVICE_MODEL,
         dtype=None,
-        attention_implementation: Optional[str] = None,
+        attention_implementation: str | None = None,
     ) -> SuryaModel:
         if device is None:
             device = settings.TORCH_DEVICE_MODEL
@@ -68,7 +66,10 @@ class FoundationModelLoader(ModelLoader):
 
         model = restore_buffers(
             model_cls.from_pretrained(
-                self.checkpoint, dtype=dtype, config=config, ignore_mismatched_sizes=True
+                self.checkpoint,
+                dtype=dtype,
+                config=config,
+                ignore_mismatched_sizes=True,
             )
         ).to(device)
         model = model.eval()

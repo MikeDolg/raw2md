@@ -1,20 +1,19 @@
 from dataclasses import dataclass
-from typing import Optional, Union, Tuple, Dict
 
 import torch
-from transformers import PreTrainedModel, VisionEncoderDecoderConfig, PretrainedConfig
+from transformers import PretrainedConfig, PreTrainedModel, VisionEncoderDecoderConfig
+from transformers.utils import ModelOutput
 
 from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
 from raw2md_engine.surya.common.s3 import S3DownloaderMixin
 from raw2md_engine.surya.table_rec.model.decoder import SuryaTableRecDecoder
 from raw2md_engine.surya.table_rec.model.encoder import DonutSwinModel
-from transformers.utils import ModelOutput
 
 
 @dataclass
 class TableRecOutput(ModelOutput):
-    box_property_logits: Dict[str, torch.FloatTensor]
-    decoder_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    box_property_logits: dict[str, torch.FloatTensor]
+    decoder_hidden_states: tuple[torch.FloatTensor] | None = None
 
 
 class TableRecEncoderDecoderModel(S3DownloaderMixin, SuryaPreTrainedModel):
@@ -26,9 +25,9 @@ class TableRecEncoderDecoderModel(S3DownloaderMixin, SuryaPreTrainedModel):
 
     def __init__(
         self,
-        config: Optional[PretrainedConfig] = None,
-        encoder: Optional[PreTrainedModel] = None,
-        decoder: Optional[PreTrainedModel] = None,
+        config: PretrainedConfig | None = None,
+        encoder: PreTrainedModel | None = None,
+        decoder: PreTrainedModel | None = None,
         **kwargs,
     ):
         # initialize with config
@@ -70,13 +69,13 @@ class TableRecEncoderDecoderModel(S3DownloaderMixin, SuryaPreTrainedModel):
     def forward(
         self,
         decoder_input_ids: torch.LongTensor = None,
-        decoder_cache_position: Optional[torch.LongTensor] = None,
-        decoder_attention_mask: Optional[torch.LongTensor] = None,
-        encoder_outputs: Optional[Tuple[torch.FloatTensor]] = None,
-        use_cache: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        decoder_cache_position: torch.LongTensor | None = None,
+        decoder_attention_mask: torch.LongTensor | None = None,
+        encoder_outputs: tuple[torch.FloatTensor] | None = None,
+        use_cache: bool | None = None,
+        return_dict: bool | None = None,
         **kwargs,
-    ) -> Union[Tuple[torch.FloatTensor], TableRecOutput]:
+    ) -> tuple[torch.FloatTensor] | TableRecOutput:
         kwargs_decoder = {
             argument[len("decoder_") :]: value
             for argument, value in kwargs.items()

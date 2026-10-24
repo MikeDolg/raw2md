@@ -1,9 +1,8 @@
-from typing import Optional
 from transformers import PretrainedConfig
 
 from raw2md_engine.surya.common.s3 import S3DownloaderMixin
-from raw2md_engine.surya.common.surya.encoder.config import SuryaEncoderConfig
 from raw2md_engine.surya.common.surya.decoder.config import SuryaDecoderConfig
+from raw2md_engine.surya.common.surya.encoder.config import SuryaEncoderConfig
 
 
 class SuryaModelConfig(S3DownloaderMixin, PretrainedConfig):
@@ -34,7 +33,7 @@ class SuryaModelConfig(S3DownloaderMixin, PretrainedConfig):
         image_embed_encoding_multiplier: int = 256,
         num_beacon_tokens: int = 1,
         beacon_token_interval: int = 4096,
-        sliding_window: Optional[int] = None,
+        sliding_window: int | None = None,
         multi_output_distance: int = 4,
         max_multi_out: int = 8,
         **kwargs,

@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel
 
 from raw2md_engine.surya.common.polygon import PolygonBox
@@ -15,11 +13,11 @@ class TableCell(PolygonBox):
     merge_up: bool = False
     merge_down: bool = False
     col_id: int | None = None
-    text_lines: List[dict] | None = None
+    text_lines: list[dict] | None = None
 
     @property
     def label(self):
-        return f'Cell {self.cell_id} {self.rowspan}/{self.colspan}'
+        return f"Cell {self.cell_id} {self.rowspan}/{self.colspan}"
 
 
 class TableRow(PolygonBox):
@@ -28,7 +26,7 @@ class TableRow(PolygonBox):
 
     @property
     def label(self):
-        return f'Row {self.row_id}'
+        return f"Row {self.row_id}"
 
 
 class TableCol(PolygonBox):
@@ -37,12 +35,12 @@ class TableCol(PolygonBox):
 
     @property
     def label(self):
-        return f'Column {self.col_id}'
+        return f"Column {self.col_id}"
 
 
 class TableResult(BaseModel):
-    cells: List[TableCell]
-    unmerged_cells: List[TableCell]
-    rows: List[TableRow]
-    cols: List[TableCol]
-    image_bbox: List[float]
+    cells: list[TableCell]
+    unmerged_cells: list[TableCell]
+    rows: list[TableRow]
+    cols: list[TableCol]
+    image_bbox: list[float]

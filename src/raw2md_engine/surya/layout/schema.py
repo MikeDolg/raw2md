@@ -1,5 +1,3 @@
-from typing import Optional, Dict, List
-
 from pydantic import BaseModel
 
 from raw2md_engine.surya.common.polygon import PolygonBox
@@ -8,10 +6,10 @@ from raw2md_engine.surya.common.polygon import PolygonBox
 class LayoutBox(PolygonBox):
     label: str
     position: int
-    top_k: Optional[Dict[str, float]] = None
+    top_k: dict[str, float] | None = None
 
 
 class LayoutResult(BaseModel):
-    bboxes: List[LayoutBox]
-    image_bbox: List[float]
+    bboxes: list[LayoutBox]
+    image_bbox: list[float]
     sliced: bool = False  # Whether the image was sliced and reconstructed

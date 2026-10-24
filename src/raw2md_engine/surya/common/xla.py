@@ -1,4 +1,5 @@
 import math
+
 from raw2md_engine.surya.settings import settings
 
 if settings.TORCH_DEVICE_MODEL == "xla":

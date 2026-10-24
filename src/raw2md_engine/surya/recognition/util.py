@@ -1,11 +1,7 @@
 import re
-from typing import List, Tuple
-
-import numpy
-import torch
 
 from raw2md_engine.surya.common.polygon import PolygonBox
-from raw2md_engine.surya.recognition.schema import TextLine, TextWord, TextChar
+from raw2md_engine.surya.recognition.schema import TextChar, TextLine, TextWord
 
 MATH_SYMBOLS = ["+", "-", "*", "=", "^", "_", "\\", "{", "}"]
 
@@ -27,11 +23,27 @@ def unwrap_math(text: str) -> str:
     return text
 
 
-MATH_BLOCK = re.compile(r"(<math\b[^>]*>)(.*?)</math>", flags=re.I | re.S)
-STRIP_TAGS = re.compile(r"</?(?:br|u|del|mark|i|b|sup|sub)\b[^>]*>", flags=re.I | re.S)
-DEFAULT_TAGS_TO_FILTER = ["p", "li", "ul", "ol", "table", "td", "tr", "th", "tbody", "pre"]
+MATH_BLOCK = re.compile(r"(<math\b[^>]*>)(.*?)</math>", flags=re.IGNORECASE | re.DOTALL)
+STRIP_TAGS = re.compile(
+    r"</?(?:br|u|del|mark|i|b|sup|sub)\b[^>]*>", flags=re.IGNORECASE | re.DOTALL
+)
+DEFAULT_TAGS_TO_FILTER = [
+    "p",
+    "li",
+    "ul",
+    "ol",
+    "table",
+    "td",
+    "tr",
+    "th",
+    "tbody",
+    "pre",
+]
 
-def filter_blacklist_tags(text_chars: List[TextChar], tags_to_filter: List[str] = None) -> List[TextChar]:
+
+def filter_blacklist_tags(
+    text_chars: list[TextChar], tags_to_filter: list[str] = None
+) -> list[TextChar]:
     filtered_chars = []
     char_buffer = []
     in_tag = False
@@ -45,18 +57,18 @@ def filter_blacklist_tags(text_chars: List[TextChar], tags_to_filter: List[str] 
             in_tag = True
             char_buffer.append(text_char)
             if char.endswith(">"):
-                full_tag = ''.join(c.text for c in char_buffer)
+                full_tag = "".join(c.text for c in char_buffer)
                 inner = full_tag[1:-1].strip()  # remove < >
                 inner = inner.strip("/")  # remove '/'
-                
+
                 # Possible that it is just an empty <>
                 if not inner:
                     filtered_chars.extend(char_buffer)
                     in_tag = False
                     char_buffer = []
                     continue
-                
-                tag_name_candidate = inner.split()[0]   # remove any attributes
+
+                tag_name_candidate = inner.split()[0]  # remove any attributes
                 if tag_name_candidate in tags_to_filter:
                     # Discard tag
                     pass
@@ -87,7 +99,7 @@ def clean_math_tags(html: str) -> str:
     # drop only orphan *closing* </math> tags
     depth = 0
     parts = []
-    for token in re.split(r"(</?math[^>]*>)", cleaned, flags=re.I):
+    for token in re.split(r"(</?math[^>]*>)", cleaned, flags=re.IGNORECASE):
         if token.lower().startswith("<math"):
             depth += 1
             parts.append(token)
@@ -101,7 +113,7 @@ def clean_math_tags(html: str) -> str:
     return "".join(parts)
 
 
-def sort_text_lines(lines: List[TextLine] | List[dict], tolerance=1.25):
+def sort_text_lines(lines: list[TextLine] | list[dict], tolerance=1.25):
     # Sorts in reading order.  Not 100% accurate, this should only
     # be used as a starting point for more advanced sorting.
     vertical_groups = {}
@@ -129,7 +141,7 @@ def sort_text_lines(lines: List[TextLine] | List[dict], tolerance=1.25):
     return sorted_lines
 
 
-def clean_close_polygons(bboxes: List[List[List[int]]], thresh: float = 0.1):
+def clean_close_polygons(bboxes: list[list[list[int]]], thresh: float = 0.1):
     if len(bboxes) < 2:
         return bboxes
 
@@ -152,7 +164,7 @@ def clean_close_polygons(bboxes: List[List[List[int]]], thresh: float = 0.1):
     return new_bboxes
 
 
-def words_from_chars(chars: List[TextChar], line_box: PolygonBox):
+def words_from_chars(chars: list[TextChar], line_box: PolygonBox):
     words = []
     word = None
     for i, char in enumerate(chars):

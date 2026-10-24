@@ -1,22 +1,21 @@
+from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Generator, Tuple
+from typing import List, Tuple
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-
 from PIL import Image
 from tqdm import tqdm
 
 from raw2md_engine.surya.common.predictor import BasePredictor
 from raw2md_engine.surya.common.xla import mark_step
-
+from raw2md_engine.surya.detection.heatmap import parallel_get_boxes
 from raw2md_engine.surya.detection.loader import DetectionModelLoader
 from raw2md_engine.surya.detection.parallel import FakeExecutor
-from raw2md_engine.surya.detection.util import get_total_splits, split_image
 from raw2md_engine.surya.detection.schema import TextDetectionResult
+from raw2md_engine.surya.detection.util import get_total_splits, split_image
 from raw2md_engine.surya.settings import settings
-from raw2md_engine.surya.detection.heatmap import parallel_get_boxes
 
 
 class DetectionPredictor(BasePredictor):
@@ -25,8 +24,8 @@ class DetectionPredictor(BasePredictor):
     default_batch_sizes = {"cpu": 8, "mps": 8, "cuda": 36, "xla": 18}
 
     def __call__(
-        self, images: List[Image.Image], batch_size=None, include_maps=False
-    ) -> List[TextDetectionResult]:
+        self, images: list[Image.Image], batch_size=None, include_maps=False
+    ) -> list[TextDetectionResult]:
         detection_generator = self.batch_detection(
             images, batch_size=batch_size, static_cache=settings.DETECTOR_STATIC_CACHE
         )
@@ -62,8 +61,8 @@ class DetectionPredictor(BasePredictor):
         return img
 
     def batch_detection(
-        self, images: List, batch_size=None, static_cache=False
-    ) -> Generator[Tuple[List[List[np.ndarray]], List[Tuple[int, int]]], None, None]:
+        self, images: list, batch_size=None, static_cache=False
+    ) -> Generator[tuple[list[list[np.ndarray]], list[tuple[int, int]]], None, None]:
         assert all([isinstance(image, Image.Image) for image in images])
         if batch_size is None:
             batch_size = self.get_batch_size()

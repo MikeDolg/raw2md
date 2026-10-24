@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Any
 
 import torch
 
@@ -19,20 +19,20 @@ def restore_buffers(model: torch.nn.Module) -> torch.nn.Module:
 
 
 class ModelLoader:
-    def __init__(self, checkpoint: Optional[str] = None):
+    def __init__(self, checkpoint: str | None = None):
         self.checkpoint = checkpoint
 
     def model(
         self,
         device: torch.device | str | None = settings.TORCH_DEVICE_MODEL,
-        dtype: Optional[torch.dtype | str] = settings.MODEL_DTYPE,
-        attention_implementation: Optional[str] = None,
+        dtype: torch.dtype | str | None = settings.MODEL_DTYPE,
+        attention_implementation: str | None = None,
     ) -> Any:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def processor(
         self,
         device: torch.device | str | None = settings.TORCH_DEVICE_MODEL,
-        dtype: Optional[torch.dtype | str] = settings.MODEL_DTYPE,
+        dtype: torch.dtype | str | None = settings.MODEL_DTYPE,
     ) -> Any:
-        raise NotImplementedError()
+        raise NotImplementedError

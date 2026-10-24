@@ -1,9 +1,12 @@
-from typing import Optional, Union, Tuple
-
 import torch
-import torch.nn as nn
+from torch import nn
 
-from raw2md_engine.surya.common.donut.encoder import DonutSwinPreTrainedModel, DonutSwinModelOutput, DonutSwinEmbeddings, DonutSwinEncoder
+from raw2md_engine.surya.common.donut.encoder import (
+    DonutSwinEmbeddings,
+    DonutSwinEncoder,
+    DonutSwinModelOutput,
+    DonutSwinPreTrainedModel,
+)
 
 
 class DonutSwinModel(DonutSwinPreTrainedModel):
@@ -18,7 +21,9 @@ class DonutSwinModel(DonutSwinPreTrainedModel):
 
         self.position_embeddings = None
         if hasattr(config, "encoder_length"):
-            self.position_embeddings = nn.Parameter(torch.zeros(1, config.encoder_length, config.hidden_size))
+            self.position_embeddings = nn.Parameter(
+                torch.zeros(1, config.encoder_length, config.hidden_size)
+            )
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -28,23 +33,31 @@ class DonutSwinModel(DonutSwinPreTrainedModel):
 
     def forward(
         self,
-        pixel_values: Optional[torch.FloatTensor] = None,
-        bool_masked_pos: Optional[torch.BoolTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
+        pixel_values: torch.FloatTensor | None = None,
+        bool_masked_pos: torch.BoolTensor | None = None,
+        head_mask: torch.FloatTensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
         interpolate_pos_encoding: bool = False,
-        return_dict: Optional[bool] = None,
-    ) -> Union[Tuple, DonutSwinModelOutput]:
+        return_dict: bool | None = None,
+    ) -> tuple | DonutSwinModelOutput:
         r"""
         bool_masked_pos (`torch.BoolTensor` of shape `(batch_size, num_patches)`):
             Boolean masked positions. Indicates which patches are masked (1) and which aren't (0).
         """
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         if pixel_values is None:
             raise ValueError("You have to specify pixel_values")
@@ -57,7 +70,9 @@ class DonutSwinModel(DonutSwinPreTrainedModel):
         head_mask = self.get_head_mask(head_mask, len(self.config.depths))
 
         embedding_output, input_dimensions = self.embeddings(
-            pixel_values, bool_masked_pos=bool_masked_pos, interpolate_pos_encoding=interpolate_pos_encoding
+            pixel_values,
+            bool_masked_pos=bool_masked_pos,
+            interpolate_pos_encoding=interpolate_pos_encoding,
         )
 
         encoder_outputs = self.encoder(
@@ -72,7 +87,9 @@ class DonutSwinModel(DonutSwinPreTrainedModel):
         last_hidden_state = encoder_outputs[0]
 
         if self.position_embeddings is not None:
-            last_hidden_state += self.position_embeddings[:, :last_hidden_state.size(1), :]
+            last_hidden_state += self.position_embeddings[
+                :, : last_hidden_state.size(1), :
+            ]
 
         return DonutSwinModelOutput(
             last_hidden_state=last_hidden_state,

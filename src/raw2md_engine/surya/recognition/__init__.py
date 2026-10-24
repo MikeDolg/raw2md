@@ -5,37 +5,40 @@ from typing import List
 
 import numpy as np
 import torch
-from PIL import Image
 import torch.nn.functional as F
+from PIL import Image
 
 from raw2md_engine.surya.common.polygon import PolygonBox
-from raw2md_engine.surya.common.surya.processor import NOMATH_TOKEN
 from raw2md_engine.surya.common.predictor import BasePredictor
+from raw2md_engine.surya.common.surya.processor import NOMATH_TOKEN
+from raw2md_engine.surya.common.surya.schema import TaskNames
 from raw2md_engine.surya.detection import DetectionPredictor
 from raw2md_engine.surya.foundation import FoundationPredictor
-
+from raw2md_engine.surya.foundation.util import (
+    detect_repeat_token,
+    prediction_to_polygon_batch,
+)
 from raw2md_engine.surya.input.processing import (
     convert_if_not_rgb,
-    slice_polys_from_image,
     slice_bboxes_from_image,
+    slice_polys_from_image,
 )
+from raw2md_engine.surya.logging import configure_logging, get_logger
 from raw2md_engine.surya.recognition.postprocessing import fix_unbalanced_tags
+from raw2md_engine.surya.recognition.schema import OCRResult, TextChar, TextLine
 from raw2md_engine.surya.recognition.util import (
-    sort_text_lines,
     clean_close_polygons,
-    unwrap_math,
     clean_math_tags,
     filter_blacklist_tags,
-    words_from_chars
+    sort_text_lines,
+    unwrap_math,
+    words_from_chars,
 )
-from raw2md_engine.surya.foundation.util import detect_repeat_token, prediction_to_polygon_batch
-from raw2md_engine.surya.recognition.schema import TextLine, OCRResult, TextChar
-from raw2md_engine.surya.common.surya.schema import TaskNames
 from raw2md_engine.surya.settings import settings
-from raw2md_engine.surya.logging import get_logger, configure_logging
 
 configure_logging()
 logger = get_logger()
+
 
 class RecognitionPredictor(BasePredictor):
     batch_size = settings.RECOGNITION_BATCH_SIZE
@@ -61,11 +64,11 @@ class RecognitionPredictor(BasePredictor):
 
     def detect_and_slice_bboxes(
         self,
-        images: List[Image.Image],
-        task_names: List[str],
+        images: list[Image.Image],
+        task_names: list[str],
         det_predictor: DetectionPredictor,
         detection_batch_size: int | None = None,
-        highres_images: List[Image.Image] | None = None,
+        highres_images: list[Image.Image] | None = None,
     ):
         det_predictions = det_predictor(images, batch_size=detection_batch_size)
 
@@ -122,11 +125,11 @@ class RecognitionPredictor(BasePredictor):
 
     def slice_bboxes(
         self,
-        images: List[Image.Image],
-        task_names: List[str],
-        bboxes: List[List[List[int]]] | None = None,
-        polygons: List[List[List[List[int]]]] | None = None,
-        input_text: List[List[str | None]] | None = None,
+        images: list[Image.Image],
+        task_names: list[str],
+        bboxes: list[list[list[int]]] | None = None,
+        polygons: list[list[list[list[int]]]] | None = None,
+        input_text: list[list[str | None]] | None = None,
     ) -> dict:
         assert bboxes is not None or polygons is not None
         slice_map = []
@@ -241,9 +244,7 @@ class RecognitionPredictor(BasePredictor):
                 nonlocal detokenize_sequence, detokenize_sequences
 
                 if (
-                    special_token
-                    or past_special_token
-                    or force
+                    special_token or past_special_token or force
                 ) and detokenize_sequence:
                     chars = [dt[0] for dt in detokenize_sequence]
                     scores = [dt[1] for dt in detokenize_sequence]
@@ -268,15 +269,11 @@ class RecognitionPredictor(BasePredictor):
                 special_token = (
                     char_id >= self.processor.ocr_tokenizer.ocr_tokenizer.SPECIAL_BASE
                 )
-                _add_detokenize_sequence(
-                    special_token, past_special_token
-                )
+                _add_detokenize_sequence(special_token, past_special_token)
                 detokenize_sequence.append((char_id, score, bbox))
                 past_special_token = special_token
 
-            _add_detokenize_sequence(
-                False, past_special_token, force=True
-            )
+            _add_detokenize_sequence(False, past_special_token, force=True)
 
             img_chars = []
             for sequence in detokenize_sequences:
@@ -337,23 +334,23 @@ class RecognitionPredictor(BasePredictor):
 
     def __call__(
         self,
-        images: List[Image.Image],
-        task_names: List[str] | None = None,
+        images: list[Image.Image],
+        task_names: list[str] | None = None,
         det_predictor: DetectionPredictor | None = None,
         detection_batch_size: int | None = None,
         recognition_batch_size: int | None = None,
-        highres_images: List[Image.Image] | None = None,
-        bboxes: List[List[List[int]]] | None = None,
-        polygons: List[List[List[List[int]]]] | None = None,
-        input_text: List[List[str | None]] | None = None,
+        highres_images: list[Image.Image] | None = None,
+        bboxes: list[list[list[int]]] | None = None,
+        polygons: list[list[list[list[int]]]] | None = None,
+        input_text: list[list[str | None]] | None = None,
         sort_lines: bool = False,
         math_mode: bool = True,
         return_words: bool = False,
         drop_repeated_text: bool = False,
         max_sliding_window: int | None = None,
         max_tokens: int | None = None,
-        filter_tag_list: List[str] = None
-    ) -> List[OCRResult]:
+        filter_tag_list: list[str] = None,
+    ) -> list[OCRResult]:
         if task_names is None:
             task_names = [TaskNames.ocr_with_boxes] * len(images)
         if recognition_batch_size is None:
@@ -409,16 +406,14 @@ class RecognitionPredictor(BasePredictor):
         # No images passed, or no boxes passed, or no text detected in the images
         if len(flat["slices"]) == 0:
             return [
-                OCRResult(
-                    text_lines=[], image_bbox=[0, 0, im.size[0], im.size[1]]
-                )
+                OCRResult(text_lines=[], image_bbox=[0, 0, im.size[0], im.size[1]])
                 for im in images
             ]
 
         # Sort by image sizes. Negative so that longer images come first, fits in with continuous batching better
         sorted_pairs = sorted(
             enumerate(flat["slices"]),
-            key=lambda x: -(x[1].shape[0] * x[1].shape[1])  # height * width
+            key=lambda x: -(x[1].shape[0] * x[1].shape[1]),  # height * width
         )
         indices, sorted_slices = zip(*sorted_pairs)
 
@@ -428,17 +423,19 @@ class RecognitionPredictor(BasePredictor):
         flat["task_names"] = [flat["task_names"][i] for i in indices]
 
         # Make predictions
-        predicted_tokens, batch_bboxes, scores, _ = self.foundation_predictor.prediction_loop(
-            images=flat["slices"],
-            input_texts=flat["input_text"],
-            task_names=flat["task_names"],
-            batch_size=recognition_batch_size,
-            math_mode=math_mode,
-            drop_repeated_tokens=True,
-            max_lookahead_tokens=self.foundation_predictor.model.config.multi_output_distance,
-            max_sliding_window=max_sliding_window,
-            max_tokens=max_tokens,
-            tqdm_desc="Recognizing Text"
+        predicted_tokens, batch_bboxes, scores, _ = (
+            self.foundation_predictor.prediction_loop(
+                images=flat["slices"],
+                input_texts=flat["input_text"],
+                task_names=flat["task_names"],
+                batch_size=recognition_batch_size,
+                math_mode=math_mode,
+                drop_repeated_tokens=True,
+                max_lookahead_tokens=self.foundation_predictor.model.config.multi_output_distance,
+                max_sliding_window=max_sliding_window,
+                max_tokens=max_tokens,
+                tqdm_desc="Recognizing Text",
+            )
         )
 
         # Get text and bboxes in structured form

@@ -1,22 +1,20 @@
 from __future__ import annotations
 
 import math
-from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
 from torch import nn
-from torch.nn import functional as F, MSELoss, CrossEntropyLoss, BCEWithLogitsLoss
+from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
+from torch.nn import functional as F
 from transformers import apply_chunking_to_forward
 from transformers.activations import get_activation
 from transformers.modeling_outputs import BaseModelOutput, SequenceClassifierOutput
-
 from transformers.utils import (
     is_flash_attn_greater_or_equal_2_10,
 )
 
 from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
-
 from raw2md_engine.surya.common.s3 import S3DownloaderMixin
 from raw2md_engine.surya.ocr_error.model.config import DistilBertConfig
 
@@ -69,7 +67,7 @@ class Embeddings(nn.Module):
         )
 
     def forward(
-        self, input_ids: torch.Tensor, input_embeds: Optional[torch.Tensor] = None
+        self, input_ids: torch.Tensor, input_embeds: torch.Tensor | None = None
     ) -> torch.Tensor:
         """
         Parameters:
@@ -140,9 +138,9 @@ class MultiHeadSelfAttention(nn.Module):
         key: torch.Tensor,
         value: torch.Tensor,
         mask: torch.Tensor,
-        head_mask: Optional[torch.Tensor] = None,
+        head_mask: torch.Tensor | None = None,
         output_attentions: bool = False,
-    ) -> Tuple[torch.Tensor, ...]:
+    ) -> tuple[torch.Tensor, ...]:
         """
         Parameters:
             query: torch.tensor(bs, seq_length, dim)
@@ -201,8 +199,7 @@ class MultiHeadSelfAttention(nn.Module):
 
         if output_attentions:
             return (context, weights)
-        else:
-            return (context,)
+        return (context,)
 
 
 class DistilBertFlashAttention2(MultiHeadSelfAttention):
@@ -227,9 +224,9 @@ class DistilBertFlashAttention2(MultiHeadSelfAttention):
         key: torch.Tensor,
         value: torch.Tensor,
         mask: torch.Tensor,
-        head_mask: Optional[torch.Tensor] = None,
+        head_mask: torch.Tensor | None = None,
         output_attentions: bool = False,
-    ) -> Tuple[torch.Tensor, ...]:
+    ) -> tuple[torch.Tensor, ...]:
         """
         Parameters:
             query: torch.tensor(bs, seq_length, dim)
@@ -287,8 +284,7 @@ class DistilBertFlashAttention2(MultiHeadSelfAttention):
 
         if output_attentions:
             return (attn_output, attn_weights)
-        else:
-            return (attn_output,)
+        return (attn_output,)
 
     # Copied from transformers.models.llama.modeling_llama.LlamaFlashAttention2._flash_attention_forward with causal=True->causal=False
     def _flash_attention_forward(
@@ -473,10 +469,10 @@ class TransformerBlock(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
-        head_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
+        head_mask: torch.Tensor | None = None,
         output_attentions: bool = False,
-    ) -> Tuple[torch.Tensor, ...]:
+    ) -> tuple[torch.Tensor, ...]:
         """
         Parameters:
             x: torch.tensor(bs, seq_length, dim)
@@ -528,12 +524,12 @@ class Transformer(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
-        head_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
+        head_mask: torch.Tensor | None = None,
         output_attentions: bool = False,
         output_hidden_states: bool = False,
-        return_dict: Optional[bool] = None,
-    ) -> Union[BaseModelOutput, Tuple[torch.Tensor, ...]]:  # docstyle-ignore
+        return_dict: bool | None = None,
+    ) -> BaseModelOutput | tuple[torch.Tensor, ...]:  # docstyle-ignore
         """
         Parameters:
             x: torch.tensor(bs, seq_length, dim) Input sequence embedded.
@@ -582,11 +578,10 @@ class Transformer(nn.Module):
 
                 attentions = layer_outputs[0]
                 all_attentions = all_attentions + (attentions,)
-            else:
-                if len(layer_outputs) != 1:
-                    raise ValueError(
-                        f"The length of the layer_outputs should be 1, but it is {len(layer_outputs)}"
-                    )
+            elif len(layer_outputs) != 1:
+                raise ValueError(
+                    f"The length of the layer_outputs should be 1, but it is {len(layer_outputs)}"
+                )
 
         # Add last layer
         if output_hidden_states:
@@ -714,14 +709,14 @@ class DistilBertModel(DistilBertPreTrainedModel):
 
     def forward(
         self,
-        input_ids: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        head_mask: Optional[torch.Tensor] = None,
-        inputs_embeds: Optional[torch.Tensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[BaseModelOutput, Tuple[torch.Tensor, ...]]:
+        input_ids: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        head_mask: torch.Tensor | None = None,
+        inputs_embeds: torch.Tensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> BaseModelOutput | tuple[torch.Tensor, ...]:
         output_attentions = (
             output_attentions
             if output_attentions is not None
@@ -740,7 +735,7 @@ class DistilBertModel(DistilBertPreTrainedModel):
             raise ValueError(
                 "You cannot specify both input_ids and inputs_embeds at the same time"
             )
-        elif input_ids is not None:
+        if input_ids is not None:
             self.warn_if_padding_and_no_attention_mask(input_ids, attention_mask)
             input_shape = input_ids.size()
         elif inputs_embeds is not None:
@@ -761,11 +756,8 @@ class DistilBertModel(DistilBertPreTrainedModel):
                 if (attention_mask is not None and 0 in attention_mask)
                 else None
             )
-        else:
-            if attention_mask is None:
-                attention_mask = torch.ones(
-                    input_shape, device=device
-                )  # (bs, seq_length)
+        elif attention_mask is None:
+            attention_mask = torch.ones(input_shape, device=device)  # (bs, seq_length)
 
         return self.transformer(
             x=embeddings,
@@ -813,15 +805,15 @@ class DistilBertForSequenceClassification(S3DownloaderMixin, DistilBertPreTraine
 
     def forward(
         self,
-        input_ids: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        head_mask: Optional[torch.Tensor] = None,
-        inputs_embeds: Optional[torch.Tensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[SequenceClassifierOutput, Tuple[torch.Tensor, ...]]:
+        input_ids: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        head_mask: torch.Tensor | None = None,
+        inputs_embeds: torch.Tensor | None = None,
+        labels: torch.LongTensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> SequenceClassifierOutput | tuple[torch.Tensor, ...]:
         r"""
         labels (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
             Labels for computing the sequence classification/regression loss. Indices should be in `[0, ...,

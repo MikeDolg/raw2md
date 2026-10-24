@@ -1,12 +1,11 @@
-from typing import Optional
-
 import torch
 
 from raw2md_engine.surya.common.load import ModelLoader
-from raw2md_engine.surya.detection.processor import SegformerImageProcessor
-
 from raw2md_engine.surya.detection.model.config import EfficientViTConfig
-from raw2md_engine.surya.detection.model.encoderdecoder import EfficientViTForSemanticSegmentation
+from raw2md_engine.surya.detection.model.encoderdecoder import (
+    EfficientViTForSemanticSegmentation,
+)
+from raw2md_engine.surya.detection.processor import SegformerImageProcessor
 from raw2md_engine.surya.logging import get_logger
 from raw2md_engine.surya.settings import settings
 
@@ -14,7 +13,7 @@ logger = get_logger()
 
 
 class DetectionModelLoader(ModelLoader):
-    def __init__(self, checkpoint: Optional[str] = None):
+    def __init__(self, checkpoint: str | None = None):
         super().__init__(checkpoint)
 
         if self.checkpoint is None:
@@ -22,9 +21,9 @@ class DetectionModelLoader(ModelLoader):
 
     def model(
         self,
-        device: Optional[torch.device | str] = None,
-        dtype: Optional[torch.dtype | str] = None,
-        attention_implementation: Optional[str] = None,
+        device: torch.device | str | None = None,
+        dtype: torch.dtype | str | None = None,
+        attention_implementation: str | None = None,
     ) -> EfficientViTForSemanticSegmentation:
         if device is None:
             device = settings.TORCH_DEVICE_MODEL
@@ -57,7 +56,7 @@ class DetectionModelLoader(ModelLoader):
 
     def processor(
         self,
-        device: Optional[torch.device | str] = None,
-        dtype: Optional[torch.dtype | str] = None,
+        device: torch.device | str | None = None,
+        dtype: torch.dtype | str | None = None,
     ) -> SegformerImageProcessor:
         return SegformerImageProcessor.from_pretrained(self.checkpoint)

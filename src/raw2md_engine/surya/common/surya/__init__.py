@@ -1,13 +1,13 @@
 import warnings
-from typing import Optional, Tuple, TypedDict
 from dataclasses import dataclass
+from typing import Optional, Tuple, TypedDict
 
 import torch
-from torch import nn
 import torch.nn.functional as F
-from transformers.modeling_outputs import CausalLMOutputWithPast
+from torch import nn
 from transformers.cache_utils import Cache
 from transformers.modeling_attn_mask_utils import AttentionMaskConverter
+from transformers.modeling_outputs import CausalLMOutputWithPast
 
 from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
 from raw2md_engine.surya.common.s3 import S3DownloaderMixin
@@ -17,9 +17,8 @@ from raw2md_engine.surya.common.surya.embedder import SimpleTokenEmbedder
 from raw2md_engine.surya.common.surya.encoder import SuryaEncoderModel
 from raw2md_engine.surya.common.util import pad_to_batch_size, pad_to_batch_size_repeat
 from raw2md_engine.surya.common.xla import get_nearest_pad
-from raw2md_engine.surya.settings import settings
-
 from raw2md_engine.surya.logging import get_logger
+from raw2md_engine.surya.settings import settings
 
 logger = get_logger()
 
@@ -45,10 +44,10 @@ class FlashAttentionKwargs(TypedDict, total=False):
             Maximum sequence length for key state.
     """
 
-    cu_seq_lens_q: Optional[torch.LongTensor]
-    cu_seq_lens_k: Optional[torch.LongTensor]
-    max_length_q: Optional[int]
-    max_length_k: Optional[int]
+    cu_seq_lens_q: torch.LongTensor | None
+    cu_seq_lens_k: torch.LongTensor | None
+    max_length_q: int | None
+    max_length_k: int | None
 
 
 class KwargsForCausalLM(FlashAttentionKwargs): ...
@@ -180,7 +179,7 @@ class SuryaModel(S3DownloaderMixin, SuryaPreTrainedModel):
         chunk_grid_thw: torch.Tensor,
         actual_chunk_len: int,
         encoder_chunk_size: int,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         valid_embed_len = actual_chunk_len // (
             self.vision_encoder.spatial_merge_size**2
         )
@@ -260,7 +259,7 @@ class SuryaModel(S3DownloaderMixin, SuryaPreTrainedModel):
             raise ValueError(
                 "No image embeddings were generated. Check the input images and grid sizes."
             )
-        elif len(embeddings) == 1:
+        if len(embeddings) == 1:
             embeddings = embeddings[0]
         else:
             embeddings = torch.cat(embeddings, dim=0)
@@ -304,7 +303,7 @@ class SuryaModel(S3DownloaderMixin, SuryaPreTrainedModel):
             special_image_mask = (input_ids == self.config.image_token_id).unsqueeze(-1)
             special_image_mask = special_image_mask.expand_as(inputs_embeds)
             if inputs_embeds[special_image_mask].numel() != image_embeddings.numel():
-                n_image_tokens = torch.sum((input_ids == self.config.image_token_id))
+                n_image_tokens = torch.sum(input_ids == self.config.image_token_id)
                 n_image_features = image_embeddings.shape[0] * image_embeddings.shape[1]
                 warnings.warn(
                     f"Image features and image tokens do not match: tokens {n_image_tokens}, features {n_image_features}. This may lead to unexpected results"
@@ -414,33 +413,42 @@ class SuryaModel(S3DownloaderMixin, SuryaPreTrainedModel):
         logits_to_keep=None,
         **kwargs: KwargsForCausalLM,
     ):
-        if any([
-            input_ids is None,
-            position_ids is None,
-            cache_position is None,
-            (
-                prefill
-                and not (
-                    (image_tiles is not None and grid_thw is not None)
-                    or image_embeddings is not None
-                )
-            ),
-        ]):
+        if any(
+            [
+                input_ids is None,
+                position_ids is None,
+                cache_position is None,
+                (
+                    prefill
+                    and not (
+                        (image_tiles is not None and grid_thw is not None)
+                        or image_embeddings is not None
+                    )
+                ),
+            ]
+        ):
             raise ValueError(
                 "`input_ids`, `position_ids`, and `cache_position` **must** be specified. "
                 "For prefill, you must provide either (`image_tiles` and `grid_thw`) or `image_embeddings`."
             )
 
-
         inputs_embeds = self.embed_ids_boxes_images(
-            input_ids, image_embeddings, encoder_chunk_size, valid_batch_size, input_boxes, embed_boxes
+            input_ids,
+            image_embeddings,
+            encoder_chunk_size,
+            valid_batch_size,
+            input_boxes,
+            embed_boxes,
         )
 
         # Handling flash attention kwargs outside the decoder to speed up + avoid graph breaks inside the decoder
         # Skipped during decoding since not required
         if self.decoder.config._attn_implementation == "flash_attention_2" and prefill:
             # Needed for CPU -> GPU
-            from raw2md_engine.surya.common.surya.flash_attn_utils import _get_unpad_data
+            from raw2md_engine.surya.common.surya.flash_attn_utils import (
+                _get_unpad_data,
+            )
+
             batch_size, query_length, _ = inputs_embeds.shape
             indices_k, cu_seqlens_k, max_seqlen_in_batch_k = _get_unpad_data(
                 attention_mask
@@ -623,6 +631,7 @@ class SuryaModel(S3DownloaderMixin, SuryaPreTrainedModel):
                     :, :, :, :mask_length
                 ].masked_fill(padding_mask, min_dtype)
         return causal_mask
+
 
 class SuryaXLAModel(SuryaModel):
     def get_image_embeddings(

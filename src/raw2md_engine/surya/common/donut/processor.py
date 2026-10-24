@@ -1,19 +1,19 @@
-from typing import Dict, Union, Optional, List, Iterable
+from collections.abc import Iterable
 
 import cv2
+import numpy as np
+import PIL
+from PIL import Image
 from torch import TensorType
 from transformers import ImageProcessingMixin
 from transformers.image_processing_utils import BatchFeature
-from transformers.image_transforms import pad, normalize
+from transformers.image_transforms import normalize, pad
 from transformers.image_utils import (
-    ImageInput,
     ChannelDimension,
-    make_list_of_images,
+    ImageInput,
     get_image_size,
+    make_list_of_images,
 )
-import numpy as np
-from PIL import Image
-import PIL
 from transformers.utils import IMAGENET_STANDARD_MEAN, IMAGENET_STANDARD_STD
 
 from raw2md_engine.surya.common.s3 import S3DownloaderMixin
@@ -26,9 +26,9 @@ class SuryaEncoderImageProcessor(S3DownloaderMixin, ImageProcessingMixin):
         *args,
         max_size=None,
         align_long_axis=False,
-        rescale_factor: Union[int, float] = 1 / 255,
-        image_mean: Optional[Union[float, List[float]]] = None,
-        image_std: Optional[Union[float, List[float]]] = None,
+        rescale_factor: float = 1 / 255,
+        image_mean: float | list[float] | None = None,
+        image_std: float | list[float] | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -58,7 +58,7 @@ class SuryaEncoderImageProcessor(S3DownloaderMixin, ImageProcessingMixin):
 
         return resized_image
 
-    def process_inner(self, images: List[np.ndarray]):
+    def process_inner(self, images: list[np.ndarray]):
         assert images[0].shape[2] == 3  # RGB input images, channel dim last
 
         if self.do_align_long_axis:
@@ -118,7 +118,7 @@ class SuryaEncoderImageProcessor(S3DownloaderMixin, ImageProcessingMixin):
     def preprocess(
         self,
         images: ImageInput,
-        return_tensors: Optional[Union[str, TensorType]] = None,
+        return_tensors: str | TensorType | None = None,
         **kwargs,
     ) -> PIL.Image.Image:
         images = make_list_of_images(images)
@@ -134,9 +134,9 @@ class SuryaEncoderImageProcessor(S3DownloaderMixin, ImageProcessingMixin):
     def pad_image(
         cls,
         image: np.ndarray,
-        size: Dict[str, int],
-        data_format: Optional[Union[str, ChannelDimension]] = None,
-        input_data_format: Optional[Union[str, ChannelDimension]] = None,
+        size: dict[str, int],
+        data_format: str | ChannelDimension | None = None,
+        input_data_format: str | ChannelDimension | None = None,
         pad_value: float = 0.0,
     ) -> np.ndarray:
         output_height, output_width = size["height"], size["width"]
@@ -164,7 +164,7 @@ class SuryaEncoderImageProcessor(S3DownloaderMixin, ImageProcessingMixin):
 
     @classmethod
     def align_long_axis(
-        cls, image: np.ndarray, size: Dict[str, int], **kwargs
+        cls, image: np.ndarray, size: dict[str, int], **kwargs
     ) -> np.ndarray:
         input_height, input_width = image.shape[:2]
         output_height, output_width = size["height"], size["width"]
@@ -180,10 +180,10 @@ class SuryaEncoderImageProcessor(S3DownloaderMixin, ImageProcessingMixin):
     def normalize(
         cls,
         image: np.ndarray,
-        mean: Union[float, Iterable[float]],
-        std: Union[float, Iterable[float]],
-        data_format: Optional[Union[str, ChannelDimension]] = None,
-        input_data_format: Optional[Union[str, ChannelDimension]] = None,
+        mean: float | Iterable[float],
+        std: float | Iterable[float],
+        data_format: str | ChannelDimension | None = None,
+        input_data_format: str | ChannelDimension | None = None,
         **kwargs,
     ) -> np.ndarray:
         return normalize(

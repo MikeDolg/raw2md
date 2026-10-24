@@ -2,10 +2,8 @@ from transformers.configuration_utils import PretrainedConfig
 
 from raw2md_engine.surya.common.s3 import S3DownloaderMixin
 
-ID2LABEL = {
-    0: 'good',
-    1: 'bad'
-}
+ID2LABEL = {0: "good", 1: "bad"}
+
 
 class DistilBertConfig(S3DownloaderMixin, PretrainedConfig):
     model_type = "distilbert"

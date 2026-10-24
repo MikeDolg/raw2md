@@ -1,5 +1,4 @@
 import re
-from typing import List, Dict
 
 from raw2md_engine.surya.recognition.schema import TextChar
 
@@ -14,7 +13,7 @@ def truncate_repetitions(text: str, min_len=15):
     for rep_len in range(min_len, int(len(text) / 2)):
         # check if there is a repetition at the end
         same = True
-        for i in range(0, rep_len):
+        for i in range(rep_len):
             if text[len(text) - rep_len - i - 1] != text[len(text) - i - 1]:
                 same = False
                 break
@@ -35,7 +34,7 @@ def truncate_repetitions(text: str, min_len=15):
     return text[: len(text_to_truncate)]
 
 
-def extract_tags(proposed_tags: List[str]) -> List[str]:
+def extract_tags(proposed_tags: list[str]) -> list[str]:
     tags = []
     for tag in proposed_tags:
         tag_match = re.match(tag_pattern, tag)
@@ -72,8 +71,8 @@ def cleanup_math(line: str):
 
 
 def fix_unbalanced_tags(
-    text_chars: List[TextChar], special_tokens: Dict[str, list]
-) -> List[TextChar]:
+    text_chars: list[TextChar], special_tokens: dict[str, list]
+) -> list[TextChar]:
     self_closing_tags = ["br"]
 
     open_tags = []

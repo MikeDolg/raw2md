@@ -11,13 +11,12 @@ License: Apache 2
 
 from __future__ import annotations
 
-from typing import Optional, Union, Tuple, List, Any
 from functools import partial
+from typing import Any
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-
+from torch import nn
 from transformers.modeling_outputs import SemanticSegmenterOutput
 
 from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
@@ -25,13 +24,13 @@ from raw2md_engine.surya.common.s3 import S3DownloaderMixin
 from raw2md_engine.surya.detection.model.config import EfficientViTConfig
 
 
-def val2list(x: Union[List, Tuple, Any], repeat_time=1):
+def val2list(x: list | tuple | Any, repeat_time=1):
     if isinstance(x, (list, tuple)):
         return list(x)
     return [x for _ in range(repeat_time)]
 
 
-def val2tuple(x: Union[List, Tuple, Any], min_len: int = 1, idx_repeat: int = -1):
+def val2tuple(x: list | tuple | Any, min_len: int = 1, idx_repeat: int = -1):
     # repeat elements if necessary
     x = val2list(x)
     if len(x) > 0:
@@ -41,13 +40,12 @@ def val2tuple(x: Union[List, Tuple, Any], min_len: int = 1, idx_repeat: int = -1
 
 
 def get_same_padding(
-    kernel_size: Union[int, Tuple[int, ...]],
-) -> Union[int, Tuple[int, ...]]:
+    kernel_size: int | tuple[int, ...],
+) -> int | tuple[int, ...]:
     if isinstance(kernel_size, tuple):
         return tuple([get_same_padding(ks) for ks in kernel_size])
-    else:
-        assert kernel_size % 2 > 0, "kernel size should be odd number"
-        return kernel_size // 2
+    assert kernel_size % 2 > 0, "kernel size should be odd number"
+    return kernel_size // 2
 
 
 def get_padding(kernel_size: int, stride: int = 1, dilation: int = 1) -> int:
@@ -69,7 +67,7 @@ class ConvNormAct(nn.Module):
         norm_layer=nn.BatchNorm2d,
         act_layer=nn.ReLU,
     ):
-        super(ConvNormAct, self).__init__()
+        super().__init__()
         self.dropout = nn.Dropout(dropout, inplace=False)
         padding = get_padding(kernel_size, stride, dilation)
         self.conv = nn.Conv2d(
@@ -105,7 +103,7 @@ class DSConv(nn.Module):
         norm_layer=(nn.BatchNorm2d, nn.BatchNorm2d),
         act_layer=(nn.ReLU6, None),
     ):
-        super(DSConv, self).__init__()
+        super().__init__()
         use_bias = val2tuple(use_bias, 2)
         norm_layer = val2tuple(norm_layer, 2)
         act_layer = val2tuple(act_layer, 2)
@@ -148,7 +146,7 @@ class ConvBlock(nn.Module):
         norm_layer=(nn.BatchNorm2d, nn.BatchNorm2d),
         act_layer=(nn.ReLU6, None),
     ):
-        super(ConvBlock, self).__init__()
+        super().__init__()
         use_bias = val2tuple(use_bias, 2)
         norm_layer = val2tuple(norm_layer, 2)
         act_layer = val2tuple(act_layer, 2)
@@ -192,7 +190,7 @@ class MBConv(nn.Module):
         norm_layer=(nn.BatchNorm2d, nn.BatchNorm2d, nn.BatchNorm2d),
         act_layer=(nn.ReLU6, nn.ReLU6, None),
     ):
-        super(MBConv, self).__init__()
+        super().__init__()
         use_bias = val2tuple(use_bias, 3)
         norm_layer = val2tuple(norm_layer, 3)
         act_layer = val2tuple(act_layer, 3)
@@ -247,7 +245,7 @@ class FusedMBConv(nn.Module):
         norm_layer=(nn.BatchNorm2d, nn.BatchNorm2d),
         act_layer=(nn.ReLU6, None),
     ):
-        super(FusedMBConv, self).__init__()
+        super().__init__()
         use_bias = val2tuple(use_bias, 2)
         norm_layer = val2tuple(norm_layer, 2)
         act_layer = val2tuple(act_layer, 2)
@@ -285,7 +283,7 @@ class LiteMLA(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        heads: Union[int, None] = None,
+        heads: int | None = None,
         heads_ratio: float = 1.0,
         dim=8,
         use_bias=False,
@@ -295,7 +293,7 @@ class LiteMLA(nn.Module):
         scales=(5,),
         eps=1e-5,
     ):
-        super(LiteMLA, self).__init__()
+        super().__init__()
         self.eps = eps
         heads = heads or int(in_channels // dim * heads_ratio)
         total_dim = heads * dim
@@ -392,7 +390,7 @@ class EfficientVitBlock(nn.Module):
         norm_layer=nn.BatchNorm2d,
         act_layer=nn.Hardswish,
     ):
-        super(EfficientVitBlock, self).__init__()
+        super().__init__()
         self.context_module = ResidualBlock(
             LiteMLA(
                 in_channels=in_channels,
@@ -424,11 +422,11 @@ class EfficientVitBlock(nn.Module):
 class ResidualBlock(nn.Module):
     def __init__(
         self,
-        main: Optional[nn.Module],
-        shortcut: Optional[nn.Module] = None,
-        pre_norm: Optional[nn.Module] = None,
+        main: nn.Module | None,
+        shortcut: nn.Module | None = None,
+        pre_norm: nn.Module | None = None,
     ):
-        super(ResidualBlock, self).__init__()
+        super().__init__()
         self.pre_norm = pre_norm if pre_norm is not None else nn.Identity()
         self.main = main
         self.shortcut = shortcut
@@ -473,29 +471,28 @@ def build_local_block(
                 norm_layer=(None, norm_layer) if fewer_norm else norm_layer,
                 act_layer=(act_layer, None),
             )
+    elif block_type == "default":
+        block = MBConv(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            stride=stride,
+            kernel_size=kernel_size,
+            expand_ratio=expand_ratio,
+            use_bias=(True, True, False) if fewer_norm else False,
+            norm_layer=(None, None, norm_layer) if fewer_norm else norm_layer,
+            act_layer=(act_layer, act_layer, None),
+        )
     else:
-        if block_type == "default":
-            block = MBConv(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                stride=stride,
-                kernel_size=kernel_size,
-                expand_ratio=expand_ratio,
-                use_bias=(True, True, False) if fewer_norm else False,
-                norm_layer=(None, None, norm_layer) if fewer_norm else norm_layer,
-                act_layer=(act_layer, act_layer, None),
-            )
-        else:
-            block = FusedMBConv(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                stride=stride,
-                kernel_size=kernel_size,
-                expand_ratio=expand_ratio,
-                use_bias=(True, False) if fewer_norm else False,
-                norm_layer=(None, norm_layer) if fewer_norm else norm_layer,
-                act_layer=(act_layer, None),
-            )
+        block = FusedMBConv(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            stride=stride,
+            kernel_size=kernel_size,
+            expand_ratio=expand_ratio,
+            use_bias=(True, False) if fewer_norm else False,
+            norm_layer=(None, norm_layer) if fewer_norm else norm_layer,
+            act_layer=(act_layer, None),
+        )
     return block
 
 
@@ -558,7 +555,7 @@ class EfficientVitLargeStage(nn.Module):
         vit_stage=False,
         fewer_norm=False,
     ):
-        super(EfficientVitLargeStage, self).__init__()
+        super().__init__()
         blocks = [
             ResidualBlock(
                 build_local_block(
@@ -622,7 +619,7 @@ class EfficientVitLarge(nn.Module):
         norm_layer=nn.BatchNorm2d,
         act_layer=nn.Hardswish,
     ):
-        super(EfficientVitLarge, self).__init__()
+        super().__init__()
         self.grad_checkpointing = False
         self.num_classes = config.num_classes
         self.norm_eps = config.layer_norm_eps
@@ -796,7 +793,7 @@ class EfficientViTForSemanticSegmentation(
 
     def forward(
         self, pixel_values: torch.FloatTensor
-    ) -> Union[Tuple, SemanticSegmenterOutput]:
+    ) -> tuple | SemanticSegmenterOutput:
         # Pixel values should be B,C,H,W
         encoder_hidden_states = self.vit(
             pixel_values,
@@ -823,7 +820,7 @@ class EfficientViTForSemanticLayoutSegmentation(EfficientViTPreTrainedModel):
 
     def forward(
         self, pixel_values: torch.FloatTensor
-    ) -> Union[Tuple, SemanticSegmenterOutput]:
+    ) -> tuple | SemanticSegmenterOutput:
         # Pixel values should be B,C,H,W
         encoder_hidden_states = self.vit(
             pixel_values,

@@ -154,9 +154,6 @@ dev = ["ruff", "mypy", "pytest", "pytest-cov", "types-pyyaml", "pikepdf", "fpdf2
 [tool.ruff]
 target-version = "py311"
 line-length = 88
-# The engine copy is raw2md code, edited in place with minimal diffs. Ruff
-# takes it on one subpackage at a time.
-extend-exclude = ["src/raw2md_engine/surya"]
 
 [tool.ruff.lint]
 # Every stable rule, minus the exclusions below: an explicit list would skip
@@ -221,6 +218,18 @@ max-statements = 60
     "PTH120", "PTH123", "RET503", "RET504", "RUF001", "RUF005", "RUF012",
     "RUF013", "RUF059", "S110", "S112", "SIM103", "SIM108", "SIM201", "TD004",
     "TRY004", "UP035", "UP042",
+]
+# The surya subpackage keeps the upstream code; each rule here stays off
+# until the code that breaks it is rewritten.
+"src/raw2md_engine/surya/**" = [
+    "A001", "A002", "ARG001", "ARG002", "ARG003", "ARG004", "B006", "B007",
+    "B008", "B023", "B028", "B905", "BLE001", "C408", "C419", "C901", "E501",
+    "E741", "ERA001", "F401", "F841", "FURB171", "G004", "INP001", "N801",
+    "N802", "N803", "N806", "N812", "PERF401", "PLC0206", "PLR0912",
+    "PLR0913", "PLR0915", "PLR1714", "PLW2901", "PT018", "PTH103", "PTH112",
+    "PTH113", "PTH118", "PTH123", "RET504", "RUF003", "RUF005", "RUF012",
+    "RUF013", "RUF059", "S105", "S107", "S110", "SIM102", "SIM103", "SIM113",
+    "SIM118", "SIM201", "SLF001", "T201", "TD004", "TRY004", "UP035", "W291",
 ]
 # The benchmark runner is a flat script with its own package beside it.
 "benchmarks/**" = ["T201", "INP001"]

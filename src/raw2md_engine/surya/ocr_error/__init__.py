@@ -4,11 +4,11 @@ from typing import List, Optional
 from tqdm import tqdm
 
 from raw2md_engine.surya.common.predictor import BasePredictor
+from raw2md_engine.surya.common.xla import mark_step
 from raw2md_engine.surya.ocr_error.loader import OCRErrorModelLoader
 from raw2md_engine.surya.ocr_error.model.config import ID2LABEL
 from raw2md_engine.surya.ocr_error.schema import OCRErrorDetectionResult
 from raw2md_engine.surya.settings import settings
-from raw2md_engine.surya.common.xla import mark_step
 
 
 class OCRErrorPredictor(BasePredictor):
@@ -16,11 +16,11 @@ class OCRErrorPredictor(BasePredictor):
     batch_size = settings.OCR_ERROR_BATCH_SIZE
     default_batch_sizes = {"cpu": 8, "mps": 8, "cuda": 64, "xla": 32}
 
-    def __call__(self, texts: List[str], batch_size: Optional[int] = None):
+    def __call__(self, texts: list[str], batch_size: int | None = None):
         return self.batch_ocr_error_detection(texts, batch_size)
 
     def batch_ocr_error_detection(
-        self, texts: List[str], batch_size: Optional[int] = None
+        self, texts: list[str], batch_size: int | None = None
     ):
         if batch_size is None:
             batch_size = self.get_batch_size()

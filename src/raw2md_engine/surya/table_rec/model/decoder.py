@@ -1,12 +1,13 @@
-from typing import Optional, Tuple, Union
-
 import torch
 from torch import nn
 
-from raw2md_engine.surya.common.adetr.decoder import SuryaADETRDecoderModel, SuryaADETRDecoderPreTrainedModel
+from raw2md_engine.surya.common.adetr.decoder import (
+    SuryaADETRDecoderModel,
+    SuryaADETRDecoderPreTrainedModel,
+)
+from raw2md_engine.surya.settings import settings
 from raw2md_engine.surya.table_rec.model.config import TableRecModelOutput
 from raw2md_engine.surya.table_rec.shaper import LabelShaper
-from raw2md_engine.surya.settings import settings
 
 
 class LabelEmbedding(nn.Module):
@@ -34,7 +35,9 @@ class LabelEmbedding(nn.Module):
         shaper = LabelShaper()
         self.component_idxs = shaper.component_idx_dict()
         merge_count = shaper.get_box_property("merges")[1] + config.special_token_count
-        category_count = shaper.get_box_property("category")[1] + config.special_token_count
+        category_count = (
+            shaper.get_box_property("category")[1] + config.special_token_count
+        )
 
         # Other box properties
         self.category_embed = nn.Embedding(category_count, config.property_embed_size)
@@ -48,10 +51,18 @@ class LabelEmbedding(nn.Module):
         boxes = boxes.to(torch.long).clamp(0, self.config.vocab_size)
 
         boxes_unbound = boxes.to(torch.long).unbind(dim=-1)
-        cx, cy, w, h, xskew, yskew = boxes_unbound[self.component_idxs["bbox"][0]:self.component_idxs["bbox"][1]]
-        category = boxes_unbound[self.component_idxs["category"][0]:self.component_idxs["category"][1]][0]
-        merges = boxes_unbound[self.component_idxs["merges"][0]:self.component_idxs["merges"][1]][0]
-        colspan = boxes_unbound[self.component_idxs["colspan"][0]:self.component_idxs["colspan"][1]][0]
+        cx, cy, w, h, xskew, yskew = boxes_unbound[
+            self.component_idxs["bbox"][0] : self.component_idxs["bbox"][1]
+        ]
+        category = boxes_unbound[
+            self.component_idxs["category"][0] : self.component_idxs["category"][1]
+        ][0]
+        merges = boxes_unbound[
+            self.component_idxs["merges"][0] : self.component_idxs["merges"][1]
+        ][0]
+        colspan = boxes_unbound[
+            self.component_idxs["colspan"][0] : self.component_idxs["colspan"][1]
+        ][0]
 
         xskew_actual = ((xskew - self.config.bbox_size // 2) / 2).to(torch.long)
         yskew_actual = ((yskew - self.config.bbox_size // 2) / 2).to(torch.long)
@@ -61,12 +72,23 @@ class LabelEmbedding(nn.Module):
         x3 = (cx + w // 2 + xskew_actual).clamp(0, self.config.bbox_size).to(torch.long)
         y3 = (cy + h // 2 + yskew_actual).clamp(0, self.config.bbox_size).to(torch.long)
 
-        size_embeds = self.w_embed(w) + self.h_embed(h) + self.cx_embed(cx) + self.cy_embed(cy)
+        size_embeds = (
+            self.w_embed(w) + self.h_embed(h) + self.cx_embed(cx) + self.cy_embed(cy)
+        )
         skew_embeds = self.xskew_embed(xskew) + self.yskew_embed(yskew)
-        corner_embeds = self.x1_embed(x1) + self.y1_embed(y1) + self.x3_embed(x3) + self.y3_embed(y3)
+        corner_embeds = (
+            self.x1_embed(x1)
+            + self.y1_embed(y1)
+            + self.x3_embed(x3)
+            + self.y3_embed(y3)
+        )
         box_embeds = size_embeds + skew_embeds + corner_embeds
 
-        property_embeds = self.category_embed(category) + self.merge_embed(merges) + self.colspan_embed(colspan)
+        property_embeds = (
+            self.category_embed(category)
+            + self.merge_embed(merges)
+            + self.colspan_embed(colspan)
+        )
 
         # Cat bbox and property embeddings
         embedded = torch.cat([box_embeds, property_embeds], dim=-1)
@@ -83,7 +105,7 @@ class SuryaTableRecDecoder(SuryaADETRDecoderPreTrainedModel):
             config,
             embedder=embed_tokens,
             static_cache=settings.TABLE_REC_STATIC_CACHE,
-            max_boxes=settings.TABLE_REC_MAX_BOXES
+            max_boxes=settings.TABLE_REC_MAX_BOXES,
         )
         self.vocab_size = config.vocab_size
 
@@ -94,7 +116,9 @@ class SuryaTableRecDecoder(SuryaADETRDecoderPreTrainedModel):
             property_heads[k] = nn.Linear(config.hidden_size, kcount, bias=False)
 
         self.box_property_heads = nn.ModuleDict(property_heads)
-        self.pre_output_norm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.pre_output_norm = nn.LayerNorm(
+            config.hidden_size, eps=config.layer_norm_eps
+        )
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -120,15 +144,15 @@ class SuryaTableRecDecoder(SuryaADETRDecoderPreTrainedModel):
     # Ignore copy
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        cache_position: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
+        input_ids: torch.LongTensor | None = None,
+        cache_position: torch.LongTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        encoder_hidden_states: torch.FloatTensor | None = None,
+        encoder_attention_mask: torch.FloatTensor | None = None,
+        use_cache: bool | None = None,
         prefill: bool = False,
-        **kwargs
-    ) -> Union[Tuple, TableRecModelOutput]:
+        **kwargs,
+    ) -> tuple | TableRecModelOutput:
         outputs = self.model(
             input_ids=input_ids,
             cache_position=cache_position,

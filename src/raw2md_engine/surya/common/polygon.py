@@ -1,14 +1,13 @@
 import copy
-from typing import List, Optional
+import numbers
 
 import numpy as np
-from pydantic import BaseModel, field_validator, computed_field
-import numbers
+from pydantic import BaseModel, computed_field, field_validator
 
 
 class PolygonBox(BaseModel):
-    polygon: List[List[float]]
-    confidence: Optional[float] = None
+    polygon: list[list[float]]
+    confidence: float | None = None
 
     @field_validator("polygon", mode="before")
     @classmethod
@@ -24,7 +23,7 @@ class PolygonBox(BaseModel):
                     [x_min, y_max],
                 ]
                 return polygon
-            elif all(
+            if all(
                 isinstance(point, (list, tuple)) and len(point) == 2 for point in value
             ):
                 value = [[float(v) for v in point] for point in value]
@@ -51,7 +50,7 @@ class PolygonBox(BaseModel):
 
     @computed_field
     @property
-    def bbox(self) -> List[float]:
+    def bbox(self) -> list[float]:
         x_coords = [point[0] for point in self.polygon]
         y_coords = [point[1] for point in self.polygon]
         return [min(x_coords), min(y_coords), max(x_coords), max(y_coords)]
@@ -112,7 +111,7 @@ class PolygonBox(BaseModel):
                 new_polygon.append([int(poly[0] - x_margin), int(poly[1] + y_margin)])
         self.polygon = new_polygon
 
-    def intersection_polygon(self, other) -> List[List[float]]:
+    def intersection_polygon(self, other) -> list[list[float]]:
         new_poly = []
         for i in range(4):
             if i == 0:
@@ -180,7 +179,7 @@ class PolygonBox(BaseModel):
             for corner in self.polygon:
                 corner[1] += y_shift
 
-    def clamp(self, bbox: List[float]):
+    def clamp(self, bbox: list[float]):
         for corner in self.polygon:
             corner[0] = max(min(corner[0], bbox[2]), bbox[0])
             corner[1] = max(min(corner[1], bbox[3]), bbox[1])

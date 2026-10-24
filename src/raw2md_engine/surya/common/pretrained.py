@@ -1,5 +1,3 @@
-from typing import Optional
-
 from torch import Tensor
 from transformers import PreTrainedModel
 from transformers.utils import is_flash_attn_2_available
@@ -8,7 +6,7 @@ from transformers.utils import is_flash_attn_2_available
 class SuryaPreTrainedModel(PreTrainedModel):
     # No-op if we pass attention, so we can set attention however we want in the config
     def _check_and_adjust_attn_implementation(
-        self, attn_implementation: Optional[str], **kwargs
+        self, attn_implementation: str | None, **kwargs
     ):
         if attn_implementation is None:
             try:
@@ -25,7 +23,7 @@ class SuryaPreTrainedModel(PreTrainedModel):
     # transformers 5 removed these two methods; the encoders still call them.
     def get_head_mask(
         self,
-        head_mask: Optional[Tensor],
+        head_mask: Tensor | None,
         num_hidden_layers: int,
         is_attention_chunked: bool = False,
     ) -> Tensor:

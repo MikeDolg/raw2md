@@ -3,13 +3,13 @@ from typing import List
 from PIL import Image
 
 from raw2md_engine.surya.common.predictor import BasePredictor
-from raw2md_engine.surya.layout.schema import LayoutBox, LayoutResult
-from raw2md_engine.surya.settings import settings
+from raw2md_engine.surya.common.util import clean_boxes
 from raw2md_engine.surya.foundation import FoundationPredictor, TaskNames
 from raw2md_engine.surya.foundation.util import prediction_to_polygon_batch
 from raw2md_engine.surya.input.processing import convert_if_not_rgb
 from raw2md_engine.surya.layout.label import LAYOUT_PRED_RELABEL
-from raw2md_engine.surya.common.util import clean_boxes
+from raw2md_engine.surya.layout.schema import LayoutBox, LayoutResult
+from raw2md_engine.surya.settings import settings
 
 
 class LayoutPredictor(BasePredictor):
@@ -35,8 +35,8 @@ class LayoutPredictor(BasePredictor):
         self.foundation_predictor.disable_tqdm = bool(value)
 
     def __call__(
-        self, images: List[Image.Image], batch_size: int | None = None, top_k: int = 5
-    ) -> List[LayoutResult]:
+        self, images: list[Image.Image], batch_size: int | None = None, top_k: int = 5
+    ) -> list[LayoutResult]:
         assert all([isinstance(image, Image.Image) for image in images])
         if batch_size is None:
             batch_size = self.get_batch_size()
@@ -57,7 +57,7 @@ class LayoutPredictor(BasePredictor):
                 top_k=5,
                 max_sliding_window=576,
                 max_tokens=500,
-                tqdm_desc="Recognizing Layout"
+                tqdm_desc="Recognizing Layout",
             )
         )
 

@@ -1,14 +1,13 @@
 import copy
-from typing import List
-import torch
 from functools import lru_cache
 
+import torch
 import torch.nn.functional as F
 
 from raw2md_engine.surya.common.polygon import PolygonBox
 
 
-def clean_boxes(boxes: List[PolygonBox]) -> List[PolygonBox]:
+def clean_boxes(boxes: list[PolygonBox]) -> list[PolygonBox]:
     new_boxes = []
     for box_obj in boxes:
         xs = [point[0] for point in box_obj.polygon]
@@ -63,6 +62,7 @@ def expand_bbox(bbox, expansion_factor=0.01):
         bbox[3] * expansion_high,
     ]
 
+
 SCRIPT_TOKEN_MAPPING = {
     "latin": "<SCRIPT-LATIN>",
     "punctuation": "<SCRIPT-PUNCTUATION>",
@@ -94,6 +94,7 @@ SCRIPT_TOKEN_MAPPING = {
     "mongolian": "<SCRIPT-MONGOLIAN>",
     "math": "<SCRIPT-MATH>",
 }
+
 
 @lru_cache(maxsize=1)
 def script_ranges():
@@ -204,9 +205,10 @@ def script_ranges():
 
     return script_categories, flat_ranges
 
+
 def get_top_scripts(text: str, max_scripts: int = 5):
     script_categories, flat_ranges = script_ranges()
-    char_count = {category: 0 for category in script_categories.keys()}
+    char_count = dict.fromkeys(script_categories.keys(), 0)
     for char in text:
         for category, char_set in flat_ranges.items():
             if ord(char) in char_set:
@@ -219,6 +221,7 @@ def get_top_scripts(text: str, max_scripts: int = 5):
         top_scripts.insert(0, "math")
 
     return top_scripts[:max_scripts]
+
 
 def is_flash_attn_2_supported(device: str | torch.device) -> bool:
     if not torch.cuda.is_available():

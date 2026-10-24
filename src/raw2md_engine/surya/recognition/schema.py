@@ -1,7 +1,6 @@
 import math
-import numpy as np
-from typing import Optional, List
 
+import numpy as np
 from pydantic import BaseModel, field_validator
 
 from raw2md_engine.surya.common.polygon import PolygonBox
@@ -9,14 +8,12 @@ from raw2md_engine.surya.common.polygon import PolygonBox
 
 class BaseChar(PolygonBox):
     text: str
-    confidence: Optional[float] = 0
+    confidence: float | None = 0
 
     @field_validator("confidence", mode="before")
     @classmethod
     def validate_confidence(cls, v: float) -> float:
-        if v is None:
-            return 0
-        elif math.isnan(v) or np.isnan(v):
+        if v is None or math.isnan(v) or np.isnan(v):
             return 0
         return v
 
@@ -30,11 +27,11 @@ class TextWord(BaseChar):
 
 
 class TextLine(BaseChar):
-    chars: List[TextChar]  # Individual characters in the line
+    chars: list[TextChar]  # Individual characters in the line
     original_text_good: bool = False
-    words: List[TextWord] | None = None
+    words: list[TextWord] | None = None
 
 
 class OCRResult(BaseModel):
-    text_lines: List[TextLine]
-    image_bbox: List[float]
+    text_lines: list[TextLine]
+    image_bbox: list[float]

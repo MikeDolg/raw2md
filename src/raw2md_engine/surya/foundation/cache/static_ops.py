@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
+
 import torch
 from transformers import PretrainedConfig
 
@@ -78,8 +79,8 @@ class StaticOpsCache(DynamicOpsCache):
         key_states: torch.Tensor,
         value_states: torch.Tensor,
         layer_idx: int,
-        cache_kwargs: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        cache_kwargs: dict[str, Any] | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         prefill = cache_kwargs.get("prefill", False)
         update_fn = self._prefill_update if prefill else self._decode_update
         return update_fn(
@@ -98,10 +99,10 @@ class StaticOpsCache(DynamicOpsCache):
         key_states: torch.Tensor,
         value_states: torch.Tensor,
         text_token_counts: torch.Tensor,
-        cache_kwargs: Optional[Dict[str, Any]] = None,
+        cache_kwargs: dict[str, Any] | None = None,
     ):
         cache_idxs: torch.tensor = cache_kwargs.get("cache_idxs", None)
-        text_lengths: List[int] = cache_kwargs.get("text_lengths", None)
+        text_lengths: list[int] = cache_kwargs.get("text_lengths", None)
         assert cache_idxs is not None, "cache_idxs must be specified during prefill"
         assert text_lengths is not None, "text_lengths must be specified during prefill"
 
@@ -126,7 +127,7 @@ class StaticOpsCache(DynamicOpsCache):
     # since some parts of the model depend on the attention mask
     # """
     def decode_attention_mask_update(
-        self, num_valid_tokens: torch.Tensor, cache_idxs: List[int]
+        self, num_valid_tokens: torch.Tensor, cache_idxs: list[int]
     ):
         max_valid_tokens = num_valid_tokens.max().item()
         if max_valid_tokens == 0:
@@ -145,7 +146,7 @@ class StaticOpsCache(DynamicOpsCache):
         attention_mask: torch.Tensor,
         merge_idxs: torch.Tensor,
         valid_batch_size: torch.Tensor,
-        text_lengths: List[int],
+        text_lengths: list[int],
     ):
         # Set from -(image_length + text_length) to end to 1 for each batch element
         seq_len = attention_mask.shape[1]
@@ -161,8 +162,8 @@ class StaticOpsCache(DynamicOpsCache):
         key_states: torch.Tensor,
         value_states: torch.Tensor,
         text_token_counts: torch.Tensor,
-        cache_kwargs: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        cache_kwargs: dict[str, Any] | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         # Naive, always assumes we'll roll by a fixed amount
         # Needs left padding with beacons to work properly
 
@@ -190,5 +191,5 @@ class StaticOpsCache(DynamicOpsCache):
     # The attention mask managed by our kv cache automatically masks the tokens
     # in the cache, so we can return full length for HF to use in other places
     # This is mainly utilized in the cache_positions creation
-    def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
+    def get_seq_length(self, layer_idx: int | None = 0) -> int:
         return self.max_cache_len

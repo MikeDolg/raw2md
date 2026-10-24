@@ -1,8 +1,8 @@
-from typing import List, Tuple
 import numpy as np
 import torch
 
-def detect_repeat_token(predicted_tokens: List[int], max_repeats: int = 40):
+
+def detect_repeat_token(predicted_tokens: list[int], max_repeats: int = 40):
     if len(predicted_tokens) < max_repeats:
         return False
 
@@ -14,16 +14,15 @@ def detect_repeat_token(predicted_tokens: List[int], max_repeats: int = 40):
 
     return last_n[-unique_tokens:] == last_n[-unique_tokens * 2 : -unique_tokens]
 
+
 def prediction_to_polygon_batch(
     pred: torch.Tensor,
-    img_sizes: List[Tuple[int, int]],
+    img_sizes: list[tuple[int, int]],
     bbox_scaler,
     skew_scaler,
     skew_min=0.001,
 ):
-    img_sizes = torch.from_numpy(np.array(img_sizes, dtype=np.float32)).to(
-        pred.device
-    )
+    img_sizes = torch.from_numpy(np.array(img_sizes, dtype=np.float32)).to(pred.device)
     w_scale = (img_sizes[:, 1] / bbox_scaler)[:, None, None]
     h_scale = (img_sizes[:, 0] / bbox_scaler)[:, None, None]
 

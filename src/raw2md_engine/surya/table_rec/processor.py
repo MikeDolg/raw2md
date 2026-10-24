@@ -1,14 +1,12 @@
-from typing import List
-
 import PIL
 import torch
 from transformers import ProcessorMixin
 
-from raw2md_engine.surya.common.s3 import S3DownloaderMixin
 from raw2md_engine.surya.common.donut.processor import SuryaEncoderImageProcessor
-from raw2md_engine.surya.table_rec.shaper import LabelShaper
+from raw2md_engine.surya.common.s3 import S3DownloaderMixin
 from raw2md_engine.surya.settings import settings
 from raw2md_engine.surya.table_rec.model.config import BOX_DIM, SPECIAL_TOKENS
+from raw2md_engine.surya.table_rec.shaper import LabelShaper
 
 
 class SuryaTableRecProcessor(S3DownloaderMixin, ProcessorMixin):
@@ -34,25 +32,21 @@ class SuryaTableRecProcessor(S3DownloaderMixin, ProcessorMixin):
             corner[0] = corner[0] * w_scaler
             corner[1] = corner[1] * h_scaler
 
-            if corner[0] < 0:
-                corner[0] = 0
-            if corner[1] < 0:
-                corner[1] = 0
-            if corner[0] > new_size[0]:
-                corner[0] = new_size[0]
-            if corner[1] > new_size[1]:
-                corner[1] = new_size[1]
+            corner[0] = max(corner[0], 0)
+            corner[1] = max(corner[1], 0)
+            corner[0] = min(corner[0], new_size[0])
+            corner[1] = min(corner[1], new_size[1])
 
         return polygon
 
     def __call__(
-            self,
-            images: List[PIL.Image.Image] | None,
-            query_items: List[dict],
-            columns: List[dict] | None = None,
-            convert_images: bool = True,
-            *args,
-            **kwargs
+        self,
+        images: list[PIL.Image.Image] | None,
+        query_items: list[dict],
+        columns: list[dict] | None = None,
+        convert_images: bool = True,
+        *args,
+        **kwargs,
     ):
         if convert_images:
             assert len(images) == len(query_items)
@@ -60,7 +54,9 @@ class SuryaTableRecProcessor(S3DownloaderMixin, ProcessorMixin):
 
             # Resize input query items
             for image, query_item in zip(images, query_items):
-                query_item["polygon"] = self.resize_polygon(query_item["polygon"], image.size, self.box_size)
+                query_item["polygon"] = self.resize_polygon(
+                    query_item["polygon"], image.size, self.box_size
+                )
 
         query_items = self.shaper.convert_polygons_to_bboxes(query_items)
         query_labels = self.shaper.dict_to_labels(query_items)
@@ -68,11 +64,13 @@ class SuryaTableRecProcessor(S3DownloaderMixin, ProcessorMixin):
         decoder_input_boxes = []
         col_count = len(query_labels[0])
         for label in query_labels:
-            decoder_input_boxes.append([
-                [self.token_bos_id] * col_count,
-                label,
-                [self.token_query_end_id] * col_count
-            ])
+            decoder_input_boxes.append(
+                [
+                    [self.token_bos_id] * col_count,
+                    label,
+                    [self.token_query_end_id] * col_count,
+                ]
+            )
 
         # Add columns to end of decoder input
         if columns:
@@ -84,10 +82,9 @@ class SuryaTableRecProcessor(S3DownloaderMixin, ProcessorMixin):
         input_boxes = torch.tensor(decoder_input_boxes, dtype=torch.long)
         input_boxes_mask = torch.ones_like(input_boxes, dtype=torch.long)
 
-        inputs = {
-            "input_ids": input_boxes,
-            "attention_mask": input_boxes_mask
-        }
+        inputs = {"input_ids": input_boxes, "attention_mask": input_boxes_mask}
         if convert_images:
-            inputs["pixel_values"] = self.image_processor(images, *args, **kwargs)["pixel_values"]
+            inputs["pixel_values"] = self.image_processor(images, *args, **kwargs)[
+                "pixel_values"
+            ]
         return inputs

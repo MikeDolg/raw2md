@@ -1,4 +1,5 @@
 import math
+
 from PIL import ImageOps
 
 from raw2md_engine.surya.settings import settings
@@ -24,12 +25,13 @@ def split_image(img, height):
         for i in range(num_splits):
             top = i * height
             bottom = (i + 1) * height
-            if bottom > img_height:
-                bottom = img_height
+            bottom = min(bottom, img_height)
             cropped = img.crop((0, top, img.size[0], bottom))
             chunk_height = bottom - top
             if chunk_height < height:
-                cropped = ImageOps.pad(cropped, (img.size[0], height), color=255, centering=(0, 0))
+                cropped = ImageOps.pad(
+                    cropped, (img.size[0], height), color=255, centering=(0, 0)
+                )
             splits.append(cropped)
             split_heights.append(chunk_height)
         return splits, split_heights

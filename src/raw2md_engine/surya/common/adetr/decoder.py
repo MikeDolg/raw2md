@@ -1,17 +1,13 @@
-from typing import Dict, Optional, Tuple, Union
-
 import torch
 import torch.utils.checkpoint
 from torch import nn
 from transformers import PretrainedConfig
-
 from transformers.activations import ACT2FN
 from transformers.modeling_attn_mask_utils import AttentionMaskConverter
 from transformers.modeling_outputs import BaseModelOutputWithNoAttention
 from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS
 
 from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
-from raw2md_engine.surya.common.xla import mark_step
 
 _MAX_SQRT_GRADIENT = 1000.0
 
@@ -181,10 +177,10 @@ class SuryaADETRDecoderSdpaCrossAttention(nn.Module):
         self,
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        encoder_attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        encoder_attention_mask: torch.Tensor | None = None,
         use_cache: bool = False,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         # Encoder attention mask currently ignored
 
         bsz, q_len, _ = hidden_states.size()
@@ -286,12 +282,12 @@ class SuryaADETRDecoderSdpaAttention(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        position_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        cache_position: Optional[torch.LongTensor] = None,
+        position_ids: torch.LongTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        cache_position: torch.LongTensor | None = None,
         use_cache: bool = False,
         window_attn: bool = False,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         bsz, q_len, _ = hidden_states.size()
 
         query_states = self.q_proj(hidden_states)
@@ -463,7 +459,7 @@ class SuryaADETRDecoderLayer(nn.Module):
         encoder_attention_mask: torch.Tensor = None,
         cache_position: torch.Tensor = None,
         use_cache: bool = None,
-    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         if self.double_residual_flow:
             return self.double_res_forward(
                 activations,
@@ -519,7 +515,7 @@ class SuryaADETRDecoderLayer(nn.Module):
         encoder_attention_mask: torch.Tensor = None,
         cache_position: torch.Tensor = None,
         use_cache: bool = None,
-    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         raw_activations = activations
 
         if self.cross_attn_block is not None:
@@ -680,17 +676,17 @@ class SuryaADETRDecoderModel(SuryaADETRDecoderPreTrainedModel):
         self,
         input_ids: torch.LongTensor = None,
         input_boxes_counts: torch.LongTensor = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        cache_position: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        encoder_hidden_states: torch.FloatTensor | None = None,
+        encoder_attention_mask: torch.FloatTensor | None = None,
+        cache_position: torch.LongTensor | None = None,
+        use_cache: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
         prefill: bool = False,
-    ) -> Union[Tuple, BaseModelOutputWithNoAttention]:
+    ) -> tuple | BaseModelOutputWithNoAttention:
         use_cache = use_cache if use_cache is not None else self.config.use_cache
         return_dict = (
             return_dict if return_dict is not None else self.config.use_return_dict

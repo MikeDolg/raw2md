@@ -5,6 +5,7 @@ class FakeFuture:
     def result(self):
         return self._result
 
+
 class FakeExecutor:
     def __init__(self, **kwargs):
         pass

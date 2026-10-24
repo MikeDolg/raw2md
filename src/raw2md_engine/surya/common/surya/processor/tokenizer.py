@@ -1,15 +1,15 @@
 import html
-import re
-from typing import List, Union, Dict, Optional, Tuple, Iterable
-import numpy as np
-from tokenizers import AddedToken
 import json
 import os
-from transformers import PreTrainedTokenizer, Qwen2Tokenizer as Qwen2OriginalTokenizer
+import re
+from collections.abc import Iterable
 
+import numpy as np
+from tokenizers import AddedToken
+from transformers import PreTrainedTokenizer
+from transformers import Qwen2Tokenizer as Qwen2OriginalTokenizer
 
 from raw2md_engine.surya.common.s3 import S3DownloaderMixin
-from raw2md_engine.surya.common.surya.schema import TASK_NAMES, TaskNames
 from raw2md_engine.surya.logging import get_logger
 from raw2md_engine.surya.settings import settings
 
@@ -26,6 +26,7 @@ def create_token_regex(tokens):
 
 class Qwen2Tokenizer(S3DownloaderMixin, Qwen2OriginalTokenizer):
     pass
+
 
 class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
     """
@@ -49,12 +50,12 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
 
     # ---------- helpers ----------
     @staticmethod
-    def _to_utf16_units(s: str) -> List[int]:
+    def _to_utf16_units(s: str) -> list[int]:
         b = s.encode("utf-16le")
         return [int.from_bytes(b[i : i + 2], "little") for i in range(0, len(b), 2)]
 
     @staticmethod
-    def _from_utf16_units(units: List[int]) -> str:
+    def _from_utf16_units(units: list[int]) -> str:
         b = bytearray()
         for u in units:
             b += int(u).to_bytes(2, "little")
@@ -64,13 +65,13 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         __slots__ = ("child", "id", "leaf")
 
         def __init__(self):
-            self.child: Dict[str, "GreedyMathUTF16Tokenizer._TrieNode"] = {}
-            self.id: Optional[int] = None
+            self.child: dict[str, GreedyMathUTF16Tokenizer._TrieNode] = {}
+            self.id: int | None = None
             self.leaf: bool = False
 
     @classmethod
     def _build_trie(
-        cls, token_to_id: Dict[str, int]
+        cls, token_to_id: dict[str, int]
     ) -> "GreedyMathUTF16Tokenizer._TrieNode":
         root = cls._TrieNode()
         for tok, tid in token_to_id.items():
@@ -88,19 +89,19 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         escape sequence interpretation (e.g., \\begin becomes <backspace>egin).
         """
         control_chars = {
-            '\x08': 'b',  # backspace
-            '\t': 't',    # tab
-            '\n': 'n',    # newline
-            '\r': 'r',    # carriage return
-            '\f': 'f',    # form feed
-            '\x07': 'a',  # bell
-            '\x0b': 'v',  # vertical tab
+            "\x08": "b",  # backspace
+            "\t": "t",  # tab
+            "\n": "n",  # newline
+            "\r": "r",  # carriage return
+            "\f": "f",  # form feed
+            "\x07": "a",  # bell
+            "\x0b": "v",  # vertical tab
         }
 
         patterns = {char: [] for char in control_chars}
 
         for token in math_token_to_rawid.keys():
-            if token.startswith('\\') and len(token) > 1:
+            if token.startswith("\\") and len(token) > 1:
                 letter = token[1:2]  # First char after backslash
                 for ctrl_char, ctrl_letter in control_chars.items():
                     if letter == ctrl_letter:
@@ -121,9 +122,9 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         trie: "GreedyMathUTF16Tokenizer._TrieNode",
         math_base: int,
         debug: bool = False,
-    ) -> List[int]:
+    ) -> list[int]:
         i, n = 0, len(s)
-        out: List[int] = []
+        out: list[int] = []
         while i < n:
             node = trie
             j = i
@@ -150,25 +151,25 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
     # ---------- init ----------
     def __init__(
         self,
-        vocab_file: Optional[str] = None,
-        specials_file: Optional[str] = None,
-        specials_dict_file: Optional[str] = None,
+        vocab_file: str | None = None,
+        specials_file: str | None = None,
+        specials_dict_file: str | None = None,
         *,
         # You can also pass programmatically instead of files:
-        math_vocab: Optional[Dict[str, int]] = None,
-        special_tokens: Optional[List[str]] = None,
-        special_tokens_dict: Optional[Dict[str, List[str]]] = None,
+        math_vocab: dict[str, int] | None = None,
+        special_tokens: list[str] | None = None,
+        special_tokens_dict: dict[str, list[str]] | None = None,
         debug: bool = False,
         # Standard HF special token kwargs:
-        bos_token: Optional[str] = None,
-        eos_token: Optional[str] = None,
-        pad_token: Optional[str] = None,
-        unk_token: Optional[str] = None,
+        bos_token: str | None = None,
+        eos_token: str | None = None,
+        pad_token: str | None = None,
+        unk_token: str | None = None,
         **kwargs,
     ):
         # Load math vocab
         if vocab_file and os.path.isfile(vocab_file):
-            with open(vocab_file, "r", encoding="utf-8") as f:
+            with open(vocab_file, encoding="utf-8") as f:
                 mv = json.load(f)
         else:
             mv = math_vocab or {}
@@ -183,7 +184,7 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         # Load special tokens (prefer category dict; fallback to flat list or defaults)
         sp_dict = None
         if specials_dict_file and os.path.isfile(specials_dict_file):
-            with open(specials_dict_file, "r", encoding="utf-8") as f:
+            with open(specials_dict_file, encoding="utf-8") as f:
                 sp_dict = json.load(f)
         elif special_tokens_dict is not None:
             sp_dict = dict(special_tokens_dict)
@@ -191,7 +192,7 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         if sp_dict is None:
             # Legacy path: flat list from file or provided/default list
             if specials_file and os.path.isfile(specials_file):
-                with open(specials_file, "r", encoding="utf-8") as f:
+                with open(specials_file, encoding="utf-8") as f:
                     sp_list_flat = json.load(f)
             else:
                 sp_list_flat = special_tokens or []
@@ -210,7 +211,7 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
                 "reserved",
             ]
             seen = set()
-            all_tokens: List[str] = []
+            all_tokens: list[str] = []
             for k in order:
                 if k in sp_dict and isinstance(sp_dict[k], list):
                     for t in sp_dict[k]:
@@ -244,7 +245,7 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
 
         # Public attributes for legacy/processor:
         # All specials mapping (token -> absolute id)
-        self.SPECIAL_TOKEN_MAPPING: Dict[str, int] = dict(self.special_to_absid)
+        self.SPECIAL_TOKEN_MAPPING: dict[str, int] = dict(self.special_to_absid)
         # Subset used heavily by processor for quick access
         self.reverse_special_token_mapping = {
             v: k for k, v in self.SPECIAL_TOKEN_MAPPING.items()
@@ -266,7 +267,7 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         self.MATH_END_TAG = "</math>"
 
         sys_list = self.special_tokens.get("system", [])
-        self.system_tokens: Dict[str, int] = {
+        self.system_tokens: dict[str, int] = {
             t: self.special_to_absid[t] for t in sys_list if t in self.special_to_absid
         }
 
@@ -281,7 +282,9 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         self.trie = self._build_trie(self.math_token_to_rawid)
 
         # Build escape fix patterns from vocab
-        self.latex_escape_patterns = self._build_escape_patterns(self.math_token_to_rawid)
+        self.latex_escape_patterns = self._build_escape_patterns(
+            self.math_token_to_rawid
+        )
 
         # Tell HF about special tokens (metadata)
         kwargs.setdefault("bos_token", bos_token)
@@ -301,7 +304,7 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
     def vocab_size(self) -> int:
         return self.UTF16_SPACE + self.math_vocab_size + len(self.special_tokens_list)
 
-    def get_vocab(self) -> Dict[str, int]:
+    def get_vocab(self) -> dict[str, int]:
         # Compact vocab: just math+specials with ABSOLUTE ids.
         v = {tok: self.MATH_BASE + rid for tok, rid in self.math_token_to_rawid.items()}
         v.update(self.special_to_absid)
@@ -311,9 +314,9 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         return self.vocab_size
 
     # Core encode/decode on ABSOLUTE ids
-    def _encode_core(self, text: str) -> List[int]:
+    def _encode_core(self, text: str) -> list[int]:
         text = html.unescape(text)
-        ids: List[int] = []
+        ids: list[int] = []
         in_math = False
         chunks = self.specials_pattern.split(text) if self.specials_pattern else [text]
         for chunk in chunks:
@@ -356,7 +359,7 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
                 # Check if any pattern matches
                 matched = False
                 for pattern, replacement in self.latex_escape_patterns[char]:
-                    if text[i+1:].startswith(pattern):
+                    if text[i + 1 :].startswith(pattern):
                         result.append(replacement)
                         i += 1 + len(pattern)
                         matched = True
@@ -369,11 +372,11 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
                 result.append(char)
                 i += 1
 
-        return ''.join(result)
+        return "".join(result)
 
     def _decode_core(self, ids: Iterable[int]) -> str:
-        out: List[str] = []
-        buf: List[int] = []
+        out: list[str] = []
+        buf: list[int] = []
 
         def flush():
             if buf:
@@ -394,9 +397,9 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         return self._fix_latex_escapes(decoded)
 
     # ---- Tokenizer interface ----
-    def _tokenize(self, text: str, **kwargs) -> List[str]:
+    def _tokenize(self, text: str, **kwargs) -> list[str]:
         ids = self._encode_core(text)
-        toks: List[str] = []
+        toks: list[str] = []
         for i in ids:
             if i < self.MATH_BASE:
                 toks.append(f"<U+{i:04X}>")
@@ -431,7 +434,7 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
             return self.math_absid_to_token.get(index, "<UNK_MATH>")
         return self.absid_to_special.get(index, "<UNK_SPECIAL>")
 
-    def convert_tokens_to_string(self, tokens: List[str]) -> str:
+    def convert_tokens_to_string(self, tokens: list[str]) -> str:
         ids = [self._convert_token_to_id(t) for t in tokens]
         return self._decode_core(ids)
 
@@ -451,8 +454,8 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
 
     # HF plumbing
     def build_inputs_with_special_tokens(
-        self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None
-    ) -> List[int]:
+        self, token_ids_0: list[int], token_ids_1: list[int] | None = None
+    ) -> list[int]:
         out = (
             list(token_ids_0)
             if token_ids_1 is None
@@ -464,11 +467,11 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
 
     def get_special_tokens_mask(
         self,
-        token_ids_0: List[int],
-        token_ids_1: Optional[List[int]] = None,
+        token_ids_0: list[int],
+        token_ids_1: list[int] | None = None,
         already_has_special_tokens: bool = False,
-    ) -> List[int]:
-        def mask(seq: List[int]) -> List[int]:
+    ) -> list[int]:
+        def mask(seq: list[int]) -> list[int]:
             return [1 if i >= self.SPECIAL_BASE else 0 for i in seq]
 
         return (
@@ -478,8 +481,8 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         )
 
     def create_token_type_ids_from_sequences(
-        self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None
-    ) -> List[int]:
+        self, token_ids_0: list[int], token_ids_1: list[int] | None = None
+    ) -> list[int]:
         return [0] * (
             len(token_ids_0)
             if token_ids_1 is None
@@ -488,8 +491,8 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
 
     # Save/load raw assets
     def save_vocabulary(
-        self, save_directory: str, filename_prefix: Optional[str] = None
-    ) -> Tuple[str, str]:
+        self, save_directory: str, filename_prefix: str | None = None
+    ) -> tuple[str, str]:
         os.makedirs(save_directory, exist_ok=True)
         pre = (filename_prefix + "-") if filename_prefix else ""
         vocab_path = os.path.join(
@@ -514,7 +517,7 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
 class SuryaOCRTokenizer(S3DownloaderMixin, PreTrainedTokenizer):
     def __init__(
         self,
-        special_tokens: Dict[str, list] | None = None,
+        special_tokens: dict[str, list] | None = None,
         model_checkpoint: str = settings.FOUNDATION_MODEL_CHECKPOINT,
         **kwargs,
     ):
@@ -534,17 +537,15 @@ class SuryaOCRTokenizer(S3DownloaderMixin, PreTrainedTokenizer):
 
         super().__init__(**kwargs)
 
-    def get_vocab(self) -> Dict[str, int]:
+    def get_vocab(self) -> dict[str, int]:
         return self.ocr_tokenizer.get_vocab()
 
     def _add_tokens(
         self,
-        new_tokens: Union[List[str], List[AddedToken]],
+        new_tokens: list[str] | list[AddedToken],
         special_tokens: bool = False,
     ) -> int:
-        return self.ocr_tokenizer._add_tokens(
-            new_tokens, special_tokens=special_tokens
-        )
+        return self.ocr_tokenizer._add_tokens(new_tokens, special_tokens=special_tokens)
 
     @property
     def vocab_size(self):
@@ -560,10 +561,10 @@ class SuryaOCRTokenizer(S3DownloaderMixin, PreTrainedTokenizer):
 
     def __call__(
         self,
-        texts: Union[str, List[str]],
-        tasks: Union[str, List[str]] = None,
+        texts: str | list[str],
+        tasks: str | list[str] = None,
         **kwargs,
-    ) -> Dict[str, List[List[int]]]:
+    ) -> dict[str, list[list[int]]]:
         """Tokenizes text and returns input IDs."""
         tokenized = []
 

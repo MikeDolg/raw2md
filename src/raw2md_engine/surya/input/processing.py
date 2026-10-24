@@ -1,5 +1,3 @@
-from typing import List
-
 import cv2
 import numpy as np
 import pypdfium2
@@ -11,7 +9,7 @@ from raw2md_engine.surya.settings import settings
 logger = get_logger()
 
 
-def convert_if_not_rgb(images: List[Image.Image]) -> List[Image.Image]:
+def convert_if_not_rgb(images: list[Image.Image]) -> list[Image.Image]:
     new_images = []
     for image in images:
         if image.mode != "RGB":
@@ -24,7 +22,7 @@ def open_pdf(pdf_filepath):
     return pypdfium2.PdfDocument(pdf_filepath)
 
 
-def get_page_images(doc, indices: List, dpi=settings.IMAGE_DPI):
+def get_page_images(doc, indices: list, dpi=settings.IMAGE_DPI):
     images = [
         doc[i].render(scale=dpi / 72, draw_annots=False).to_pil() for i in indices
     ]

@@ -1,5 +1,5 @@
 import os
-from typing import Callable, Dict, Optional
+from collections.abc import Callable
 
 import torch
 
@@ -12,7 +12,7 @@ class Settings:
     IMAGE_DPI: int = 96  # Used for detection, layout, reading order
     IN_STREAMLIT: bool = False  # Whether we're running in streamlit
     DISABLE_TQDM: bool = False  # Disable tqdm progress bars
-    MODEL_DIR: Optional[str] = None  # Set by marker.models.create_model_dict
+    MODEL_DIR: str | None = None  # Set by marker.models.create_model_dict
     LOGLEVEL: str = "INFO"  # Logging level
 
     @property
@@ -34,7 +34,7 @@ class Settings:
         return "cpu"
 
     # Text detection
-    DETECTOR_BATCH_SIZE: Optional[int] = None  # Defaults to 2 for CPU/MPS, 32 otherwise
+    DETECTOR_BATCH_SIZE: int | None = None  # Defaults to 2 for CPU/MPS, 32 otherwise
     DETECTOR_MODEL_CHECKPOINT: str = "s3://text_detection/2025_05_07"
     DETECTOR_IMAGE_CHUNK_HEIGHT: int = (
         1400  # Height at which to slice images vertically
@@ -58,32 +58,32 @@ class Settings:
 
     # Text recognition
     FOUNDATION_MODEL_CHECKPOINT: str = "s3://text_recognition/2025_09_23"
-    FOUNDATION_MAX_TOKENS: Optional[int] = None
-    FOUNDATION_CHUNK_SIZE: Optional[int] = None
+    FOUNDATION_MAX_TOKENS: int | None = None
+    FOUNDATION_CHUNK_SIZE: int | None = None
     FOUNDATION_PAD_TO_NEAREST: int = 256
     COMPILE_FOUNDATION: bool = False
     FOUNDATION_MULTI_TOKEN_MIN_CONFIDENCE: float = 0.9
 
     RECOGNITION_MODEL_CHECKPOINT: str = "s3://text_recognition/2025_09_23"
-    RECOGNITION_BATCH_SIZE: Optional[int] = (
+    RECOGNITION_BATCH_SIZE: int | None = (
         None  # Defaults to 8 for CPU/MPS, 256 otherwise
     )
     RECOGNITION_PAD_VALUE: int = 255  # Should be 0 or 255
 
     # Layout
     LAYOUT_MODEL_CHECKPOINT: str = "s3://layout/2025_09_23"
-    LAYOUT_BATCH_SIZE: Optional[int] = None
+    LAYOUT_BATCH_SIZE: int | None = None
 
     # Table Rec
     TABLE_REC_MODEL_CHECKPOINT: str = "s3://table_recognition/2025_02_18"
-    TABLE_REC_IMAGE_SIZE: Dict = {"height": 768, "width": 768}
+    TABLE_REC_IMAGE_SIZE: dict = {"height": 768, "width": 768}
     TABLE_REC_MAX_BOXES: int = 150
-    TABLE_REC_BATCH_SIZE: Optional[int] = None
+    TABLE_REC_BATCH_SIZE: int | None = None
     COMPILE_TABLE_REC: bool = False
 
     # OCR Error Detection
     OCR_ERROR_MODEL_CHECKPOINT: str = "s3://ocr_error_detection/2025_02_18"
-    OCR_ERROR_BATCH_SIZE: Optional[int] = None
+    OCR_ERROR_BATCH_SIZE: int | None = None
     COMPILE_OCR_ERROR: bool = False
 
     COMPILE_ALL: bool = False

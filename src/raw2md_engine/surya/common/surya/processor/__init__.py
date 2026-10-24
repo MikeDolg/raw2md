@@ -1,22 +1,20 @@
 import math
+from typing import List, Optional, Tuple
 
 import cv2
 import numpy as np
 import torch
 from PIL import Image
 from torch.nn.utils.rnn import pad_sequence
-
-from typing import List, Optional, Tuple
-
 from transformers.feature_extraction_utils import BatchFeature
 from transformers.processing_utils import ProcessorMixin
 from transformers.tokenization_utils import PreTrainedTokenizer
 
 from raw2md_engine.surya.common.s3 import S3DownloaderMixin
 from raw2md_engine.surya.common.surya.processor.schema import (
-    TextInput,
     ImageInput,
     ProcessorOutput,
+    TextInput,
 )
 from raw2md_engine.surya.common.surya.schema import TaskNames
 from raw2md_engine.surya.logging import get_logger
@@ -153,8 +151,8 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
     @staticmethod
     def scale_to_fit(
         img: np.ndarray,
-        max_size: Tuple[int, int],
-        min_size: Tuple[int, int] = (168, 168),
+        max_size: tuple[int, int],
+        min_size: tuple[int, int] = (168, 168),
     ):
         # Get current dimensions
         height, width = img.shape[:2]
@@ -197,7 +195,7 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
 
     def _process_and_tile(
         self, image: np.ndarray
-    ) -> Tuple[torch.Tensor, Tuple[int, int, int]]:
+    ) -> tuple[torch.Tensor, tuple[int, int, int]]:
         """
         Resizes the input image to the closest multiple of tile_size while preserving the aspect ratio
         and returns a tensor of image tiles.
@@ -299,7 +297,7 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
         input_type = input_dict["type"]
         if input_type == "image":
             return self._process_image_input(input_dict)
-        elif input_type == "text":
+        if input_type == "text":
             return self._process_text_input(input_dict, task)
 
         raise NotImplementedError(f"Input of type `{input_type}` is not implemented")
@@ -309,7 +307,7 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
     # use_input_dict is allowed to have an empty input which is fine, but needs to be present
     def _process_ocr_with_boxes(
         self,
-        mixed_input: List[dict],
+        mixed_input: list[dict],
         bos_token_id: int,
         task: str = TaskNames.ocr_with_boxes,
     ):
@@ -338,7 +336,9 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
                 )
                 input_ids = input_ids + [self.eos_token_id]
             elif i > 2:
-                raise ValueError(f"Too many inputs received. Expected is 2 for inference, 3 for training. Received: {len(mixed_input)}")
+                raise ValueError(
+                    f"Too many inputs received. Expected is 2 for inference, 3 for training. Received: {len(mixed_input)}"
+                )
 
             # Some input types don't return any image tiles, accounting for that
             if image_tiles is not None:
@@ -353,19 +353,19 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
             all_grid_thw,
         )
 
-    def _process_layout(self, mixed_input: List[dict], bos_token_id: int):
+    def _process_layout(self, mixed_input: list[dict], bos_token_id: int):
         return self._process_ocr_with_boxes(
             mixed_input, bos_token_id=bos_token_id, task="layout"
         )
 
-    def _process_table_structure(self, mixed_input: List[dict], bos_token_id: int):
+    def _process_table_structure(self, mixed_input: list[dict], bos_token_id: int):
         return self._process_ocr_with_boxes(
             mixed_input, bos_token_id=bos_token_id, task="table_structure"
         )
 
     def _process_ocr_without_boxes(
         self,
-        mixed_input: List[dict],
+        mixed_input: list[dict],
         bos_token_id: int,
         task: str = "ocr_without_boxes",
     ):
@@ -377,7 +377,7 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
 
     def _process_block_without_boxes(
         self,
-        mixed_input: List[dict],
+        mixed_input: list[dict],
         bos_token_id: int,
         task: str = "block_without_boxes",
     ):
@@ -385,7 +385,7 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
             mixed_input, bos_token_id=bos_token_id, task=task
         )
 
-    def align_long_axis(self, image: np.ndarray) -> Tuple[np.ndarray, bool]:
+    def align_long_axis(self, image: np.ndarray) -> tuple[np.ndarray, bool]:
         height, width, _ = image.shape
         if height > width:  # Rotate vertical lines
             image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
@@ -395,10 +395,10 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
 
     def __call__(
         self,
-        mixed_batch: List[dict],
-        padding_side: Optional[str] = "left",
-        device: Optional[torch.device] = None,
-        pad_to_multiple: Optional[int] = None,
+        mixed_batch: list[dict],
+        padding_side: str | None = "left",
+        device: torch.device | None = None,
+        pad_to_multiple: int | None = None,
     ):
         all_image_tiles = []
         all_input_ids = []
@@ -472,7 +472,7 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
         )
 
     # Decode model outputs; Strips special tokens
-    def decode(self, tokens: List[int], task: str):
+    def decode(self, tokens: list[int], task: str):
         filtered_tokens = [
             t
             for t in tokens

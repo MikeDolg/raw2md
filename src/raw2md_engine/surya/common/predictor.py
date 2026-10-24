@@ -1,4 +1,3 @@
-from typing import Optional
 import torch
 import torch.nn.functional as F
 
@@ -8,7 +7,7 @@ from raw2md_engine.surya.settings import settings
 
 class BasePredictor:
     model_loader_cls = ModelLoader
-    batch_size: Optional[int] = None
+    batch_size: int | None = None
     default_batch_sizes = {"cpu": 1, "mps": 1, "cuda": 1}
     torch_dtype = settings.MODEL_DTYPE
 
@@ -22,10 +21,10 @@ class BasePredictor:
 
     def __init__(
         self,
-        checkpoint: Optional[str] = None,
+        checkpoint: str | None = None,
         device: torch.device | str | None = settings.TORCH_DEVICE_MODEL,
-        dtype: Optional[torch.dtype | str] = None,
-        attention_implementation: Optional[str] = None,
+        dtype: torch.dtype | str | None = None,
+        attention_implementation: str | None = None,
     ):
         if dtype is None:
             dtype = self.torch_dtype
@@ -76,4 +75,4 @@ class BasePredictor:
         return F.pad(tensor, padding, mode="constant", value=0)
 
     def __call__(self, *args, **kwargs):
-        raise NotImplementedError()
+        raise NotImplementedError

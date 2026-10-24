@@ -1,12 +1,10 @@
-from typing import List
-
 import cv2
 import numpy as np
 from PIL import Image
 
-from raw2md_engine.surya.common.util import clean_boxes
-from raw2md_engine.surya.detection import TextDetectionResult
 from raw2md_engine.surya.common.polygon import PolygonBox
+from raw2md_engine.surya.common.util import clean_boxes
+from raw2md_engine.surya.detection.schema import TextDetectionResult
 from raw2md_engine.surya.settings import settings
 
 
@@ -110,7 +108,7 @@ def detect_boxes(linemap, text_threshold, low_text):
     return det, confidences
 
 
-def get_detected_boxes(textmap, text_threshold=None, low_text=None) -> List[PolygonBox]:
+def get_detected_boxes(textmap, text_threshold=None, low_text=None) -> list[PolygonBox]:
     if text_threshold is None:
         text_threshold = settings.DETECTOR_TEXT_THRESHOLD
     if low_text is None:
@@ -129,7 +127,7 @@ def get_detected_boxes(textmap, text_threshold=None, low_text=None) -> List[Poly
 
 def get_and_clean_boxes(
     textmap, processor_size, image_size, text_threshold=None, low_text=None
-) -> List[PolygonBox]:
+) -> list[PolygonBox]:
     bboxes = get_detected_boxes(textmap, text_threshold, low_text)
     for bbox in bboxes:
         bbox.rescale(processor_size, image_size)

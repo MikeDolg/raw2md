@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Dict
 
 import torch
 from transformers import PretrainedConfig
@@ -12,27 +11,23 @@ BOX_DIM = 1024
 SPECIAL_TOKENS = 5
 MAX_BOXES = 150
 
-MERGE_KEYS = {
-    "none": 0,
-    "merge_up": 1,
-    "merge_down": 2,
-    "merge_both": 3
-}
-MERGE_VALUES = [MERGE_KEYS["merge_up"], MERGE_KEYS["merge_down"], MERGE_KEYS["merge_both"]]
+MERGE_KEYS = {"none": 0, "merge_up": 1, "merge_down": 2, "merge_both": 3}
+MERGE_VALUES = [
+    MERGE_KEYS["merge_up"],
+    MERGE_KEYS["merge_down"],
+    MERGE_KEYS["merge_both"],
+]
 
 ID_TO_CATEGORY = {
-    0: 'Blank',
-    1: 'Table-row',
-    2: 'Table-column',
-    3: 'Table-cell',
-    4: 'Table'
+    0: "Blank",
+    1: "Table-row",
+    2: "Table-column",
+    3: "Table-cell",
+    4: "Table",
 }
 CATEGORY_TO_ID = {v: k for k, v in ID_TO_CATEGORY.items()}
 
-ID_TO_HEADER = {
-    0: "None",
-    1: "Header"
-}
+ID_TO_HEADER = {0: "None", 1: "Header"}
 HEADER_TO_ID = {v: k for k, v in ID_TO_HEADER.items()}
 
 BOX_PROPERTIES = [
@@ -40,13 +35,13 @@ BOX_PROPERTIES = [
     ("category", len(ID_TO_CATEGORY), "classification"),
     ("merges", len(MERGE_KEYS), "classification"),
     ("colspan", 1, "regression"),
-    ("is_header", len(ID_TO_HEADER), "classification")
+    ("is_header", len(ID_TO_HEADER), "classification"),
 ]
 
 
 @dataclass
 class TableRecModelOutput(ModelOutput):
-    box_property_logits: Dict[str, torch.Tensor]
+    box_property_logits: dict[str, torch.Tensor]
     hidden_states: torch.Tensor | None = None
 
 
@@ -88,7 +83,10 @@ class DonutSwinTableRecConfig(PretrainedConfig):
 
     def __init__(
         self,
-        image_size=(settings.TABLE_REC_IMAGE_SIZE["width"], settings.TABLE_REC_IMAGE_SIZE["height"]),
+        image_size=(
+            settings.TABLE_REC_IMAGE_SIZE["width"],
+            settings.TABLE_REC_IMAGE_SIZE["height"],
+        ),
         patch_size=4,
         num_channels=3,
         embed_dim=128,
@@ -174,7 +172,7 @@ class SuryaTableRecDecoderConfig(PretrainedConfig):
         w_init_variance_scale=0.01,
         init_std=0.02,
         tie_word_embeddings=False,
-        aux_heads=0, # How many n-token-ahead heads to add
+        aux_heads=0,  # How many n-token-ahead heads to add
         causal=True,
         layer_norm_eps=1e-5,
         dropout=0.0,
@@ -196,9 +194,15 @@ class SuryaTableRecDecoderConfig(PretrainedConfig):
         self.block_types = list(block_types)
         self.hidden_activation = hidden_activation
         self.head_dim = self.hidden_size // self.num_attention_heads
-        self.num_key_value_heads = num_key_value_heads if num_key_value_heads is not None else num_attention_heads
+        self.num_key_value_heads = (
+            num_key_value_heads
+            if num_key_value_heads is not None
+            else num_attention_heads
+        )
         if self.num_key_value_heads > self.num_attention_heads:
-            raise ValueError("The number of `num_key_value_heads` must be smaller than `num_attention_heads`")
+            raise ValueError(
+                "The number of `num_key_value_heads` must be smaller than `num_attention_heads`"
+            )
         self.cross_attn_layers = cross_attn_layers
         self.self_attn_layers = self_attn_layers
         self.global_attn_layers = global_attn_layers
@@ -209,7 +213,7 @@ class SuryaTableRecDecoderConfig(PretrainedConfig):
         self.init_std = init_std
         self.tie_word_embeddings = tie_word_embeddings
         self.aux_heads = aux_heads
-        self.encoder_hidden_size=encoder_hidden_size
+        self.encoder_hidden_size = encoder_hidden_size
         self.causal = causal
         self.encoder_cross_attn_layers = encoder_cross_attn_layers
         self.layer_norm_eps = layer_norm_eps

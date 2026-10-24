@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
+
 import torch
 from transformers import PretrainedConfig
 
@@ -76,8 +77,8 @@ class DynamicOpsCache:
         key_states: torch.Tensor,
         value_states: torch.Tensor,
         layer_idx: int,
-        cache_kwargs: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        cache_kwargs: dict[str, Any] | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         prefill = cache_kwargs.get("prefill", False)
         update_fn = self._prefill_update if prefill else self._decode_update
         return update_fn(
@@ -109,7 +110,7 @@ class DynamicOpsCache:
         prefill_attention_mask: torch.Tensor,
         merge_idxs: torch.Tensor,
         valid_batch_mask: torch.Tensor,
-        text_lengths: List[int],
+        text_lengths: list[int],
     ):
         seq_len = prefill_attention_mask.shape[1]
         sliding_window = self.text_sliding_window
@@ -154,10 +155,10 @@ class DynamicOpsCache:
         key_states: torch.Tensor,
         value_states: torch.Tensor,
         text_token_counts: torch.Tensor,
-        cache_kwargs: Optional[Dict[str, Any]] = None,
+        cache_kwargs: dict[str, Any] | None = None,
     ):
-        cache_idxs: List[int] = cache_kwargs.get("cache_idxs", None)
-        text_lengths: List[int] = cache_kwargs.get("text_lengths", None)
+        cache_idxs: list[int] = cache_kwargs.get("cache_idxs", None)
+        text_lengths: list[int] = cache_kwargs.get("text_lengths", None)
         assert cache_idxs is not None, "cache_idxs must be specified during prefill"
         assert text_lengths is not None, "text_lengths must be specified during prefill"
 
@@ -232,7 +233,7 @@ class DynamicOpsCache:
     # since some parts of the model depend on the attention mask
     # """
     def decode_attention_mask_update(
-        self, num_valid_tokens: torch.Tensor, cache_idxs: List[int]
+        self, num_valid_tokens: torch.Tensor, cache_idxs: list[int]
     ):
         sliding_window = self.text_sliding_window
         text_cache_start = self.max_cache_len - sliding_window
@@ -301,8 +302,8 @@ class DynamicOpsCache:
         key_states: torch.Tensor,
         value_states: torch.Tensor,
         text_token_counts: torch.Tensor,
-        cache_kwargs: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        cache_kwargs: dict[str, Any] | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         num_valid_tokens: torch.Tensor = cache_kwargs.get(
             "num_valid_tokens"
         )  # shape: (B,)
@@ -395,5 +396,5 @@ class DynamicOpsCache:
 
     # We have a non-uniform cache, so its better to not return it and handle any logic
     # that requires this ourselves
-    def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
-        raise NotImplementedError()
+    def get_seq_length(self, layer_idx: int | None = 0) -> int:
+        raise NotImplementedError

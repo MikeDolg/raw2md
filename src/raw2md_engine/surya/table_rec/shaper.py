@@ -1,41 +1,47 @@
 import math
-from typing import List, Dict
+
 import numpy as np
 
-from raw2md_engine.surya.table_rec.model.config import BOX_PROPERTIES, SPECIAL_TOKENS, BOX_DIM
+from raw2md_engine.surya.table_rec.model.config import (
+    BOX_DIM,
+    BOX_PROPERTIES,
+    SPECIAL_TOKENS,
+)
 
 
 class LabelShaper:
     def __init__(self):
         self.property_keys = [k for (k, kcount, mode) in BOX_PROPERTIES]
 
-    def dict_to_labels(self, label_components: List[dict]):
+    def dict_to_labels(self, label_components: list[dict]):
         if len(label_components) == 0:
             return []
 
         out_list = []
-        for (k, kcount, mode) in BOX_PROPERTIES:
+        for k, kcount, mode in BOX_PROPERTIES:
             for label_component in label_components:
                 if k not in label_component:
-                    raise ValueError(f"Missing key {k} in label component {label_component}")
+                    raise ValueError(
+                        f"Missing key {k} in label component {label_component}"
+                    )
 
                 if mode == "classification":
                     assert isinstance(label_component[k], int)
                 elif mode == "regression":
-                    assert (isinstance(label_component[k], (int, float)) and kcount == 1) or len(label_component[k]) == kcount
+                    assert (
+                        isinstance(label_component[k], (int, float)) and kcount == 1
+                    ) or len(label_component[k]) == kcount
                 else:
                     raise ValueError(f"Invalid mode {k['mode']} for key {k}")
 
         for label_component in label_components:
             bbox = label_component["bbox"]
             for i in range(len(bbox)):
-                if bbox[i] < 0:
-                    bbox[i] = 0
-                if bbox[i] > BOX_DIM:
-                    bbox[i] = BOX_DIM
+                bbox[i] = max(bbox[i], 0)
+                bbox[i] = min(bbox[i], BOX_DIM)
 
             vector = []
-            for (k, kcount, mode) in BOX_PROPERTIES:
+            for k, kcount, mode in BOX_PROPERTIES:
                 item = label_component[k]
                 if isinstance(item, (list, tuple)):
                     vector += list(item)
@@ -53,7 +59,7 @@ class LabelShaper:
 
     def component_idx(self, key):
         idx = 0
-        for (k, kcount, mode) in BOX_PROPERTIES:
+        for k, kcount, mode in BOX_PROPERTIES:
             if mode == "regression":
                 incr = kcount
             elif mode == "classification":
@@ -66,7 +72,7 @@ class LabelShaper:
         raise ValueError(f"Key {key} not found in properties")
 
     def get_box_property(self, key, add_special_tokens=True):
-        for (k, kcount, mode) in BOX_PROPERTIES:
+        for k, kcount, mode in BOX_PROPERTIES:
             if k == key:
                 # Add special token count
                 if mode == "classification" and add_special_tokens:
@@ -76,11 +82,11 @@ class LabelShaper:
 
     def component_idx_dict(self):
         idx_dict = {}
-        for (k, kcount, mode) in BOX_PROPERTIES:
+        for k, kcount, mode in BOX_PROPERTIES:
             idx_dict[k] = self.component_idx(k)
         return idx_dict
 
-    def convert_polygons_to_bboxes(self, label_components: List[Dict]):
+    def convert_polygons_to_bboxes(self, label_components: list[dict]):
         for i, label_component in enumerate(label_components):
             poly = label_component["polygon"]
             poly = np.clip(poly, 0, BOX_DIM)
@@ -97,21 +103,14 @@ class LabelShaper:
 
             x_skew = bottom_avg_x - top_avg_x
             y_skew = right_avg_y - left_avg_y
-            x_skew += BOX_DIM // 2 # Shift up into positive space
-            y_skew += BOX_DIM // 2 # Shift up into positive space
-            new_poly = [
-                cx,
-                cy,
-                width,
-                height,
-                x_skew,
-                y_skew
-            ]
+            x_skew += BOX_DIM // 2  # Shift up into positive space
+            y_skew += BOX_DIM // 2  # Shift up into positive space
+            new_poly = [cx, cy, width, height, x_skew, y_skew]
             label_component["bbox"] = new_poly
 
         return label_components
 
-    def convert_bbox_to_polygon(self, box, skew_scaler=BOX_DIM // 2, skew_min=.001):
+    def convert_bbox_to_polygon(self, box, skew_scaler=BOX_DIM // 2, skew_min=0.001):
         cx = box[0]
         cy = box[1]
         width = box[2]
@@ -131,15 +130,17 @@ class LabelShaper:
         if abs(skew_y) < skew_min:
             skew_y = 0
 
-        polygon = [x1 - skew_x, y1 - skew_y, x2 - skew_x, y1 + skew_y, x2 + skew_x, y2 + skew_y, x1 + skew_x,
-                   y2 - skew_y]
+        polygon = [
+            x1 - skew_x,
+            y1 - skew_y,
+            x2 - skew_x,
+            y1 + skew_y,
+            x2 + skew_x,
+            y2 + skew_y,
+            x1 + skew_x,
+            y2 - skew_y,
+        ]
         poly = []
         for i in range(4):
-            poly.append([
-                polygon[2 * i],
-                polygon[2 * i + 1]
-            ])
+            poly.append([polygon[2 * i], polygon[2 * i + 1]])
         return poly
-
-
-

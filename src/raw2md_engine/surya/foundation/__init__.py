@@ -1,31 +1,29 @@
 from __future__ import annotations
 
+import math
+from collections import deque
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
-from collections import deque
 
 import cv2
 import numpy as np
 import torch
-import math
+import torch.nn.functional as F
 from PIL import Image
 from tqdm import tqdm
-import torch.nn.functional as F
 
-from raw2md_engine.surya.common.surya import SuryaModelOutput
-from raw2md_engine.surya.common.xla import mark_step
 from raw2md_engine.surya.common.predictor import BasePredictor
-
+from raw2md_engine.surya.common.surya import SuryaModelOutput
+from raw2md_engine.surya.common.surya.schema import TaskNames
+from raw2md_engine.surya.common.xla import mark_step
+from raw2md_engine.surya.foundation.cache.dynamic_ops import DynamicOpsCache
+from raw2md_engine.surya.foundation.cache.static_ops import StaticOpsCache
 from raw2md_engine.surya.foundation.loader import FoundationModelLoader
 from raw2md_engine.surya.foundation.util import (
     detect_repeat_token,
 )
-from raw2md_engine.surya.common.surya.schema import TaskNames
-from raw2md_engine.surya.foundation.cache.dynamic_ops import DynamicOpsCache
-from raw2md_engine.surya.foundation.cache.static_ops import StaticOpsCache
-
+from raw2md_engine.surya.logging import configure_logging, get_logger
 from raw2md_engine.surya.settings import settings
-from raw2md_engine.surya.logging import get_logger, configure_logging
 
 configure_logging()
 logger = get_logger()
@@ -108,7 +106,7 @@ class FoundationPredictor(BasePredictor):
         checkpoint=None,
         device=settings.TORCH_DEVICE_MODEL,
         dtype=None,
-        attention_implementation: Optional[str] = None,
+        attention_implementation: str | None = None,
     ):
         super().__init__(checkpoint, device, dtype, attention_implementation)
         self.prompt_queue = deque()
@@ -160,7 +158,7 @@ class FoundationPredictor(BasePredictor):
             dtype=self.model.dtype,
         )
         self.prompt_queue.clear()
-        self.batch_prompt_mapping = {i: None for i in range(batch_size)}
+        self.batch_prompt_mapping = dict.fromkeys(range(batch_size))
 
     @property
     def num_empty_slots(self):
@@ -172,10 +170,10 @@ class FoundationPredictor(BasePredictor):
 
     def prepare_input(
         self,
-        task_names: List[str],
-        images: List[Image.Image],
-        input_text: List[str | None],
-        math_modes: List[bool],
+        task_names: list[str],
+        images: list[Image.Image],
+        input_text: list[str | None],
+        math_modes: list[bool],
     ):
         batch = []
         for image, text, task_name, math_mode in zip(
@@ -206,7 +204,7 @@ class FoundationPredictor(BasePredictor):
         return batch
 
     def process_outputs(
-        self, outputs: SuryaModelOutput, max_lookahead_tokens: Optional[int] = None
+        self, outputs: SuryaModelOutput, max_lookahead_tokens: int | None = None
     ) -> ContinuousBatchOutput:
         # Predictions are multi-token
         lm_logits = outputs["lm_logits"].float()  # shape: [batch_size, seq_len, V]
@@ -245,8 +243,8 @@ class FoundationPredictor(BasePredictor):
         input_ids: torch.Tensor,
         input_boxes: torch.Tensor,
         num_predicted_tokens: torch.Tensor,
-        num_new_tokens: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        num_new_tokens: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         batch_size, seq_len = (
             input_ids.shape
         )  # seq_len can be >1 - In case of multi-token predictions
@@ -314,8 +312,8 @@ class FoundationPredictor(BasePredictor):
 
     def decode(
         self,
-        current_inputs: Optional[ContinuousBatchInput] = None,
-        max_lookahead_tokens: Optional[int] = None,
+        current_inputs: ContinuousBatchInput | None = None,
+        max_lookahead_tokens: int | None = None,
     ):
         # Note - If we want to use the outputs from the non-last token, we
         # need to set the cache position manually to ensure causality. The default
@@ -376,7 +374,7 @@ class FoundationPredictor(BasePredictor):
 
         num_predicted_tokens += num_new_tokens
         input_ids, input_boxes, num_valid_tokens = self.maybe_insert_beacon_tokens(
-             input_ids, input_boxes, num_predicted_tokens, num_new_tokens
+            input_ids, input_boxes, num_predicted_tokens, num_new_tokens
         )
         position_ids = position_ids[:, -1:] + torch.arange(
             1, input_ids.shape[1] + 1, device=input_ids.device
@@ -403,7 +401,7 @@ class FoundationPredictor(BasePredictor):
         bbox_preds: torch.Tensor,
         position_ids: torch.Tensor,
         new_seq_len: int,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Pads new_input_ids to match the new seq len with **left padding**
         and creates updated position_ids
@@ -417,7 +415,8 @@ class FoundationPredictor(BasePredictor):
             return (
                 input_ids,
                 bbox_preds,
-                position_ids[:, -1:] + torch.arange(1, new_seq_len + 1, device=self.model.device),
+                position_ids[:, -1:]
+                + torch.arange(1, new_seq_len + 1, device=self.model.device),
             )
 
         pad_len = new_seq_len - input_ids.shape[1]
@@ -464,12 +463,12 @@ class FoundationPredictor(BasePredictor):
 
     def prefill(
         self,
-        current_inputs: Optional[ContinuousBatchInput] = None,
-        max_lookahead_tokens: Optional[int] = None,
+        current_inputs: ContinuousBatchInput | None = None,
+        max_lookahead_tokens: int | None = None,
     ):
         logger.debug(f"Prefilling {self.num_empty_slots} slots")
 
-        prompts: List[FoundationPrompt] = [
+        prompts: list[FoundationPrompt] = [
             self.prompt_queue.popleft()
             for _ in range(min(self.num_empty_slots, len(self.prompt_queue)))
         ]
@@ -668,11 +667,11 @@ class FoundationPredictor(BasePredictor):
         return new_input, processed_outputs, idxs_to_merge
 
     def get_max_image_token_count(
-        self, images: list[np.ndarray], tasks: List[TaskNames]
+        self, images: list[np.ndarray], tasks: list[TaskNames]
     ) -> int:
         def compute_scaled_size(
-            H: int, W: int, max_size: Tuple[int, int]
-        ) -> Tuple[int, int]:
+            H: int, W: int, max_size: tuple[int, int]
+        ) -> tuple[int, int]:
             max_W, max_H = max_size
             min_W, min_H = (168, 168)
 
@@ -684,7 +683,7 @@ class FoundationPredictor(BasePredictor):
             if current_pixels > max_pixels:
                 scale = (max_pixels / current_pixels) ** 0.5
                 return math.floor(H * scale), math.floor(W * scale)
-            elif current_pixels < min_pixels:
+            if current_pixels < min_pixels:
                 scale = (min_pixels / current_pixels) ** 0.5
                 return math.ceil(H * scale), math.ceil(W * scale)
             return H, W
@@ -713,17 +712,17 @@ class FoundationPredictor(BasePredictor):
 
     def prediction_loop(
         self,
-        images: List[np.ndarray],
-        input_texts: List[str],
-        task_names: List[TaskNames],
+        images: list[np.ndarray],
+        input_texts: list[str],
+        task_names: list[TaskNames],
         batch_size: int | None = None,
         max_tokens: int | None = None,
         max_sliding_window: int | None = None,
         math_mode: bool = True,
         drop_repeated_tokens: bool = True,
-        max_lookahead_tokens: Optional[int] = None,
+        max_lookahead_tokens: int | None = None,
         top_k: int = 0,
-        tqdm_desc: str = "Recognizing Text"
+        tqdm_desc: str = "Recognizing Text",
     ) -> tuple:
         allowed_tasks = self.tasks.keys()
         assert all([task_name in allowed_tasks for task_name in task_names]), (
@@ -745,7 +744,9 @@ class FoundationPredictor(BasePredictor):
             max_sliding_window = self.model.config.sliding_window
         self.setup_cache(
             batch_size,
-            max_cache_len=max_image_tokens + max_sliding_window + self.extra_token_count.get(settings.TORCH_DEVICE_MODEL, 0),
+            max_cache_len=max_image_tokens
+            + max_sliding_window
+            + self.extra_token_count.get(settings.TORCH_DEVICE_MODEL, 0),
             max_sliding_window=max_sliding_window,
         )
 

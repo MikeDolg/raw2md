@@ -1,12 +1,12 @@
-from typing import TypedDict, Literal, List, Tuple
+from typing import Literal, TypedDict
 
 import torch
 from PIL import Image
 
 
 class TaskDict(TypedDict):
-    datasets: List[str]
-    img_size: Tuple[int, int]
+    datasets: list[str]
+    img_size: tuple[int, int]
 
 
 class TasksDict(TypedDict):
@@ -32,6 +32,6 @@ class TextInput(ProcessorInput):
 
 
 class ProcessorOutput(TypedDict):
-    input_ids: List[int]
+    input_ids: list[int]
     image_tiles: torch.Tensor | None
     grid_thw: torch.Tensor | None

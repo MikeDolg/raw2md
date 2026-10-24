@@ -1,11 +1,11 @@
-from typing import Optional
-
 import torch
 
 from raw2md_engine.surya.common.load import ModelLoader, restore_buffers
 from raw2md_engine.surya.logging import get_logger
 from raw2md_engine.surya.ocr_error.model.config import DistilBertConfig
-from raw2md_engine.surya.ocr_error.model.encoder import DistilBertForSequenceClassification
+from raw2md_engine.surya.ocr_error.model.encoder import (
+    DistilBertForSequenceClassification,
+)
 from raw2md_engine.surya.ocr_error.tokenizer import DistilBertTokenizer
 from raw2md_engine.surya.settings import settings
 
@@ -13,7 +13,7 @@ logger = get_logger()
 
 
 class OCRErrorModelLoader(ModelLoader):
-    def __init__(self, checkpoint: Optional[str] = None):
+    def __init__(self, checkpoint: str | None = None):
         super().__init__(checkpoint)
 
         if self.checkpoint is None:
@@ -23,7 +23,7 @@ class OCRErrorModelLoader(ModelLoader):
         self,
         device=settings.TORCH_DEVICE_MODEL,
         dtype=settings.MODEL_DTYPE,
-        attention_implementation: Optional[str] = None,
+        attention_implementation: str | None = None,
     ) -> DistilBertForSequenceClassification:
         if device is None:
             device = settings.TORCH_DEVICE_MODEL
