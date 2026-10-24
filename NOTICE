@@ -105,6 +105,9 @@ of the repository holds each change with its diff.
   references. `marker` loses the reference processor, the reference
   block, the page references of the provider and the page, and the span
   anchor of the Markdown renderer (2026-10-24).
+- `marker/processors/ignoretext.py` counts the streaks of a repeated
+  block on the even and the odd pages apart, so a running header that
+  alternates between them is ignored (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 

@@ -80,6 +80,13 @@ class IgnoreTextProcessor(BaseProcessor):
         for key, group in groupby(text):
             streaks[key] = max(streaks.get(key, 0), len(list(group)))
 
+        # A running header can alternate between even and odd pages, so each
+        # page parity also keeps its own streaks.
+        for parity in (0, 1):
+            same_parity = [t for t, b in zip(text, blocks) if b.page_id % 2 == parity]
+            for key, group in groupby(same_parity):
+                streaks[key] = max(streaks.get(key, 0), len(list(group)))
+
         counter = Counter(text)
         common = [
             k for k, v in counter.items()
