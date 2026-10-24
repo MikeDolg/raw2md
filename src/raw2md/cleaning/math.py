@@ -1640,6 +1640,10 @@ def _normalize_math_zones(text: str) -> str:
 def _normalize_inline_math(text: str) -> str:
     def repl(match: re.Match[str]) -> str:
         content = match.group(1).replace("\\[", "").replace("\\]", "")
+        if _is_spacer_residue(content):
+            # The tail trim would empty it to `$$`, a display delimiter; the
+            # content-free pass drops the span whole.
+            return match.group(0)
         return f"${_fix_math_content(content)}$"
 
     return _INLINE_MATH_RE.sub(repl, text)

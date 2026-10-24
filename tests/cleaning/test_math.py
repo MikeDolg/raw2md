@@ -1681,3 +1681,27 @@ def test_keeps_a_delimiter_pair_inside_a_link_target() -> None:
 def test_separating_a_glued_span_is_idempotent() -> None:
     once = clean_in_place("No more than 3$S$ in the zone.\n")
     assert clean_in_place(once) == once
+
+
+def test_a_span_of_one_backslash_space_is_dropped_whole() -> None:
+    text = "Alpha  $\\ $ \n\nBeta $x$.\n"
+    result = clean(text)
+    assert "$$" not in result
+    assert "Beta $x$." in result.split("\n")
+
+
+def test_spacing_only_spans_do_not_open_a_display_zone() -> None:
+    for body in ("\\ ", "\\,", "\\;", "\\ \\,"):
+        text = f"Alpha ${body}$ gamma.\n\nBeta $x$ and $y$.\n"
+        assert clean(text) == "Alpha gamma.\n\nBeta $x$ and $y$.\n"
+
+
+def test_a_sign_beside_a_spacing_command_is_kept() -> None:
+    for body in ("+\\,", "\\,x"):
+        text = f"Sum ${body}$ here.\n"
+        assert clean_in_place(text) == text
+
+
+def test_dropping_a_spacing_only_span_is_idempotent() -> None:
+    once = clean_in_place("Alpha $\\ $ beta.\n")
+    assert clean_in_place(once) == once
