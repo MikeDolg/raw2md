@@ -41,11 +41,13 @@ def assign_scripts(lines: Lines, height_threshold: float = 0.8, line_distance_th
             next_fullheight = is_last or span_height / max(1, line["spans"][i + 1]["bbox"].height) <= height_threshold
             prev_fullheight = is_first or span_height / max(1, prev_span["bbox"].height) <= height_threshold
 
-            above = any([span_top < (s["bbox"].y_start - s["bbox"].height * line_distance_threshold) for j, s in enumerate(line["spans"]) if j != i])
+            # A blank span has a zero-height box on the baseline: every glyph
+            # would rise above it and drop below it.
+            above = any([span_top < (s["bbox"].y_start - s["bbox"].height * line_distance_threshold) for j, s in enumerate(line["spans"]) if j != i and s["text"].strip()])
             prev_above = is_first or span_top < prev_span["bbox"].y_start
             next_above = is_last or span_top < line["spans"][i + 1]["bbox"].y_start
 
-            below = any([span_bottom > (s["bbox"].y_end + s["bbox"].height * line_distance_threshold) for j, s in enumerate(line["spans"]) if j != i])
+            below = any([span_bottom > (s["bbox"].y_end + s["bbox"].height * line_distance_threshold) for j, s in enumerate(line["spans"]) if j != i and s["text"].strip()])
             prev_below = is_first or span_bottom > prev_span["bbox"].y_end
             next_below = is_last or span_bottom > line["spans"][i + 1]["bbox"].y_end
 

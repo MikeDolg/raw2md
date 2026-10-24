@@ -86,6 +86,8 @@ of the repository holds each change with its diff.
   with their cluster labels (2026-10-24).
 - `marker/schema/text/span.py` does not wrap the text of a math span in
   superscript markup (2026-10-24).
+- `pdftext/pdf/pages.py` does not compare a span with the blank spans of
+  its line when it decides a superscript or a subscript (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 
