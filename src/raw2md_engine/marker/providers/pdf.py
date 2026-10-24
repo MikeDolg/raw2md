@@ -2,13 +2,12 @@ import contextlib
 import ctypes
 import logging
 import re
-from typing import Annotated, Dict, List, Optional, Set
+from typing import Annotated, List, Optional, Set
 
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_c
 from ftfy import fix_text
 from raw2md_engine.pdftext.extraction import dictionary_output
-from raw2md_engine.pdftext.schema import Reference
 from raw2md_engine.pdftext.pdf.utils import flatten as flatten_pdf_page
 
 from PIL import Image
@@ -89,9 +88,6 @@ class PdfProvider(BaseProvider):
         with self.get_doc() as doc:
             self.page_count = len(doc)
             self.page_lines: ProviderPageLines = {i: [] for i in range(len(doc))}
-            self.page_refs: Dict[int, List[Reference]] = {
-                i: [] for i in range(len(doc))
-            }
 
             if self.page_range is None:
                 self.page_range = range(len(doc))
@@ -297,10 +293,6 @@ class PdfProvider(BaseProvider):
             if self.check_line_spans(lines):
                 page_lines[page_id] = lines
 
-            self.page_refs[page_id] = []
-            if page_refs := page.get("refs", None):
-                self.page_refs[page_id] = page_refs
-
         return page_lines
 
     def check_line_spans(self, page_lines: List[ProviderOutput]) -> bool:
@@ -426,9 +418,6 @@ class PdfProvider(BaseProvider):
 
     def get_page_lines(self, idx: int) -> List[ProviderOutput]:
         return self.page_lines[idx]
-
-    def get_page_refs(self, idx: int) -> List[Reference]:
-        return self.page_refs[idx]
 
     @staticmethod
     def _get_fontname(font) -> str:

@@ -28,7 +28,6 @@ from raw2md_engine.marker.processors.ignoretext import IgnoreTextProcessor
 from raw2md_engine.marker.processors.line_numbers import LineNumbersProcessor
 from raw2md_engine.marker.processors.list import ListProcessor
 from raw2md_engine.marker.processors.page_header import PageHeaderProcessor
-from raw2md_engine.marker.processors.reference import ReferenceProcessor
 from raw2md_engine.marker.processors.sectionheader import SectionHeaderProcessor
 from raw2md_engine.marker.processors.table import TableProcessor
 from raw2md_engine.marker.processors.text import TextProcessor
@@ -71,7 +70,6 @@ class PdfConverter(BaseConverter):
         SectionHeaderProcessor,
         TableProcessor,
         TextProcessor,
-        ReferenceProcessor,
         BlankPageProcessor,
         DebugProcessor,
     )

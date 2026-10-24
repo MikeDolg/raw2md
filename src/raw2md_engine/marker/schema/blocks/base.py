@@ -340,12 +340,7 @@ class Block(BaseModel):
         if block_config is None:
             block_config = {}
 
-        child_ref_blocks = [
-            block
-            for block in child_blocks
-            if block.id.block_type == BlockTypes.Reference
-        ]
         html = Block.assemble_html(
-            self, document, child_ref_blocks, parent_structure, block_config
+            self, document, [], parent_structure, block_config
         )
         return html + self.html

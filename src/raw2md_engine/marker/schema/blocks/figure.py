@@ -16,13 +16,8 @@ class Figure(Block):
                 document, child_blocks, parent_structure, block_config
             )
 
-        child_ref_blocks = [
-            block
-            for block in child_blocks
-            if block.id.block_type == BlockTypes.Reference
-        ]
         html = super().assemble_html(
-            document, child_ref_blocks, parent_structure, block_config
+            document, [], parent_structure, block_config
         )
         if self.description:
             html += f"<p role='img' data-original-image-id='{self.id}'>Image {self.id} description: {self.description}</p>"

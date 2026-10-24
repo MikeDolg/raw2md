@@ -4,7 +4,6 @@ import numpy as np
 
 from PIL import Image, ImageDraw
 
-from raw2md_engine.pdftext.schema import Reference
 from pydantic import computed_field
 
 from raw2md_engine.marker.providers import ProviderOutput
@@ -33,7 +32,6 @@ class PageGroup(Group):
     )
     maximum_assignment_distance: float = 20  # pixels
     block_description: str = "A single page in the document."
-    refs: List[Reference] | None = None
     ocr_errors_detected: bool = False
 
     def incr_block_id(self):

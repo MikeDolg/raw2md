@@ -4,8 +4,6 @@ from typing import List, Optional, Dict
 from PIL import Image
 from pydantic import BaseModel
 
-from raw2md_engine.pdftext.schema import Reference
-
 from raw2md_engine.marker.logger import configure_logging
 from raw2md_engine.marker.schema.polygon import PolygonBox
 from raw2md_engine.marker.schema.text import Span
@@ -62,9 +60,6 @@ class BaseProvider:
         pass
 
     def get_page_lines(self, idx: int) -> List[Line]:
-        pass
-
-    def get_page_refs(self, idx: int) -> List[Reference]:
         pass
 
     def __enter__(self):

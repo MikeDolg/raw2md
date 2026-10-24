@@ -99,6 +99,12 @@ of the repository holds each change with its diff.
   on a page without rotation and keeps the character boxes of a table run.
   `marker/processors/table.py` splits a run of numeric words at the cell
   boundaries (2026-10-24).
+- `pdftext/pdf/links.py` drops a link whose target is inside the
+  document, so its span stays whole and no page reference is made.
+  `pdftext/schema.py` and `pdftext/extraction.py` lose the page
+  references. `marker` loses the reference processor, the reference
+  block, the page references of the provider and the page, and the span
+  anchor of the Markdown renderer (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 

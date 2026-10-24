@@ -18,7 +18,6 @@ _TORCH_FREE = (
     "marker.schema.blocks.sectionheader",
     "marker.processors.ignoretext",
     "marker.processors.list",
-    "marker.processors.reference",
     "marker.processors.sectionheader",
     "pdftext.extraction",
     "pdftext.tables",

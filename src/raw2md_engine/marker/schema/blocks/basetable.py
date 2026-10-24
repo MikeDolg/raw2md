@@ -43,13 +43,8 @@ class BaseTable(Block):
         block_config: dict | None = None,
     ):
         # Filter out the table cells, so they don't render twice
-        child_ref_blocks = [
-            block
-            for block in child_blocks
-            if block.id.block_type == BlockTypes.Reference
-        ]
         template = super().assemble_html(
-            document, child_ref_blocks, parent_structure, block_config
+            document, [], parent_structure, block_config
         )
 
         child_block_types = set([c.id.block_type for c in child_blocks])

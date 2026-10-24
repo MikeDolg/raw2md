@@ -46,7 +46,6 @@ class DocumentBuilder(BaseBuilder):
                 lowres_image=lowres_images[i],
                 highres_image=highres_images[i],
                 polygon=provider.get_page_bbox(p),
-                refs=provider.get_page_refs(p)
             ) for i, p in enumerate(provider.page_range)
         ]
         DocumentClass: Document = get_block_class(BlockTypes.Document)

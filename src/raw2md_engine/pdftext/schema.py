@@ -1,6 +1,6 @@
+# Modified by the raw2md authors. See NOTICE.
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, TypedDict, Union
 
 
@@ -168,7 +168,6 @@ class Page(TypedDict):
     height: int
     blocks: List[Block]
     rotation: int
-    refs: List[Reference]
 
 
 class TableCell(TypedDict):
@@ -184,47 +183,7 @@ class TableInput(TypedDict):
 class Link(TypedDict):
     page: int
     bbox: List[float]
-    dest_page: Optional[int]
-    dest_pos: Optional[List[float]]
     url: Optional[str]
-
-
-@dataclass
-class Reference:
-    idx: int
-    page: int
-    coord: List[float]
-
-    @property
-    def ref(self):
-        return f"page-{self.page}-{self.idx}"
-
-    @property
-    def url(self):
-        return f"#{self.ref}"
-
-
-class PageReference:
-    def __init__(self):
-        self.page_ref_map: Dict[int, List[Reference]] = {}
-
-    def get_refs(self, page: int) -> List[Reference]:
-        return self.page_ref_map.get(page, [])
-
-    def add_ref(self, page: int, coord: List[float]) -> Reference:
-        self.page_ref_map.setdefault(page, [])
-        ref = self.check_ref(page, coord)
-        if ref is None:
-            ref = Reference(idx=len(self.page_ref_map[page]), page=page, coord=coord)
-            self.page_ref_map[page].append(ref)
-        return ref
-
-    def check_ref(self, page: int, coord: List[float]) -> Optional[Reference]:
-        refs = self.page_ref_map.get(page, [])
-        for ref in refs:
-            if ref.coord == coord:
-                return ref
-        return None
 
 
 Chars = List[Char]

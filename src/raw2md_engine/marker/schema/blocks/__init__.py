@@ -19,4 +19,3 @@ from raw2md_engine.marker.schema.blocks.text import Text
 from raw2md_engine.marker.schema.blocks.toc import TableOfContents
 from raw2md_engine.marker.schema.blocks.complexregion import ComplexRegion
 from raw2md_engine.marker.schema.blocks.tablecell import TableCell
-from raw2md_engine.marker.schema.blocks.reference import Reference

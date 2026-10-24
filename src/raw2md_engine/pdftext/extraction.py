@@ -8,7 +8,7 @@ from typing import List
 
 import pypdfium2 as pdfium
 
-from raw2md_engine.pdftext.pdf.links import add_links_and_refs
+from raw2md_engine.pdftext.pdf.links import add_links
 from raw2md_engine.pdftext.pdf.pages import get_pages
 from raw2md_engine.pdftext.postprocessing import handle_hyphens, merge_text, postprocess_text, sort_blocks
 from raw2md_engine.pdftext.schema import Pages, TableInputs, Tables
@@ -105,7 +105,7 @@ def dictionary_output(
 
     if not disable_links:
         pdf = _load_pdf(pdf_path, False)
-        add_links_and_refs(pages, pdf)
+        add_links(pages, pdf)
         pdf.close()
 
     for page in pages:

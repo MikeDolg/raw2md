@@ -1,30 +1,13 @@
 # Modified by the raw2md authors. See NOTICE.
 import ctypes
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_c
 
 from raw2md_engine.pdftext.pdf.utils import matrix_intersection_area
-from raw2md_engine.pdftext.schema import Bbox, Link, Page, PageReference, Pages, Span
-
-
-def _get_dest_position(dest) -> Optional[Tuple[float, float]]:
-    has_x = ctypes.c_int()
-    has_y = ctypes.c_int()
-    has_zoom = ctypes.c_int()
-    x_coord = ctypes.c_float()
-    y_coord = ctypes.c_float()
-    zoom_level = ctypes.c_float()
-    success = pdfium_c.FPDFDest_GetLocationInPage(
-        dest, has_x, has_y, has_zoom,
-        x_coord, y_coord, zoom_level
-    )
-    if success:
-        if has_x.value and has_y.value:
-            return x_coord.value, y_coord.value
-    return None
+from raw2md_engine.pdftext.schema import Bbox, Link, Page, Pages, Span
 
 
 def _rect_to_scaled_bbox(rect, page_bbox, page_rotation) -> List[float]:
@@ -45,10 +28,6 @@ def _rect_to_scaled_bbox(rect, page_bbox, page_rotation) -> List[float]:
     return Bbox(bbox).rotate(page_width, page_height, page_rotation).bbox
 
 
-def _xy_to_scaled_pos(x, y, page_bbox, page_rotation, expand_by=1) -> List[float]:
-    return _rect_to_scaled_bbox([x - expand_by, y - expand_by, x + expand_by, y + expand_by], page_bbox, page_rotation)[:2]
-
-
 def get_links(page_idx: int, pdf: pdfium.PdfDocument) -> List[Link]:
     urls = []
 
@@ -65,8 +44,6 @@ def get_links(page_idx: int, pdf: pdfium.PdfDocument) -> List[Link]:
         link: Link = {
             'page': page_idx,
             'bbox': None,
-            'dest_page': None,
-            'dest_pos': None,
             'url': None,
         }
         annot = pdfium_c.FPDFPage_GetAnnot(page, i)
@@ -85,30 +62,17 @@ def get_links(page_idx: int, pdf: pdfium.PdfDocument) -> List[Link]:
 
         link_obj = pdfium_c.FPDFAnnot_GetLink(annot)
 
+        # A link inside the document gives no anchor that Markdown keeps, and
+        # its split would break the span at the link boundary.
         dest = pdfium_c.FPDFLink_GetDest(pdf, link_obj)
         if dest:
-            tgt_page = pdfium_c.FPDFDest_GetDestPageIndex(pdf, dest)
-            link['dest_page'] = tgt_page
-            dest_position = _get_dest_position(dest)
-            if dest_position:
-                link['dest_pos'] = _xy_to_scaled_pos(*dest_position, page_bbox, page_rotation)
-
+            continue
         else:
             action = pdfium_c.FPDFLink_GetAction(link_obj)
             a_type = pdfium_c.FPDFAction_GetType(action)
 
-            if a_type == pdfium_c.PDFACTION_UNSUPPORTED:
+            if a_type in (pdfium_c.PDFACTION_UNSUPPORTED, pdfium_c.PDFACTION_GOTO):
                 continue
-
-            elif a_type == pdfium_c.PDFACTION_GOTO:
-                # Goto a page
-                dest = pdfium_c.FPDFAction_GetDest(pdf, action)
-                if dest:
-                    tgt_page = pdfium_c.FPDFDest_GetDestPageIndex(pdf, dest)
-                    link['dest_page'] = tgt_page
-                    dest_position = _get_dest_position(dest)
-                    if dest_position:
-                        link['dest_pos'] = _xy_to_scaled_pos(*dest_position, page_bbox, page_rotation)
 
             elif a_type == pdfium_c.PDFACTION_URI:
                 # External link
@@ -123,7 +87,7 @@ def get_links(page_idx: int, pdf: pdfium.PdfDocument) -> List[Link]:
     return urls
 
 
-def merge_links(page: Page, pdf: pdfium.PdfDocument, refs: PageReference):
+def merge_links(page: Page, pdf: pdfium.PdfDocument):
     """
     Merges links with spans. Some spans can also have multiple links associated with them.
     We break up the spans and reconstruct them taking the links into account.
@@ -145,22 +109,6 @@ def merge_links(page: Page, pdf: pdfium.PdfDocument, refs: PageReference):
             continue
 
         max_intersection = intersection_link.argmax()
-        span = spans[max_intersection]
-
-        dest_page = link['dest_page']
-        if dest_page is not None:
-            if link['dest_pos']:
-                dest_pos = link['dest_pos']
-            else:
-                # Don't link to self if there is no dest_pos
-                if dest_page == page_id:
-                    continue
-                # if we don't have a dest pos, we just link to the top of the page
-                dest_pos = [0.0, 0.0]
-
-            ref = refs.add_ref(dest_page, dest_pos)
-            link['url'] = ref.url
-
         span_link_map.setdefault(max_intersection, [])
         span_link_map[max_intersection].append(link)
 
@@ -222,11 +170,6 @@ def _reconstruct_spans(orig_span: dict, links: List[Link]) -> List[Span]:
     return spans
 
 
-def add_links_and_refs(pages: Pages, pdf_doc: pdfium.PdfDocument):
-    refs = PageReference()
-
+def add_links(pages: Pages, pdf_doc: pdfium.PdfDocument):
     for page in pages:
-        merge_links(page, pdf_doc, refs)
-
-    for page in pages:
-        page["refs"] = refs.get_refs(page["page"])
+        merge_links(page, pdf_doc)

@@ -238,12 +238,6 @@ class Markdownify(MarkdownConverter):
         text = re.sub(r"([\[\]()])", r"\\\1", text)
         return super().convert_a(el, text, parent_tags)
 
-    def convert_span(self, el, text, parent_tags):
-        if el.get("id"):
-            return f'<span id="{el["id"]}">{text}</span>'
-        else:
-            return text
-
     def escape(self, text, parent_tags=None):
         text = super().escape(text, parent_tags)
         if self.options["escape_dollars"]:

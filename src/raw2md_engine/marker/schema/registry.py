@@ -22,7 +22,6 @@ from raw2md_engine.marker.schema.blocks import (
     Text,
     ComplexRegion,
     TableCell,
-    Reference,
 )
 from raw2md_engine.marker.schema.document import Document
 from raw2md_engine.marker.schema.groups import (
@@ -75,7 +74,6 @@ register_block_class(BlockTypes.Text, Text)
 register_block_class(BlockTypes.TableOfContents, TableOfContents)
 register_block_class(BlockTypes.ComplexRegion, ComplexRegion)
 register_block_class(BlockTypes.TableCell, TableCell)
-register_block_class(BlockTypes.Reference, Reference)
 register_block_class(BlockTypes.Document, Document)
 
 assert len(BLOCK_REGISTRY) == len(BlockTypes)
