@@ -114,33 +114,31 @@ class Span(Block):
             if "<sup>" not in text:
                 text = f"<sup>{text}</sup>"
 
-        if self.url:
-            text = f"<a href='{self.url}'>{text}</a>"
-
-        # TODO Support multiple formats
-        if self.italic:
-            text = f"<i>{text}</i>"
-        elif self.bold:
-            text = f"<b>{text}</b>"
-        elif self.math:
+        # Math is innermost, so that unwrap_math and the Markdown math
+        # delimiters see the formula alone.
+        if self.math:
             block_envs = ["split", "align", "gather", "multline"]
             if any(f"\\begin{{{env}}}" in text for env in block_envs):
                 display_mode = "block"
             else:
                 display_mode = "inline"
-            text = f"<math display='{display_mode}'>{text}</math>"
-        elif self.highlight:
-            text = f"<mark>{text}</mark>"
-        elif self.subscript:
-            text = f"<sub>{text}</sub>"
-        elif self.superscript:
-            text = f"<sup>{text}</sup>"
-        elif self.underline:
-            text = f"<u>{text}</u>"
-        elif self.small:
-            text = f"<small>{text}</small>"
-        elif self.code:
+            text = unwrap_math(f"<math display='{display_mode}'>{text}</math>")
+        if self.code:
             text = f"<code>{text}</code>"
-
-        text = unwrap_math(text)
+        if self.subscript:
+            text = f"<sub>{text}</sub>"
+        if self.superscript:
+            text = f"<sup>{text}</sup>"
+        if self.small:
+            text = f"<small>{text}</small>"
+        if self.underline:
+            text = f"<u>{text}</u>"
+        if self.highlight:
+            text = f"<mark>{text}</mark>"
+        if self.url:
+            text = f"<a href='{self.url}'>{text}</a>"
+        if self.italic:
+            text = f"<i>{text}</i>"
+        if self.bold:
+            text = f"<b>{text}</b>"
         return text

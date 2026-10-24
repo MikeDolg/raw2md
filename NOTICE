@@ -80,6 +80,8 @@ of the repository holds each change with its diff.
   and does not replace it with a space (2026-10-24).
 - `marker/processors/table.py` removes dot leaders in a table cell only
   when whitespace or the end follows them (2026-10-24).
+- `marker/schema/text/span.py` applies every format of a span, with math
+  innermost and bold outermost (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 
