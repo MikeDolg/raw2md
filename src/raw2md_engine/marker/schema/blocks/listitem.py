@@ -12,8 +12,10 @@ def replace_bullets(child_blocks):
         child_blocks = first_block.children
 
     if first_block is not None and first_block.id.block_type == BlockTypes.Line:
-        bullet_pattern = r"(^|[\n ]|<[^>]*>)[•●○ഠ ം◦■▪▫–—-]( )"
-        first_block.html = re.sub(bullet_pattern, r"\1\2", first_block.html)
+        bullet_pattern = r"^((?:\s|<[^>]*>)*)[•●○ഠ ം◦■▪▫–—-]( )"
+        first_block.html = re.sub(
+            bullet_pattern, r"\1\2", first_block.html, count=1
+        )
 
 
 class ListItem(Block):
