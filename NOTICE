@@ -76,6 +76,8 @@ of the repository holds each change with its diff.
   math spans merge (2026-10-24).
 - `marker/schema/text/line.py` removes only a hyphen or a soft hyphen at
   the end of a line, and keeps a dash (2026-10-24).
+- `marker/renderers/markdown.py` escapes a vertical bar in a table cell
+  and does not replace it with a space (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 

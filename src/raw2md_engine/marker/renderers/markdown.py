@@ -146,12 +146,11 @@ class Markdownify(MarkdownConverter):
                     col_idx += 1
 
                 # Fill in grid
-                value = (
-                    get_formatted_table_text(cell)
-                    .replace("\n", " ")
-                    .replace("|", " ")
-                    .strip()
-                )
+                value = re.sub(
+                    r"(?<!\\)\|",
+                    r"\\|",
+                    get_formatted_table_text(cell).replace("\n", " "),
+                ).strip()
                 rowspan = int(cell.get("rowspan", 1))
                 colspan = int(cell.get("colspan", 1))
 
