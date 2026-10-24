@@ -95,6 +95,10 @@ of the repository holds each change with its diff.
   of one row (2026-10-24).
 - `marker/renderers/markdown.py` removes bold markup from a
   heading and keeps italic (2026-10-24).
+- `pdftext/tables.py` measures the gap between characters along the line
+  on a page without rotation and keeps the character boxes of a table run.
+  `marker/processors/table.py` splits a run of numeric words at the cell
+  boundaries (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 

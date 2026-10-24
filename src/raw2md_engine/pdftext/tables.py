@@ -21,7 +21,8 @@ def get_dynamic_gap_thresh(page: Page, img_size: list, default_thresh=.01, min_c
                     elif page["rotation"] == 270:
                         space_dists.append((char1["bbox"][0] - char2["bbox"][2]) / img_size[0])
                     else:
-                        space_dists.append((char1["bbox"][1] - char2["bbox"][3]) / img_size[1])
+                        # The gap along the line, in page units, as is_same_span measures it.
+                        space_dists.append((char2["bbox"][0] - char1["bbox"][2]) / page["width"])
     cell_gap_thresh = np.percentile(space_dists, 80) if len(space_dists) > min_chars else default_thresh
     return cell_gap_thresh
 
@@ -77,6 +78,7 @@ def table_cell_text(tables: List[List[int]], page: Page, img_size: list, table_t
                     continue
                 curr_span = None
                 curr_box = None
+                curr_chars = []
                 for span in line["spans"]:
                     for char in span["chars"]:
                         bbox = Bbox(bbox=char["bbox"]).rescale(img_size, page).bbox
@@ -87,25 +89,29 @@ def table_cell_text(tables: List[List[int]], page: Page, img_size: list, table_t
                         if curr_span is None:
                             curr_span = char["char"]
                             curr_box = bbox
+                            curr_chars = [{"char": char["char"], "bbox": bbox}]
                         elif same_span:
                             curr_span += char["char"]
                             curr_box = [min(curr_box[0], bbox[0]), min(curr_box[1], bbox[1]),
                                         max(curr_box[2], bbox[2]), max(curr_box[3], bbox[3])]
+                            curr_chars.append({"char": char["char"], "bbox": bbox})
                         else:
                             if curr_span.strip():
-                                table_text.append({"text": curr_span, "bbox": curr_box})
+                                table_text.append({"text": curr_span, "bbox": curr_box, "chars": curr_chars})
                             curr_span = char["char"]
                             curr_box = bbox
+                            curr_chars = [{"char": char["char"], "bbox": bbox}]
                 if curr_span is not None and curr_span.strip():
-                    table_text.append({"text": curr_span, "bbox": curr_box})
+                    table_text.append({"text": curr_span, "bbox": curr_box, "chars": curr_chars})
         # Adjust to be relative to input table
+        def to_table(box):
+            return [box[0] - table[0], box[1] - table[1], box[2] - table[0], box[3] - table[1]]
+
         for item in table_text:
-            item["bbox"] = [
-                item["bbox"][0] - table[0],
-                item["bbox"][1] - table[1],
-                item["bbox"][2] - table[0],
-                item["bbox"][3] - table[1]
-            ]
+            item["bbox"] = to_table(item["bbox"])
+            # The char boxes let the caller split a run at the cell boundaries.
+            for char in item["chars"]:
+                char["bbox"] = to_table(char["bbox"])
         table_text = sort_blocks(table_text)
         table_texts.append(table_text)
     return table_texts

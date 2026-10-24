@@ -433,10 +433,14 @@ class TableProcessor(BaseProcessor):
             if table_page_data["ocr_block"]:
                 continue
 
-            table_text_lines = table_page_data["table_text_lines"]
             table_cells: List[SuryaTableCell] = table_result.cells
-            text_line_bboxes = [t["bbox"] for t in table_text_lines]
             table_cell_bboxes = [c.bbox for c in table_cells]
+            table_text_lines = [
+                piece
+                for text_line in table_page_data["table_text_lines"]
+                for piece in self.split_text_line_at_cells(text_line, table_cell_bboxes)
+            ]
+            text_line_bboxes = [t["bbox"] for t in table_text_lines]
 
             intersection_matrix = matrix_intersection_area(
                 text_line_bboxes, table_cell_bboxes
@@ -457,6 +461,65 @@ class TableProcessor(BaseProcessor):
                 assert all("text" in t for t in text), "All text lines must have text"
                 assert all("bbox" in t for t in text), "All text lines must have a bbox"
                 table_cells[k].text_lines = text
+
+    @staticmethod
+    def split_text_line_at_cells(text_line: dict, cell_bboxes: list) -> list:
+        # pdftext joins the values of columns closer than its gap threshold into
+        # one run. A run of numeric words splits between words, so a word stays
+        # whole. Text stays whole: a header line often spans cells that the table
+        # model did not merge.
+        chars = text_line.get("chars") or []
+        words = []
+        start = None
+        for i, char in enumerate(chars + [{"char": " "}]):
+            if char["char"].strip():
+                if start is None:
+                    start = i
+            elif start is not None:
+                words.append((start, i))
+                start = None
+        if len(words) < 2:
+            return [text_line]
+        texts = ["".join(c["char"] for c in chars[s:e]) for s, e in words]
+        if not all(any(ch.isdigit() for ch in text) for text in texts):
+            return [text_line]
+
+        def union(boxes):
+            return [
+                min(b[0] for b in boxes),
+                min(b[1] for b in boxes),
+                max(b[2] for b in boxes),
+                max(b[3] for b in boxes),
+            ]
+
+        word_bboxes = [union([c["bbox"] for c in chars[s:e]]) for s, e in words]
+        areas = matrix_intersection_area(word_bboxes, cell_bboxes)
+        word_cells = [int(a.argmax()) if a.sum() > 0 else None for a in areas]
+        if len(set(word_cells) - {None}) < 2:
+            return [text_line]
+
+        # A word outside every cell joins its neighbour.
+        known = [c for c in word_cells if c is not None]
+        last = known[0]
+        for i, cell in enumerate(word_cells):
+            if cell is None:
+                word_cells[i] = last
+            else:
+                last = cell
+
+        pieces = []
+        for (s, e), cell in zip(words, word_cells):
+            if pieces and pieces[-1][2] == cell:
+                pieces[-1][1] = e
+            else:
+                pieces.append([s, e, cell])
+        return [
+            {
+                "text": "".join(c["char"] for c in chars[s:e]),
+                "bbox": union([c["bbox"] for c in chars[s:e]]),
+            }
+            for s, e, _ in pieces
+        ]
 
     def assign_pdftext_lines(self, extract_blocks: list, filepath: str):
         table_inputs = []
