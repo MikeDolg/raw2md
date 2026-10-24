@@ -93,6 +93,8 @@ of the repository holds each change with its diff.
   delimiter (2026-10-24).
 - `marker/renderers/markdown.py` writes one separator line for a table
   of one row (2026-10-24).
+- `marker/renderers/markdown.py` removes bold markup from a
+  heading and keeps italic (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 
