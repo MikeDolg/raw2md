@@ -73,7 +73,7 @@ class SectionHeaderProcessor(BaseProcessor):
         data = np.asarray(line_heights).reshape(-1, 1)
         labels = KMeans(n_clusters=num_levels, random_state=0, n_init="auto").fit_predict(data)
         data_labels = np.concatenate([data, labels.reshape(-1, 1)], axis=1)
-        data_labels = np.sort(data_labels, axis=0)
+        data_labels = data_labels[np.argsort(data_labels[:, 0], kind="stable")]
 
         cluster_means = {int(label): float(np.mean(data_labels[data_labels[:, 1] == label, 0])) for label in np.unique(labels)}
         label_max = None
