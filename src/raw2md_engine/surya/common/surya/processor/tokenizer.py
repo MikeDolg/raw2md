@@ -2,7 +2,6 @@ import html
 import re
 from typing import List, Union, Dict, Optional, Tuple, Iterable
 import numpy as np
-import torch
 from tokenizers import AddedToken
 import json
 import os
@@ -195,7 +194,7 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
                 with open(specials_file, "r", encoding="utf-8") as f:
                     sp_list_flat = json.load(f)
             else:
-                sp_list_flat = special_tokens or SPECIAL_TOKENS
+                sp_list_flat = special_tokens or []
             sp_dict = {"all": list(sp_list_flat)}
 
         # Ensure "all" exists and is unique/preserved in order.
@@ -253,12 +252,12 @@ class GreedyMathUTF16Tokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         self.LAYOUT_LABEL2ID = {
             k: v
             for k, v in self.SPECIAL_TOKEN_MAPPING.items()
-            if k in self.special_tokens["layout"]
+            if k in self.special_tokens.get("layout", [])
         }
         self.TABLE_STRUCTURE_LABEL2ID = {
             k: v
             for k, v in self.SPECIAL_TOKEN_MAPPING.items()
-            if k in self.special_tokens["table_structure"]
+            if k in self.special_tokens.get("table_structure", [])
         }
         if not self.special_tokens.get("system", []):
             print("Warning: No system tokens found in special_tokens")
@@ -583,7 +582,7 @@ class SuryaOCRTokenizer(S3DownloaderMixin, PreTrainedTokenizer):
         return {"input_ids": tokenized}
 
     def decode(self, token_ids, **kwargs):
-        if isinstance(token_ids, (np.ndarray, torch.Tensor)):
+        if isinstance(token_ids, np.ndarray) or hasattr(token_ids, "tolist"):
             token_ids = token_ids.tolist()
 
         decoded_text = self.ocr_tokenizer.decode(token_ids, skip_special_tokens=False)

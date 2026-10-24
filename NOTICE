@@ -114,6 +114,10 @@ of the repository holds each change with its diff.
 - `marker/converters/pdf.py` drops the line merge, blank page, and
   block relabel processors from the default chain, and `marker` loses
   their files, because no setting of raw2md enables them (2026-10-24).
+- `surya/common/surya/processor/tokenizer.py` builds without a special
+  token file or a category list: the flat list defaults to empty and the
+  layout and table categories may be absent. It imports torch nowhere, so
+  it loads without the package (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 
