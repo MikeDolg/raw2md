@@ -149,7 +149,7 @@ part. The table rules do not change the values in the cells.
 
 | Defect | Before | After |
 |---|---|---|
-| Navigation markup of `raw2md-engine` and `marker` | `See Table [2,](#page-49-0)` | `See Table 2,` |
+| Navigation markup of `marker` | `See Table [2,](#page-49-0)` | `See Table 2,` |
 | A file path instead of the image caption | `![C:\Users\me\pump.png](media/image1.png)` | `![](media/image1.png)` |
 | A line of punctuation marks only; `---` and a single mark stay | `.,;:` | deleted |
 | Invisible characters: the soft hyphen (U+00AD), the zero-width characters (U+200B to U+200D), and the byte order mark (U+FEFF) | `pre` + U+00AD + `ssure`, which looks like `pressure` on screen | `pressure` |

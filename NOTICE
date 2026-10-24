@@ -70,54 +70,42 @@ of the repository holds each change with its diff.
   `common/surya/decoder/config.py`, `ocr_error/model/config.py`,
   `ocr_error/model/encoder.py`, `ocr_error/tokenizer.py`,
   `table_rec/model/encoder.py`, and `table_rec/model/encoderdecoder.py`.
-- `marker/settings.py` imports torch only when the device is read, so the
-  renderers and the text processors import without torch (2026-10-24).
-- `marker/renderers/__init__.py` keeps the trailing minus when two inline
-  math spans merge (2026-10-24).
-- `marker/schema/text/line.py` removes only a hyphen or a soft hyphen at
-  the end of a line, and keeps a dash (2026-10-24).
-- `marker/renderers/markdown.py` escapes a vertical bar in a table cell
-  and does not replace it with a space (2026-10-24).
-- `marker/processors/table.py` removes dot leaders in a table cell only
-  when whitespace or the end follows them (2026-10-24).
-- `marker/schema/text/span.py` applies every format of a span, with math
-  innermost and bold outermost (2026-10-24).
-- `marker/processors/sectionheader.py` sorts the heading heights together
-  with their cluster labels (2026-10-24).
-- `marker/schema/text/span.py` does not wrap the text of a math span in
-  superscript markup (2026-10-24).
-- `pdftext/pdf/pages.py` does not compare a span with the blank spans of
-  its line when it decides a superscript or a subscript (2026-10-24).
-- `marker/renderers/markdown.py` keeps the escaped space at the end of a
-  math span, so a trailing backslash does not escape the closing
-  delimiter (2026-10-24).
-- `marker/renderers/markdown.py` writes one separator line for a table
-  of one row (2026-10-24).
-- `marker/renderers/markdown.py` removes bold markup from a
-  heading and keeps italic (2026-10-24).
-- `pdftext/tables.py` measures the gap between characters along the line
-  on a page without rotation and keeps the character boxes of a table run.
-  `marker/processors/table.py` splits a run of numeric words at the cell
-  boundaries (2026-10-24).
-- `pdftext/pdf/links.py` drops a link whose target is inside the
-  document, so its span stays whole and no page reference is made.
-  `pdftext/schema.py` and `pdftext/extraction.py` lose the page
-  references. `marker` loses the reference processor, the reference
-  block, the page references of the provider and the page, and the span
-  anchor of the Markdown renderer (2026-10-24).
-- `marker/processors/ignoretext.py` counts the streaks of a repeated
-  block on the even and the odd pages apart, so a running header that
-  alternates between them is ignored (2026-10-24).
-- `marker/schema/blocks/listitem.py` removes only the leading bullet of
-  the first line of a list item, so a dash inside the line stays
-  (2026-10-24).
-- `marker/converters/pdf.py` drops the line merge, blank page, and
-  block relabel processors from the default chain, and `marker` loses
-  their files, because no setting of raw2md enables them (2026-10-24).
-- `surya/common/surya/processor/tokenizer.py` builds without a special
-  token file or a category list: the flat list defaults to empty and the
-  layout and table categories may be absent. It imports torch nowhere, so
-  it loads without the package (2026-10-24).
+- The copy fixes defects of its text extraction and its Markdown output,
+  drops code that raw2md never runs, and follows the formatting and lint
+  rules of raw2md (2026-10-24). Changed files, under src/raw2md_engine/:
+  - Text: `pdftext/pdf/pages.py` ignores the blank spans of a line when it
+    marks a superscript or a subscript. `marker/schema/text/line.py` keeps
+    a dash at the end of a line. `marker/schema/blocks/listitem.py` removes
+    only the leading bullet of a list item.
+  - Links: `pdftext/pdf/links.py` drops a link whose target is inside the
+    document. The page references, the reference processor and block, and
+    the span anchors go with it, in `pdftext/schema.py`,
+    `pdftext/extraction.py`, `marker/builders/document.py`,
+    `marker/providers/`, `marker/schema/`, and
+    `marker/renderers/markdown.py`.
+  - Tables: `pdftext/tables.py` measures the gap between characters along
+    the line and keeps the character boxes of a table run.
+    `marker/processors/table.py` splits a run of numbers at the cell
+    boundaries and removes dot leaders only outside the values.
+    `marker/renderers/markdown.py` escapes a vertical bar in a cell and
+    writes one separator line for a table of one row.
+  - Formats and math: `marker/schema/text/span.py` applies every format of
+    a span, with math innermost and bold outermost, and keeps superscript
+    markup out of math. `marker/renderers/__init__.py` keeps the minus when
+    two inline math spans merge. `marker/renderers/markdown.py` keeps the
+    escaped space at the end of math and removes bold from a heading.
+  - Layout: `marker/processors/sectionheader.py` sorts the heading heights
+    together with their cluster labels. `marker/processors/ignoretext.py`
+    counts the repeats of a running header on the even and the odd pages
+    apart.
+  - Dead code: `marker/converters/pdf.py` drops the line merge, blank page,
+    and block relabel processors, and their files go.
+  - Imports: `marker/settings.py` imports torch only when the device is
+    read. `surya/common/surya/processor/tokenizer.py` imports no torch and
+    builds without a special token file.
+  - Style: ruff formats every Python file of the copy and applies its safe
+    fixes. `surya/detection/heatmap.py` takes its result class from
+    `surya/detection/schema.py`, which breaks an import cycle.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

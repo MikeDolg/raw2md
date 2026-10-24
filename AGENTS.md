@@ -30,7 +30,7 @@ The guide to each stage is in `docs/`.
 | `src/raw2md/orchestrator.py`, `queue.py`, `lock.py` | the run: the lock, the queue, resume, and the exit code |
 | `src/raw2md/pipeline.py` | the stages of one file |
 | `src/raw2md/engines/` | the conversion engines; `base.py` holds their interface, `bundled.py` is the adapter of `raw2md-engine`, and `weights.py` downloads its weights |
-| `src/raw2md_engine/` | `raw2md-engine`: a reduced copy of `marker`, `surya`, and `pdftext`, with the upstream layout and names; `NOTICE` lists its changed files |
+| `src/raw2md_engine/` | `raw2md-engine`: a modified copy of `marker`, `surya`, and `pdftext`, with the upstream layout and names; `NOTICE` describes the changes |
 | `src/raw2md/cleaner.py` | the entry points of cleaning and the order of its passes |
 | `src/raw2md/cleaning/` | the cleaning rules, grouped by the object that they repair: headings, lists, tables, formulas, and prose |
 | `src/raw2md/mdtext/` | the Markdown readers that all stages share: protected zones, lines, tables, and formulas |
@@ -40,7 +40,7 @@ The guide to each stage is in `docs/`.
 | `src/raw2md/keywords.yaml` | the words that the cleaning rules look for |
 | `src/raw2md/prompts.py` | the default prompts of the LLM stages |
 | `src/raw2md/katex.min.js` | KaTeX, which checks that a formula is valid |
-| `tests/` | the tests; `tests/cleaning/` holds the tests of `src/raw2md/cleaning/` |
+| `tests/` | the tests; `tests/cleaning/` holds the tests of `src/raw2md/cleaning/`, and `tests/engine/` holds the tests of `src/raw2md_engine/` |
 | `tests/corpus/`, `tests/synthesis/` | the reference Markdown and the round-trip harness |
 | `benchmarks/` | the MPDocBench runner and its results |
 | `examples/` | the conversion results of real documents |
@@ -113,10 +113,18 @@ Both layers skip a test when its tool or its key is absent.
   length of comments and docstrings.
 - Each `# noqa` and `# type: ignore` names its rule code and gives a reason.
 - Test data is invented. Do not copy text from real documents into tests.
-- `src/raw2md_engine/` is upstream code: `ruff`, `mypy`, and the comment
-  length test skip it. When you change a file there, set the date of the
-  last change in `NOTICE`. Add an item to the list of changes only for a
-  new kind of change. A changed file of `pdftext/` starts with the line
+- `src/raw2md_engine/` is code of raw2md that keeps the upstream layout.
+  Change it in place with a minimal diff, and do not reformat the rest of
+  the file. Give each fix a test in `tests/engine/`. `ruff` checks the copy,
+  minus the rules that `pyproject.toml` ignores for each subpackage.
+  `mypy` and the comment length test skip it.
+- A test in `tests/engine/` imports the copy through its `engine` fixture,
+  which hides `torch`. A module of the copy that a test imports keeps
+  `import torch` out of its top level, because the CI install has no
+  `torch`.
+- When you change a file in `src/raw2md_engine/`, set the date of the last
+  change in `NOTICE`. Add an item to the list of changes only for a new
+  kind of change. A changed file of `pdftext/` starts with the line
   `# Modified by the raw2md authors. See NOTICE.`
 
 ## Issues and pull requests

@@ -1,3 +1,4 @@
+# Modified by the raw2md authors. See NOTICE.
 from ctypes import byref, c_int, create_string_buffer
 
 import numpy as np
