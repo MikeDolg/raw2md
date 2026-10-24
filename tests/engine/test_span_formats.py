@@ -73,3 +73,24 @@ def test_bold_text_and_bold_math_form_one_run(engine: Loader) -> None:
         engine, "x^{2}", ["plain", "bold", "math"]
     )
     assert "**Bound $x^{2}$**" in _markdown(engine, html)
+
+
+def test_math_span_with_superscript_flag_keeps_formula_intact(
+    engine: Loader,
+) -> None:
+    span_class = engine("marker.schema.text.span").Span
+    polygon = engine("marker.schema.polygon").PolygonBox.from_bbox([0, 0, 10, 10])
+    span = span_class(
+        text="^{\ast}",
+        formats=["math"],
+        has_superscript=True,
+        polygon=polygon,
+        font="Unknown",
+        font_weight=0,
+        font_size=0,
+        minimum_position=0,
+        maximum_position=0,
+    )
+    html = str(span.assemble_html(None, [], [], None))
+    assert html == "<math display='inline'>^{\ast}</math>"
+    assert "<sup>" not in html

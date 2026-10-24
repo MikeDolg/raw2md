@@ -84,6 +84,8 @@ of the repository holds each change with its diff.
   innermost and bold outermost (2026-10-24).
 - `marker/processors/sectionheader.py` sorts the heading heights together
   with their cluster labels (2026-10-24).
+- `marker/schema/text/span.py` does not wrap the text of a math span in
+  superscript markup (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 

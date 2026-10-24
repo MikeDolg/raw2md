@@ -107,7 +107,7 @@ class Span(Block):
         text = html.escape(text)
         text = cleanup_text(text)
 
-        if self.has_superscript:
+        if self.has_superscript and not self.math:
             text = re.sub(r"^([0-9\W]+)(.*)", r"<sup>\1</sup>\2", text)
 
             # Handle full block superscript
