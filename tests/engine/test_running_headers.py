@@ -39,6 +39,23 @@ def test_chapter_header_on_odd_pages_is_ignored(engine: Loader) -> None:
     assert _filter(engine, blocks) == [True] * _PAGES
 
 
+def test_header_across_pages_without_text_blocks_is_kept(engine: Loader) -> None:
+    # Pages 0, 10, 20, 30 hold the header; the pages between hold no block.
+    blocks = [_block(page, "Instructions") for page in (0, 10, 20, 30)]
+    blocks += [_block(page, f"Unique text {page}") for page in range(1, 40, 2)]
+    blocks.sort(key=lambda b: b.page_id)
+
+    flags = _filter(engine, blocks)
+
+    header_flags = [
+        flag
+        for flag, block in zip(flags, blocks, strict=True)
+        if block.raw_text(None) == "Instructions"
+    ]
+
+    assert header_flags == [False] * 4
+
+
 def test_header_on_one_parity_needs_three_pages_in_a_row(engine: Loader) -> None:
     # Four repeats of a short header, but each parity holds only two in a row.
     texts = ["Short Header", "a", "Short Header", "b", "c", "d", "e", "f"]

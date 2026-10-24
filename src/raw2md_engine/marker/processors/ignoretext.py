@@ -81,11 +81,20 @@ class IgnoreTextProcessor(BaseProcessor):
             streaks[key] = max(streaks.get(key, 0), len(list(group)))
 
         # A running header can alternate between even and odd pages, so each
-        # page parity also keeps its own streaks.
+        # page parity also keeps its own streaks. A page without a candidate
+        # block breaks the streak.
         for parity in (0, 1):
-            same_parity = [t for t, b in zip(text, blocks) if b.page_id % 2 == parity]
-            for key, group in groupby(same_parity):
-                streaks[key] = max(streaks.get(key, 0), len(list(group)))
+            previous: tuple[int, str] | None = None
+            run = 0
+            for t, b in zip(text, blocks):
+                if b.page_id % 2 != parity:
+                    continue
+                if previous is not None and previous == (b.page_id - 2, t):
+                    run += 1
+                else:
+                    run = 1
+                previous = (b.page_id, t)
+                streaks[t] = max(streaks.get(t, 0), run)
 
         counter = Counter(text)
         common = [
