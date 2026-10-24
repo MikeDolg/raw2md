@@ -74,6 +74,8 @@ of the repository holds each change with its diff.
   renderers and the text processors import without torch (2026-10-24).
 - `marker/renderers/__init__.py` keeps the trailing minus when two inline
   math spans merge (2026-10-24).
+- `marker/schema/text/line.py` removes only a hyphen or a soft hyphen at
+  the end of a line, and keeps a dash (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 

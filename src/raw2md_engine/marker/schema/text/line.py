@@ -7,7 +7,7 @@ import regex
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block, BlockOutput
 
-HYPHENS = r"-—¬"
+HYPHENS = r"-¬"
 
 
 def remove_tags(text):
