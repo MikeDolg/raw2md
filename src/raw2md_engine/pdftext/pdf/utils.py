@@ -1,13 +1,12 @@
 from ctypes import byref, c_int, create_string_buffer
-from typing import List
 
 import numpy as np
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_c
 
-LINE_BREAKS = ["\n", "\u000D", "\u000A"]
+LINE_BREAKS = ["\n", "\u000d", "\u000a"]
 TABS = ["\t", "\u0009", "\x09"]
-SPACES = [" ", "\ufffe", "\uFEFF", "\xa0"]
+SPACES = [" ", "\ufffe", "\ufeff", "\xa0"]
 WHITESPACE_CHARS = ["\n", "\r", "\f", "\t", " "]
 
 
@@ -25,20 +24,26 @@ def get_fontname(textpage, i):
         font_name = create_string_buffer(buffer_size)
         font_flags = c_int()
 
-        length = pdfium_c.FPDFText_GetFontInfo(textpage, i, font_name, buffer_size, byref(font_flags))
+        length = pdfium_c.FPDFText_GetFontInfo(
+            textpage, i, font_name, buffer_size, byref(font_flags)
+        )
         if length > buffer_size:
             font_name = create_string_buffer(length)
-            pdfium_c.FPDFText_GetFontInfo(textpage, i, font_name, length, byref(font_flags))
+            pdfium_c.FPDFText_GetFontInfo(
+                textpage, i, font_name, length, byref(font_flags)
+            )
 
         if length > 0:
-            font_name_str = font_name.value.decode('utf-8')
+            font_name_str = font_name.value.decode("utf-8")
             flags = font_flags.value
     except:
         pass
     return font_name_str, flags
 
 
-def matrix_intersection_area(boxes1: List[List[float]], boxes2: List[List[float]]) -> np.ndarray:
+def matrix_intersection_area(
+    boxes1: list[list[float]], boxes2: list[list[float]]
+) -> np.ndarray:
     if len(boxes1) == 0 or len(boxes2) == 0:
         return np.zeros((len(boxes1), len(boxes2)))
 

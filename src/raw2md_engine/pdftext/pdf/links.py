@@ -1,7 +1,6 @@
 # Modified by the raw2md authors. See NOTICE.
 import ctypes
 import math
-from typing import Dict, List, Tuple
 
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_c
@@ -10,7 +9,7 @@ from raw2md_engine.pdftext.pdf.utils import matrix_intersection_area
 from raw2md_engine.pdftext.schema import Bbox, Link, Page, Pages, Span
 
 
-def _rect_to_scaled_bbox(rect, page_bbox, page_rotation) -> List[float]:
+def _rect_to_scaled_bbox(rect, page_bbox, page_rotation) -> list[float]:
     page_width = math.ceil(abs(page_bbox[2] - page_bbox[0]))
     page_height = math.ceil(abs(page_bbox[1] - page_bbox[3]))
 
@@ -23,16 +22,21 @@ def _rect_to_scaled_bbox(rect, page_bbox, page_rotation) -> List[float]:
     ty_start = page_height - cy_start
     ty_end = page_height - cy_end
 
-    bbox = [min(cx_start, cx_end), min(ty_start, ty_end), max(cx_start, cx_end), max(ty_start, ty_end)]
+    bbox = [
+        min(cx_start, cx_end),
+        min(ty_start, ty_end),
+        max(cx_start, cx_end),
+        max(ty_start, ty_end),
+    ]
     bbox = [round(x, 0) for x in bbox]
     return Bbox(bbox).rotate(page_width, page_height, page_rotation).bbox
 
 
-def get_links(page_idx: int, pdf: pdfium.PdfDocument) -> List[Link]:
+def get_links(page_idx: int, pdf: pdfium.PdfDocument) -> list[Link]:
     urls = []
 
     page = pdf.get_page(page_idx)
-    page_bbox: List[float] = page.get_bbox()
+    page_bbox: list[float] = page.get_bbox()
     page_rotation = 0
     try:
         page_rotation = page.get_rotation()
@@ -42,9 +46,9 @@ def get_links(page_idx: int, pdf: pdfium.PdfDocument) -> List[Link]:
     annot_count = pdfium_c.FPDFPage_GetAnnotCount(page)
     for i in range(annot_count):
         link: Link = {
-            'page': page_idx,
-            'bbox': None,
-            'url': None,
+            "page": page_idx,
+            "bbox": None,
+            "url": None,
         }
         annot = pdfium_c.FPDFPage_GetAnnot(page, i)
         if pdfium_c.FPDFAnnot_GetSubtype(annot) != pdfium_c.FPDF_ANNOT_LINK:
@@ -55,9 +59,10 @@ def get_links(page_idx: int, pdf: pdfium.PdfDocument) -> List[Link]:
         if not success:
             continue
 
-        link['bbox'] = _rect_to_scaled_bbox(
+        link["bbox"] = _rect_to_scaled_bbox(
             [fs_rect.left, fs_rect.top, fs_rect.right, fs_rect.bottom],
-            page_bbox, page_rotation
+            page_bbox,
+            page_rotation,
         )
 
         link_obj = pdfium_c.FPDFAnnot_GetLink(annot)
@@ -67,21 +72,24 @@ def get_links(page_idx: int, pdf: pdfium.PdfDocument) -> List[Link]:
         dest = pdfium_c.FPDFLink_GetDest(pdf, link_obj)
         if dest:
             continue
-        else:
-            action = pdfium_c.FPDFLink_GetAction(link_obj)
-            a_type = pdfium_c.FPDFAction_GetType(action)
+        action = pdfium_c.FPDFLink_GetAction(link_obj)
+        a_type = pdfium_c.FPDFAction_GetType(action)
 
-            if a_type in (pdfium_c.PDFACTION_UNSUPPORTED, pdfium_c.PDFACTION_GOTO):
-                continue
+        if a_type in (pdfium_c.PDFACTION_UNSUPPORTED, pdfium_c.PDFACTION_GOTO):
+            continue
 
-            elif a_type == pdfium_c.PDFACTION_URI:
-                # External link
-                needed_len = pdfium_c.FPDFAction_GetURIPath(pdf, action, None, 0)
-                if needed_len > 0:
-                    buf = ctypes.create_string_buffer(needed_len)
-                    pdfium_c.FPDFAction_GetURIPath(pdf, action, buf, needed_len)
-                    uri = buf.raw[:needed_len].decode('utf-8', errors='replace').rstrip('\x00')
-                    link["url"] = uri
+        if a_type == pdfium_c.PDFACTION_URI:
+            # External link
+            needed_len = pdfium_c.FPDFAction_GetURIPath(pdf, action, None, 0)
+            if needed_len > 0:
+                buf = ctypes.create_string_buffer(needed_len)
+                pdfium_c.FPDFAction_GetURIPath(pdf, action, buf, needed_len)
+                uri = (
+                    buf.raw[:needed_len]
+                    .decode("utf-8", errors="replace")
+                    .rstrip("\x00")
+                )
+                link["url"] = uri
 
         urls.append(link)
     return urls
@@ -96,13 +104,18 @@ def merge_links(page: Page, pdf: pdfium.PdfDocument):
 
     links = get_links(page_id, pdf)
 
-    spans = [span for block in page['blocks'] for line in block['lines'] for span in line['spans']]
-    span_bboxes = [span['bbox'].bbox for span in spans]
-    link_bboxes = [link['bbox'] for link in links]
+    spans = [
+        span
+        for block in page["blocks"]
+        for line in block["lines"]
+        for span in line["spans"]
+    ]
+    span_bboxes = [span["bbox"].bbox for span in spans]
+    link_bboxes = [link["bbox"] for link in links]
 
     intersection_matrix = matrix_intersection_area(link_bboxes, span_bboxes)
 
-    span_link_map: Dict[int, List[Link]] = {}
+    span_link_map: dict[int, list[Link]] = {}
     for link_idx, link in enumerate(links):
         intersection_link = intersection_matrix[link_idx]
         if intersection_link.sum() == 0:
@@ -122,34 +135,36 @@ def merge_links(page: Page, pdf: pdfium.PdfDocument):
                 else:
                     spans.append(span)
                 span_idx += 1
-            line['spans'] = spans
+            line["spans"] = spans
 
 
-def _reconstruct_spans(orig_span: dict, links: List[Link]) -> List[Span]:
+def _reconstruct_spans(orig_span: dict, links: list[Link]) -> list[Span]:
     """
     Reconstructs the spans by breaking them up into smaller spans based on the links.
     """
-    spans: List[Span] = []
+    spans: list[Span] = []
     span: Span = None
-    link_bboxes = [Bbox(link['bbox']) for link in links]
+    link_bboxes = [Bbox(link["bbox"]) for link in links]
 
-    for char in orig_span['chars']:
-        char_bbox = Bbox(char['bbox'].bbox)
-        intersections: List[Tuple[float, Link]] = []
+    for char in orig_span["chars"]:
+        char_bbox = Bbox(char["bbox"].bbox)
+        intersections: list[tuple[float, Link]] = []
         for i, link_bbox in enumerate(link_bboxes):
             if char_bbox.area > 0:
                 area = link_bbox.intersection_area(char_bbox)
             else:
-                area = link_bbox.intersection_area(Bbox(char['bbox'].bbox, ensure_nonzero_area=True))
+                area = link_bbox.intersection_area(
+                    Bbox(char["bbox"].bbox, ensure_nonzero_area=True)
+                )
             if area > 0:
                 intersections.append((area, links[i]))
 
-        current_url = ''
+        current_url = ""
         if intersections:
             intersections.sort(key=lambda x: x[0], reverse=True)
-            current_url = intersections[0][1]['url']
+            current_url = intersections[0][1]["url"]
 
-        if not span or current_url != span['url']:
+        if not span or current_url != span["url"]:
             span = {
                 "bbox": char_bbox,
                 "text": char["char"],
@@ -162,10 +177,10 @@ def _reconstruct_spans(orig_span: dict, links: List[Link]) -> List[Span]:
             }
             spans.append(span)
         else:
-            span['text'] += char['char']
-            span['char_end_idx'] = char['char_idx']
-            span['bbox'] = span['bbox'].merge(char_bbox)
-            span['chars'].append(char)
+            span["text"] += char["char"]
+            span["char_end_idx"] = char["char_idx"]
+            span["bbox"] = span["bbox"].merge(char_bbox)
+            span["chars"].append(char)
 
     return spans
 

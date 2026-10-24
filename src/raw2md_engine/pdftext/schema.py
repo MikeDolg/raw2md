@@ -1,11 +1,11 @@
 # Modified by the raw2md authors. See NOTICE.
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, TypedDict, Union
+from typing import Any, TypedDict
 
 
 class Bbox:
-    def __init__(self, bbox: List[float], ensure_nonzero_area=False):
+    def __init__(self, bbox: list[float], ensure_nonzero_area=False):
         if ensure_nonzero_area:
             bbox = list(bbox)
             bbox[2] = max(bbox[0], bbox[2] + 1)
@@ -58,18 +58,24 @@ class Bbox:
     def merge(self, other: Bbox) -> Bbox:
         self_bbox = self.bbox
         other_bbox = other.bbox
-        return Bbox([
-            min(self_bbox[0], other_bbox[0]),
-            min(self_bbox[1], other_bbox[1]),
-            max(self_bbox[2], other_bbox[2]),
-            max(self_bbox[3], other_bbox[3])
-        ])
+        return Bbox(
+            [
+                min(self_bbox[0], other_bbox[0]),
+                min(self_bbox[1], other_bbox[1]),
+                max(self_bbox[2], other_bbox[2]),
+                max(self_bbox[3], other_bbox[3]),
+            ]
+        )
 
     def overlap_x(self, other: Bbox):
-        return max(0, min(self.bbox[2], other.bbox[2]) - max(self.bbox[0], other.bbox[0]))
+        return max(
+            0, min(self.bbox[2], other.bbox[2]) - max(self.bbox[0], other.bbox[0])
+        )
 
     def overlap_y(self, other: Bbox):
-        return max(0, min(self.bbox[3], other.bbox[3]) - max(self.bbox[1], other.bbox[1]))
+        return max(
+            0, min(self.bbox[3], other.bbox[3]) - max(self.bbox[1], other.bbox[1])
+        )
 
     def intersection_area(self, other: Bbox):
         return self.overlap_x(other) * self.overlap_y(other)
@@ -89,7 +95,7 @@ class Bbox:
 
         if rotation == 0:
             return Bbox(self.bbox)
-        elif rotation == 90:
+        if rotation == 90:
             new_x_min = page_height - y_max
             new_y_min = x_min
             new_x_max = page_height - y_min
@@ -110,19 +116,19 @@ class Bbox:
             min(new_x_min, new_x_max),
             min(new_y_min, new_y_max),
             max(new_x_min, new_x_max),
-            max(new_y_min, new_y_max)
+            max(new_y_min, new_y_max),
         )
 
         return Bbox(rotated_bbox)
 
-    def rescale(self, img_size: List[int], page: Page) -> Bbox:
+    def rescale(self, img_size: list[int], page: Page) -> Bbox:
         w_scale = img_size[0] / page["width"]
         h_scale = img_size[1] / page["height"]
         new_bbox = [
             self.bbox[0] * w_scale,
             self.bbox[1] * h_scale,
             self.bbox[2] * w_scale,
-            self.bbox[3] * h_scale
+            self.bbox[3] * h_scale,
         ]
 
         return Bbox(new_bbox)
@@ -132,15 +138,15 @@ class Char(TypedDict):
     bbox: Bbox
     char: str
     rotation: float
-    font: Dict[str, Union[Any, str]]
+    font: dict[str, Any | str]
     char_idx: int
 
 
 class Span(TypedDict):
     bbox: Bbox
     text: str
-    font: Dict[str, Union[Any, str]]
-    chars: List[Char]
+    font: dict[str, Any | str]
+    chars: list[Char]
     char_start_idx: int
     char_end_idx: int
     rotation: int
@@ -150,13 +156,13 @@ class Span(TypedDict):
 
 
 class Line(TypedDict):
-    spans: List[Span]
+    spans: list[Span]
     bbox: Bbox
     rotation: int
 
 
 class Block(TypedDict):
-    lines: List[Line]
+    lines: list[Line]
     bbox: Bbox
     rotation: int
 
@@ -166,7 +172,7 @@ class Page(TypedDict):
     bbox: Bbox
     width: int
     height: int
-    blocks: List[Block]
+    blocks: list[Block]
     rotation: int
 
 
@@ -176,20 +182,20 @@ class TableCell(TypedDict):
 
 
 class TableInput(TypedDict):
-    tables: List[List[int]]
-    img_size: List[int]
+    tables: list[list[int]]
+    img_size: list[int]
 
 
 class Link(TypedDict):
     page: int
-    bbox: List[float]
-    url: Optional[str]
+    bbox: list[float]
+    url: str | None
 
 
-Chars = List[Char]
-Spans = List[Span]
-Lines = List[Line]
-Blocks = List[Block]
-Pages = List[Page]
-Tables = List[List[TableCell]]
-TableInputs = List[TableInput]
+Chars = list[Char]
+Spans = list[Span]
+Lines = list[Line]
+Blocks = list[Block]
+Pages = list[Page]
+Tables = list[list[TableCell]]
+TableInputs = list[TableInput]

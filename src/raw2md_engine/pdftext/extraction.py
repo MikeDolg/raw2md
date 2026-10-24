@@ -4,13 +4,17 @@ import math
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from itertools import repeat
-from typing import List
 
 import pypdfium2 as pdfium
 
 from raw2md_engine.pdftext.pdf.links import add_links
 from raw2md_engine.pdftext.pdf.pages import get_pages
-from raw2md_engine.pdftext.postprocessing import handle_hyphens, merge_text, postprocess_text, sort_blocks
+from raw2md_engine.pdftext.postprocessing import (
+    handle_hyphens,
+    merge_text,
+    postprocess_text,
+    sort_blocks,
+)
 from raw2md_engine.pdftext.schema import Pages, TableInputs, Tables
 from raw2md_engine.pdftext.settings import settings
 from raw2md_engine.pdftext.tables import table_cell_text
@@ -42,13 +46,17 @@ def worker_init(pdf_path, flatten_pdf):
     atexit.register(partial(worker_shutdown, pdf_doc))
 
 
-def _get_pages(pdf_path, page_range=None, flatten_pdf=False, quote_loosebox=True, workers=None) -> Pages:
+def _get_pages(
+    pdf_path, page_range=None, flatten_pdf=False, quote_loosebox=True, workers=None
+) -> Pages:
     pdf_doc = _load_pdf(pdf_path, flatten_pdf)
     if page_range is None:
         page_range = range(len(pdf_doc))
 
     if workers is not None:
-        workers = min(workers, len(page_range) // settings.WORKER_PAGE_THRESHOLD)  # It's inefficient to have too many workers, since we batch in inference
+        workers = min(
+            workers, len(page_range) // settings.WORKER_PAGE_THRESHOLD
+        )  # It's inefficient to have too many workers, since we batch in inference
 
     if workers is None or workers <= 1:
         pages = get_pages(pdf_doc, page_range, flatten_pdf, quote_loosebox)
@@ -59,22 +67,57 @@ def _get_pages(pdf_path, page_range=None, flatten_pdf=False, quote_loosebox=True
     page_range = list(page_range)
 
     pages_per_worker = math.ceil(len(page_range) / workers)
-    page_range_chunks = [page_range[i * pages_per_worker:(i + 1) * pages_per_worker] for i in range(workers)]
+    page_range_chunks = [
+        page_range[i * pages_per_worker : (i + 1) * pages_per_worker]
+        for i in range(workers)
+    ]
 
-    with ProcessPoolExecutor(max_workers=workers, initializer=worker_init, initargs=(pdf_path, flatten_pdf)) as executor:
-        pages = list(executor.map(_get_page_range, page_range_chunks, repeat(flatten_pdf), repeat(quote_loosebox)))
+    with ProcessPoolExecutor(
+        max_workers=workers, initializer=worker_init, initargs=(pdf_path, flatten_pdf)
+    ) as executor:
+        pages = list(
+            executor.map(
+                _get_page_range,
+                page_range_chunks,
+                repeat(flatten_pdf),
+                repeat(quote_loosebox),
+            )
+        )
 
     ordered_pages = [page for sublist in pages for page in sublist]
     return ordered_pages
 
 
-def plain_text_output(pdf_path, sort=False, hyphens=False, page_range=None, flatten_pdf=False, workers=None) -> str:
-    text = paginated_plain_text_output(pdf_path, sort=sort, hyphens=hyphens, page_range=page_range, workers=workers, flatten_pdf=flatten_pdf)
+def plain_text_output(
+    pdf_path,
+    sort=False,
+    hyphens=False,
+    page_range=None,
+    flatten_pdf=False,
+    workers=None,
+) -> str:
+    text = paginated_plain_text_output(
+        pdf_path,
+        sort=sort,
+        hyphens=hyphens,
+        page_range=page_range,
+        workers=workers,
+        flatten_pdf=flatten_pdf,
+    )
     return "\n".join(text)
 
 
-def paginated_plain_text_output(pdf_path, sort=False, hyphens=False, page_range=None, flatten_pdf=False, workers=None) -> List[str]:
-    pages: Pages = _get_pages(pdf_path, page_range, workers=workers, flatten_pdf=flatten_pdf)
+def paginated_plain_text_output(
+    pdf_path,
+    sort=False,
+    hyphens=False,
+    page_range=None,
+    flatten_pdf=False,
+    workers=None,
+) -> list[str]:
+    pages: Pages = _get_pages(
+        pdf_path, page_range, workers=workers, flatten_pdf=flatten_pdf
+    )
     text = []
     for page in pages:
         text.append(merge_text(page, sort=sort, hyphens=hyphens).strip())
@@ -92,16 +135,22 @@ def _process_span(span, page_width, page_height, keep_chars):
 
 
 def dictionary_output(
-        pdf_path,
-        sort=False,
-        page_range=None,
-        keep_chars=False,
-        flatten_pdf=False,
-        quote_loosebox=True,
-        disable_links=False,
-        workers=None
+    pdf_path,
+    sort=False,
+    page_range=None,
+    keep_chars=False,
+    flatten_pdf=False,
+    quote_loosebox=True,
+    disable_links=False,
+    workers=None,
 ) -> Pages:
-    pages: Pages = _get_pages(pdf_path, page_range, workers=workers, flatten_pdf=flatten_pdf, quote_loosebox=quote_loosebox)
+    pages: Pages = _get_pages(
+        pdf_path,
+        page_range,
+        workers=workers,
+        flatten_pdf=flatten_pdf,
+        quote_loosebox=quote_loosebox,
+    )
 
     if not disable_links:
         pdf = _load_pdf(pdf_path, False)
@@ -128,7 +177,12 @@ def dictionary_output(
 
         if page["rotation"] == 90 or page["rotation"] == 270:
             page["width"], page["height"] = page["height"], page["width"]
-            page["bbox"] = [page["bbox"][2], page["bbox"][3], page["bbox"][0], page["bbox"][1]]
+            page["bbox"] = [
+                page["bbox"][2],
+                page["bbox"][3],
+                page["bbox"][0],
+                page["bbox"][1],
+            ]
     return pages
 
 
@@ -139,18 +193,29 @@ def table_output(
     flatten_pdf=False,
     quote_loosebox=True,
     workers=None,
-    pages: Pages | None = None
-) -> List[Tables]:
+    pages: Pages | None = None,
+) -> list[Tables]:
     # Extract pages if they don't exist
     if not pages:
-        pages: Pages = dictionary_output(pdf_path, page_range=page_range, flatten_pdf=flatten_pdf, quote_loosebox=quote_loosebox, workers=workers, keep_chars=True)
+        pages: Pages = dictionary_output(
+            pdf_path,
+            page_range=page_range,
+            flatten_pdf=flatten_pdf,
+            quote_loosebox=quote_loosebox,
+            workers=workers,
+            keep_chars=True,
+        )
 
-    assert len(pages) == len(table_inputs), "Number of pages and table inputs must match"
+    assert len(pages) == len(table_inputs), (
+        "Number of pages and table inputs must match"
+    )
 
     # Extract table cells per page
     out_tables = []
     for page, table_input in zip(pages, table_inputs):
         tables = table_cell_text(table_input["tables"], page, table_input["img_size"])
-        assert len(tables) == len(table_input["tables"]), "Number of tables and table inputs must match"
+        assert len(tables) == len(table_input["tables"]), (
+            "Number of tables and table inputs must match"
+        )
         out_tables.append(tables)
     return out_tables

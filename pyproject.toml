@@ -156,7 +156,7 @@ target-version = "py311"
 line-length = 88
 # The engine copy is raw2md code, edited in place with minimal diffs. Ruff
 # takes it on one subpackage at a time.
-extend-exclude = ["src/raw2md_engine"]
+extend-exclude = ["src/raw2md_engine/marker", "src/raw2md_engine/surya"]
 
 [tool.ruff.lint]
 # Every stable rule, minus the exclusions below: an explicit list would skip
@@ -205,6 +205,12 @@ max-statements = 60
 "src/raw2md/prompts.py" = ["T201"]
 "src/raw2md/service.py" = ["T201"]
 "src/raw2md/settings.py" = ["T201"]
+# The pdftext subpackage keeps the upstream control flow; each rule here
+# stays off until the code that breaks it is rewritten.
+"src/raw2md_engine/pdftext/**" = [
+    "ARG001", "B023", "B905", "C419", "C901", "E501", "E722", "INP001",
+    "PERF401", "PLR0912", "PLW0603", "RET504", "S110", "SIM105",
+]
 # The benchmark runner is a flat script with its own package beside it.
 "benchmarks/**" = ["T201", "INP001"]
 

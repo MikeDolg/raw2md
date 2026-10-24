@@ -3,12 +3,11 @@ from __future__ import annotations
 
 import math
 import statistics
-from typing import List
 import unicodedata
 
 import pypdfium2 as pdfium
 
-from raw2md_engine.pdftext.pdf.chars import get_chars, deduplicate_chars
+from raw2md_engine.pdftext.pdf.chars import deduplicate_chars, get_chars
 from raw2md_engine.pdftext.pdf.utils import flatten
 from raw2md_engine.pdftext.schema import Blocks, Chars, Line, Lines, Pages, Span, Spans
 
@@ -18,9 +17,12 @@ def is_math_symbol(char):
         return False
 
     category = unicodedata.category(char)
-    return category == 'Sm'
+    return category == "Sm"
 
-def assign_scripts(lines: Lines, height_threshold: float = 0.8, line_distance_threshold: float = 0.1):
+
+def assign_scripts(
+    lines: Lines, height_threshold: float = 0.8, line_distance_threshold: float = 0.1
+):
     for line in lines:
         prev_span = None
         if len(line["spans"]) < 2:
@@ -32,66 +34,108 @@ def assign_scripts(lines: Lines, height_threshold: float = 0.8, line_distance_th
 
         for i, span in enumerate(line["spans"]):
             is_first = i == 0 or not prev_span["text"].strip()
-            is_last = i == len(line["spans"]) - 1 or not line["spans"][i + 1]["text"].strip()
+            is_last = (
+                i == len(line["spans"]) - 1 or not line["spans"][i + 1]["text"].strip()
+            )
             span_height = span["bbox"].height
             span_top = span["bbox"].y_start
             span_bottom = span["bbox"].y_end
 
-            line_fullheight = span_height / max(1, line["bbox"].height) <= height_threshold
-            next_fullheight = is_last or span_height / max(1, line["spans"][i + 1]["bbox"].height) <= height_threshold
-            prev_fullheight = is_first or span_height / max(1, prev_span["bbox"].height) <= height_threshold
+            line_fullheight = (
+                span_height / max(1, line["bbox"].height) <= height_threshold
+            )
+            next_fullheight = (
+                is_last
+                or span_height / max(1, line["spans"][i + 1]["bbox"].height)
+                <= height_threshold
+            )
+            prev_fullheight = (
+                is_first
+                or span_height / max(1, prev_span["bbox"].height) <= height_threshold
+            )
 
             # A blank span has a zero-height box on the baseline: every glyph
             # would rise above it and drop below it.
-            above = any([span_top < (s["bbox"].y_start - s["bbox"].height * line_distance_threshold) for j, s in enumerate(line["spans"]) if j != i and s["text"].strip()])
+            above = any(
+                [
+                    span_top
+                    < (s["bbox"].y_start - s["bbox"].height * line_distance_threshold)
+                    for j, s in enumerate(line["spans"])
+                    if j != i and s["text"].strip()
+                ]
+            )
             prev_above = is_first or span_top < prev_span["bbox"].y_start
             next_above = is_last or span_top < line["spans"][i + 1]["bbox"].y_start
 
-            below = any([span_bottom > (s["bbox"].y_end + s["bbox"].height * line_distance_threshold) for j, s in enumerate(line["spans"]) if j != i and s["text"].strip()])
+            below = any(
+                [
+                    span_bottom
+                    > (s["bbox"].y_end + s["bbox"].height * line_distance_threshold)
+                    for j, s in enumerate(line["spans"])
+                    if j != i and s["text"].strip()
+                ]
+            )
             prev_below = is_first or span_bottom > prev_span["bbox"].y_end
             next_below = is_last or span_bottom > line["spans"][i + 1]["bbox"].y_end
 
             span_text = span["text"].strip()
-            span_text_okay = all([
-                (len(span_text) == 1 or span_text.isdigit()), # Ensure that the span text is a single char or a number
-                span_text.isalnum() or is_math_symbol(span_text) # Ensure that the span text is an alphanumeric or a math symbol
-            ])
+            span_text_okay = all(
+                [
+                    (
+                        len(span_text) == 1 or span_text.isdigit()
+                    ),  # Ensure that the span text is a single char or a number
+                    span_text.isalnum()
+                    or is_math_symbol(
+                        span_text
+                    ),  # Ensure that the span text is an alphanumeric or a math symbol
+                ]
+            )
 
-            if all([
-                (prev_fullheight or next_fullheight),
-                (prev_above or next_above),
-                above,
-                line_fullheight,
-                span_text_okay
-            ]):
+            if all(
+                [
+                    (prev_fullheight or next_fullheight),
+                    (prev_above or next_above),
+                    above,
+                    line_fullheight,
+                    span_text_okay,
+                ]
+            ):
                 span["superscript"] = True
-            elif all([
-                (prev_fullheight or next_fullheight),
-                (prev_below or next_below),
-                below,
-                line_fullheight,
-                span_text_okay
-            ]):
+            elif all(
+                [
+                    (prev_fullheight or next_fullheight),
+                    (prev_below or next_below),
+                    below,
+                    line_fullheight,
+                    span_text_okay,
+                ]
+            ):
                 span["subscript"] = True
 
             prev_span = span
 
 
-def get_spans(chars: Chars, superscript_height_threshold: float = 0.8, line_distance_threshold: float = 0.1) -> Spans:
+def get_spans(
+    chars: Chars,
+    superscript_height_threshold: float = 0.8,
+    line_distance_threshold: float = 0.1,
+) -> Spans:
     spans: Spans = []
     span: Span = None
 
     def span_break():
-        spans.append({
-            "bbox": char["bbox"],
-            "text": char["char"],
-            "rotation": char["rotation"],
-            "font": char["font"],
-            "char_start_idx": char["char_idx"],
-            "char_end_idx": char["char_idx"],
-            "chars": [char],
-            "url": '',
-        })
+        spans.append(
+            {
+                "bbox": char["bbox"],
+                "text": char["char"],
+                "rotation": char["rotation"],
+                "font": char["font"],
+                "char_start_idx": char["char_idx"],
+                "char_end_idx": char["char_idx"],
+                "chars": [char],
+                "url": "",
+            }
+        )
 
     for char in chars:
         if spans:
@@ -102,32 +146,42 @@ def get_spans(chars: Chars, superscript_height_threshold: float = 0.8, line_dist
             continue
 
         # we break on any change in font info
-        if any(char['font'][k] != span['font'][k] for k in ['name', 'flags', 'size', 'weight']):
+        if any(
+            char["font"][k] != span["font"][k]
+            for k in ["name", "flags", "size", "weight"]
+        ):
             span_break()
             continue
 
-        if char['rotation'] != span['rotation']:
+        if char["rotation"] != span["rotation"]:
             span_break()
             continue
 
         # we break on hyphenation or newline
-        if span['text'].endswith("\x02") or span['text'].endswith("\n"):
+        if span["text"].endswith("\x02") or span["text"].endswith("\n"):
             span_break()
             continue
 
         # Character is likely a superscript
-        if all([
-            char["bbox"][1] < (span["bbox"][1] - span["bbox"].height * line_distance_threshold), # char top is above span
-            char["bbox"][3] < (span["bbox"].height * superscript_height_threshold) + span["bbox"][1], # char bottom is not full line height
-            char["bbox"][0] > span["bbox"][2], # char is to the right of the span
-        ]):
+        if all(
+            [
+                char["bbox"][1]
+                < (
+                    span["bbox"][1] - span["bbox"].height * line_distance_threshold
+                ),  # char top is above span
+                char["bbox"][3]
+                < (span["bbox"].height * superscript_height_threshold)
+                + span["bbox"][1],  # char bottom is not full line height
+                char["bbox"][0] > span["bbox"][2],  # char is to the right of the span
+            ]
+        ):
             span_break()
             continue
 
-        span['text'] += char['char']
-        span['char_end_idx'] = char['char_idx']
-        span['bbox'] = span['bbox'].merge(char['bbox'])
-        span['chars'].append(char)
+        span["text"] += char["char"]
+        span["char_end_idx"] = char["char_idx"]
+        span["bbox"] = span["bbox"].merge(char["bbox"])
+        span["chars"].append(char)
 
     return spans
 
@@ -137,7 +191,9 @@ def get_lines(spans: Spans) -> Lines:
     line: Line = None
 
     def line_break():
-        lines.append({"spans": [span], "bbox": span["bbox"], "rotation": span["rotation"]})
+        lines.append(
+            {"spans": [span], "bbox": span["bbox"], "rotation": span["rotation"]}
+        )
 
     for span in spans:
         if lines:
@@ -153,7 +209,10 @@ def get_lines(spans: Spans) -> Lines:
             line_break()
             continue
 
-        if span["rotation"] != line["rotation"] and abs(span["rotation"] - line["rotation"]) >= 45:
+        if (
+            span["rotation"] != line["rotation"]
+            and abs(span["rotation"] - line["rotation"]) >= 45
+        ):
             line_break()
             continue
 
@@ -199,7 +258,9 @@ def get_blocks(lines: Lines) -> Blocks:
     for line in lines:
         if not blocks:
             # First block
-            blocks.append({"lines": [line], "bbox": line["bbox"], "rotation": line["rotation"]})
+            blocks.append(
+                {"lines": [line], "bbox": line["bbox"], "rotation": line["rotation"]}
+            )
             continue
 
         block = blocks[-1]
@@ -218,7 +279,11 @@ def get_blocks(lines: Lines) -> Blocks:
 
         # we make an exception for the first line w.r.t the x diff, because the first line is usually indented
         line_x_indented_start = last_line["bbox"].x_start > line["bbox"].x_start
-        if len(block["lines"]) == 1 and line_x_indented_start and y_diff <= allowed_y_gap:
+        if (
+            len(block["lines"]) == 1
+            and line_x_indented_start
+            and y_diff <= allowed_y_gap
+        ):
             block_merge()
             continue
 
@@ -229,7 +294,10 @@ def get_blocks(lines: Lines) -> Blocks:
             continue
 
         # if the y diff is very small, and you see a line continuation, we merge (can happen with inline math between text spans)
-        if y_diff < allowed_y_gap * 0.2 and last_line["bbox"].x_end > line["bbox"].x_start:
+        if (
+            y_diff < allowed_y_gap * 0.2
+            and last_line["bbox"].x_end > line["bbox"].x_start
+        ):
             block_merge()
             continue
 
@@ -253,7 +321,7 @@ def get_blocks(lines: Lines) -> Blocks:
         if prev_block["bbox"].intersection_pct(curr_block["bbox"]) > 0:
             merged_blocks[-1] = {
                 "lines": prev_block["lines"] + curr_block["lines"],
-                "bbox": prev_block["bbox"].merge(curr_block["bbox"])
+                "bbox": prev_block["bbox"].merge(curr_block["bbox"]),
             }
         else:
             merged_blocks.append(curr_block)
@@ -265,7 +333,7 @@ def get_pages(
     pdf: pdfium.PdfDocument,
     page_range: range,
     flatten_pdf: bool = True,
-    quote_loosebox: bool =True,
+    quote_loosebox: bool = True,
     superscript_height_threshold: float = 0.7,
     line_distance_threshold: float = 0.1,
 ) -> Pages:
@@ -279,7 +347,7 @@ def get_pages(
 
         textpage = page.get_textpage()
 
-        page_bbox: List[float] = page.get_bbox()
+        page_bbox: list[float] = page.get_bbox()
         page_width = math.ceil(abs(page_bbox[2] - page_bbox[0]))
         page_height = math.ceil(abs(page_bbox[1] - page_bbox[3]))
 
@@ -289,18 +357,30 @@ def get_pages(
         except:
             pass
 
-        chars = deduplicate_chars(get_chars(textpage, page_bbox, page_rotation, quote_loosebox))
-        spans = get_spans(chars, superscript_height_threshold=superscript_height_threshold, line_distance_threshold=line_distance_threshold)
+        chars = deduplicate_chars(
+            get_chars(textpage, page_bbox, page_rotation, quote_loosebox)
+        )
+        spans = get_spans(
+            chars,
+            superscript_height_threshold=superscript_height_threshold,
+            line_distance_threshold=line_distance_threshold,
+        )
         lines = get_lines(spans)
-        assign_scripts(lines, height_threshold=superscript_height_threshold, line_distance_threshold=line_distance_threshold)
+        assign_scripts(
+            lines,
+            height_threshold=superscript_height_threshold,
+            line_distance_threshold=line_distance_threshold,
+        )
         blocks = get_blocks(lines)
 
-        pages.append({
-            "page": page_idx,
-            "bbox": page_bbox,
-            "width": page_width,
-            "height": page_height,
-            "rotation": page_rotation,
-            "blocks": blocks
-        })
+        pages.append(
+            {
+                "page": page_idx,
+                "bbox": page_bbox,
+                "width": page_width,
+                "height": page_height,
+                "rotation": page_rotation,
+                "blocks": blocks,
+            }
+        )
     return pages

@@ -1,6 +1,5 @@
 # Modified by the raw2md authors. See NOTICE.
 import unicodedata
-from typing import List
 
 from raw2md_engine.pdftext.pdf.utils import LINE_BREAKS, SPACES, TABS, WHITESPACE_CHARS
 from raw2md_engine.pdftext.schema import Page
@@ -65,7 +64,15 @@ def replace_special_chars(text: str) -> str:
 
 
 def replace_control_chars(text: str) -> str:
-    return "".join(char for char in text if (unicodedata.category(char)[0] != "C" or char == HYPHEN_CHAR or char in WHITESPACE_CHARS))
+    return "".join(
+        char
+        for char in text
+        if (
+            unicodedata.category(char)[0] != "C"
+            or char == HYPHEN_CHAR
+            or char in WHITESPACE_CHARS
+        )
+    )
 
 
 def replace_ligatures(text: str) -> str:
@@ -74,7 +81,7 @@ def replace_ligatures(text: str) -> str:
     return text
 
 
-def sort_blocks(blocks: List, tolerance=1.25) -> List:
+def sort_blocks(blocks: list, tolerance=1.25) -> list:
     # Sort blocks into best guess reading order
     vertical_groups = {}
     for block in blocks:
