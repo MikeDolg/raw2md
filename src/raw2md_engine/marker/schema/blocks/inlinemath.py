@@ -35,5 +35,4 @@ class InlineMath(Block):
             blockquote_prefix = "<blockquote>" * self.blockquote_level
             blockquote_suffix = "</blockquote>" * self.blockquote_level
             return f"{blockquote_prefix}<p{el_attr}>{template}</p>{blockquote_suffix}"
-        else:
-            return f"<p{el_attr}>{template}</p>"
+        return f"<p{el_attr}>{template}</p>"

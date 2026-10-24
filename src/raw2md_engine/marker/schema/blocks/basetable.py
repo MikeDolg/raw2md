@@ -1,5 +1,3 @@
-from typing import List
-
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block, BlockOutput
 from raw2md_engine.marker.schema.blocks.tablecell import TableCell
@@ -11,10 +9,10 @@ class BaseTable(Block):
 
     @staticmethod
     def format_cells(
-        document, child_blocks, block_config, child_cells: List[TableCell] | None = None
+        document, child_blocks, block_config, child_cells: list[TableCell] | None = None
     ):
         if child_cells is None:
-            child_cells: List[TableCell] = [
+            child_cells: list[TableCell] = [
                 document.get_block(c.id)
                 for c in child_blocks
                 if c.id.block_type == BlockTypes.TableCell
@@ -38,22 +36,19 @@ class BaseTable(Block):
     def assemble_html(
         self,
         document,
-        child_blocks: List[BlockOutput],
+        child_blocks: list[BlockOutput],
         parent_structure=None,
         block_config: dict | None = None,
     ):
         # Filter out the table cells, so they don't render twice
-        template = super().assemble_html(
-            document, [], parent_structure, block_config
-        )
+        template = super().assemble_html(document, [], parent_structure, block_config)
 
         child_block_types = set([c.id.block_type for c in child_blocks])
         if self.html:
             # LLM processor
             return template + self.html
-        elif len(child_blocks) > 0 and BlockTypes.TableCell in child_block_types:
+        if len(child_blocks) > 0 and BlockTypes.TableCell in child_block_types:
             # Table processor
             return template + self.format_cells(document, child_blocks, block_config)
-        else:
-            # Default text lines and spans
-            return f"<p>{template}</p>"
+        # Default text lines and spans
+        return f"<p>{template}</p>"

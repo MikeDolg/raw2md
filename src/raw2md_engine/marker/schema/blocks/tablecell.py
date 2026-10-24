@@ -1,5 +1,3 @@
-from typing import List
-
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block
 
@@ -11,7 +9,7 @@ class TableCell(Block):
     row_id: int
     col_id: int
     is_header: bool
-    text_lines: List[str] | None = None
+    text_lines: list[str] | None = None
     block_description: str = "A cell in a table."
 
     @property

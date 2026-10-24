@@ -16,9 +16,7 @@ class Figure(Block):
                 document, child_blocks, parent_structure, block_config
             )
 
-        html = super().assemble_html(
-            document, [], parent_structure, block_config
-        )
+        html = super().assemble_html(document, [], parent_structure, block_config)
         if self.description:
             html += f"<p role='img' data-original-image-id='{self.id}'>Image {self.id} description: {self.description}</p>"
         return html

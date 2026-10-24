@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Sequence, Tuple
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, ConfigDict, field_validator
 from PIL import Image
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.polygon import PolygonBox
@@ -34,13 +35,13 @@ class BlockOutput(BaseModel):
     html: str
     polygon: PolygonBox
     id: BlockId
-    children: List[BlockOutput] | None = None
-    section_hierarchy: Dict[int, BlockId] | None = None
+    children: list[BlockOutput] | None = None
+    section_hierarchy: dict[int, BlockId] | None = None
 
 
 class BlockId(BaseModel):
     page_id: int
-    block_id: Optional[int] = None
+    block_id: int | None = None
     block_type: BlockTypes | None = None
 
     def __str__(self):
@@ -60,12 +61,11 @@ class BlockId(BaseModel):
 
         if isinstance(other, str):
             return str(self) == other
-        else:
-            return (
-                self.page_id == other.page_id
-                and self.block_id == other.block_id
-                and self.block_type == other.block_type
-            )
+        return (
+            self.page_id == other.page_id
+            and self.block_id == other.block_id
+            and self.block_type == other.block_type
+        )
 
     @field_validator("block_type")
     @classmethod
@@ -83,11 +83,11 @@ class BlockId(BaseModel):
 class Block(BaseModel):
     polygon: PolygonBox
     block_description: str
-    block_type: Optional[BlockTypes] = None
-    block_id: Optional[int] = None
-    page_id: Optional[int] = None
-    text_extraction_method: Optional[Literal["pdftext", "surya", "gemini"]] = None
-    structure: List[BlockId] | None = (
+    block_type: BlockTypes | None = None
+    block_id: int | None = None
+    page_id: int | None = None
+    text_extraction_method: Literal["pdftext", "surya", "gemini"] | None = None
+    structure: list[BlockId] | None = (
         None  # The top-level page structure, which is the block ids in order
     )
     ignore_for_output: bool = False  # Whether this block should be ignored in output
@@ -95,12 +95,12 @@ class Block(BaseModel):
         False  # Whether to replace newlines with spaces in output
     )
     source: Literal["layout", "heuristics", "processor"] = "layout"
-    top_k: Optional[Dict[BlockTypes, float]] = None
+    top_k: dict[BlockTypes, float] | None = None
     metadata: BlockMetadata | None = None
     lowres_image: Image.Image | None = None
     highres_image: Image.Image | None = None
     removed: bool = False  # Has block been replaced by new block?
-    _metadata: Optional[dict] = None
+    _metadata: dict | None = None
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -129,7 +129,7 @@ class Block(BaseModel):
         self,
         document: Document,
         highres: bool = False,
-        expansion: Tuple[float, float] | None = None,
+        expansion: tuple[float, float] | None = None,
         remove_blocks: Sequence[BlockTypes] | None = None,
     ) -> Image.Image | None:
         image = self.highres_image if highres else self.lowres_image
@@ -147,7 +147,7 @@ class Block(BaseModel):
             image = page_image.crop(bbox)
         return image
 
-    def structure_blocks(self, document_page: Document | PageGroup) -> List[Block]:
+    def structure_blocks(self, document_page: Document | PageGroup) -> list[Block]:
         if self.structure is None:
             return []
         return [document_page.get_block(block_id) for block_id in self.structure]
@@ -156,7 +156,7 @@ class Block(BaseModel):
         self,
         document_page: Document | PageGroup,
         block: Block,
-        ignored_block_types: Optional[List[BlockTypes]] = None,
+        ignored_block_types: list[BlockTypes] | None = None,
     ):
         if ignored_block_types is None:
             ignored_block_types = []
@@ -172,8 +172,8 @@ class Block(BaseModel):
     def get_next_block(
         self,
         document_page: Document | PageGroup,
-        block: Optional[Block] = None,
-        ignored_block_types: Optional[List[BlockTypes]] = None,
+        block: Block | None = None,
+        ignored_block_types: list[BlockTypes] | None = None,
     ):
         if ignored_block_types is None:
             ignored_block_types = []
@@ -201,20 +201,19 @@ class Block(BaseModel):
                     self.structure[i] = new_id
                     break
 
-    def remove_structure_items(self, block_ids: List[BlockId]):
+    def remove_structure_items(self, block_ids: list[BlockId]):
         if self.structure is not None:
             self.structure = [item for item in self.structure if item not in block_ids]
 
     def raw_text(self, document: Document) -> str:
+        from raw2md_engine.marker.schema.blocks.tablecell import TableCell
         from raw2md_engine.marker.schema.text.line import Line
         from raw2md_engine.marker.schema.text.span import Span
-        from raw2md_engine.marker.schema.blocks.tablecell import TableCell
 
         if self.structure is None:
             if isinstance(self, (Span, TableCell)):
                 return self.text
-            else:
-                return ""
+            return ""
 
         text = ""
         for block_id in self.structure:
@@ -227,9 +226,9 @@ class Block(BaseModel):
     def assemble_html(
         self,
         document: Document,
-        child_blocks: List[BlockOutput],
-        parent_structure: Optional[List[str]] = None,
-        block_config: Optional[dict] = None,
+        child_blocks: list[BlockOutput],
+        parent_structure: list[str] | None = None,
+        block_config: dict | None = None,
     ) -> str:
         if self.ignore_for_output:
             return ""
@@ -256,7 +255,7 @@ class Block(BaseModel):
 
     def contained_blocks(
         self, document: Document, block_types: Sequence[BlockTypes] = None
-    ) -> List[Block]:
+    ) -> list[Block]:
         if self.structure is None:
             return []
 
@@ -282,9 +281,9 @@ class Block(BaseModel):
     def render(
         self,
         document: Document,
-        parent_structure: Optional[List[str]] = None,
+        parent_structure: list[str] | None = None,
         section_hierarchy: dict | None = None,
-        block_config: Optional[dict] = None,
+        block_config: dict | None = None,
     ) -> BlockOutput:
         if block_config is None:
             block_config = {}
@@ -340,7 +339,5 @@ class Block(BaseModel):
         if block_config is None:
             block_config = {}
 
-        html = Block.assemble_html(
-            self, document, [], parent_structure, block_config
-        )
+        html = Block.assemble_html(self, document, [], parent_structure, block_config)
         return html + self.html

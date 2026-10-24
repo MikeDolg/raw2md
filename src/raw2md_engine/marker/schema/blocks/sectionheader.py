@@ -1,12 +1,10 @@
-from typing import Optional
-
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block
 
 
 class SectionHeader(Block):
     block_type: BlockTypes = BlockTypes.SectionHeader
-    heading_level: Optional[int] = None
+    heading_level: int | None = None
     block_description: str = "The header of a section of text or other blocks."
     html: str | None = None
 

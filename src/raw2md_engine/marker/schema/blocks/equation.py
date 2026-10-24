@@ -16,8 +16,7 @@ class Equation(Block):
             )
             html_out += f"""<p block-type='{self.block_type}'>{self.html}</p>"""
             return html_out
-        else:
-            template = super().assemble_html(
-                document, child_blocks, parent_structure, block_config
-            )
-            return f"<p block-type='{self.block_type}'>{template}</p>"
+        template = super().assemble_html(
+            document, child_blocks, parent_structure, block_config
+        )
+        return f"<p block-type='{self.block_type}'>{template}</p>"

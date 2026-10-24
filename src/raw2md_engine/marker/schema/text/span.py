@@ -1,6 +1,6 @@
 import html
 import re
-from typing import List, Literal, Optional
+from typing import Literal
 
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block
@@ -23,7 +23,7 @@ class Span(Block):
     font_size: float
     minimum_position: int
     maximum_position: int
-    formats: List[
+    formats: list[
         Literal[
             "plain",
             "math",
@@ -40,8 +40,8 @@ class Span(Block):
     ]
     has_superscript: bool = False
     has_subscript: bool = False
-    url: Optional[str] = None
-    html: Optional[str] = None
+    url: str | None = None
+    html: str | None = None
 
     @property
     def bold(self):

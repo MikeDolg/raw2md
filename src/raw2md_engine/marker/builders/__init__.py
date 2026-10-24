@@ -6,7 +6,7 @@ from raw2md_engine.marker.util import assign_config
 
 
 class BaseBuilder:
-    def __init__(self, config: Optional[BaseModel | dict] = None):
+    def __init__(self, config: BaseModel | dict | None = None):
         assign_config(self, config)
 
     def __call__(self, data, *args, **kwargs):

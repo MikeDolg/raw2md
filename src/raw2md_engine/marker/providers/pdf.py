@@ -2,24 +2,28 @@ import contextlib
 import ctypes
 import logging
 import re
-from typing import Annotated, List, Optional, Set
+from typing import Annotated
 
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_c
 from ftfy import fix_text
-from raw2md_engine.pdftext.extraction import dictionary_output
-from raw2md_engine.pdftext.pdf.utils import flatten as flatten_pdf_page
-
 from PIL import Image
-from pypdfium2 import PdfiumError, PdfDocument
+from pypdfium2 import PdfDocument, PdfiumError
 
-from raw2md_engine.marker.providers import BaseProvider, ProviderOutput, Char, ProviderPageLines
+from raw2md_engine.marker.providers import (
+    BaseProvider,
+    Char,
+    ProviderOutput,
+    ProviderPageLines,
+)
 from raw2md_engine.marker.providers.utils import alphanum_ratio
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.polygon import PolygonBox
 from raw2md_engine.marker.schema.registry import get_block_class
 from raw2md_engine.marker.schema.text.line import Line
 from raw2md_engine.marker.schema.text.span import Span
+from raw2md_engine.pdftext.extraction import dictionary_output
+from raw2md_engine.pdftext.pdf.utils import flatten as flatten_pdf_page
 
 # Ignore pypdfium2 warning about form flattening
 logging.getLogger("pypdfium2").setLevel(logging.ERROR)
@@ -31,7 +35,7 @@ class PdfProvider(BaseProvider):
     """
 
     page_range: Annotated[
-        List[int],
+        list[int],
         "The range of pages to process.",
         "Default is None, which will process all pages.",
     ] = None
@@ -120,7 +124,7 @@ class PdfProvider(BaseProvider):
     def __len__(self) -> int:
         return self.page_count
 
-    def font_flags_to_format(self, flags: Optional[int]) -> Set[str]:
+    def font_flags_to_format(self, flags: int | None) -> set[str]:
         if flags is None:
             return {"plain"}
 
@@ -144,15 +148,17 @@ class PdfProvider(BaseProvider):
             set_flags.add("Plain")
 
         formats = set()
-        if set_flags == {"Symbolic", "Italic"} or set_flags == {
-            "Symbolic",
-            "Italic",
-            "UseExternAttr",
-        }:
-            formats.add("plain")
-        elif set_flags == {"UseExternAttr"}:
-            formats.add("plain")
-        elif set_flags == {"Plain"}:
+        if (
+            set_flags == {"Symbolic", "Italic"}
+            or set_flags
+            == {
+                "Symbolic",
+                "Italic",
+                "UseExternAttr",
+            }
+            or set_flags == {"UseExternAttr"}
+            or set_flags == {"Plain"}
+        ):
             formats.add("plain")
         else:
             if set_flags & {"Italic"}:
@@ -171,7 +177,7 @@ class PdfProvider(BaseProvider):
                 formats.add("plain")
         return formats
 
-    def font_names_to_format(self, font_name: str | None) -> Set[str]:
+    def font_names_to_format(self, font_name: str | None) -> set[str]:
         formats = set()
         if font_name is None:
             return formats
@@ -217,14 +223,14 @@ class PdfProvider(BaseProvider):
 
         for page in page_char_blocks:
             page_id = page["page"]
-            lines: List[ProviderOutput] = []
+            lines: list[ProviderOutput] = []
             if not self.check_page(page_id, doc):
                 continue
 
             for block in page["blocks"]:
                 for line in block["lines"]:
-                    spans: List[Span] = []
-                    chars: List[List[Char]] = []
+                    spans: list[Span] = []
+                    chars: list[list[Char]] = []
                     for span in line["spans"]:
                         if not span["text"]:
                             continue
@@ -295,7 +301,7 @@ class PdfProvider(BaseProvider):
 
         return page_lines
 
-    def check_line_spans(self, page_lines: List[ProviderOutput]) -> bool:
+    def check_line_spans(self, page_lines: list[ProviderOutput]) -> bool:
         page_spans = [span for line in page_lines for span in line.spans]
         if len(page_spans) == 0:
             return False
@@ -404,7 +410,7 @@ class PdfProvider(BaseProvider):
         image = image.convert("RGB")
         return image
 
-    def get_images(self, idxs: List[int], dpi: int) -> List[Image.Image]:
+    def get_images(self, idxs: list[int], dpi: int) -> list[Image.Image]:
         with self.get_doc() as doc:
             images = [
                 self._render_image(doc, idx, dpi, self.flatten_pdf) for idx in idxs
@@ -416,7 +422,7 @@ class PdfProvider(BaseProvider):
         if bbox:
             return PolygonBox.from_bbox(bbox)
 
-    def get_page_lines(self, idx: int) -> List[ProviderOutput]:
+    def get_page_lines(self, idx: int) -> list[ProviderOutput]:
         return self.page_lines[idx]
 
     @staticmethod

@@ -1,5 +1,3 @@
-from typing import List
-
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import BlockOutput
 from raw2md_engine.marker.schema.groups.base import Group
@@ -13,7 +11,7 @@ class TableGroup(Group):
     def assemble_html(
         self,
         document,
-        child_blocks: List[BlockOutput],
+        child_blocks: list[BlockOutput],
         parent_structure=None,
         block_config: dict | None = None,
     ):

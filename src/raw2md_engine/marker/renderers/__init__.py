@@ -2,7 +2,7 @@ import base64
 import io
 import re
 from collections import Counter
-from typing import Annotated, Optional, Tuple, Literal
+from typing import Annotated, Literal, Optional, Tuple
 
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ from raw2md_engine.marker.util import assign_config
 
 class BaseRenderer:
     image_blocks: Annotated[
-        Tuple[BlockTypes, ...], "The block types to consider as images."
+        tuple[BlockTypes, ...], "The block types to consider as images."
     ] = (BlockTypes.Picture, BlockTypes.Figure)
     extract_images: Annotated[bool, "Extract images from the document."] = True
     image_extraction_mode: Annotated[
@@ -33,7 +33,7 @@ class BaseRenderer:
         False
     )
 
-    def __init__(self, config: Optional[BaseModel | dict] = None):
+    def __init__(self, config: BaseModel | dict | None = None):
         assign_config(self, config)
 
         self.block_config = {
@@ -84,8 +84,7 @@ class BaseRenderer:
             whitespace = match.group(1)
             if len(whitespace) == 0:
                 return ""
-            else:
-                return " "
+            return " "
 
         pattern = rf"</{tag}>(\s*)<{tag}>"
 

@@ -1,18 +1,17 @@
 import textwrap
 
-from PIL import Image
-from typing import Annotated, Tuple
+# Ignore beautifulsoup warnings
+import warnings
+from typing import Annotated
 
 from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
+from PIL import Image
 from pydantic import BaseModel
 
 from raw2md_engine.marker.renderers import BaseRenderer
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import BlockId
 from raw2md_engine.marker.settings import settings
-
-# Ignore beautifulsoup warnings
-import warnings
 
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
@@ -32,7 +31,7 @@ class HTMLRenderer(BaseRenderer):
     """
 
     page_blocks: Annotated[
-        Tuple[BlockTypes],
+        tuple[BlockTypes],
         "The block types to consider as pages.",
     ] = (BlockTypes.Page,)
     paginate_output: Annotated[

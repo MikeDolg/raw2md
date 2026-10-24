@@ -1,5 +1,5 @@
 import math
-from typing import Annotated, List
+from typing import Annotated
 
 import regex
 
@@ -79,12 +79,12 @@ class TextProcessor(BaseProcessor):
                         new_block_lines[0].polygon.x_start > min_x
                     )
 
-                lines: List[Line] = [
+                lines: list[Line] = [
                     line
                     for line in block.structure_blocks(document)
                     if line.polygon.width > 1
                 ]
-                if len(lines):
+                if lines:
                     max_x = math.floor(max([line.polygon.x_end for line in lines]))
                     last_line_is_full_width = lines[-1].polygon.x_end >= max_x
 

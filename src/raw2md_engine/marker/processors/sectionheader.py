@@ -1,5 +1,5 @@
 import warnings
-from typing import Annotated, Dict, List
+from typing import Annotated
 
 import numpy as np
 from sklearn.cluster import KMeans
@@ -17,7 +17,8 @@ class SectionHeaderProcessor(BaseProcessor):
     """
     A processor for recognizing section headers in the document.
     """
-    block_types = (BlockTypes.SectionHeader, )
+
+    block_types = (BlockTypes.SectionHeader,)
     level_count: Annotated[
         int,
         "The number of levels to use for headings.",
@@ -36,7 +37,7 @@ class SectionHeaderProcessor(BaseProcessor):
     ] = 0.99
 
     def __call__(self, document: Document):
-        line_heights: Dict[int, float] = {}
+        line_heights: dict[int, float] = {}
         for page in document.pages:
             # Iterate children to grab all section headers
             for block in page.children:
@@ -46,7 +47,9 @@ class SectionHeaderProcessor(BaseProcessor):
                     line_heights[block.id] = block.line_height(document)
                 else:
                     line_heights[block.id] = 0
-                    block.ignore_for_output = True  # Don't output an empty section header
+                    block.ignore_for_output = (
+                        True  # Don't output an empty section header
+                    )
 
         flat_line_heights = list(line_heights.values())
         heading_ranges = self.bucket_headings(flat_line_heights)
@@ -66,16 +69,21 @@ class SectionHeaderProcessor(BaseProcessor):
                 if block.heading_level is None:
                     block.heading_level = self.default_level
 
-    def bucket_headings(self, line_heights: List[float], num_levels=4):
+    def bucket_headings(self, line_heights: list[float], num_levels=4):
         if len(line_heights) <= self.level_count:
             return []
 
         data = np.asarray(line_heights).reshape(-1, 1)
-        labels = KMeans(n_clusters=num_levels, random_state=0, n_init="auto").fit_predict(data)
+        labels = KMeans(
+            n_clusters=num_levels, random_state=0, n_init="auto"
+        ).fit_predict(data)
         data_labels = np.concatenate([data, labels.reshape(-1, 1)], axis=1)
         data_labels = data_labels[np.argsort(data_labels[:, 0], kind="stable")]
 
-        cluster_means = {int(label): float(np.mean(data_labels[data_labels[:, 1] == label, 0])) for label in np.unique(labels)}
+        cluster_means = {
+            int(label): float(np.mean(data_labels[data_labels[:, 1] == label, 0]))
+            for label in np.unique(labels)
+        }
         label_max = None
         label_min = None
         heading_ranges = []

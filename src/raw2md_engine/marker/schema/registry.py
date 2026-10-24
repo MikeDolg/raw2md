@@ -1,4 +1,3 @@
-from typing import Dict, Type
 from importlib import import_module
 
 from raw2md_engine.marker.schema import BlockTypes
@@ -6,6 +5,7 @@ from raw2md_engine.marker.schema.blocks import (
     Block,
     Caption,
     Code,
+    ComplexRegion,
     Equation,
     Figure,
     Footnote,
@@ -18,10 +18,9 @@ from raw2md_engine.marker.schema.blocks import (
     Picture,
     SectionHeader,
     Table,
+    TableCell,
     TableOfContents,
     Text,
-    ComplexRegion,
-    TableCell,
 )
 from raw2md_engine.marker.schema.document import Document
 from raw2md_engine.marker.schema.groups import (
@@ -34,14 +33,14 @@ from raw2md_engine.marker.schema.groups import (
 from raw2md_engine.marker.schema.text import Line, Span
 from raw2md_engine.marker.schema.text.char import Char
 
-BLOCK_REGISTRY: Dict[BlockTypes, str] = {}
+BLOCK_REGISTRY: dict[BlockTypes, str] = {}
 
 
-def register_block_class(block_type: BlockTypes, block_cls: Type[Block]):
+def register_block_class(block_type: BlockTypes, block_cls: type[Block]):
     BLOCK_REGISTRY[block_type] = f"{block_cls.__module__}.{block_cls.__name__}"
 
 
-def get_block_class(block_type: BlockTypes) -> Type[Block]:
+def get_block_class(block_type: BlockTypes) -> type[Block]:
     class_path = BLOCK_REGISTRY[block_type]
     module_name, class_name = class_path.rsplit(".", 1)
     module = import_module(module_name)

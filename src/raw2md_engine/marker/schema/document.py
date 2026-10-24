@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Sequence, Optional
+from collections.abc import Sequence
 
 from pydantic import BaseModel
 
@@ -10,7 +10,7 @@ from raw2md_engine.marker.schema.groups.page import PageGroup
 
 
 class DocumentOutput(BaseModel):
-    children: List[BlockOutput]
+    children: list[BlockOutput]
     html: str
     block_type: BlockTypes = BlockTypes.Document
 
@@ -19,14 +19,14 @@ class TocItem(BaseModel):
     title: str
     heading_level: int
     page_id: int
-    polygon: List[List[float]]
+    polygon: list[list[float]]
 
 
 class Document(BaseModel):
     filepath: str
-    pages: List[PageGroup]
+    pages: list[PageGroup]
     block_type: BlockTypes = BlockTypes.Document
-    table_of_contents: List[TocItem] | None = None
+    table_of_contents: list[TocItem] | None = None
     debug_data_path: str | None = None  # Path that debug data was saved to
 
     def get_block(self, block_id: BlockId):
@@ -43,7 +43,7 @@ class Document(BaseModel):
         return None
 
     def get_next_block(
-        self, block: Block, ignored_block_types: List[BlockTypes] = None
+        self, block: Block, ignored_block_types: list[BlockTypes] = None
     ):
         if ignored_block_types is None:
             ignored_block_types = []
@@ -85,14 +85,14 @@ class Document(BaseModel):
         return None
 
     def assemble_html(
-        self, child_blocks: List[Block], block_config: Optional[dict] = None
+        self, child_blocks: list[Block], block_config: dict | None = None
     ):
         template = ""
         for c in child_blocks:
             template += f"<content-ref src='{c.id}'></content-ref>"
         return template
 
-    def render(self, block_config: Optional[dict] = None):
+    def render(self, block_config: dict | None = None):
         child_content = []
         section_hierarchy = None
         for page in self.pages:
@@ -105,7 +105,7 @@ class Document(BaseModel):
             html=self.assemble_html(child_content, block_config),
         )
 
-    def contained_blocks(self, block_types: Sequence[BlockTypes] = None) -> List[Block]:
+    def contained_blocks(self, block_types: Sequence[BlockTypes] = None) -> list[Block]:
         blocks = []
         for page in self.pages:
             blocks += page.contained_blocks(self, block_types)

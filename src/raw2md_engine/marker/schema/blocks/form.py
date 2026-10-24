@@ -1,5 +1,3 @@
-from typing import List
-
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks.basetable import BaseTable
 

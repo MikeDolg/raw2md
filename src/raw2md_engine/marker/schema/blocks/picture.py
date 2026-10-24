@@ -16,9 +16,7 @@ class Picture(Block):
                 document, child_blocks, parent_structure, block_config
             )
 
-        html = super().assemble_html(
-            document, [], parent_structure, block_config
-        )
+        html = super().assemble_html(document, [], parent_structure, block_config)
 
         if self.description:
             return (

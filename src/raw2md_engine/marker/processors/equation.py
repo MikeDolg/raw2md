@@ -1,15 +1,15 @@
-from typing import Annotated, List, Tuple
-from PIL import Image
 import re
-from bs4 import BeautifulSoup
+from typing import Annotated
 
-from ftfy import fix_text, TextFixerConfig
-from raw2md_engine.surya.recognition import RecognitionPredictor, OCRResult
+from bs4 import BeautifulSoup
+from ftfy import TextFixerConfig, fix_text
+from PIL import Image
 
 from raw2md_engine.marker.processors import BaseProcessor
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.document import Document
 from raw2md_engine.marker.settings import settings
+from raw2md_engine.surya.recognition import OCRResult, RecognitionPredictor
 
 MATH_TAG_PATTERN = re.compile(r"<math[^>]*>(.*?)</math>")
 
@@ -20,7 +20,7 @@ class EquationProcessor(BaseProcessor):
     """
 
     block_types: Annotated[
-        Tuple[BlockTypes],
+        tuple[BlockTypes],
         "The block types to process.",
     ] = (BlockTypes.Equation,)
     model_max_length: Annotated[
@@ -47,9 +47,9 @@ class EquationProcessor(BaseProcessor):
         # Set to 1/4th of OCR batch size due to sequence length with tiling
         if self.equation_batch_size is not None:
             return self.equation_batch_size
-        elif settings.TORCH_DEVICE_MODEL == "cuda":
+        if settings.TORCH_DEVICE_MODEL == "cuda":
             return 32
-        elif settings.TORCH_DEVICE_MODEL == "mps":
+        if settings.TORCH_DEVICE_MODEL == "mps":
             return 6
         return 6
 
@@ -122,11 +122,11 @@ class EquationProcessor(BaseProcessor):
 
     def get_latex_batched(
         self,
-        page_images: List[Image.Image],
-        bboxes: List[List[List[float]]],
+        page_images: list[Image.Image],
+        bboxes: list[list[list[float]]],
     ):
         self.recognition_model.disable_tqdm = self.disable_tqdm
-        predictions: List[OCRResult] = self.recognition_model(
+        predictions: list[OCRResult] = self.recognition_model(
             images=page_images,
             bboxes=bboxes,
             task_names=["ocr_with_boxes"] * len(page_images),

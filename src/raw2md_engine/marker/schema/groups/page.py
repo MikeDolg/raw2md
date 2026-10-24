@@ -1,9 +1,9 @@
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import Any
+
 import numpy as np
-
 from PIL import Image, ImageDraw
-
 from pydantic import computed_field
 
 from raw2md_engine.marker.providers import ProviderOutput
@@ -14,7 +14,7 @@ from raw2md_engine.marker.schema.groups.base import Group
 from raw2md_engine.marker.schema.polygon import PolygonBox
 from raw2md_engine.marker.util import matrix_intersection_area, sort_text_lines
 
-LINE_MAPPING_TYPE = List[Tuple[int, ProviderOutput]]
+LINE_MAPPING_TYPE = list[tuple[int, ProviderOutput]]
 
 
 class PageGroup(Group):
@@ -22,7 +22,7 @@ class PageGroup(Group):
     # This is bytes if it is serialized
     lowres_image: Image.Image | None | bytes = None
     highres_image: Image.Image | None | bytes = None
-    children: List[Union[Any, Block]] | None = None
+    children: list[Any | Block] | None = None
     layout_sliced: bool = (
         False  # Whether the layout model had to slice the image (order may be wrong)
     )
@@ -77,13 +77,13 @@ class PageGroup(Group):
 
     @computed_field
     @property
-    def current_children(self) -> List[Block]:
+    def current_children(self) -> list[Block]:
         return [child for child in self.children if not child.removed]
 
     def get_next_block(
         self,
-        block: Optional[Block] = None,
-        ignored_block_types: Optional[List[BlockTypes]] = None,
+        block: Block | None = None,
+        ignored_block_types: list[BlockTypes] | None = None,
     ):
         if ignored_block_types is None:
             ignored_block_types = []
@@ -135,7 +135,7 @@ class PageGroup(Group):
         return template
 
     def compute_line_block_intersections(
-        self, blocks: List[Block], provider_outputs: List[ProviderOutput]
+        self, blocks: list[Block], provider_outputs: list[ProviderOutput]
     ):
         max_intersections = {}
 
@@ -162,14 +162,19 @@ class PageGroup(Group):
         structure_blocks = [self.get_block(block_id) for block_id in self.structure]
         strucure_block_bboxes = [b.polygon.bbox for b in structure_blocks]
 
-        intersection_matrix = matrix_intersection_area(strucure_block_bboxes, strucure_block_bboxes)
-        np.fill_diagonal(intersection_matrix, 0)    # Ignore self-intersections
+        intersection_matrix = matrix_intersection_area(
+            strucure_block_bboxes, strucure_block_bboxes
+        )
+        np.fill_diagonal(intersection_matrix, 0)  # Ignore self-intersections
 
         max_intersection_pct = 0
         for block_idx, block in enumerate(structure_blocks):
             if block.polygon.area == 0:
                 continue
-            max_intersection_pct = max(max_intersection_pct, np.max(intersection_matrix[block_idx]) / block.polygon.area)
+            max_intersection_pct = max(
+                max_intersection_pct,
+                np.max(intersection_matrix[block_idx]) / block.polygon.area,
+            )
 
         return max_intersection_pct
 
@@ -189,8 +194,8 @@ class PageGroup(Group):
 
     def identify_missing_blocks(
         self,
-        provider_line_idxs: List[int],
-        provider_outputs: List[ProviderOutput],
+        provider_line_idxs: list[int],
+        provider_outputs: list[ProviderOutput],
         assigned_line_idxs: set[int],
     ):
         new_blocks = []
@@ -229,8 +234,8 @@ class PageGroup(Group):
 
     def create_missing_blocks(
         self,
-        new_blocks: List[LINE_MAPPING_TYPE],
-        block_lines: Dict[BlockId, LINE_MAPPING_TYPE],
+        new_blocks: list[LINE_MAPPING_TYPE],
+        block_lines: dict[BlockId, LINE_MAPPING_TYPE],
     ):
         for new_block in new_blocks:
             block = self.add_block(Text, new_block[0][1].line.polygon)
@@ -247,7 +252,7 @@ class PageGroup(Group):
                 dist = block.polygon.center_distance(
                     existing_block.polygon, x_weight=5, absolute=True
                 )
-                if dist > 0 and min_dist_idx is None or dist < min_dist:
+                if (dist > 0 and min_dist_idx is None) or dist < min_dist:
                     min_dist = dist
                     min_dist_idx = existing_block.id
 
@@ -259,7 +264,7 @@ class PageGroup(Group):
 
     def add_initial_blocks(
         self,
-        block_lines: Dict[BlockId, LINE_MAPPING_TYPE],
+        block_lines: dict[BlockId, LINE_MAPPING_TYPE],
         text_extraction_method: str,
         keep_chars: bool = False,
     ):
@@ -305,7 +310,7 @@ class PageGroup(Group):
 
     def merge_blocks(
         self,
-        provider_outputs: List[ProviderOutput],
+        provider_outputs: list[ProviderOutput],
         text_extraction_method: str,
         keep_chars: bool = False,
     ):

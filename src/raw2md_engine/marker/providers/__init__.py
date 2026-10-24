@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 from PIL import Image
 from pydantic import BaseModel
@@ -16,8 +16,8 @@ configure_logging()
 
 class ProviderOutput(BaseModel):
     line: Line
-    spans: List[Span]
-    chars: Optional[List[List[Char]]] = None
+    spans: list[Span]
+    chars: list[list[Char]] | None = None
 
     @property
     def raw_text(self):
@@ -42,24 +42,24 @@ class ProviderOutput(BaseModel):
         return new_output
 
 
-ProviderPageLines = Dict[int, List[ProviderOutput]]
+ProviderPageLines = dict[int, list[ProviderOutput]]
 
 
 class BaseProvider:
-    def __init__(self, filepath: str, config: Optional[BaseModel | dict] = None):
+    def __init__(self, filepath: str, config: BaseModel | dict | None = None):
         assign_config(self, config)
         self.filepath = filepath
 
     def __len__(self):
         pass
 
-    def get_images(self, idxs: List[int], dpi: int) -> List[Image.Image]:
+    def get_images(self, idxs: list[int], dpi: int) -> list[Image.Image]:
         pass
 
     def get_page_bbox(self, idx: int) -> PolygonBox | None:
         pass
 
-    def get_page_lines(self, idx: int) -> List[Line]:
+    def get_page_lines(self, idx: int) -> list[Line]:
         pass
 
     def __enter__(self):

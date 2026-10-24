@@ -1,7 +1,4 @@
-from typing import Annotated, List
-
-from raw2md_engine.surya.layout import LayoutPredictor
-from raw2md_engine.surya.layout.schema import LayoutResult, LayoutBox
+from typing import Annotated
 
 from raw2md_engine.marker.builders import BaseBuilder
 from raw2md_engine.marker.providers.pdf import PdfProvider
@@ -11,6 +8,8 @@ from raw2md_engine.marker.schema.groups.page import PageGroup
 from raw2md_engine.marker.schema.polygon import PolygonBox
 from raw2md_engine.marker.schema.registry import get_block_class
 from raw2md_engine.marker.settings import settings
+from raw2md_engine.surya.layout import LayoutPredictor
+from raw2md_engine.surya.layout.schema import LayoutBox, LayoutResult
 
 
 class LayoutBuilder(BaseBuilder):
@@ -32,7 +31,7 @@ class LayoutBuilder(BaseBuilder):
         "Disable tqdm progress bars.",
     ] = False
     expand_block_types: Annotated[
-        List[BlockTypes],
+        list[BlockTypes],
         "Block types whose bounds should be expanded to accomodate missing regions",
     ] = [
         BlockTypes.Picture,
@@ -60,11 +59,11 @@ class LayoutBuilder(BaseBuilder):
     def get_batch_size(self):
         if self.layout_batch_size is not None:
             return self.layout_batch_size
-        elif settings.TORCH_DEVICE_MODEL == "cuda":
+        if settings.TORCH_DEVICE_MODEL == "cuda":
             return 12
         return 6
 
-    def forced_layout(self, pages: List[PageGroup]) -> List[LayoutResult]:
+    def forced_layout(self, pages: list[PageGroup]) -> list[LayoutResult]:
         layout_results = []
         for page in pages:
             layout_results.append(
@@ -83,7 +82,7 @@ class LayoutBuilder(BaseBuilder):
             )
         return layout_results
 
-    def surya_layout(self, pages: List[PageGroup]) -> List[LayoutResult]:
+    def surya_layout(self, pages: list[PageGroup]) -> list[LayoutResult]:
         self.layout_model.disable_tqdm = self.disable_tqdm
         layout_results = self.layout_model(
             [p.get_image(highres=False) for p in pages],
@@ -129,7 +128,7 @@ class LayoutBuilder(BaseBuilder):
                     ).fit_to_bounds((0, 0, *page_size))
 
     def add_blocks_to_pages(
-        self, pages: List[PageGroup], layout_results: List[LayoutResult]
+        self, pages: list[PageGroup], layout_results: list[LayoutResult]
     ):
         for page, layout_result in zip(pages, layout_results):
             layout_page_size = PolygonBox.from_bbox(layout_result.image_bbox).size

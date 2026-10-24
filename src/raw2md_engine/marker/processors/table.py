@@ -1,17 +1,12 @@
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from copy import deepcopy
-from typing import Annotated, List
-from collections import Counter
-from PIL import Image
+from typing import Annotated
 
 from ftfy import fix_text
-from raw2md_engine.surya.detection import DetectionPredictor, TextDetectionResult
-from raw2md_engine.surya.recognition import RecognitionPredictor, TextLine
-from raw2md_engine.surya.table_rec import TableRecPredictor
-from raw2md_engine.surya.table_rec.schema import TableResult, TableCell as SuryaTableCell
-from raw2md_engine.pdftext.extraction import table_output
+from PIL import Image
 
+from raw2md_engine.marker.logger import get_logger
 from raw2md_engine.marker.processors import BaseProcessor
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks.tablecell import TableCell
@@ -20,7 +15,12 @@ from raw2md_engine.marker.schema.polygon import PolygonBox
 from raw2md_engine.marker.settings import settings
 from raw2md_engine.marker.util import matrix_intersection_area, unwrap_math
 from raw2md_engine.marker.utils.image import is_blank_image
-from raw2md_engine.marker.logger import get_logger
+from raw2md_engine.pdftext.extraction import table_output
+from raw2md_engine.surya.detection import DetectionPredictor, TextDetectionResult
+from raw2md_engine.surya.recognition import RecognitionPredictor, TextLine
+from raw2md_engine.surya.table_rec import TableRecPredictor
+from raw2md_engine.surya.table_rec.schema import TableCell as SuryaTableCell
+from raw2md_engine.surya.table_rec.schema import TableResult
 
 logger = get_logger()
 
@@ -47,7 +47,7 @@ class TableProcessor(BaseProcessor):
         "Default is None, which will use the default batch size for the model.",
     ] = None
     contained_block_types: Annotated[
-        List[BlockTypes],
+        list[BlockTypes],
         "Block types to remove if they're contained inside the tables.",
     ] = (BlockTypes.Text, BlockTypes.TextInlineMath)
     row_split_threshold: Annotated[
@@ -114,7 +114,7 @@ class TableProcessor(BaseProcessor):
 
         # Detect tables and cells
         self.table_rec_model.disable_tqdm = self.disable_tqdm
-        tables: List[TableResult] = self.table_rec_model(
+        tables: list[TableResult] = self.table_rec_model(
             [t["table_image"] for t in table_data],
             batch_size=self.get_table_rec_batch_size(),
         )
@@ -141,7 +141,7 @@ class TableProcessor(BaseProcessor):
         for page in document.pages:
             for block in page.contained_blocks(document, self.block_types):
                 block.structure = []  # Remove any existing lines, spans, etc.
-                cells: List[SuryaTableCell] = tables[table_idx].cells
+                cells: list[SuryaTableCell] = tables[table_idx].cells
                 for cell in cells:
                     # Rescale the cell polygon to the page size
                     cell_polygon = PolygonBox(polygon=cell.polygon).rescale(
@@ -186,7 +186,7 @@ class TableProcessor(BaseProcessor):
 
     def finalize_cell_text(self, cell: SuryaTableCell):
         fixed_text = []
-        text_lines = cell.text_lines if cell.text_lines else []
+        text_lines = cell.text_lines or []
         for line in text_lines:
             text = line["text"].strip()
             if not text or text == ".":
@@ -235,7 +235,7 @@ class TableProcessor(BaseProcessor):
             text = text.replace(space, " ")
         return text
 
-    def combine_dollar_column(self, tables: List[TableResult]):
+    def combine_dollar_column(self, tables: list[TableResult]):
         for table in tables:
             if len(table.cells) == 0:
                 # Skip empty tables
@@ -289,7 +289,7 @@ class TableProcessor(BaseProcessor):
                 if col in dollar_cols:
                     col_offset += 1
                     for cell in col_cells:
-                        text_lines = cell.text_lines if cell.text_lines else []
+                        text_lines = cell.text_lines or []
                         next_row_col = [
                             c
                             for c in table.cells
@@ -313,7 +313,7 @@ class TableProcessor(BaseProcessor):
                     for cell in col_cells:
                         cell.col_id -= col_offset
 
-    def split_combined_rows(self, tables: List[TableResult]):
+    def split_combined_rows(self, tables: list[TableResult]):
         for table in tables:
             if len(table.cells) == 0:
                 # Skip empty tables
@@ -383,7 +383,7 @@ class TableProcessor(BaseProcessor):
             for row, item_info in zip(unique_rows, row_info):
                 max_lines = max(item_info["line_lens"])
                 if item_info["should_split"]:
-                    for i in range(0, max_lines):
+                    for i in range(max_lines):
                         for cell in item_info["row_cells"]:
                             # Calculate height based on number of splits
                             split_height = cell.bbox[3] - cell.bbox[1]
@@ -428,12 +428,12 @@ class TableProcessor(BaseProcessor):
             if len(new_cells) > len(table.cells):
                 table.cells = new_cells
 
-    def assign_text_to_cells(self, tables: List[TableResult], table_data: list):
+    def assign_text_to_cells(self, tables: list[TableResult], table_data: list):
         for table_result, table_page_data in zip(tables, table_data):
             if table_page_data["ocr_block"]:
                 continue
 
-            table_cells: List[SuryaTableCell] = table_result.cells
+            table_cells: list[SuryaTableCell] = table_result.cells
             table_cell_bboxes = [c.bbox for c in table_cells]
             table_text_lines = [
                 piece
@@ -633,11 +633,11 @@ class TableProcessor(BaseProcessor):
                         [x0, new_y1],
                     ]
 
-    def needs_ocr(self, tables: List[TableResult], table_blocks: List[dict]):
+    def needs_ocr(self, tables: list[TableResult], table_blocks: list[dict]):
         ocr_tables = []
         ocr_idxs = []
         for j, (table_result, table_block) in enumerate(zip(tables, table_blocks)):
-            table_cells: List[SuryaTableCell] = table_result.cells
+            table_cells: list[SuryaTableCell] = table_result.cells
             text_lines_need_ocr = any([tc.text_lines is None for tc in table_cells])
             if (
                 table_block["ocr_block"]
@@ -650,7 +650,7 @@ class TableProcessor(BaseProcessor):
                 ocr_tables.append(table_result)
                 ocr_idxs.append(j)
 
-        detection_results: List[TextDetectionResult] = self.detection_model(
+        detection_results: list[TextDetectionResult] = self.detection_model(
             images=[table_blocks[i]["table_image"] for i in ocr_idxs],
             batch_size=self.get_detection_batch_size(),
         )
@@ -669,7 +669,7 @@ class TableProcessor(BaseProcessor):
         return ocr_tables, ocr_polys, ocr_idxs
 
     def get_ocr_results(
-        self, table_images: List[Image.Image], ocr_polys: List[List[SuryaTableCell]]
+        self, table_images: list[Image.Image], ocr_polys: list[list[SuryaTableCell]]
     ):
         ocr_polys_bad = []
 
@@ -735,7 +735,7 @@ class TableProcessor(BaseProcessor):
 
         return ocr_results
 
-    def assign_ocr_lines(self, tables: List[TableResult], table_blocks: list):
+    def assign_ocr_lines(self, tables: list[TableResult], table_blocks: list):
         ocr_tables, ocr_polys, ocr_idxs = self.needs_ocr(tables, table_blocks)
         det_images = [
             t["table_image"] for i, t in enumerate(table_blocks) if i in ocr_idxs
@@ -747,7 +747,7 @@ class TableProcessor(BaseProcessor):
         ocr_results = self.get_ocr_results(table_images=det_images, ocr_polys=ocr_polys)
 
         for result, ocr_res in zip(ocr_tables, ocr_results):
-            table_cells: List[SuryaTableCell] = result.cells
+            table_cells: list[SuryaTableCell] = result.cells
             cells_need_text = [tc for tc in table_cells if tc.text_lines is None]
 
             assert len(cells_need_text) == len(ocr_res.text_lines), (
@@ -763,24 +763,24 @@ class TableProcessor(BaseProcessor):
     def get_table_rec_batch_size(self):
         if self.table_rec_batch_size is not None:
             return self.table_rec_batch_size
-        elif settings.TORCH_DEVICE_MODEL == "mps":
+        if settings.TORCH_DEVICE_MODEL == "mps":
             return 6
-        elif settings.TORCH_DEVICE_MODEL == "cuda":
+        if settings.TORCH_DEVICE_MODEL == "cuda":
             return 14
         return 6
 
     def get_recognition_batch_size(self):
         if self.recognition_batch_size is not None:
             return self.recognition_batch_size
-        elif settings.TORCH_DEVICE_MODEL == "mps":
+        if settings.TORCH_DEVICE_MODEL == "mps":
             return 32
-        elif settings.TORCH_DEVICE_MODEL == "cuda":
+        if settings.TORCH_DEVICE_MODEL == "cuda":
             return 48
         return 32
 
     def get_detection_batch_size(self):
         if self.detection_batch_size is not None:
             return self.detection_batch_size
-        elif settings.TORCH_DEVICE_MODEL == "cuda":
+        if settings.TORCH_DEVICE_MODEL == "cuda":
             return 10
         return 4

@@ -1,12 +1,8 @@
 from copy import deepcopy
-from typing import Annotated, List, Tuple
+from typing import Annotated
 
 import numpy as np
 from PIL import Image
-import cv2
-
-from raw2md_engine.surya.detection import DetectionPredictor
-from raw2md_engine.surya.ocr_error import OCRErrorPredictor
 
 from raw2md_engine.marker.builders import BaseBuilder
 from raw2md_engine.marker.providers import ProviderOutput, ProviderPageLines
@@ -20,6 +16,8 @@ from raw2md_engine.marker.schema.text.line import Line
 from raw2md_engine.marker.settings import settings
 from raw2md_engine.marker.util import matrix_intersection_area, sort_text_lines
 from raw2md_engine.marker.utils.image import is_blank_image
+from raw2md_engine.surya.detection import DetectionPredictor
+from raw2md_engine.surya.ocr_error import OCRErrorPredictor
 
 
 class LineBuilder(BaseBuilder):
@@ -56,7 +54,7 @@ class LineBuilder(BaseBuilder):
         "The percentage of a provider line that has to be covered by a detected line",
     ] = 0.1
     excluded_for_coverage: Annotated[
-        Tuple[BlockTypes],
+        tuple[BlockTypes],
         "A list of block types to exclude from the layout coverage check.",
     ] = (
         BlockTypes.Figure,
@@ -66,7 +64,7 @@ class LineBuilder(BaseBuilder):
         BlockTypes.TableGroup,
         BlockTypes.PictureGroup,
     )
-    ocr_remove_blocks: Tuple[BlockTypes, ...] = (
+    ocr_remove_blocks: tuple[BlockTypes, ...] = (
         BlockTypes.Table,
         BlockTypes.Form,
         BlockTypes.TableOfContents,
@@ -80,7 +78,9 @@ class LineBuilder(BaseBuilder):
         "Disable OCR for the document. This will only use the lines from the provider.",
     ] = False
     keep_chars: Annotated[bool, "Keep individual characters."] = False
-    detection_line_min_confidence: Annotated[float, "Minimum confidence for a detected line to be included"] = 0.8
+    detection_line_min_confidence: Annotated[
+        float, "Minimum confidence for a detected line to be included"
+    ] = 0.8
 
     def __init__(
         self,
@@ -102,19 +102,19 @@ class LineBuilder(BaseBuilder):
     def get_detection_batch_size(self):
         if self.detection_batch_size is not None:
             return self.detection_batch_size
-        elif settings.TORCH_DEVICE_MODEL == "cuda":
+        if settings.TORCH_DEVICE_MODEL == "cuda":
             return 10
         return 4
 
     def get_ocr_error_batch_size(self):
         if self.ocr_error_batch_size is not None:
             return self.ocr_error_batch_size
-        elif settings.TORCH_DEVICE_MODEL == "cuda":
+        if settings.TORCH_DEVICE_MODEL == "cuda":
             return 14
         return 4
 
     def get_detection_results(
-        self, page_images: List[Image.Image], run_detection: List[bool]
+        self, page_images: list[Image.Image], run_detection: list[bool]
     ):
         self.detection_model.disable_tqdm = self.disable_tqdm
         page_detection_results = self.detection_model(
@@ -150,7 +150,7 @@ class LineBuilder(BaseBuilder):
             document.pages, ocr_error_detection_results.labels
         ):
             document_page.ocr_errors_detected = ocr_error_detection_label == "bad"
-            provider_lines: List[ProviderOutput] = provider.page_lines.get(
+            provider_lines: list[ProviderOutput] = provider.page_lines.get(
                 document_page.page_id, []
             )
             provider_lines_good = all(
@@ -183,7 +183,7 @@ class LineBuilder(BaseBuilder):
         for document_page, detection_result, provider_lines_good in zip(
             document.pages, detection_results, layout_good
         ):
-            provider_lines: List[ProviderOutput] = provider.page_lines.get(
+            provider_lines: list[ProviderOutput] = provider.page_lines.get(
                 document_page.page_id, []
             )
 
@@ -191,7 +191,9 @@ class LineBuilder(BaseBuilder):
             detection_boxes = []
             if detection_result:
                 detection_boxes = [
-                    PolygonBox(polygon=box.polygon) for box in detection_result.bboxes if box.confidence > self.detection_line_min_confidence
+                    PolygonBox(polygon=box.polygon)
+                    for box in detection_result.bboxes
+                    if box.confidence > self.detection_line_min_confidence
                 ]
 
             detection_boxes = sort_text_lines(detection_boxes)
@@ -232,7 +234,7 @@ class LineBuilder(BaseBuilder):
         return page_lines, ocr_lines
 
     def ocr_error_detection(
-        self, pages: List[PageGroup], provider_page_lines: ProviderPageLines
+        self, pages: list[PageGroup], provider_page_lines: ProviderPageLines
     ):
         page_texts = []
         for document_page in pages:
@@ -249,7 +251,7 @@ class LineBuilder(BaseBuilder):
         return ocr_error_detection_results
 
     def check_line_overlaps(
-        self, document_page: PageGroup, provider_lines: List[ProviderOutput]
+        self, document_page: PageGroup, provider_lines: list[ProviderOutput]
     ) -> bool:
         provider_bboxes = [line.line.polygon.bbox for line in provider_lines]
         # Add a small margin to account for minor overflows
@@ -281,7 +283,7 @@ class LineBuilder(BaseBuilder):
     def check_layout_coverage(
         self,
         document_page: PageGroup,
-        provider_lines: List[ProviderOutput],
+        provider_lines: list[ProviderOutput],
     ):
         covered_blocks = 0
         total_blocks = 0
@@ -326,7 +328,7 @@ class LineBuilder(BaseBuilder):
             text_okay = True
         return text_okay
 
-    def filter_blank_lines(self, page: PageGroup, lines: List[ProviderOutput]):
+    def filter_blank_lines(self, page: PageGroup, lines: list[ProviderOutput]):
         page_size = (page.polygon.width, page.polygon.height)
         page_image = page.get_image()
         image_size = page_image.size
@@ -350,10 +352,10 @@ class LineBuilder(BaseBuilder):
         page_ocr_lines: ProviderPageLines,
     ):
         for document_page in document.pages:
-            provider_lines: List[ProviderOutput] = page_provider_lines[
+            provider_lines: list[ProviderOutput] = page_provider_lines[
                 document_page.page_id
             ]
-            ocr_lines: List[ProviderOutput] = page_ocr_lines[document_page.page_id]
+            ocr_lines: list[ProviderOutput] = page_ocr_lines[document_page.page_id]
 
             # Only one or the other will have lines
             # Filter out blank lines which come from bad provider boxes, or invisible text

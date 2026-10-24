@@ -1,6 +1,6 @@
 import html
 import re
-from typing import Literal, List
+from typing import Literal
 
 import regex
 
@@ -39,7 +39,7 @@ def strip_trailing_hyphens(line_text, next_line_text, line_html) -> str:
 class Line(Block):
     block_type: BlockTypes = BlockTypes.Line
     block_description: str = "A line of text."
-    formats: List[Literal["math"]] | None = (
+    formats: list[Literal["math"]] | None = (
         None  # Sometimes we want to set math format at the line level, not span
     )
 

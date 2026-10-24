@@ -4,20 +4,19 @@ from raw2md_engine.marker.schema.document import Document
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"  # disables a tokenizers warning
 
-from collections import defaultdict
-from typing import Annotated, Any, Dict, List, Optional, Type, Tuple, Union
 import io
-from contextlib import contextmanager
 import tempfile
+from collections import defaultdict
+from contextlib import contextmanager
+from typing import Annotated, Any
 
-from raw2md_engine.marker.processors import BaseProcessor
-from raw2md_engine.marker.providers.pdf import PdfProvider
 from raw2md_engine.marker.builders.document import DocumentBuilder
 from raw2md_engine.marker.builders.layout import LayoutBuilder
 from raw2md_engine.marker.builders.line import LineBuilder
 from raw2md_engine.marker.builders.ocr import OcrBuilder
 from raw2md_engine.marker.builders.structure import StructureBuilder
 from raw2md_engine.marker.converters import BaseConverter
+from raw2md_engine.marker.processors import BaseProcessor
 from raw2md_engine.marker.processors.blockquote import BlockquoteProcessor
 from raw2md_engine.marker.processors.code import CodeProcessor
 from raw2md_engine.marker.processors.debug import DebugProcessor
@@ -27,16 +26,17 @@ from raw2md_engine.marker.processors.footnote import FootnoteProcessor
 from raw2md_engine.marker.processors.ignoretext import IgnoreTextProcessor
 from raw2md_engine.marker.processors.line_numbers import LineNumbersProcessor
 from raw2md_engine.marker.processors.list import ListProcessor
+from raw2md_engine.marker.processors.order import OrderProcessor
 from raw2md_engine.marker.processors.page_header import PageHeaderProcessor
 from raw2md_engine.marker.processors.sectionheader import SectionHeaderProcessor
 from raw2md_engine.marker.processors.table import TableProcessor
 from raw2md_engine.marker.processors.text import TextProcessor
+from raw2md_engine.marker.providers.pdf import PdfProvider
 from raw2md_engine.marker.renderers.markdown import MarkdownRenderer
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block
 from raw2md_engine.marker.schema.registry import register_block_class
 from raw2md_engine.marker.util import strings_to_classes
-from raw2md_engine.marker.processors.order import OrderProcessor
 
 
 class PdfConverter(BaseConverter):
@@ -45,13 +45,13 @@ class PdfConverter(BaseConverter):
     """
 
     override_map: Annotated[
-        Dict[BlockTypes, Type[Block]],
+        dict[BlockTypes, type[Block]],
         "A mapping to override the default block classes for specific block types.",
         "The keys are `BlockTypes` enum values, representing the types of blocks,",
         "and the values are corresponding `Block` class implementations to use",
         "instead of the defaults.",
     ] = defaultdict()
-    default_processors: Tuple[BaseProcessor, ...] = (
+    default_processors: tuple[BaseProcessor, ...] = (
         OrderProcessor,
         BlockquoteProcessor,
         CodeProcessor,
@@ -70,8 +70,8 @@ class PdfConverter(BaseConverter):
 
     def __init__(
         self,
-        artifact_dict: Dict[str, Any],
-        processor_list: Optional[List[str]] = None,
+        artifact_dict: dict[str, Any],
+        processor_list: list[str] | None = None,
         renderer: str | None = None,
         config=None,
     ):
@@ -105,7 +105,7 @@ class PdfConverter(BaseConverter):
         self.page_count = None  # Track how many pages were converted
 
     @contextmanager
-    def filepath_to_str(self, file_input: Union[str, io.BytesIO]):
+    def filepath_to_str(self, file_input: str | io.BytesIO):
         temp_file = None
         try:
             if isinstance(file_input, str):

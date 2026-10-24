@@ -1,14 +1,14 @@
 import re
 from collections import defaultdict
-from typing import Annotated, Tuple
+from typing import Annotated
 
 import regex
 import six
 from bs4 import NavigableString
 from markdownify import MarkdownConverter, re_whitespace
-from raw2md_engine.marker.logger import get_logger
 from pydantic import BaseModel
 
+from raw2md_engine.marker.logger import get_logger
 from raw2md_engine.marker.renderers.html import HTMLRenderer
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.document import Document
@@ -83,8 +83,7 @@ class Markdownify(MarkdownConverter):
                 "\n\n" + "{" + str(page_id) + "}" + self.page_separator + "\n\n"
             )
             return pagination_item + text
-        else:
-            return text
+        return text
 
     def convert_p(self, el, text, parent_tags):
         hyphens = r"-—¬"
@@ -128,14 +127,13 @@ class Markdownify(MarkdownConverter):
                 + self.block_math_delimiters[1]
                 + "\n"
             )
-        else:
-            return (
-                " "
-                + self.inline_math_delimiters[0]
-                + body
-                + self.inline_math_delimiters[1]
-                + " "
-            )
+        return (
+            " "
+            + self.inline_math_delimiters[0]
+            + body
+            + self.inline_math_delimiters[1]
+            + " "
+        )
 
     def convert_table(self, el, text, parent_tags):
         if self.html_tables_in_markdown:
@@ -277,10 +275,10 @@ class MarkdownRenderer(HTMLRenderer):
         str, "The separator to use between pages.", "Default is '-' * 48."
     ] = "-" * 48
     inline_math_delimiters: Annotated[
-        Tuple[str], "The delimiters to use for inline math."
+        tuple[str], "The delimiters to use for inline math."
     ] = ("$", "$")
     block_math_delimiters: Annotated[
-        Tuple[str], "The delimiters to use for block math."
+        tuple[str], "The delimiters to use for block math."
     ] = ("$$", "$$")
     html_tables_in_markdown: Annotated[
         bool, "Return tables formatted as HTML, instead of in markdown"
@@ -301,7 +299,7 @@ class MarkdownRenderer(HTMLRenderer):
             sup_symbol="<sup>",
             inline_math_delimiters=self.inline_math_delimiters,
             block_math_delimiters=self.block_math_delimiters,
-            html_tables_in_markdown=self.html_tables_in_markdown
+            html_tables_in_markdown=self.html_tables_in_markdown,
         )
 
     def __call__(self, document: Document) -> MarkdownOutput:

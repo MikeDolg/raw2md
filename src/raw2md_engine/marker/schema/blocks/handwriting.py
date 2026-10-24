@@ -13,7 +13,6 @@ class Handwriting(Block):
     ):
         if self.html:
             return self.html
-        else:
-            return super().assemble_html(
-                document, child_blocks, parent_structure, block_config
-            )
+        return super().assemble_html(
+            document, child_blocks, parent_structure, block_config
+        )

@@ -3,8 +3,8 @@ import os
 from typing import Annotated
 
 from PIL import Image, ImageDraw, ImageFont
-from raw2md_engine.marker.logger import get_logger
 
+from raw2md_engine.marker.logger import get_logger
 from raw2md_engine.marker.processors import BaseProcessor
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.document import Document
