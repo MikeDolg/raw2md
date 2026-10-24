@@ -72,6 +72,8 @@ of the repository holds each change with its diff.
   `table_rec/model/encoder.py`, and `table_rec/model/encoderdecoder.py`.
 - `marker/settings.py` imports torch only when the device is read, so the
   renderers and the text processors import without torch (2026-10-24).
+- `marker/renderers/__init__.py` keeps the trailing minus when two inline
+  math spans merge (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 

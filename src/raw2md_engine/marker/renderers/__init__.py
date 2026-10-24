@@ -69,10 +69,10 @@ class BaseRenderer:
         if not html:
             return html
         pattern = rf"-</{tag}>(\s*)<{tag}>"
-        html = re.sub(pattern, " ", html)
+        html = re.sub(pattern, "- ", html)
 
         pattern = rf'-</{tag}>(\s*)<{tag} display="inline">'
-        html = re.sub(pattern, " ", html)
+        html = re.sub(pattern, "- ", html)
         return html
 
     @staticmethod
