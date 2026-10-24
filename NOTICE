@@ -88,6 +88,9 @@ of the repository holds each change with its diff.
   superscript markup (2026-10-24).
 - `pdftext/pdf/pages.py` does not compare a span with the blank spans of
   its line when it decides a superscript or a subscript (2026-10-24).
+- `marker/renderers/markdown.py` keeps the escaped space at the end of a
+  math span, so a trailing backslash does not escape the closing
+  delimiter (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 

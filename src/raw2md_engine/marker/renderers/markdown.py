@@ -100,11 +100,17 @@ class Markdownify(MarkdownConverter):
 
     def convert_math(self, el, text, parent_tags):
         block = el.has_attr("display") and el["display"] == "block"
+        body = text.strip()
+        # A trailing unpaired backslash is an escaped space; without it the
+        # backslash escapes the closing delimiter.
+        trailing = len(body) - len(body.rstrip("\\"))
+        if trailing % 2 == 1:
+            body += " "
         if block:
             return (
                 "\n"
                 + self.block_math_delimiters[0]
-                + text.strip()
+                + body
                 + self.block_math_delimiters[1]
                 + "\n"
             )
@@ -112,7 +118,7 @@ class Markdownify(MarkdownConverter):
             return (
                 " "
                 + self.inline_math_delimiters[0]
-                + text.strip()
+                + body
                 + self.inline_math_delimiters[1]
                 + " "
             )
