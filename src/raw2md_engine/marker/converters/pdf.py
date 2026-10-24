@@ -31,15 +31,12 @@ from raw2md_engine.marker.processors.page_header import PageHeaderProcessor
 from raw2md_engine.marker.processors.sectionheader import SectionHeaderProcessor
 from raw2md_engine.marker.processors.table import TableProcessor
 from raw2md_engine.marker.processors.text import TextProcessor
-from raw2md_engine.marker.processors.block_relabel import BlockRelabelProcessor
-from raw2md_engine.marker.processors.blank_page import BlankPageProcessor
 from raw2md_engine.marker.renderers.markdown import MarkdownRenderer
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block
 from raw2md_engine.marker.schema.registry import register_block_class
 from raw2md_engine.marker.util import strings_to_classes
 from raw2md_engine.marker.processors.order import OrderProcessor
-from raw2md_engine.marker.processors.line_merge import LineMergeProcessor
 
 
 class PdfConverter(BaseConverter):
@@ -56,8 +53,6 @@ class PdfConverter(BaseConverter):
     ] = defaultdict()
     default_processors: Tuple[BaseProcessor, ...] = (
         OrderProcessor,
-        BlockRelabelProcessor,
-        LineMergeProcessor,
         BlockquoteProcessor,
         CodeProcessor,
         DocumentTOCProcessor,
@@ -70,7 +65,6 @@ class PdfConverter(BaseConverter):
         SectionHeaderProcessor,
         TableProcessor,
         TextProcessor,
-        BlankPageProcessor,
         DebugProcessor,
     )
 

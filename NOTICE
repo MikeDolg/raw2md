@@ -111,6 +111,9 @@ of the repository holds each change with its diff.
 - `marker/schema/blocks/listitem.py` removes only the leading bullet of
   the first line of a list item, so a dash inside the line stays
   (2026-10-24).
+- `marker/converters/pdf.py` drops the line merge, blank page, and
+  block relabel processors from the default chain, and `marker` loses
+  their files, because no setting of raw2md enables them (2026-10-24).
 
 Each changed file of `pdftext/` carries a notice at its top.
 
