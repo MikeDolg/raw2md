@@ -1929,7 +1929,7 @@ def _levels_by_restart(
     series = _series_groups(occurrences)
     in_series = {occ.idx for members in series for occ in members}
     titles = frozenset(occ.idx for occ in occurrences if occ.idx not in in_series)
-    ranked: dict[int, int] = {}
+    owners: list[tuple[list[_HeadingOccurrence], int, int, frozenset[int]]] = []
     for members in series:
         sections = _sections_numbered_anew(members, singles)
         if not sections:
@@ -1937,6 +1937,16 @@ def _levels_by_restart(
         level, _ = _group_mode(members)
         shallowest = min(heading.level for heading in sections)
         if shallowest == 1 or shallowest not in (level, level + 1):
+            continue
+        owners.append((members, level, shallowest, frozenset(h.idx for h in sections)))
+    ranked: dict[int, int] = {}
+    for members, level, shallowest, section_idx in owners:
+        # A class above another class that numbers the same sections is its
+        # ancestor: the inner class cannot rise to the ancestor's level.
+        if any(
+            other_level < level and section_idx & other_idx
+            for _, other_level, _, other_idx in owners
+        ):
             continue
         for occ in members:
             ranked[occ.idx] = shallowest - 1

@@ -948,6 +948,26 @@ def test_a_class_above_the_sections_it_numbers_anew_is_untouched() -> None:
     assert clean_in_place(text) == text
 
 
+def test_a_class_inside_another_class_numbering_the_same_sections_stays() -> None:
+    parts = []
+    for part in range(1, 4):
+        parts.append(f"## Part {part}\n")
+        parts.append(f"### Chapter {part}\n")
+        parts.append("### 1 Topic\n\nBody.\n\n### 2 Topic\n\nBody.\n")
+    cleaned = clean_in_place("\n".join(parts))
+
+    assert _heading_lines(cleaned) == [
+        line
+        for part in range(1, 4)
+        for line in (
+            f"## Part {part}",
+            f"### Chapter {part}",
+            "### 1 Topic",
+            "### 2 Topic",
+        )
+    ]
+
+
 def test_a_class_under_the_sections_it_numbers_anew_is_untouched() -> None:
     # Sections shallower than the class: the class is nested, not inverted.
     text = _chapters_numbering_sections_anew(section="###")
