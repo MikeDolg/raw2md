@@ -862,6 +862,112 @@ def test_the_class_rank_from_dotted_numbers_is_idempotent() -> None:
     assert clean(once) == once
 
 
+# `DC` reads as a roman number, so a title can look like a class of its own.
+_CHAPTER_TITLES = (
+    ("I", "VECTORS"),
+    ("II", "MOTION"),
+    ("III", "CURRENTS IN DC CIRCUITS"),
+    ("IV", "WORK"),
+)
+
+
+def _chapters_numbering_sections_anew(
+    chapter: str = "####", section: str = "####", title: str = "####"
+) -> str:
+    """Four roman chapters, each with a title and sections numbered from 1."""
+    parts = []
+    for numeral, name in _CHAPTER_TITLES:
+        parts.append(f"{chapter} CHAPTER {numeral}\n")
+        parts.append(f"{title} {name}\n")
+        for number in (1, 2):
+            parts.append(f"{section} {number} - TOPIC {number}\n")
+            parts.append("Body.\n")
+    return "\n".join(parts)
+
+
+def _heading_lines(text: str) -> list[str]:
+    return [line for line in text.splitlines() if line.startswith("#")]
+
+
+def test_a_class_stands_above_the_sections_it_numbers_anew() -> None:
+    cleaned = clean_in_place(_chapters_numbering_sections_anew())
+
+    assert _heading_lines(cleaned) == [
+        line
+        for numeral, name in _CHAPTER_TITLES
+        for line in (
+            f"### CHAPTER {numeral}",
+            f"### {name}",
+            "#### 1 - TOPIC 1",
+            "#### 2 - TOPIC 2",
+        )
+    ]
+
+
+def test_the_title_under_a_chapter_moves_with_it_past_a_picture() -> None:
+    text = _chapters_numbering_sections_anew(title="#####").replace(
+        "\n##### MOTION", "\n![](plate.png)\n\n##### MOTION"
+    )
+    cleaned = clean_in_place(text)
+
+    assert [line for line in _heading_lines(cleaned) if " - " not in line] == [
+        line
+        for numeral, name in _CHAPTER_TITLES
+        for line in (f"### CHAPTER {numeral}", f"### {name}")
+    ]
+
+
+def test_a_class_over_sections_numbered_on_through_it_is_untouched() -> None:
+    # One numbering runs through the whole body: no chapter owns its sections.
+    parts = []
+    for chapter in range(1, 5):
+        parts.append(f"## Lecture {chapter}\n")
+        for number in (2 * chapter - 1, 2 * chapter):
+            parts.append(f"## {number} Topic\n")
+            parts.append("Body.\n")
+    text = "\n".join(parts)
+    assert clean_in_place(text) == text
+
+
+def test_a_class_of_three_sections_numbered_anew_is_enough() -> None:
+    parts = []
+    for chapter in range(1, 4):
+        parts.append(f"## Lecture {chapter}\n")
+        parts.append("## 1 Topic\n\nBody.\n\n## 2 Topic\n\nBody.\n")
+    cleaned = clean_in_place("\n".join(parts))
+
+    assert _heading_lines(cleaned) == [
+        line
+        for chapter in range(1, 4)
+        for line in (f"# Lecture {chapter}", "## 1 Topic", "## 2 Topic")
+    ]
+
+
+def test_a_class_above_the_sections_it_numbers_anew_is_untouched() -> None:
+    text = _chapters_numbering_sections_anew(chapter="###", title="###")
+    assert clean_in_place(text) == text
+
+
+def test_a_class_under_the_sections_it_numbers_anew_is_untouched() -> None:
+    # Sections shallower than the class: the class is nested, not inverted.
+    text = _chapters_numbering_sections_anew(section="###")
+    assert clean_in_place(text) == text
+
+
+def test_a_class_over_top_level_sections_numbered_anew_stays_on_the_top() -> None:
+    text = _chapters_numbering_sections_anew(chapter="#", section="#", title="#")
+    cleaned = clean_in_place(text)
+
+    assert [
+        line for line in _heading_lines(cleaned) if "CHAPTER" in line or " - " in line
+    ] == [line for line in _heading_lines(text) if "CHAPTER" in line or " - " in line]
+
+
+def test_the_class_rank_from_sections_numbered_anew_is_idempotent() -> None:
+    once = clean(_chapters_numbering_sections_anew(title="#####"))
+    assert clean(once) == once
+
+
 def test_part_code_headings_are_not_a_class() -> None:
     text = "# KTX6 Series\n\nA\n\n### KTX7 Series\n\nB\n\n## KTX8 Series\n\nC\n"
     assert clean_in_place(text) == text

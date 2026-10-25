@@ -25,6 +25,7 @@ from raw2md.cleaning.segments import (
     CYRILLIC_UPPER,
     LIST_ITEM_RE,
     body_word_counts,
+    is_image_only_line,
     is_standalone,
     is_standalone_span,
     prev_content_index,
@@ -243,6 +244,10 @@ _HEADING_CLASS_MIN_NUMBERS = 2
 # numbering ranks the class. One can do so by coincidence: a caption
 # `Figure 12` beside sections numbered `12.3`.
 _HEADING_STEM_MIN_MEMBERS = 3
+
+# Class members whose stretch numbers its sections anew before the restart
+# ranks the class. One numbering run through the body opens at 1 only once.
+_SECTION_RESTART_MIN_MEMBERS = 3
 
 # Share of a numbered group on one level that outweighs its members' ancestors.
 # Strictly past two thirds: a document's own series carries more (91 of 129),
@@ -1910,6 +1915,83 @@ def _shallowest_numbered_under(
     return min(levels)
 
 
+def _levels_by_restart(
+    seg_list: list[Segment], occurrences: list[_HeadingOccurrence]
+) -> dict[int, int]:
+    """The level a class takes over the single-level sections it numbers anew.
+
+    A class standing on the level of those sections moves one level above them,
+    every member with the title under it (`_member_title`); a class already one
+    level above keeps it. Sections above the class, a wider gap, or sections on
+    `#` leave the class alone.
+    """
+    singles = [h for h in _numbered_headings(seg_list) if len(h.number) == 1]
+    series = _series_groups(occurrences)
+    in_series = {occ.idx for members in series for occ in members}
+    titles = frozenset(occ.idx for occ in occurrences if occ.idx not in in_series)
+    ranked: dict[int, int] = {}
+    for members in series:
+        sections = _sections_numbered_anew(members, singles)
+        if not sections:
+            continue
+        level, _ = _group_mode(members)
+        shallowest = min(heading.level for heading in sections)
+        if shallowest == 1 or shallowest not in (level, level + 1):
+            continue
+        for occ in members:
+            ranked[occ.idx] = shallowest - 1
+            title = _member_title(seg_list, occ.idx, titles)
+            if title is not None:
+                ranked[title] = shallowest - 1
+    return ranked
+
+
+def _sections_numbered_anew(
+    members: list[_HeadingOccurrence], singles: list[_NumberedHeading]
+) -> list[_NumberedHeading]:
+    """The sections of the stretches that restart the numbering, if enough do.
+
+    A stretch restarts it when its first number is 1 or below the largest
+    number of the stretches before it. Empty under
+    `_SECTION_RESTART_MIN_MEMBERS` such stretches.
+    """
+    sections: list[_NumberedHeading] = []
+    owners = 0
+    largest = 0
+    for occ, end in _member_stretches(members):
+        stretch = [
+            heading
+            for heading in singles
+            if occ.idx < heading.idx and (end is None or heading.idx < end)
+        ]
+        if not stretch:
+            continue
+        first = stretch[0].number[0]
+        if first == 1 or first < largest:
+            owners += 1
+            sections.extend(stretch)
+        largest = max(largest, *(heading.number[0] for heading in stretch))
+    return sections if owners >= _SECTION_RESTART_MIN_MEMBERS else []
+
+
+def _member_title(
+    seg_list: list[Segment], idx: int, titles: frozenset[int]
+) -> int | None:
+    """The heading right under the member at `idx`, past blanks and pictures.
+
+    None when the next content is not one of `titles`: the unsettled headings
+    outside every numbered series.
+    """
+    for nxt in range(idx + 1, len(seg_list)):
+        line, protected = seg_list[nxt]
+        if protected:
+            return None
+        if not line.strip() or is_image_only_line(line):
+            continue
+        return nxt if nxt in titles else None
+    return None
+
+
 def _settled_levels(
     seg_list: list[Segment], occurrences: list[_HeadingOccurrence]
 ) -> dict[int, int]:
@@ -1917,10 +1999,12 @@ def _settled_levels(
 
     A group vote and a repeated title never speak about one heading. Where the
     numbering under a class speaks about the same heading as a vote, the
-    numbering wins: the document wrote it.
+    numbering wins: the document wrote it. The dotted numbers a member opens
+    outweigh a restart, since they name the member itself.
     """
     levels = _levels_settled_by_group(occurrences)
     levels.update(_levels_settled_by_repeat(occurrences))
+    levels.update(_levels_by_restart(seg_list, occurrences))
     levels.update(_levels_by_stem(occurrences, _numbered_headings(seg_list)))
     return levels
 
@@ -1959,13 +2043,15 @@ def headings_settled_before_nesting(
     Nesting corrects each member of a series against a different ancestor, and
     the agreement the series arrived with is gone before the vote, so a series
     settles first. The copies of a repeated title settle here too: nesting moves
-    a copy, and the vote would then depend on the previous round. A numbered
-    group short of a series waits: a deeper parent can legitimately hold a
-    deeper copy.
+    a copy, and the vote would then depend on the previous round. So does a
+    class over the sections it numbers anew: nesting corrects its members
+    against those very sections. A numbered group short of a series waits: a
+    deeper parent can legitimately hold a deeper copy.
     """
     occurrences = _level_vote_occurrences(seg_list, keywords, stated)
     levels = _levels_settled(_series_groups(occurrences))
     levels.update(_levels_settled_by_repeat(occurrences))
+    levels.update(_levels_by_restart(seg_list, occurrences))
     return frozenset(levels)
 
 
