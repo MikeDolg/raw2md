@@ -60,3 +60,23 @@ def test_ranges_run_from_the_tallest_cluster(
     ranges = processor.bucket_headings(object.__new__(processor), heights)
 
     assert ranges == [(30.0, 30.0), (20.0, 20.0), (14.0, 14.0), (11.0, 11.0)]
+
+
+@pytest.mark.parametrize(
+    ("heights", "ranges"),
+    [
+        # 13 and 14 differ by under a tenth: one level of the two.
+        (
+            [30.0] + [20.0] * 2 + [14.0] * 3 + [13.0] * 6,
+            [(30.0, 30.0), (20.0, 20.0), (13.0, 14.0)],
+        ),
+        # Every neighbor is close: the whole ladder is one level.
+        ([12.0] * 2 + [12.5] * 3 + [13.0] * 3 + [13.5] * 3, [(12.0, 13.5)]),
+    ],
+)
+def test_close_clusters_share_a_level(
+    engine: Loader, heights: list[float], ranges: list[tuple[float, float]]
+) -> None:
+    processor = engine("marker.processors.sectionheader").SectionHeaderProcessor
+
+    assert processor.bucket_headings(object.__new__(processor), heights) == ranges

@@ -25,8 +25,8 @@ class SectionHeaderProcessor(BaseProcessor):
     ] = 4
     merge_threshold: Annotated[
         float,
-        "The minimum gap between headings to consider them part of the same group.",
-    ] = 0.25
+        "The relative gap of mean heights within which neighboring clusters share a level.",
+    ] = 0.2
     default_level: Annotated[
         int,
         "The default heading level to use if no heading level is detected.",
@@ -95,7 +95,7 @@ class SectionHeaderProcessor(BaseProcessor):
             if prev_cluster is not None and label != prev_cluster:
                 prev_cluster_mean = cluster_means[prev_cluster]
                 cluster_mean = cluster_means[label]
-                if cluster_mean * self.merge_threshold < prev_cluster_mean:
+                if cluster_mean > prev_cluster_mean * (1 + self.merge_threshold):
                     heading_ranges.append((label_min, label_max))
                     label_min = None
                     label_max = None

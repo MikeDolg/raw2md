@@ -95,7 +95,8 @@ of the repository holds each change with its diff.
     two inline math spans merge. `marker/renderers/markdown.py` keeps the
     escaped space at the end of math and removes bold from a heading.
   - Layout: `marker/processors/sectionheader.py` sorts the heading heights
-    together with their cluster labels. `marker/processors/ignoretext.py`
+    together with their cluster labels, and gives one level to neighboring
+    clusters of close mean heights. `marker/processors/ignoretext.py`
     counts the repeats of a running header on the even and the odd pages
     apart.
   - Dead code: `marker/converters/pdf.py` drops the line merge, blank page,
@@ -109,4 +110,4 @@ of the repository holds each change with its diff.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-10-24.
+Last change: 2026-10-25.
