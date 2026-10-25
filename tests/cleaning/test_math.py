@@ -1696,6 +1696,10 @@ def test_spacing_only_spans_do_not_open_a_display_zone() -> None:
         assert clean(text) == "Alpha gamma.\n\nBeta $x$ and $y$.\n"
 
 
+def test_a_spacing_only_span_in_redundant_brackets_is_dropped() -> None:
+    assert clean_in_place("Alpha $\\[\\,\\]$ beta.\n") == "Alpha beta.\n"
+
+
 def test_a_sign_beside_a_spacing_command_is_kept() -> None:
     for body in ("+\\,", "\\,x"):
         text = f"Sum ${body}$ here.\n"

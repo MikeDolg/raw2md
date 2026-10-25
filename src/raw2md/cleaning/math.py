@@ -1643,7 +1643,7 @@ def _normalize_inline_math(text: str) -> str:
         if _is_spacer_residue(content):
             # The tail trim would empty it to `$$`, a display delimiter; the
             # content-free pass drops the span whole.
-            return match.group(0)
+            return f"${content}$"
         return f"${_fix_math_content(content)}$"
 
     return _INLINE_MATH_RE.sub(repl, text)
