@@ -62,6 +62,28 @@ def test_ranges_run_from_the_tallest_cluster(
     assert ranges == [(30.0, 30.0), (20.0, 20.0), (14.0, 14.0), (11.0, 11.0)]
 
 
+def test_headers_without_lines_take_no_cluster(engine: Loader) -> None:
+    processor = engine("marker.processors.sectionheader").SectionHeaderProcessor
+    heights = _HEIGHTS + [0.0] * 4
+
+    ranges = processor.bucket_headings(object.__new__(processor), heights)
+
+    assert ranges == [(30.0, 30.0), (20.0, 20.0), (14.0, 14.0), (11.0, 11.0)]
+
+
+def test_empty_header_keeps_the_default_level(engine: Loader) -> None:
+    blocks = [_header(engine, i, h) for i, h in enumerate(_HEIGHTS)]
+    empty = _header(engine, 99, 0.0)
+    blocks.append(empty)
+    document = SimpleNamespace(pages=[SimpleNamespace(children=blocks)])
+    processor = engine("marker.processors.sectionheader").SectionHeaderProcessor
+
+    processor.__call__(object.__new__(processor), document)
+
+    assert empty.heading_level == processor.default_level
+    assert [b.heading_level for b in blocks[:-1]] == [_LEVELS[h] for h in _HEIGHTS]
+
+
 @pytest.mark.parametrize(
     ("heights", "ranges"),
     [

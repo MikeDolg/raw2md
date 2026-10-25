@@ -70,6 +70,8 @@ class SectionHeaderProcessor(BaseProcessor):
                     block.heading_level = self.default_level
 
     def bucket_headings(self, line_heights: list[float], num_levels=4):
+        # A header without lines has height 0 and would take a cluster of its own.
+        line_heights = [height for height in line_heights if height > 0]
         if len(line_heights) <= self.level_count:
             return []
 
