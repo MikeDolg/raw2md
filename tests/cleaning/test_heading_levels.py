@@ -917,6 +917,23 @@ def test_the_title_under_a_chapter_moves_with_it_past_a_picture() -> None:
     ]
 
 
+def test_the_title_under_a_chapter_stays_behind_a_code_block() -> None:
+    text = _chapters_numbering_sections_anew(title="#####").replace(
+        "\n##### MOTION", "\n```\nplot()\n```\n\n##### MOTION"
+    )
+    cleaned = clean_in_place(text)
+
+    assert "##### MOTION" in cleaned.splitlines()
+    assert "### VECTORS" in cleaned.splitlines()
+
+
+def test_a_chapter_at_the_end_of_the_text_moves_without_a_title() -> None:
+    text = _chapters_numbering_sections_anew() + "\n#### CHAPTER V\n\n"
+    cleaned = clean_in_place(text)
+
+    assert _heading_lines(cleaned)[-1] == "### CHAPTER V"
+
+
 def test_a_class_over_sections_numbered_on_through_it_is_untouched() -> None:
     # One numbering runs through the whole body: no chapter owns its sections.
     parts = []
