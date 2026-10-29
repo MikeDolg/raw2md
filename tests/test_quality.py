@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
+import unicodedata
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 from raw2md.cleaner import clean
 from raw2md.cleaning import Finding
 from raw2md.header import ResultStatus
 from raw2md.mdtext.pages import lost_page_marker
-from raw2md.quality.evaluator import CheckId, Evaluation, evaluate
+from raw2md.quality.evaluator import (
+    _SCRIPT_NAME_PREFIXES,
+    CheckId,
+    Evaluation,
+    _letter_stats,
+    _script_group,
+    evaluate,
+)
 from raw2md.source_outline import SourceOutline
 from raw2md.source_text import SourceText
 
@@ -112,12 +121,19 @@ def test_body_at_alnum_threshold_is_not_empty() -> None:
 _GREEK_ALPHA = chr(0x3B1)  # Greek alpha: outside Latin and Cyrillic (ASCII source)
 
 
+def _detail(ev: Evaluation, check: CheckId) -> str:
+    return next(d.detail for d in ev.defects if d.check is check)
+
+
 def test_unreadable_chars_fire_above_threshold() -> None:
-    # 220 letters, 18% Greek (outside Latin and Cyrillic).
+    # 220 letters, 18% Greek: foreign to a Latin body.
     body = "a" * 180 + _GREEK_ALPHA * 40 + "\n"
     ev = evaluate(body)
     assert _fired(ev, CheckId.UNREADABLE_CHARS)
     assert ev.recognition_failure
+    assert _detail(ev, CheckId.UNREADABLE_CHARS) == (
+        "18% unreadable in a LATIN body: 40 GREEK letters"
+    )
 
 
 def test_unreadable_skipped_below_letter_floor() -> None:
@@ -133,6 +149,130 @@ def test_unreadable_not_flagged_at_low_share() -> None:
     ev = evaluate(body)
     assert not _fired(ev, CheckId.UNREADABLE_CHARS)
     assert ev.status is ResultStatus.OK
+
+
+# Invented prose in each main script. Each body passes the 200-letter floor,
+# so the check runs and must stay silent. Native punctuation and one-letter
+# words are part of the text, hence the RUF001 waivers.
+_ZH_TEXT = "这台设备用于测量钢板的厚度，操作人员每天早上检查传感器并记录读数。\n"  # noqa: RUF001
+_JA_TEXT = (
+    "この装置は鋼板の厚さを測定するために使われ、"
+    "作業員は毎朝センサーを点検して記録します。\n"
+)
+_EL_TEXT = (
+    "Η συσκευή μετρά το πάχος του ελάσματος και ο χειριστής "  # noqa: RUF001
+    "ελέγχει τους αισθητήρες κάθε πρωί.\n"
+)
+_AR_TEXT = "يستخدم هذا الجهاز لقياس سمك الصفائح ويفحص المشغل أجهزة الاستشعار كل صباح.\n"
+_RU_FORMULA_TEXT = (
+    "Сила тока $I = U / R$ растёт с напряжением U, а сопротивление R "  # noqa: RUF001
+    "задаёт резистор типа SMD-0805 в цепи DC-DC.\n"
+)
+
+
+@pytest.mark.parametrize(
+    ("body", "main_script"),
+    [
+        (_ZH_TEXT * 10, "CJK"),
+        (_JA_TEXT * 8, "CJK"),
+        (_EL_TEXT * 4, "GREEK"),
+        (_AR_TEXT * 5, "ARABIC"),
+        (_RU_FORMULA_TEXT * 4, "CYRILLIC"),
+    ],
+    ids=["chinese", "japanese", "greek", "arabic", "russian-with-latin"],
+)
+def test_unreadable_silent_on_a_valid_text_in_its_main_script(
+    body: str, main_script: str
+) -> None:
+    ev = evaluate(body)
+    assert "unreadable_share" in ev.metrics
+    assert ev.metrics["unreadable_share"] == 0.0
+    assert not _fired(ev, CheckId.UNREADABLE_CHARS)
+    assert _letter_stats(body).main_script == main_script
+
+
+def test_impossible_chars_fire_above_threshold() -> None:
+    # 180 letters and 40 impossible chars: 18% of 220.
+    body = "a" * 180 + chr(0xFFFD) * 20 + chr(0xE000) * 10 + chr(0x01) * 10 + "\n\t\r\n"
+    ev = evaluate(body)
+    assert _fired(ev, CheckId.UNREADABLE_CHARS)
+    assert _detail(ev, CheckId.UNREADABLE_CHARS) == (
+        "18% unreadable in a LATIN body: 40 impossible chars"
+    )
+
+
+def test_impossible_chars_count_toward_the_floor() -> None:
+    # 100 letters alone sit under the floor; the private-use run lifts it.
+    body = "a" * 100 + chr(0xE000) * 150 + "\n"
+    ev = evaluate(body)
+    assert _fired(ev, CheckId.UNREADABLE_CHARS)
+    assert _detail(ev, CheckId.UNREADABLE_CHARS) == (
+        "60% unreadable in a LATIN body: 150 impossible chars"
+    )
+
+
+def test_cyrillic_is_foreign_to_a_cjk_body() -> None:
+    # Cyrillic is own only beside Latin; 20% of it on a Chinese body fires.
+    body = _ZH_TEXT * 10 + chr(0x0416) * 75 + "\n"
+    ev = evaluate(body)
+    assert _fired(ev, CheckId.UNREADABLE_CHARS)
+    assert "in a CJK body: 75 CYRILLIC letters" in _detail(ev, CheckId.UNREADABLE_CHARS)
+
+
+def test_latin_is_never_foreign() -> None:
+    # A Greek body with a third of Latin identifiers stays readable.
+    stats = _letter_stats(_EL_TEXT * 4 + "abcdefghij" * 20)
+    assert stats.main_script == "GREEK"
+    assert stats.foreign == ()
+
+
+# A sample letter for each prefix of the script table.
+_SCRIPT_PREFIX_SAMPLES = {
+    "FULLWIDTH LATIN": chr(0xFF21),
+    "HIRAGANA": chr(0x3042),
+    "KATAKANA": chr(0x30A2),
+    "HALFWIDTH KATAKANA": chr(0xFF71),
+    "HANGUL": chr(0xAC00),
+    "HALFWIDTH HANGUL": chr(0xFFA1),
+    "BOPOMOFO": chr(0x3105),
+    "IDEOGRAPHIC": chr(0x3006),
+}
+
+
+def test_every_script_prefix_has_a_sample() -> None:
+    assert set(_SCRIPT_PREFIX_SAMPLES) == {
+        prefix for prefix, _ in _SCRIPT_NAME_PREFIXES
+    }
+
+
+@pytest.mark.parametrize(("prefix", "group"), _SCRIPT_NAME_PREFIXES)
+def test_script_prefix_maps_its_letter(prefix: str, group: str) -> None:
+    letter = _SCRIPT_PREFIX_SAMPLES[prefix]
+    assert letter.isalpha()
+    assert unicodedata.name(letter).startswith(prefix)
+    assert _script_group(letter) == group
+
+
+@pytest.mark.parametrize(
+    ("letter", "group"),
+    [
+        ("a", "LATIN"),
+        (chr(0x0436), "CYRILLIC"),
+        (chr(0x03B1), "GREEK"),
+        (chr(0x0628), "ARABIC"),
+        (chr(0x4E00), "CJK"),
+        (chr(0x30FC), "CJK"),  # the prolonged sound mark shared by both kana
+    ],
+)
+def test_script_group_reads_the_first_word_of_the_name(letter: str, group: str) -> None:
+    assert _script_group(letter) == group
+
+
+def test_fullwidth_latin_is_not_accented() -> None:
+    # A fullwidth letter decomposes to its narrow form, not to a diacritic.
+    stats = _letter_stats(chr(0xFF21) * 50)
+    assert stats.main_script == "LATIN"
+    assert stats.accented_share == 0.0
 
 
 # ---- mojibake ----------------------------------------------------------------

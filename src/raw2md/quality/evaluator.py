@@ -374,7 +374,7 @@ def evaluate(  # noqa: PLR0913 -- each optional keyword input switches on its ow
 
 
 def _text_checks(body: _Body, source_pages: int | None) -> _GroupResult:
-    """Density, an empty body, and unreadable letters.
+    """Density, an empty body, and unreadable text.
 
     Each of them means recognition produced no usable text, so every defect
     here is a recognition failure and none is repairable.
@@ -394,12 +394,12 @@ def _text_checks(body: _Body, source_pages: int | None) -> _GroupResult:
         defects.append(Defect(CheckId.EMPTY_BODY, f"{alnum} alphanumeric chars"))
 
     stats = _letter_stats(body.text)
-    if stats.total >= _UNREADABLE_MIN_LETTERS:
-        metrics["unreadable_share"] = round(stats.other_share, 3)
+    if stats.sample >= _UNREADABLE_MIN_LETTERS:
+        metrics["unreadable_share"] = round(stats.unreadable_share, 3)
         # Both signals mean unreadable text, so they share one defect.
         details: list[str] = []
-        if stats.other_share > _UNREADABLE_MAX_OTHER_SHARE:
-            details.append(f"{stats.other_share:.0%} non-Latin/Cyrillic")
+        if stats.unreadable_share > _UNREADABLE_MAX_OTHER_SHARE:
+            details.append(_unreadable_detail(stats))
         if _is_mojibake(stats):
             metrics["mojibake_share"] = round(stats.accented_share, 3)
             details.append(f"{stats.accented_share:.0%} accented Latin over Cyrillic")
@@ -737,49 +737,141 @@ def _coverage_metrics(body: _Body, source_text: SourceText | None) -> _GroupResu
     )
 
 
+_LATIN = "LATIN"
+_CYRILLIC = "CYRILLIC"
+_CJK = "CJK"
+
+# Name prefixes whose script group is not the first word of the name. Kana,
+# hangul, and CJK ideographs are one group: Japanese mixes kana with
+# ideographs, Korean hangul with them, so each alone would read as foreign.
+_SCRIPT_NAME_PREFIXES: tuple[tuple[str, str], ...] = (
+    ("FULLWIDTH LATIN", _LATIN),
+    ("HIRAGANA", _CJK),
+    ("KATAKANA", _CJK),
+    ("HALFWIDTH KATAKANA", _CJK),
+    ("HANGUL", _CJK),
+    ("HALFWIDTH HANGUL", _CJK),
+    ("BOPOMOFO", _CJK),
+    ("IDEOGRAPHIC", _CJK),
+)
+
+# Shown in the defect text, by count.
+_UNREADABLE_DETAIL_MAX_SCRIPTS = 3
+
+
+def _script_group(letter: str) -> str:
+    """The script group of `letter`: the first word of its Unicode name.
+
+    `unicodedata` has no Script property, but a letter's name opens with its
+    script (`LATIN`, `GREEK`, `ARABIC`, `CJK`); the prefix table merges the
+    rest.
+    """
+    name = unicodedata.name(letter, "")
+    for prefix, group in _SCRIPT_NAME_PREFIXES:
+        if name.startswith(prefix):
+            return group
+    return name.split(" ", 1)[0]
+
+
+def _is_impossible(ch: str) -> bool:
+    """True for a char that no readable text holds.
+
+    These are the replacement mark, a private use or unassigned code point,
+    and a control code other than a tab or a line break.
+    """
+    if ch == chr(0xFFFD):
+        return True
+    category = unicodedata.category(ch)
+    if category == "Cc":
+        return ch not in "\t\n\r"
+    return category in ("Co", "Cn")
+
+
 @dataclass(frozen=True)
 class _LetterStats:
-    """Letter composition of a body, as shares of its total letter count.
+    """Letter composition of a body.
 
-    `other_share` is the OCR-garbage signal (neither Latin nor Cyrillic);
-    `accented_share` and `cyrillic_share` together are the mojibake signal.
+    The OCR-garbage signal is `unreadable_share`: letters foreign to the main
+    script plus impossible chars, over letters plus impossible chars. Latin is
+    never foreign, and Cyrillic is not foreign to a Latin body. The shares of
+    accented Latin and of Cyrillic, over letters alone, are the mojibake
+    signal.
     """
 
-    total: int
-    other_share: float
+    letters: int
+    impossible: int
+    main_script: str
+    # Letter counts of the foreign script groups, the largest first.
+    foreign: tuple[tuple[str, int], ...]
     accented_share: float
     cyrillic_share: float
 
+    @property
+    def sample(self) -> int:
+        return self.letters + self.impossible
+
+    @property
+    def unreadable_share(self) -> float:
+        if not self.sample:
+            return 0.0
+        foreign = sum(count for _, count in self.foreign)
+        return (foreign + self.impossible) / self.sample
+
 
 def _letter_stats(body: str) -> _LetterStats:
-    """Classify the letters of `body` in a single pass."""
-    total = 0
-    other = 0
+    """Classify the letters and impossible chars of `body`."""
+    scripts: Counter[str] = Counter()
+    impossible = 0
     accented = 0
-    cyrillic = 0
-    for ch in body:
+    for ch, count in Counter(body).items():
         if not ch.isalpha():
+            if _is_impossible(ch):
+                impossible += count
             continue
-        total += 1
-        name = unicodedata.name(ch, "")
-        if name.startswith("CYRILLIC"):
-            cyrillic += 1
-        elif name.startswith("LATIN"):
-            # A decomposition means a diacritic.
-            if unicodedata.decomposition(ch):
-                accented += 1
-        else:
-            other += 1
-    if total == 0:
-        return _LetterStats(0, 0.0, 0.0, 0.0)
-    return _LetterStats(total, other / total, accented / total, cyrillic / total)
+        group = _script_group(ch)
+        scripts[group] += count
+        # A decomposition means a diacritic. The name, not the group, keeps
+        # a fullwidth letter out: it decomposes to its narrow form.
+        named_latin = unicodedata.name(ch, "").startswith(_LATIN)
+        if named_latin and unicodedata.decomposition(ch):
+            accented += count
+    letters = scripts.total()
+    if not letters:
+        return _LetterStats(0, impossible, "", (), 0.0, 0.0)
+    main_script = scripts.most_common(1)[0][0]
+    own = {main_script, _LATIN}
+    if main_script == _LATIN:
+        own.add(_CYRILLIC)
+    foreign = tuple(
+        (group, count) for group, count in scripts.most_common() if group not in own
+    )
+    return _LetterStats(
+        letters=letters,
+        impossible=impossible,
+        main_script=main_script,
+        foreign=foreign,
+        accented_share=accented / letters,
+        cyrillic_share=scripts[_CYRILLIC] / letters,
+    )
+
+
+def _unreadable_detail(stats: _LetterStats) -> str:
+    """The defect text: the share, the main script, and what is unreadable."""
+    found = [
+        f"{count} {group} letters"
+        for group, count in stats.foreign[:_UNREADABLE_DETAIL_MAX_SCRIPTS]
+    ]
+    if stats.impossible:
+        found.append(f"{stats.impossible} impossible chars")
+    where = f" in a {stats.main_script} body" if stats.main_script else ""
+    return f"{stats.unreadable_share:.0%} unreadable{where}: " + ", ".join(found)
 
 
 def _is_mojibake(stats: _LetterStats) -> bool:
     """True when the letters look like a Cyrillic text decoded as Latin.
 
     A cp1251 font without a ToUnicode table yields accented Latin letters,
-    which `other_share` cannot see: such garbage runs above 50% accented,
+    which `unreadable_share` cannot see: such garbage runs above 50% accented,
     real German or French near 2%. The Cyrillic guard keeps accented Latin
     documents out; the share is over all letters.
     """
