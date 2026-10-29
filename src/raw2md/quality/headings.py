@@ -12,7 +12,6 @@ from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass
 from fractions import Fraction
-from itertools import pairwise
 
 from raw2md.cleaning import apply_outline_levels, printed_outline
 from raw2md.keywords import Keywords
@@ -313,12 +312,12 @@ def _two_line_chapter_titles(structural: list[Segment]) -> list[tuple[str, ...]]
     """A chapter title the source printed across two lines, read as one.
 
     A heading of exactly a rank word and a number, followed after blank lines
-    only by the next heading, is joined with it. The rank word is read by form,
-    not by a list: documents come in any language.
+    by the next heading or by the first line of a paragraph, is joined with
+    it: a converter sets the title line either way. The rank word is read by
+    form, not by a list: documents come in any language.
     """
-    headings = _ladder_headings(structural)
     joined: list[tuple[str, ...]] = []
-    for opener, closer in pairwise(headings):
+    for opener in _ladder_headings(structural):
         opener_tokens = tuple(tokenize(opener.title))
         if len(opener_tokens) != 2:
             continue
@@ -327,13 +326,32 @@ def _two_line_chapter_titles(structural: list[Segment]) -> list[tuple[str, ...]]
             and _NUMBER_TOKEN_RE.match(opener_tokens[1])
         ):
             continue
-        between = structural[opener.position + 1 : closer.position]
-        if any(line.strip() for line, _ in between):
-            continue
-        closer_tokens = tuple(tokenize(closer.title))
+        title = _next_line_title(structural, opener.position)
+        closer_tokens = tuple(tokenize(title))
         if closer_tokens:
             joined.append(opener_tokens + closer_tokens)
     return joined
+
+
+def _next_line_title(structural: list[Segment], position: int) -> str:
+    """The title the first non-blank line after `position` gives, else empty.
+
+    A heading gives its text, a paragraph its first line. A protected line, a
+    list item, a table row, and a line over the title length give nothing.
+    """
+    for line, protected in structural[position + 1 :]:
+        text = line.strip()
+        if not text:
+            continue
+        if protected:
+            return ""
+        match = HEADING_RE.match(line)
+        if match is not None:
+            text = line[match.end() :].strip()
+        elif text.startswith(("|", "-", "*", "+", ">")) or text[0].isdigit():
+            return ""
+        return text if len(text) <= _HEADING_TITLE_MAX_LENGTH else ""
+    return ""
 
 
 def _chapter_is_written(entry: tuple[str, ...], written: _WrittenChapters) -> bool:

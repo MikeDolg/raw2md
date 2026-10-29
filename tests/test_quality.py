@@ -1372,6 +1372,36 @@ def test_a_chapter_split_across_two_headings_is_found() -> None:
     assert not _fired(ev, CheckId.LOST_CHAPTERS)
 
 
+def test_a_chapter_title_set_as_a_paragraph_is_found() -> None:
+    # The title line under a rank heading may come out as a paragraph.
+    body = _printed_contents(
+        (0, "Chapter 1 Introduction"),
+        (0, "Chapter 2 General provisions"),
+        (1, "First section"),
+    ) + (
+        "# Chapter 1\n\nIntroduction\n\nA readable paragraph.\n\n"
+        "# Chapter 2\n\nGeneral provisions\n\nA readable paragraph.\n\n"
+        "## First section\n\nA readable paragraph."
+    )
+    ev = evaluate(body)
+    assert not _fired(ev, CheckId.LOST_CHAPTERS)
+
+
+def test_a_rank_heading_followed_by_prose_matches_no_other_entry() -> None:
+    # The paragraph under the rank heading is prose, not the entry's title.
+    body = _printed_contents(
+        (0, "Chapter 1 Introduction"),
+        (0, "Chapter 2 General provisions"),
+        (1, "First section"),
+    ) + (
+        "# Chapter 1\n\nThe opening text fills this line of the page.\n\n"
+        "# Chapter 2\n\nThe next text fills this line of the page.\n\n"
+        "## First section\n\nA readable paragraph."
+    )
+    ev = evaluate(body)
+    assert ev.metrics["lost_chapters"] == 2
+
+
 def test_a_rank_heading_with_text_under_it_is_not_joined_to_the_next() -> None:
     # Text under the rank heading makes it a section of its own.
     body = _printed_contents(
