@@ -44,6 +44,14 @@ def _reported(text: str, options: CleanOptions | None = None) -> str:
 # ---- anchoring: hyphenation -------------------------------------------------
 
 
+def test_a_hyphen_before_a_cjk_line_is_not_a_split_word() -> None:
+    # A script without case has no lowercase continuation to join.
+    text = "Setup uses ASCII-\n" + chr(0x5B57) + chr(0x7B26) + chr(0x96C6) + "\n"
+    kinds = [finding.kind for finding in _findings(text)]
+    assert "hyphenation" not in kinds
+    assert "hyphenation-gap" not in kinds
+
+
 def test_hyphenation_is_anchored() -> None:
     assert _reported("inter-\nrupted word\n") == (
         "<!-- finding hyphenation -->\ninter-\nrupted word\n"

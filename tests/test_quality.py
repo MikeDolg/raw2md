@@ -58,6 +58,13 @@ def _greek_unit_lines(n: int) -> str:
     )
 
 
+def _cjk_paragraphs(n: int) -> list[str]:
+    """`n` distinct 42-character CJK paragraphs, each one line without spaces."""
+    return [
+        "".join(chr(0x4E00 + i + k) for k in range(41)) + chr(0x3002) for i in range(n)
+    ]
+
+
 def _left_standing(kind: str, count: int) -> tuple[Finding, ...]:
     """`count` findings of `kind`, as the cleaning stage would report them."""
     return tuple(Finding(kind, line) for line in range(1, count + 1))
@@ -91,6 +98,20 @@ def test_high_density_is_ok() -> None:
     ev = evaluate("a" * 4000 + "\n", source_pages=10)
     assert not _fired(ev, CheckId.TEXT_DENSITY)
     assert ev.status is ResultStatus.OK
+
+
+def test_cjk_page_of_plausible_density_is_ok() -> None:
+    # A page of Chinese prose holds 500 characters or more, so the floor of
+    # 350 characters per page needs no script allowance.
+    ev = evaluate("\n\n".join(_cjk_paragraphs(12)), source_pages=1)
+    assert ev.metrics["density"] > 500
+    assert not _fired(ev, CheckId.TEXT_DENSITY)
+    assert ev.status is ResultStatus.OK
+
+
+def test_sparse_cjk_body_still_fails_density() -> None:
+    ev = evaluate("\n\n".join(_cjk_paragraphs(12)), source_pages=20)
+    assert _fired(ev, CheckId.TEXT_DENSITY)
 
 
 def test_density_skipped_without_page_count() -> None:
@@ -1504,6 +1525,19 @@ def test_repeated_line_is_flagged() -> None:
     ev = evaluate(body)
     assert _fired(ev, CheckId.REPEATS)
     assert ev.repairable
+
+
+def test_cjk_paragraphs_without_spaces_are_not_repeats() -> None:
+    # Each paragraph is one line without spaces, under the limit of 80
+    # characters, and no two are equal.
+    ev = evaluate("\n\n".join(_cjk_paragraphs(12)))
+    assert not _fired(ev, CheckId.REPEATS)
+
+
+def test_repeated_cjk_line_is_flagged() -> None:
+    line = _cjk_paragraphs(1)[0]
+    body = "\n\n".join(_cjk_paragraphs(4)[1:] + [line] * 3)
+    assert _fired(evaluate(body), CheckId.REPEATS)
 
 
 def test_line_repeated_twice_is_not_flagged() -> None:
