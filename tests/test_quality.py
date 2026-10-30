@@ -1278,6 +1278,30 @@ def test_a_page_column_ahead_of_the_titles_states_no_section_a_chapter(
     assert "lost_chapters" not in ev.metrics
 
 
+def test_sections_numbered_in_a_cell_of_their_own_state_no_chapter() -> None:
+    # A continuation page: the section numbers hang in the first column, and
+    # each chapter title stands in the column of its sections' titles.
+    body = (
+        "# Contents\n\n"
+        "| § 20. | Basic terms | 12 |\n|---|---|---|\n"
+        "| 21. | Belt tension | 15 |\n"
+        "|  | II. SETUP RULES | 20 |\n"
+        "| § 22. | Drive pair | 20 |\n"
+        "| 23. | Pulley size | 24 |\n"
+        "|  | III. WIRING | 30 |\n"
+        "| § 24. | Cable runs | 30 |\n\n"
+    ) + _levelled(
+        (2, "II. SETUP RULES"),
+        (3, "§ 22."),
+        (3, "§ 23."),
+        (2, "III. WIRING"),
+        (3, "§ 24."),
+    )
+    ev = evaluate(body)
+    assert not _fired(ev, CheckId.LOST_CHAPTERS)
+    assert "lost_chapters" not in ev.metrics
+
+
 def test_a_body_printing_no_contents_states_no_chapter() -> None:
     # Without a contents witness no chapter is stated.
     body = _levelled(

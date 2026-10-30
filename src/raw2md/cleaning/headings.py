@@ -230,6 +230,18 @@ _CONTENTS_RANK_WORD_RE = re.compile(r"^[^\W\d_][^\d]*$")
 # The number in the cell after a rank word, arabic or roman.
 _CONTENTS_RANK_NUMBER_RE = re.compile(rf"^(\d+|{_ROMAN_NUMERAL})\.?$")
 
+# A cell holding only section numbers ahead of the title (`§ 20.`, `21.`,
+# `§ 29. § 30.`). A section sign or a closing dot marks each one: a bare number
+# can be a page, and a roman one can number a chapter.
+_CONTENTS_SECTION_NUMBER = r"(?:§\s*\d+(?:\.\d+)*\.?|\d+(?:\.\d+)*\.)"
+_CONTENTS_NUMBER_CELL_RE = re.compile(
+    rf"^{_CONTENTS_SECTION_NUMBER}(?:\s+{_CONTENTS_SECTION_NUMBER})*$"
+)
+
+# Depth units per grid column. A record past its own number cell stands one
+# unit below the records whose title opens its title column.
+_DEPTH_PER_COLUMN = 2
+
 # Distinct grid depths a contents table needs to state a hierarchy; one depth
 # would flatten that stretch. Records ranked by their own number are exempt.
 _CONTENTS_MIN_DEPTHS = 2
@@ -805,7 +817,9 @@ def _ranked_records(
     """`(depth, title)` of one table's records, or empty when its grid is no tree.
 
     The staircase and minimum-depth guards judge the grid, so a record ranked by
-    its own number stands outside them.
+    its own number stands outside them. The staircase reads each record's first
+    filled cell, a number cell included, so a number cell does not change which
+    tables it drops.
     """
     ranks = [_record_rank(record, stems, named) for record in records]
     if not _is_staircase(ranks):
@@ -826,16 +840,28 @@ def _record_rank(
     A dotted number states it. A single-level number states the top rank where
     the zone opens its sections, or where a rank word names it and the zone uses
     one rank word only: two words (`Parte`, `Cap.`) do not say which outranks
-    the other. Otherwise the column is the rank.
+    the other. Otherwise the title column is the rank, and a number cell ahead
+    of the title puts the record one unit below the column's own records: a
+    chapter title stands where its sections' titles stand, past their numbers.
     """
     number = record.number
-    if number is None:
-        return _RecordRank(record.column, stated=False)
-    if len(number) > 1:
-        return _RecordRank(len(number) - 1, stated=True)
-    if (record.rank_word is not None and len(named) == 1) or number[0] in stems:
-        return _RecordRank(0, stated=True)
-    return _RecordRank(record.column, stated=False)
+    if number is not None and len(number) > 1:
+        return _stated_rank(len(number) - 1)
+    if number is not None and (
+        (record.rank_word is not None and len(named) == 1) or number[0] in stems
+    ):
+        return _stated_rank(0)
+    below = 0 if record.number_cell is None else 1
+    return _RecordRank(
+        depth=record.column * _DEPTH_PER_COLUMN + below,
+        step=record.first_column,
+        stated=False,
+    )
+
+
+def _stated_rank(level: int) -> _RecordRank:
+    """The rank a record's own number states, `level` 0 at the top."""
+    return _RecordRank(depth=level * _DEPTH_PER_COLUMN, step=level, stated=True)
 
 
 def contents_zones(
@@ -1108,11 +1134,11 @@ def _is_staircase(ranks: list[_RecordRank]) -> bool:
     """
     if not ranks:
         return False
-    opened = min(rank.depth for rank in ranks)
+    opened = min(rank.step for rank in ranks)
     for rank in ranks:
-        if not rank.stated and rank.depth > opened + 1:
+        if not rank.stated and rank.step > opened + 1:
             return False
-        opened = max(opened, rank.depth)
+        opened = max(opened, rank.step)
     return True
 
 
@@ -1120,21 +1146,34 @@ def _is_staircase(ranks: list[_RecordRank]) -> bool:
 class _ContentsRecord:
     """One readable record of a printed contents, as the row states it.
 
-    `column` is the column of the first filled cell. `rank_word` is a leading
-    cell's word that names `number` a rank (`Cap. I`).
+    `column` is the column the title opens in: the first filled cell, or the
+    next one past `number_cell`, a leading cell of section numbers alone.
+    `rank_word` is a leading cell's word that names `number` a rank (`Cap. I`).
     """
 
     title: str
     column: int
     number: tuple[int, ...] | None
     rank_word: str | None = None
+    number_cell: int | None = None
+
+    @property
+    def first_column(self) -> int:
+        """The column of the record's first filled cell."""
+        return self.column if self.number_cell is None else self.number_cell
 
 
 @dataclass(frozen=True)
 class _RecordRank:
-    """A record's depth; `stated` when its own number named it, not its column."""
+    """Where a record stands.
+
+    `depth` orders the zone's records, in `_DEPTH_PER_COLUMN` units per column.
+    `step` is the grid column the staircase guard reads. `stated` when the
+    record's own number named the rank, not its column.
+    """
 
     depth: int
+    step: int
     stated: bool
 
 
@@ -1145,7 +1184,7 @@ def _contents_entry(cells: list[str]) -> _ContentsRecord | None:
     the title, since the lost grid no longer says which number is the page. A
     glued roman folio passes: roman numerals also number parts and spell words.
     A rank word and its number in separate cells stay in the title, since the
-    body heading prints both.
+    body heading prints both; so does a section number in a cell of its own.
     """
     filled = [(col, text) for col, text in enumerate(cells) if text]
     if not filled:
@@ -1171,10 +1210,16 @@ def _contents_entry(cells: list[str]) -> _ContentsRecord | None:
             rank_word=filled[0][1],
         )
     number = _CONTENTS_ENTRY_NUMBER_RE.match(title)
+    number_cell = (
+        filled[0][0]
+        if len(filled) > 1 and _CONTENTS_NUMBER_CELL_RE.match(filled[0][1])
+        else None
+    )
     return _ContentsRecord(
         title=title,
-        column=filled[0][0],
+        column=filled[0][0] if number_cell is None else filled[1][0],
         number=None if number is None else _section_number(number.group(1)),
+        number_cell=number_cell,
     )
 
 

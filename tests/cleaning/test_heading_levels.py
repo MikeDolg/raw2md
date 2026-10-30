@@ -2124,7 +2124,72 @@ def test_a_leading_cell_that_numbers_a_section_is_no_page(cell: str) -> None:
         "|  | Basic terms |  |\n"
     )
     outline = printed_outline(segments(text), KEYWORDS)
+    assert outline.level_for(f"{cell} Introduction") is not None
+    assert outline.level_for("Introduction") is None
+
+
+# A continuation page of a contents: the section numbers hang in a cell of their
+# own, and the chapter title stands in the column of the section titles.
+_NUMBER_CELL_ROWS = (
+    "| § 20. | Basic terms | 12 |\n|---|---|---|\n"
+    "| 21. | Belt tension | 15 |\n"
+    "|  | II. SETUP RULES | 20 |\n"
+    "| § 22. § 23. | Drive pair | 20 |\n"
+    "| 24. | Pulley size | 24 |\n"
+)
+
+
+def test_a_section_number_in_its_own_cell_ranks_below_its_chapter() -> None:
+    outline = printed_outline(segments("# Contents\n\n" + _NUMBER_CELL_ROWS), KEYWORDS)
+    assert outline.title_count == 5
+    assert outline.level_for("II. SETUP RULES") == 1
+    assert outline.level_for("§ 20. Basic terms") == 2
+    assert outline.level_for("21. Belt tension") == 2
+    assert outline.level_for("§ 22. § 23. Drive pair") == 2
+    assert outline.level_for("24. Pulley size") == 2
+    assert outline.level_for("Basic terms") is None
+
+
+def test_a_section_number_in_its_own_cell_levels_the_body_headings() -> None:
+    text = (
+        "# Contents\n\n" + _NUMBER_CELL_ROWS + "\n### II. SETUP RULES\n\nBody.\n\n"
+        "#### § 22. § 23. Drive pair\n\nBody.\n\n#### 24. Pulley size\n\nBody.\n"
+    )
+
+    assert clean_in_place(text).endswith(
+        "\n# II. SETUP RULES\n\nBody.\n\n"
+        "## § 22. § 23. Drive pair\n\nBody.\n\n## 24. Pulley size\n\nBody.\n"
+    )
+
+
+def test_a_section_number_cell_under_a_rank_word_chapter_ranks_below_it() -> None:
+    # The rank word and its number keep their own path: the top rank.
+    text = (
+        "# Contents\n\n| Ch. | I | Introduction | 3 |\n|---|---|---|---|\n"
+        "|  | 1. | Basic terms | 4 |\n"
+        "| Ch. | II | Setup | 9 |\n"
+        "|  | 2. | Belt tension | 10 |\n"
+    )
+    outline = printed_outline(segments(text), KEYWORDS)
+    assert outline.level_for("Ch. I Introduction") == 1
+    assert outline.level_for("Ch. II Setup") == 1
+    assert outline.level_for("1. Basic terms") == 2
+    assert outline.level_for("2. Belt tension") == 2
+
+
+@pytest.mark.parametrize("cell", ["1", "IV.", "§", "Part 2."])
+def test_a_leading_cell_that_is_no_section_number_keeps_its_column(
+    cell: str,
+) -> None:
+    # A bare number can be a page, a roman one numbers a chapter.
+    text = (
+        "# Contents\n\n| No. | Title | Page |\n|---|---|---|\n"
+        f"| {cell} | Introduction | 3 |\n"
+        "|  | Basic terms | 4 |\n"
+    )
+    outline = printed_outline(segments(text), KEYWORDS)
     assert outline.level_for(f"{cell} Introduction") == 1
+    assert outline.level_for("Basic terms") == 2
 
 
 def test_a_lost_page_marker_inside_the_contents_zone_states_no_record() -> None:
