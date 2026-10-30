@@ -1278,6 +1278,41 @@ def test_a_page_column_ahead_of_the_titles_states_no_section_a_chapter(
     assert "lost_chapters" not in ev.metrics
 
 
+def test_a_chapter_row_without_a_page_stays_a_stated_chapter() -> None:
+    # The chapter numbers share a column with no page in one chapter row; the
+    # unwritten chapter still counts as lost.
+    body = (
+        "# Contents\n\n| No. | Title | Page |\n|---|---|---|\n"
+        "| 1 | Introduction | 3 |\n"
+        "|  | Basic terms | 4 |\n"
+        "| 2 | Setup |  |\n"
+        "|  | Belt tension | 9 |\n\n"
+    ) + _levelled(
+        (1, "1 Introduction"),
+        (2, "Basic terms"),
+        (2, "Belt tension"),
+    )
+    ev = evaluate(body)
+    assert ev.metrics["lost_chapters"] == 1
+
+
+def test_a_chapter_number_cell_without_a_section_sign_states_the_chapter() -> None:
+    # Without a section sign the number cell is the chapter's own number.
+    body = (
+        "# Contents\n\n| No. | Title | Page |\n|---|---|---|\n"
+        "| 1. | Introduction | 5 |\n"
+        "|  | Basic terms | 6 |\n"
+        "| 2. | Setup | 9 |\n"
+        "|  | Belt tension | 10 |\n\n"
+    ) + _levelled(
+        (1, "1. Introduction"),
+        (2, "Basic terms"),
+        (2, "Belt tension"),
+    )
+    ev = evaluate(body)
+    assert ev.metrics["lost_chapters"] == 1
+
+
 def test_sections_numbered_in_a_cell_of_their_own_state_no_chapter() -> None:
     # A continuation page: the section numbers hang in the first column, and
     # each chapter title stands in the column of its sections' titles.

@@ -238,8 +238,8 @@ _CONTENTS_NUMBER_CELL_RE = re.compile(
     rf"^{_CONTENTS_SECTION_NUMBER}(?:\s+{_CONTENTS_SECTION_NUMBER})*$"
 )
 
-# Depth units per grid column. A record past its own number cell stands one
-# unit below the records whose title opens its title column.
+# Depth units per grid column. Where the zone signs its sections, a record past
+# its own number cell stands one unit below the records of its title column.
 _DEPTH_PER_COLUMN = 2
 
 # Distinct grid depths a contents table needs to state a hierarchy; one depth
@@ -766,9 +766,10 @@ def printed_outline(seg_list: list[Segment], keywords: Keywords) -> SourceOutlin
         ]
         stems = _numbered_stems(blocks)
         named = _named_ranks(blocks)
+        signed = _signed_sections(blocks)
         zone: list[tuple[int, str]] = []
         for block in blocks:
-            zone.extend(_ranked_records(block, stems, named))
+            zone.extend(_ranked_records(block, stems, named, signed))
         ladder = _contents_ladder([depth for depth, _ in zone])
         entries.extend((ladder[depth], title) for depth, title in zone)
     if not entries:
@@ -811,8 +812,25 @@ def _named_ranks(blocks: list[list[_ContentsRecord]]) -> frozenset[str]:
     )
 
 
+def _signed_sections(blocks: list[list[_ContentsRecord]]) -> bool:
+    """True when a number cell of the zone carries a section sign (`§ 20.`).
+
+    The sign names the cells' numbers sections, so an entry without such a cell
+    in their title column is a chapter. Without the sign, a number cell can hold
+    a chapter's own number (`1. | Introduction`) above unnumbered sections.
+    """
+    return any(
+        record.number_cell is not None and record.title.startswith("§")
+        for block in blocks
+        for record in block
+    )
+
+
 def _ranked_records(
-    records: list[_ContentsRecord], stems: frozenset[int], named: frozenset[str]
+    records: list[_ContentsRecord],
+    stems: frozenset[int],
+    named: frozenset[str],
+    signed: bool,
 ) -> list[tuple[int, str]]:
     """`(depth, title)` of one table's records, or empty when its grid is no tree.
 
@@ -821,7 +839,7 @@ def _ranked_records(
     filled cell, a number cell included, so a number cell does not change which
     tables it drops.
     """
-    ranks = [_record_rank(record, stems, named) for record in records]
+    ranks = [_record_rank(record, stems, named, signed) for record in records]
     if not _is_staircase(ranks):
         return []
     read_by_grid = any(not rank.stated for rank in ranks)
@@ -833,16 +851,19 @@ def _ranked_records(
 
 
 def _record_rank(
-    record: _ContentsRecord, stems: frozenset[int], named: frozenset[str]
+    record: _ContentsRecord,
+    stems: frozenset[int],
+    named: frozenset[str],
+    signed: bool,
 ) -> _RecordRank:
     """The rank one record stands at.
 
     A dotted number states it. A single-level number states the top rank where
     the zone opens its sections, or where a rank word names it and the zone uses
     one rank word only: two words (`Parte`, `Cap.`) do not say which outranks
-    the other. Otherwise the title column is the rank, and a number cell ahead
-    of the title puts the record one unit below the column's own records: a
-    chapter title stands where its sections' titles stand, past their numbers.
+    the other. Otherwise the first filled column is the rank. In a zone of
+    `signed` sections, a number cell puts the record one unit below the records
+    of its title column: a chapter title stands where its sections' titles do.
     """
     number = record.number
     if number is not None and len(number) > 1:
@@ -851,9 +872,14 @@ def _record_rank(
         (record.rank_word is not None and len(named) == 1) or number[0] in stems
     ):
         return _stated_rank(0)
-    below = 0 if record.number_cell is None else 1
+    if signed and record.number_cell is not None:
+        return _RecordRank(
+            depth=record.column * _DEPTH_PER_COLUMN + 1,
+            step=record.first_column,
+            stated=False,
+        )
     return _RecordRank(
-        depth=record.column * _DEPTH_PER_COLUMN + below,
+        depth=record.first_column * _DEPTH_PER_COLUMN,
         step=record.first_column,
         stated=False,
     )
@@ -1010,8 +1036,7 @@ def _contents_records(
     cells count. A page-word column (`_label_column`) is blanked in every row,
     since a bad scan turns the word into noise further down. Without such a
     column, a page ahead of the title is blanked only in a page column
-    (`_page_columns`) and only in a row that ends on no page; otherwise the
-    leading number is the entry's own (`1 | Intro | 5`).
+    (`_page_columns`).
     """
     body = _body_start(seg_list, start, end)
     if body is None:
@@ -1037,7 +1062,7 @@ def _contents_records(
         if label_column is not None:
             if label_column < len(cells):
                 cells[label_column] = ""
-        elif not _ends_on_a_page(cells):
+        else:
             _blank_leading_page(cells, page_columns)
         record = _contents_entry(cells)
         if record is not None:
@@ -1093,18 +1118,35 @@ def _page_columns(rows: list[list[str]]) -> frozenset[int]:
 
     One word or numeral in the column makes it something else, such as chapter
     numbers with an OCR misread among them, and its numbers stay in the titles.
+    So does one row that prints a page after the title as well: an entry has
+    one page, so the leading number is the entry's own (`1 | Intro | 5`).
     """
     width = max((len(cells) for cells in rows), default=0)
     columns: set[int] = set()
     for column in range(width):
         texts = [cells[column] for cells in rows if column < len(cells)]
         pages = [_CONTENTS_LEADING_PAGE_RE.match(text) is not None for text in texts]
-        if any(pages) and all(
-            page or not any(ch.isalnum() for ch in text)
-            for text, page in zip(texts, pages, strict=True)
+        if (
+            any(pages)
+            and all(
+                page or not any(ch.isalnum() for ch in text)
+                for text, page in zip(texts, pages, strict=True)
+            )
+            and not any(_numbers_its_entry(cells, column) for cells in rows)
         ):
             columns.add(column)
     return frozenset(columns)
+
+
+def _numbers_its_entry(cells: list[str], column: int) -> bool:
+    """True when the row opens on a number in `column` and still ends on a page."""
+    filled = [col for col, text in enumerate(cells) if text]
+    return (
+        len(filled) > 2
+        and filled[0] == column
+        and _CONTENTS_LEADING_PAGE_RE.match(cells[column]) is not None
+        and _CONTENTS_PAGE_RE.match(cells[filled[-1]]) is not None
+    )
 
 
 def _blank_leading_page(cells: list[str], page_columns: frozenset[int]) -> None:
