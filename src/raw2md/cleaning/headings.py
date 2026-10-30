@@ -205,6 +205,11 @@ _CONTENTS_PAGE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# A page printed ahead of the title. Arabic only, since a leading roman numeral
+# numbers a part. A scan can put edge noise before it (`. 168`); a closing dot
+# marks a section number (`21.`), not a page.
+_CONTENTS_LEADING_PAGE_RE = re.compile(r"^[.,:;'·\s]*\d+$")
+
 # The dot leader a typesetter runs between an entry's title and its page. Two
 # leader characters at the least, so a single dot -- the one that closes a
 # section number, `1.1` -- is left where it stands.
@@ -977,14 +982,17 @@ def _contents_records(
     The row above the separator is read only when it ends on a page number;
     otherwise it holds column labels. Of a heading merged onto a row, only the
     cells count. A page-word column (`_label_column`) is blanked in every row,
-    since a bad scan turns the word into noise further down.
+    since a bad scan turns the word into noise further down. Without such a
+    column, a page ahead of the title is blanked only in a page column
+    (`_page_columns`) and only in a row that ends on no page; otherwise the
+    leading number is the entry's own (`1 | Intro | 5`).
     """
     body = _body_start(seg_list, start, end)
     if body is None:
         return []
     header = _row_cells(seg_list, body - 2) if body - 2 >= start else None
     label_column = None if header is None else _label_column(header, page_labels)
-    records: list[_ContentsRecord] = []
+    rows: list[tuple[int, list[str]]] = []
     for idx in range(start, end):
         core = _row_core(seg_list, idx)
         if core is None or is_table_separator(core):
@@ -992,8 +1000,19 @@ def _contents_records(
         cells = _clean_cells(table_cells(core))
         if idx < body and not _ends_on_a_page(cells):
             continue
-        if label_column is not None and label_column < len(cells):
-            cells[label_column] = ""
+        rows.append((idx, cells))
+    page_columns = (
+        _page_columns([cells for idx, cells in rows if idx >= body])
+        if label_column is None
+        else frozenset()
+    )
+    records: list[_ContentsRecord] = []
+    for _, cells in rows:
+        if label_column is not None:
+            if label_column < len(cells):
+                cells[label_column] = ""
+        elif not _ends_on_a_page(cells):
+            _blank_leading_page(cells, page_columns)
         record = _contents_entry(cells)
         if record is not None:
             records.append(record)
@@ -1015,16 +1034,18 @@ def _row_cells(seg_list: list[Segment], idx: int) -> list[str] | None:
 
 
 def _label_column(header: list[str], page_labels: re.Pattern[str]) -> int | None:
-    """The column before the page that holds a page word (`pag. 1`), or None.
+    """The first column whose header cell is a page word alone, or None.
 
     Read from the row above the separator, where the word survives a bad scan.
-    A real title never reads as a page word alone.
+    The word can label a page column ahead of the title (`PAGE | CHAPTER I.`)
+    or sit before the page (`pag. 1`). The last column is left out: its page
+    goes as the record's trailing page. A real title never reads as a page word.
     """
-    if len(header) < 3:
-        return None
-    column = len(header) - 2
-    word = _drop_diacritics(header[column].strip(". ")).casefold()
-    return column if page_labels.fullmatch(word) is not None else None
+    for column, cell in enumerate(header[:-1]):
+        word = _drop_diacritics(cell.strip(". ")).casefold()
+        if page_labels.fullmatch(word) is not None:
+            return column
+    return None
 
 
 def _row_of(core: str) -> str | None:
@@ -1039,6 +1060,34 @@ def _ends_on_a_page(cells: list[str]) -> bool:
     """True when the row's last filled cell is the page an entry points at."""
     filled = [text for text in cells if text]
     return bool(filled) and _CONTENTS_PAGE_RE.match(filled[-1]) is not None
+
+
+def _page_columns(rows: list[list[str]]) -> frozenset[int]:
+    """Columns of the body rows that hold leading pages and nothing but edge noise.
+
+    One word or numeral in the column makes it something else, such as chapter
+    numbers with an OCR misread among them, and its numbers stay in the titles.
+    """
+    width = max((len(cells) for cells in rows), default=0)
+    columns: set[int] = set()
+    for column in range(width):
+        texts = [cells[column] for cells in rows if column < len(cells)]
+        pages = [_CONTENTS_LEADING_PAGE_RE.match(text) is not None for text in texts]
+        if any(pages) and all(
+            page or not any(ch.isalnum() for ch in text)
+            for text, page in zip(texts, pages, strict=True)
+        ):
+            columns.add(column)
+    return frozenset(columns)
+
+
+def _blank_leading_page(cells: list[str], page_columns: frozenset[int]) -> None:
+    """Blank the first filled cell when it is a page column's page before a title."""
+    filled = [col for col, text in enumerate(cells) if text]
+    if len(filled) < 2 or filled[0] not in page_columns:
+        return
+    if _CONTENTS_LEADING_PAGE_RE.match(cells[filled[0]]):
+        cells[filled[0]] = ""
 
 
 def _body_start(seg_list: list[Segment], start: int, end: int) -> int | None:

@@ -1253,6 +1253,31 @@ def test_chapters_the_body_writes_are_untouched() -> None:
     assert "lost_chapters" not in ev.metrics
 
 
+@pytest.mark.parametrize("label", ["PAGE", "No."])
+def test_a_page_column_ahead_of_the_titles_states_no_section_a_chapter(
+    label: str,
+) -> None:
+    # The chapter rows carry no page, so a page glued to a section's title
+    # would rank the section above its chapter.
+    body = (
+        f"# Contents\n\n| {label} | Title |  |\n|---|---|---|\n"
+        "| 3 | Chapter 1. Introduction |  |\n"
+        "| 4 |  | Basic terms |\n"
+        "|  | Chapter 2. Setup |  |\n"
+        "| . 9 |  | Belt tension |\n"
+        "| 12 |  | Drive pair |\n\n"
+    ) + _levelled(
+        (1, "Chapter 1. Introduction"),
+        (2, "Basic terms"),
+        (1, "Chapter 2. Setup"),
+        (2, "Belt tension"),
+        (2, "Drive pair"),
+    )
+    ev = evaluate(body)
+    assert not _fired(ev, CheckId.LOST_CHAPTERS)
+    assert "lost_chapters" not in ev.metrics
+
+
 def test_a_body_printing_no_contents_states_no_chapter() -> None:
     # Without a contents witness no chapter is stated.
     body = _levelled(

@@ -2053,6 +2053,80 @@ def test_the_page_label_word_comes_from_the_dictionary() -> None:
     assert not clean_in_place(text, options).endswith(levelled)
 
 
+# A contents page that prints its pages ahead of the titles. The chapter rows
+# carry no page, so a glued page would rank each section above its chapter.
+_PAGES_FIRST_ROWS = (
+    "| 3 | Chapter 1. Introduction |  |\n"
+    "| 4 |  | Basic terms |\n"
+    "|  | Chapter 2. Setup |  |\n"
+    "| . 9 |  | Belt tension |\n"
+    "| 12 |  | Drive pair |\n"
+)
+
+
+def _assert_pages_first_ladder(text: str) -> None:
+    outline = printed_outline(segments(text), KEYWORDS)
+    assert outline.title_count == 5
+    assert outline.level_for("Chapter 1. Introduction") == 1
+    assert outline.level_for("Chapter 2. Setup") == 1
+    assert outline.level_for("Basic terms") == 2
+    assert outline.level_for("Belt tension") == 2
+    assert outline.level_for("12 Drive pair") is None
+
+
+def test_a_page_column_labelled_ahead_of_the_titles_is_not_read_as_a_title() -> None:
+    text = "# Contents\n\n| PAGE | Title |  |\n|---|---|---|\n" + _PAGES_FIRST_ROWS
+    _assert_pages_first_ladder(text)
+
+
+def test_a_page_ahead_of_the_title_is_dropped_without_a_label() -> None:
+    text = "# Contents\n\n| No. | Title |  |\n|---|---|---|\n" + _PAGES_FIRST_ROWS
+    _assert_pages_first_ladder(text)
+
+
+def test_a_number_ahead_of_a_title_that_ends_on_a_page_stays_its_own() -> None:
+    text = (
+        "# Contents\n\n| No. | Title | Page |\n|---|---|---|\n"
+        "| 1 | Introduction | 5 |\n"
+        "| 1.1 | Basic terms | 6 |\n"
+        "| 2 | Setup | 9 |\n"
+        "| 2.1 | Belt tension | 9 |\n"
+    )
+    outline = printed_outline(segments(text), KEYWORDS)
+    assert outline.title_count == 4
+    assert outline.level_for("1 Introduction") == 1
+    assert outline.level_for("2.1 Belt tension") == 2
+    assert outline.level_for("Introduction") is None
+
+
+def test_a_misread_number_in_a_column_of_chapter_numbers_is_no_page() -> None:
+    # One OCR misread among roman chapter numbers: the column is no page column.
+    text = (
+        "# Contents\n\n| No. | Title |\n|---|---|\n"
+        "| I | Introduction |\n"
+        "|  | Basic terms |\n"
+        "| II | Setup |\n"
+        "| 115 | Belt tension |\n"
+    )
+    outline = printed_outline(segments(text), KEYWORDS)
+    assert outline.title_count == 4
+    assert outline.level_for("I Introduction") == 1
+    assert outline.level_for("Basic terms") == 2
+    assert outline.level_for("115 Belt tension") == 1
+    assert outline.level_for("Belt tension") is None
+
+
+@pytest.mark.parametrize("cell", ["21.", "IV", "§ 20"])
+def test_a_leading_cell_that_numbers_a_section_is_no_page(cell: str) -> None:
+    text = (
+        "# Contents\n\n| No. | Title |  |\n|---|---|---|\n"
+        f"| {cell} | Introduction |  |\n"
+        "|  | Basic terms |  |\n"
+    )
+    outline = printed_outline(segments(text), KEYWORDS)
+    assert outline.level_for(f"{cell} Introduction") == 1
+
+
 def test_a_lost_page_marker_inside_the_contents_zone_states_no_record() -> None:
     text = (
         "# Оглавление\n\n"
