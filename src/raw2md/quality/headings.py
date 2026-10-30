@@ -339,7 +339,8 @@ def _next_line_title(structural: list[Segment], position: int) -> str:
     A heading gives its text, a paragraph its first line. A protected line, a
     list item, a table row, and a line over the title length give nothing.
     """
-    for line, protected in structural[position + 1 :]:
+    for index in range(position + 1, len(structural)):
+        line, protected = structural[index]
         text = line.strip()
         if not text:
             continue
