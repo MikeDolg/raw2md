@@ -42,7 +42,20 @@ The checks are in the same order as in `issues`.
 |---|---|---|---|
 | `text_density` | fewer than 350 characters per page of the source; only for `pdf` and `djvu` | always | 10 pages of a scan gave 2,000 characters |
 | `empty_body` | fewer than 20 letters and digits in the whole body | always | a body of one link, `![](fig1.png)` |
-| `unreadable_chars` | with 200 letters or more: more than 15% of the letters are neither Latin nor Cyrillic, or more than 15% of the letters are Latin with diacritics while Cyrillic is 5% or more (a wrong encoding) | always | `Ïðèâåò ìèð` instead of `Привет мир` |
+| `unreadable_chars` | with 200 letters and impossible characters or more: more than 15% of them are letters of a foreign script or impossible characters; or more than 15% of the letters are Latin with diacritics while Cyrillic is 5% or more (a wrong encoding) | always | `Ïðèâåò ìèð` instead of `Привет мир`; `�` in place of letters |
+
+For `unreadable_chars`, the main script of the body is the script of most of
+its letters. Kana, hangul, and CJK ideographs count as one script. A letter is
+foreign when its script is not the main script. Latin is never foreign, and
+Cyrillic is not foreign in a Latin body. Thus a correct text in Chinese,
+Japanese, Greek, or Arabic passes, and so does a Russian text with Latin
+formulas. An impossible character is the replacement character `U+FFFD`, a
+private use or unassigned code point, or a control character other than a tab
+or a line break.
+
+The rule has one known limit. In a Chinese or Japanese text with more Latin
+letters than CJK letters, Latin is the main script, and the CJK letters count
+as foreign.
 
 ### 2. Formulas
 
@@ -65,6 +78,13 @@ count it.
 | `heading_ladder` | a heading not at the level of its group: identical headings (2 or more), a numbered series (3 headings or more: `Chapter 1`, `Chapter 2`, and so on), or headings of the same numbering depth (`2.1.8`) | never | `## Summary` in part 1, `### Summary` in part 2 |
 | `flat_ladder` | more than two thirds of the headings (3 at least) sit at one level, but the document sets several ranks with the bookmarks of the source, a printed table of contents, or numbering such as `4.2.1` | `0 / 2` | `## 1 Pumps`, `## 1.1 Body`, `## 1.2 Seals`, `## 2 Valves` |
 | `lost_chapters` | a chapter from the table of contents printed in the text that is not among the headings | more than a quarter of the chapters in the table of contents, and more than 1 | the table of contents names 4 chapters; the text has headings for only two |
+
+In `lost_chapters`, a chapter is an entry of the top level of the table of
+contents, as [cleaning reads it](cleaning.md#1-headings). A heading of a rank
+word and a number alone (`## CHAPTER IV.`) joins with the next heading or with
+the first line of the paragraph under it, because the source can print the
+title on a line of its own. A line that opens a list, a table, or a quote, or
+that starts with a digit, does not join.
 
 In `heading_ladder`, the level of a group is the level of most of its headings.
 In a tie, it is the higher level. Cleaning repairs these levels with
@@ -118,7 +138,7 @@ Constants in `src/raw2md/quality/evaluator.py` set the thresholds.
 |---|---|
 | 350 characters per page: `text_density` | `_DENSITY_MIN_CHARS_PER_PAGE` |
 | 20 letters and digits: `empty_body` | `_EMPTY_BODY_MIN_ALNUM` |
-| 200 letters, 15%, 5%: `unreadable_chars` | `_UNREADABLE_MIN_LETTERS`, `_UNREADABLE_MAX_OTHER_SHARE`, `_MOJIBAKE_MAX_ACCENTED_SHARE`, `_MOJIBAKE_MIN_CYRILLIC_SHARE` |
+| 200 letters and impossible characters, 15%, 5%: `unreadable_chars` | `_UNREADABLE_MIN_LETTERS`, `_UNREADABLE_MAX_OTHER_SHARE`, `_MOJIBAKE_MAX_ACCENTED_SHARE`, `_MOJIBAKE_MIN_CYRILLIC_SHARE` |
 | `2 / 1`: `formulas`, `lost_formulas` | `_FORMULA_BAD_*`, `_LOST_FORMULA_BAD_*` |
 | 40 lines, 3,000 characters: `runaway_math` | `_MATH_BLOCK_MAX_LINES`, `_MATH_BLOCK_MAX_CHARS` |
 | `0 / 2`: `headings`, `flat_ladder` | `_HEADING_BAD_*`, `_FLAT_LADDER_BAD_*` |
@@ -144,7 +164,8 @@ KaTeX checks only the syntax of a formula. A formula with the wrong content but
 with correct markup counts as valid.
 
 Recognition garbage spread over a page with mixed Latin and Cyrillic text can
-stay below every threshold. The result then gets `ok`.
+stay below every threshold. The result then gets `ok`. Latin garbage in a body
+of another script is not seen either, because Latin is never foreign.
 
 ## Hints in the log
 

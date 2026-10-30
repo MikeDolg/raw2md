@@ -48,7 +48,20 @@ extra conditions:
 - **PDF bookmarks** set the levels of the whole document when the text holds at
   least half of the bookmarks, and 3 at least.
 - **The table of contents in the text** counts only when the PDF has no
-  bookmarks. The lines of the table of contents stay in place.
+  bookmarks. The lines of the table of contents stay in place. The level of an
+  entry is its dotted number (`6.1.3`). An entry without one takes the level
+  of the table column where it starts.
+- **A column of page numbers before the titles** is not a level. The tool
+  finds it by the page label of `keywords.yaml` in the header row
+  (`| PAGE | CHAPTER VI. |`). Without the label, each cell of the column must
+  hold a page number alone or a mark such as `-`. Also, no row with a number
+  there may end on a page: in `| 1 | Pumps | 5 |`, the `1` numbers the
+  chapter.
+- **A cell with a section number alone before the title**
+  (`| § 20. | Valves | 112 |`) puts the entry one level below the entries
+  whose title starts in the same column. This works only when such a cell in
+  the table of contents holds `§`. Without it, the cell can hold the number of
+  a chapter (`| 1. | Pumps | 5 |`).
 - **A docx without styles**: the rules in the last two rows of the table work
   only on a `docx` or `md` input. The document must also have no heading at
   all.
