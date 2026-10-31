@@ -22,6 +22,7 @@ import logging
 import re
 import statistics
 import unicodedata
+from bisect import bisect_right
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
@@ -365,7 +366,7 @@ class Evaluation:
             for defect in self.defects
             if defect.veto or defect.score < _ISSUE_MAX_SCORE
         ]
-        shown = issues or [defect for defect in self.defects if defect.score < 100]
+        shown = issues or [defect for defect in self.defects if defect.halvings > 0]
         return tuple(
             f"{defect.check.value} ({defect.detail}) score {defect.score}"
             for defect in shown
@@ -1131,21 +1132,17 @@ def _closed_math_spans(text: str) -> list[tuple[str, int]]:
         last = match.end()
     pieces.append((last, text[last:]))
     joined = "".join(piece for _, piece in pieces)
-    spans.extend(
-        (match.group(1), _original_offset(pieces, match.start()))
-        for match in _INLINE_MATH_RE.finditer(joined)
-    )
+    # Joined offset of each piece start, for a bisect per inline match.
+    starts: list[int] = []
+    total = 0
+    for _, piece in pieces:
+        starts.append(total)
+        total += len(piece)
+    for match in _INLINE_MATH_RE.finditer(joined):
+        index = bisect_right(starts, match.start()) - 1
+        origin = pieces[index][0]
+        spans.append((match.group(1), origin + match.start() - starts[index]))
     return spans
-
-
-def _original_offset(pieces: list[tuple[int, str]], joined_offset: int) -> int:
-    """The offset in the source text of `joined_offset` in the joined pieces."""
-    start = 0
-    for origin, piece in pieces:
-        if joined_offset < start + len(piece):
-            return origin + joined_offset - start
-        start += len(piece)
-    return pieces[-1][0] + joined_offset - start
 
 
 def _closed_math_span_contents(text: str) -> list[str]:

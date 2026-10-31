@@ -16,7 +16,9 @@ from raw2md.mdtext.pages import lost_page_marker
 from raw2md.quality.evaluator import (
     _SCRIPT_NAME_PREFIXES,
     CheckId,
+    Defect,
     Evaluation,
+    _closed_math_spans,
     _letter_stats,
     _script_group,
     evaluate,
@@ -2672,6 +2674,27 @@ def test_an_ok_score_of_100_fails_any_lost_point() -> None:
     body = _filler_lines(1500) + "\nOne word here is [?] to the recognizer.\n"
     assert evaluate(_CLEAN_BODY, ok_score=100).status is ResultStatus.OK
     assert evaluate(body, ok_score=100).status is ResultStatus.BAD
+
+
+def test_a_total_below_ok_score_lists_checks_that_round_to_100() -> None:
+    ev = Evaluation(
+        status=ResultStatus.BAD,
+        score=99,
+        defects=(
+            Defect(CheckId.JUNK_LINES, "tiny", halvings=0.0005),
+            Defect(CheckId.REPEATED_IMAGES, "signal"),
+        ),
+        repairable=False,
+        recognition_failure=False,
+        metrics={},
+    )
+    assert ev.defects[0].score == 100
+    assert ev.scored_report == ("junk_lines (tiny) score 100",)
+
+
+def test_math_span_offsets_follow_the_source_around_display_spans() -> None:
+    text = "a $x$ b $$y$$ c $z$ d"
+    assert _closed_math_spans(text) == [("y", 8), ("x", 2), ("z", 16)]
 
 
 def test_signals_stay_out_of_the_total() -> None:
