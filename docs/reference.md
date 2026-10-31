@@ -159,7 +159,7 @@ post: none
 converted_at: 2026-10-03
 source_hash: 9rZ2...
 status: bad
-score: 31
+score: 25
 issues:
 - headings
 ---

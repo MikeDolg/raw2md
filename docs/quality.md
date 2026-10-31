@@ -25,22 +25,25 @@ halving value `h` is the amount of the defect that halves the score. At
 `x = h`, the score is 50. At `x = 2h`, it is 25.
 
 Most checks count their defects against a pair "minimum / per 1,000 lines",
-such as `0 / 2`. The minimum is the number of defects that do not count. The
+such as `1 / 2`. The minimum is the number of defects that do not count. The
 halving value is the larger of the minimum and the given number per 1,000
 lines of the body. Thus a long book does not lose its score for a few defects
 that would spoil a short document. For example, the `headings` check has the
-pair `0 / 2`:
+pair `1 / 2`:
 
 | Body | Halving value | Heading jumps | Score |
 |---|---|---|---|
-| 300 lines | 0.6 | 1 | 31 |
-| 3,000 lines | 6 | 1 | 89 |
-| 3,000 lines | 6 | 6 | 50 |
-| 3,000 lines | 6 | 7 | 45 |
+| 300 lines | 1 | 1 | 100 |
+| 300 lines | 1 | 3 | 25 |
+| 3,000 lines | 6 | 1 | 100 |
+| 3,000 lines | 6 | 7 | 50 |
+| 3,000 lines | 6 | 8 | 45 |
 
-A check with a minimum above 0 keeps the score 100 up to the minimum. The
-`formulas` check has the pair `2 / 1`. In a body of 500 lines, its halving
-value is 2. Thus 2 invalid formulas give 100, and 4 give 50.
+A check keeps the score 100 up to its minimum, and only the defects past the
+minimum lower the score. The `formulas` check has the pair `2 / 1`. In a body
+of 500 lines, its halving value is 2. Thus 2 invalid formulas give 100, and 4
+give 50. A check with the minimum 0, such as `tables`, loses score from the
+first defect.
 
 The other checks measure a share. For example, `x` of `junk_lines` is the share
 of junk lines, and its halving value is 2%. The tables below give the halving
@@ -121,7 +124,7 @@ count it.
 
 | Check | What it finds | `h` / veto | Example |
 |---|---|---|---|
-| `headings` | the level grows by more than one; no space after `#` | `0 / 2` | `# Pumps`, then `### Seals`; `##Seals` |
+| `headings` | the level grows by more than one; no space after `#` | `1 / 2` | `# Pumps`, then `### Seals`; `##Seals` |
 | `heading_ladder` | a heading not at the level of its group: identical headings (2 or more), a numbered series (3 headings or more: `Chapter 1`, `Chapter 2`, and so on), or headings of the same numbering depth (`2.1.8`) | signal | `## Summary` in part 1, `### Summary` in part 2 |
 | `flat_ladder` | more than two thirds of the headings (3 at least) sit at one level, but the document sets several ranks with the bookmarks of the source, a printed table of contents, or numbering such as `4.2.1` | `0 / 2` | `## 1 Pumps`, `## 1.1 Body`, `## 1.2 Seals`, `## 2 Valves` |
 | `lost_chapters` | a chapter from the table of contents printed in the text that is not among the headings | the first lost chapter does not count; then a quarter of the chapters in the table of contents, 1 at least | the table of contents names 4 chapters; the text has headings for only two: the score is 50 |
@@ -192,7 +195,8 @@ Constants in `src/raw2md/quality/evaluator.py` set the thresholds.
 | `2 / 1`: `formulas`, `lost_formulas` | `_FORMULA_FLOOR`, `_FORMULA_HALVING_*`, `_LOST_FORMULA_*` |
 | 40 lines, 3,000 characters: `runaway_math` | `_MATH_BLOCK_MAX_LINES`, `_MATH_BLOCK_MAX_CHARS` |
 | 1 defect: `greek_units`, `images`, `llm_ocr_markers` | `_ONE_DEFECT` |
-| `0 / 2`: `headings`, `flat_ladder` | `_HEADING_FLOOR`, `_HEADING_HALVING_*`, `_FLAT_LADDER_*` |
+| `1 / 2`: `headings` | `_HEADING_FLOOR`, `_HEADING_HALVING_*` |
+| `0 / 2`: `flat_ladder` | `_FLAT_LADDER_*` |
 | a quarter, 1: `lost_chapters` | `_LOST_CHAPTER_HALVING_SHARE`, `_LOST_CHAPTER_FLOOR` |
 | `0 / 1`: `tables` | `_TABLE_FLOOR`, `_TABLE_HALVING_*` |
 | 2%: `junk_lines` | `_JUNK_HALVING_SHARE` |
@@ -240,7 +244,7 @@ Three places show the result of the stage:
   `issues`, which appears only when the list is not empty;
 - the console: with `status: bad`, a warning with the total score and the
   checks in `issues`, each with its measured value and its score, for example
-  `quality bad for book.pdf, score 18: headings (3 level/space issues) score 35`,
+  `quality bad for book.pdf, score 25: headings (3 level/space issues) score 25`,
   and a hint from the table above. When `issues` is empty, the warning lists
   each check that lowered the total score. With `status: ok`, the console
   shows nothing;
