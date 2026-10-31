@@ -6,7 +6,7 @@ and `recognition_failure`.
 
 A graded check scores `100 * 2^(-x/h)`: `x` is its defect rate past a floor,
 `h` the rate that halves the score. The total is the product of the check
-scores, `100 * 2^(-sum(w * x/h))`, and the status is `ok` at `ok_score` or
+scores, `100 * 2^(-sum(w * x/h))` to a tenth, and the status is `ok` at `ok_score` or
 above. A veto, a defect that no rate describes, sets the total to 0.
 Repeated images and an inconsistent heading ladder are signals with no
 score: a legitimate document shows those shapes too.
@@ -255,9 +255,9 @@ _CHECK_WEIGHTS = {
 }
 
 
-def _score(halvings: float) -> int:
-    """The score `100 * 2^(-halvings)`, rounded to an integer from 0 to 100."""
-    return round(100 * 2**-halvings)
+def _score(halvings: float) -> float:
+    """The score `100 * 2^(-halvings)`, rounded to a tenth, from 0 to 100."""
+    return round(100 * 2**-halvings, 1)
 
 
 @dataclass(frozen=True)
@@ -283,9 +283,9 @@ class Defect:
     entries: tuple[str, ...] = ()
 
     @property
-    def score(self) -> int:
-        """The check score, an integer from 0 to 100."""
-        return 0 if self.veto else _score(self.halvings)
+    def score(self) -> float:
+        """The check score, a tenth-rounded number from 0 to 100."""
+        return 0.0 if self.veto else _score(self.halvings)
 
 
 def _scaled_threshold(
@@ -339,7 +339,7 @@ class Evaluation:
     """
 
     status: ResultStatus
-    score: int
+    score: float
     defects: tuple[Defect, ...]
     repairable: bool
     recognition_failure: bool
@@ -368,7 +368,7 @@ class Evaluation:
         ]
         shown = issues or [defect for defect in self.defects if defect.halvings > 0]
         return tuple(
-            f"{defect.check.value} ({defect.detail}) score {defect.score}"
+            f"{defect.check.value} ({defect.detail}) score {defect.score:.1f}"
             for defect in shown
         )
 
@@ -428,7 +428,7 @@ def evaluate(  # noqa: PLR0913 -- each optional keyword input switches on its ow
 ) -> Evaluation:
     """Run the quality checks over `body`, score it, and decide `ok`/`bad`.
 
-    The status is `ok` when no veto fired and the rounded total reaches
+    The status is `ok` when no veto fired and the total, to a tenth, reaches
     `ok_score`. A check whose input is omitted is skipped. `source_pages`
     feeds density, `base_dir` the image checks, `source_text` the coverage
     metric.
@@ -484,10 +484,10 @@ def evaluate(  # noqa: PLR0913 -- each optional keyword input switches on its ow
     )
 
 
-def _total_score(defects: Sequence[Defect]) -> int:
+def _total_score(defects: Sequence[Defect]) -> float:
     """The total, `100 * 2^(-sum(w * x/h))`; any veto makes it 0."""
     if any(defect.veto for defect in defects):
-        return 0
+        return 0.0
     return _score(
         sum(
             _CHECK_WEIGHTS[defect.check] * defect.halvings

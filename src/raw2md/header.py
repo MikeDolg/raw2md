@@ -124,8 +124,9 @@ class ResultHeader:
     converted_at: datetime.date
     source_hash: str  # SHA-256 of source bytes, base64url without padding
     status: ResultStatus
-    # The quality score, 0 to 100; None on a stub and on a result of an older version.
-    score: int | None = None
+    # The quality score, 0 to 100 with one decimal; None on a stub and on a
+    # result of an older version.
+    score: float | None = None
     # CheckId values of the checks that fired, in evaluator order; empty on `ok`.
     issues: tuple[str, ...] = field(default_factory=tuple)
     # Temporary quality-metric fields; stripped at the final write.
@@ -186,7 +187,7 @@ def to_yaml_block(header: ResultHeader, *, include_extras: bool = False) -> str:
         "status": header.status.value,
     }
     if header.score is not None:
-        data["score"] = header.score
+        data["score"] = round(float(header.score), 1)
     if header.issues:
         data["issues"] = list(header.issues)
     if include_extras and header.extras:
@@ -213,17 +214,17 @@ def _parse_issues(value: object) -> tuple[str, ...]:
     return tuple(value)
 
 
-def _parse_score(value: object) -> int | None:
+def _parse_score(value: object) -> float | None:
     """Parse the optional `score` field; absent means a result without a score."""
     if value is None:
         return None
     # bool is an int subclass.
-    if isinstance(value, bool) or not isinstance(value, int):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
         # ValueError, so the caller wraps it as HeaderParseError.
         raise ValueError(  # noqa: TRY004
-            f"score must be an integer, got {value!r}"
+            f"score must be a number, got {value!r}"
         )
-    return value
+    return float(value)
 
 
 def from_yaml_block(text: str) -> ResultHeader | None:

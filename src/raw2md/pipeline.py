@@ -848,14 +848,14 @@ def _warn_quality_verdict(
     """
     if evaluation.status is ResultStatus.BAD:
         _logger.warning(
-            "quality bad for %s, score %d: %s",
+            "quality bad for %s, score %.1f: %s",
             source_name,
             evaluation.score,
             ", ".join(evaluation.scored_report),
         )
     elif evaluation.defects:
         _logger.info(
-            "quality ok for %s, score %d, below threshold: %s",
+            "quality ok for %s, score %.1f, below threshold: %s",
             source_name,
             evaluation.score,
             ", ".join(evaluation.defect_report),

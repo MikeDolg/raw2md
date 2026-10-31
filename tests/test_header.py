@@ -239,10 +239,25 @@ def test_from_raises_on_invalid_issues_type() -> None:
 
 def test_score_written_after_status_and_round_trips() -> None:
     block = to_yaml_block(_make_header(score=83))
-    assert block.index("status: ok") < block.index("score: 83")
+    assert block.index("status: ok") < block.index("score: 83.0")
     restored = from_yaml_block(block)
     assert restored is not None
     assert restored.score == 83
+
+
+def test_score_keeps_one_decimal() -> None:
+    block = to_yaml_block(_make_header(score=24.7))
+    assert "score: 24.7\n" in block
+    restored = from_yaml_block(block)
+    assert restored is not None
+    assert restored.score == 24.7
+
+
+def test_integer_score_of_an_older_version_parses() -> None:
+    block = to_yaml_block(_make_header()).replace("status: ok", "status: ok\nscore: 83")
+    restored = from_yaml_block(block)
+    assert restored is not None
+    assert restored.score == 83.0
 
 
 def test_score_absent_when_none() -> None:
@@ -261,8 +276,8 @@ def test_header_without_score_parses_as_none() -> None:
     assert restored.score is None
 
 
-@pytest.mark.parametrize("value", ["high", "83.5", "true"])
-def test_from_raises_on_non_integer_score(value: str) -> None:
+@pytest.mark.parametrize("value", ["high", "true", "[83]"])
+def test_from_raises_on_non_numeric_score(value: str) -> None:
     block = to_yaml_block(_make_header()).replace(
         "status: ok", f"status: ok\nscore: {value}"
     )

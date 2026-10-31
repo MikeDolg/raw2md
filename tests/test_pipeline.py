@@ -308,7 +308,7 @@ def test_bad_result_warns_with_check_names(
 
     run_one(src, registry)
 
-    assert "quality bad for a.pdf, score 0: empty_body" in caplog.text
+    assert "quality bad for a.pdf, score 0.0: empty_body" in caplog.text
     assert "score 0" in caplog.text
 
 
@@ -321,7 +321,7 @@ def test_ok_result_writes_its_score(tmp_path: Path) -> None:
 
     header = read_header(tmp_path / "a.md")
     assert header is not None
-    assert header.score == 100
+    assert header.score == 100.0
 
 
 def test_ok_score_of_100_turns_a_lost_point_into_bad(
@@ -344,7 +344,7 @@ def test_ok_score_of_100_turns_a_lost_point_into_bad(
     assert header.status is ResultStatus.BAD
     assert header.issues == ()
     assert header.score == 50
-    assert "quality bad for a.pdf, score 50: images" in caplog.text
+    assert "quality bad for a.pdf, score 50.0: images" in caplog.text
 
 
 def test_bad_result_recommends_llm_ocr_on_recognition_failure(

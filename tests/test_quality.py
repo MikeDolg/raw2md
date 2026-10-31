@@ -20,6 +20,7 @@ from raw2md.quality.evaluator import (
     Evaluation,
     _closed_math_spans,
     _letter_stats,
+    _score,
     _script_group,
     evaluate,
 )
@@ -149,7 +150,7 @@ def _detail(ev: Evaluation, check: CheckId) -> str:
     return next(d.detail for d in ev.defects if d.check is check)
 
 
-def _check_score(ev: Evaluation, check: CheckId) -> int:
+def _check_score(ev: Evaluation, check: CheckId) -> float:
     return next(d.score for d in ev.defects if d.check is check)
 
 
@@ -175,7 +176,7 @@ def test_unreadable_below_the_halving_share_only_lowers_the_score() -> None:
     # 220 letters, 9% other, below the 15% that halves the score.
     body = "a" * 200 + _GREEK_ALPHA * 20 + "\n"
     ev = evaluate(body)
-    assert _check_score(ev, CheckId.UNREADABLE_CHARS) == 66
+    assert _check_score(ev, CheckId.UNREADABLE_CHARS) == 65.7
     assert ev.status is ResultStatus.OK
     assert ev.issues == ()
     assert not ev.recognition_failure
@@ -565,7 +566,7 @@ def test_lost_formulas_score_50_a_threshold_past_the_floor() -> None:
 def test_lost_formulas_past_floor_and_threshold_are_bad() -> None:
     body = _filler_lines(1500)
     ev = evaluate(body, cleaning_findings=_left_standing("broken-formula", 5))
-    assert _check_score(ev, CheckId.LOST_FORMULAS) == 35
+    assert _check_score(ev, CheckId.LOST_FORMULAS) == 35.4
     assert ev.status is ResultStatus.BAD
     assert ev.issues == (CheckId.LOST_FORMULAS.value,)
 
@@ -587,7 +588,7 @@ def test_lost_formula_threshold_scales_with_the_cleaning_body() -> None:
         cleaning_body_lines=10_000,
     )
     # A threshold of 10 halves the score at 12 lost; 3 past the floor cost 19%.
-    assert _check_score(ev, CheckId.LOST_FORMULAS) == 81
+    assert _check_score(ev, CheckId.LOST_FORMULAS) == 81.2
     assert ev.status is ResultStatus.OK
 
 
@@ -1650,7 +1651,7 @@ def test_sparse_junk_below_share_is_ok() -> None:
     lines = [f"Real sentence number {i} here" for i in range(99)]
     lines += ["@@@"]  # 1 junk line of 1%, half the share that halves the score
     ev = evaluate("\n".join(lines) + "\n")
-    assert _check_score(ev, CheckId.JUNK_LINES) == 71
+    assert _check_score(ev, CheckId.JUNK_LINES) == 70.7
     assert ev.status is ResultStatus.OK
     assert not ev.repairable
 
@@ -2198,9 +2199,9 @@ def test_each_reported_check_is_weighed_on_its_own_count() -> None:
         cleaning_findings=_left_standing("hyphenation", 3)
         + _left_standing("flattened-block", 3),
     )
-    assert _check_score(ev, CheckId.HYPHENATION) == 79
-    assert _check_score(ev, CheckId.FLATTENED_BLOCKS) == 79
-    assert ev.score == 63
+    assert _check_score(ev, CheckId.HYPHENATION) == 79.4
+    assert _check_score(ev, CheckId.FLATTENED_BLOCKS) == 79.4
+    assert ev.score == 63.0
     assert ev.status is ResultStatus.OK
 
 
@@ -2281,7 +2282,7 @@ def test_a_pass_missing_one_chunk_out_of_many_keeps_its_verdict() -> None:
     # A lost tail chunk is recorded, but it is not "barely inspected".
     ev = evaluate(_CLEAN_BODY, inspection_chunks=65, inspection_chunks_done=64)
     assert _fired(ev, CheckId.INSPECTION_COVERAGE)
-    assert _check_score(ev, CheckId.INSPECTION_COVERAGE) == 98
+    assert _check_score(ev, CheckId.INSPECTION_COVERAGE) == 97.9
     assert ev.issues == ()
     assert ev.status is ResultStatus.OK
 
@@ -2470,7 +2471,7 @@ def test_invalid_formulas_past_the_threshold_are_bad_before_they_escalate() -> N
     # Floor 2 and threshold 2: 5 invalid score 35, at the escalation floor of 5.
     body = _filler_lines(1500) + "\n" + _broken_formulas(5) + "\n"
     ev = evaluate(body)
-    assert _check_score(ev, CheckId.FORMULAS) == 35
+    assert _check_score(ev, CheckId.FORMULAS) == 35.4
     assert ev.status is ResultStatus.BAD
     assert not ev.recognition_failure
 
@@ -2529,7 +2530,7 @@ def test_two_checks_near_70_make_the_result_bad_with_no_issue() -> None:
     )
     assert _check_score(ev, CheckId.HYPHENATION) == 70
     assert _check_score(ev, CheckId.FLATTENED_BLOCKS) == 70
-    assert ev.score == 49
+    assert ev.score == 48.9
     assert ev.status is ResultStatus.BAD
     assert ev.issues == ()
 
@@ -2698,7 +2699,7 @@ def test_a_total_below_ok_score_lists_checks_that_round_to_100() -> None:
         metrics={},
     )
     assert ev.defects[0].score == 100
-    assert ev.scored_report == ("junk_lines (tiny) score 100",)
+    assert ev.scored_report == ("junk_lines (tiny) score 100.0",)
 
 
 def test_math_span_offsets_follow_the_source_around_display_spans() -> None:
@@ -2833,3 +2834,21 @@ def test_a_lost_page_names_its_line() -> None:
 def test_a_signal_and_a_density_veto_carry_no_line() -> None:
     ev = evaluate("Short text of a page.\n", source_pages=10)
     assert all(d.lines == () and d.entries == () for d in ev.defects)
+
+
+def test_score_is_rounded_to_a_tenth() -> None:
+    assert _score(0.5) == 70.7
+    assert _score(0.0) == 100.0
+    assert _score(30) == 0.0
+    assert _score(1) == 50.0
+
+
+def test_status_compares_the_tenth_rounded_total_with_ok_score() -> None:
+    # 48.9 is below 49 and 50 and reaches 48; a fractional total never
+    # rounds up to the integer threshold.
+    body = _filler_lines(200) + "\n" + _broken_formulas(3) + "\n"
+    first = evaluate(body)
+    assert first.score != round(first.score)
+    floor = int(first.score)
+    assert evaluate(body, ok_score=floor).status is ResultStatus.OK
+    assert evaluate(body, ok_score=floor + 1).status is ResultStatus.BAD
