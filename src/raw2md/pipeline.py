@@ -733,6 +733,7 @@ def _finish(
         _save_debug_stage(debug_dir, "post", cleaned)
 
     ocr_applicable = item.source.suffix.lower() in _OCR_EXTENSIONS
+    _log_defect_places(item.source.name, evaluation)
     _warn_quality_verdict(
         item.source.name,
         evaluation,
@@ -811,6 +812,20 @@ def _save_debug_stage(debug_dir: Path | None, stage: str, body: str) -> None:
         return
     with (debug_dir / f"{stage}.md").open("w", encoding="utf-8", newline="") as f:
         f.write(body)
+
+
+def _log_defect_places(source_name: str, evaluation: Evaluation) -> None:
+    """Log each defect that the body shows at DEBUG: its check and body line.
+
+    A check that names a missing entry instead of a line logs the entry.
+    """
+    for defect in evaluation.defects:
+        for line in defect.lines:
+            _logger.debug(
+                "%s: %s at body line %d", source_name, defect.check.value, line
+            )
+        for entry in defect.entries:
+            _logger.debug("%s: %s missing %r", source_name, defect.check.value, entry)
 
 
 def _warn_quality_verdict(

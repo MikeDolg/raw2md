@@ -2683,3 +2683,121 @@ def test_signals_stay_out_of_the_total() -> None:
     assert _fired(ev, CheckId.HEADING_LADDER)
     assert ev.score == 100
     assert ev.issues == ()
+
+
+# ---- defect lines ------------------------------------------------------------
+
+
+def _defect_lines(ev: Evaluation, check: CheckId) -> tuple[int, ...]:
+    return next(d.lines for d in ev.defects if d.check is check)
+
+
+def test_invalid_formulas_name_their_body_lines() -> None:
+    # The display span before the first broken one is cut out of the inline
+    # pass, so the offsets must be mapped back.
+    body = (
+        "Intro line here.\n\n$$a = b$$\n\nBroken $a + {b$ inside.\n\n"
+        "Good $x$ here.\n\nBroken $d + {e$ again.\n"
+    )
+    ev = evaluate(body)
+    assert _defect_lines(ev, CheckId.FORMULAS) == (5, 9)
+
+
+def test_an_invalid_display_formula_names_its_opening_line() -> None:
+    body = "Intro line here.\n\nSome text.\n\n$$a + {b$$\n"
+    assert _defect_lines(evaluate(body), CheckId.FORMULAS) == (5,)
+
+
+def test_a_formula_loop_names_its_line() -> None:
+    body = "Intro line here.\n\nThen $a_{1}" + "+a_{1}" * 7 + "$ ends the line.\n"
+    assert _defect_lines(evaluate(body), CheckId.FORMULAS) == (3,)
+
+
+def test_lines_inside_a_code_fence_shift_the_formula_line() -> None:
+    body = "```text\nx\ny\n```\n\nBroken $a + {b$ inside.\n"
+    assert _defect_lines(evaluate(body), CheckId.FORMULAS) == (6,)
+
+
+def test_greek_units_name_their_body_lines() -> None:
+    body = "Intro line here.\n\n" + _greek_unit_lines(2) + "\n"
+    assert _defect_lines(evaluate(body), CheckId.GREEK_UNITS) == (3, 4)
+
+
+def test_an_unpaired_display_delimiter_names_its_line() -> None:
+    body = "Intro line here.\n\n$$a = b$$\n\nMore readable text.\n\n$$ stray\n"
+    assert _defect_lines(evaluate(body), CheckId.RUNAWAY_MATH) == (7,)
+
+
+def test_a_display_block_over_a_heading_names_its_opening_line() -> None:
+    body = "Intro line here.\n\n$$a = b\n\n# Chapter two\n\nProse here.\n\nc = d$$\n"
+    assert _defect_lines(evaluate(body), CheckId.RUNAWAY_MATH) == (3,)
+
+
+def test_heading_issues_name_their_body_lines() -> None:
+    body = "# Top\n\nText here.\n\n### Skipped level\n\n#Glued\n"
+    assert _defect_lines(evaluate(body), CheckId.HEADINGS) == (5, 7)
+
+
+def test_a_flat_ladder_names_the_headings_off_the_rank() -> None:
+    body = _levelled(
+        (1, "1. Introduction"),
+        (1, "1.1. Key terms"),
+        (1, "1.2. Ground rules"),
+        (1, "2. Loads"),
+        (1, "2.1. Bending"),
+    )
+    expected = tuple(
+        body.split("\n").index(f"# {title}") + 1
+        for title in ("1. Introduction", "2. Loads")
+    )
+    assert _defect_lines(evaluate(body), CheckId.FLAT_LADDER) == expected
+
+
+def test_lost_chapters_name_their_entries_and_no_line() -> None:
+    body = _TWELVE_CHAPTERS + _levelled((2, "First section"))
+    defect = next(d for d in evaluate(body).defects if d.check is CheckId.LOST_CHAPTERS)
+    assert defect.lines == ()
+    assert len(defect.entries) == 12
+    assert defect.entries == tuple(sorted(defect.entries))
+    assert all("provisions" in entry for entry in defect.entries)
+
+
+def test_a_broken_table_row_names_its_line() -> None:
+    body = "| A | B | C |\n|---|---|---|\n| 1 | 2 |\n\nFollowing paragraph words.\n"
+    assert _defect_lines(evaluate(body), CheckId.TABLES) == (3,)
+
+
+def test_junk_lines_name_their_body_lines() -> None:
+    lines = [f"Real sentence number {i} here" for i in range(40)]
+    lines += ["@@@", "%%%", "&&&"]
+    assert _defect_lines(evaluate("\n".join(lines) + "\n"), CheckId.JUNK_LINES) == (
+        41,
+        42,
+        43,
+    )
+
+
+def test_a_repeated_line_names_its_first_occurrence() -> None:
+    body = "Intro paragraph here\n" + "Header\n" * 3 + "Body text follows here now.\n"
+    assert _defect_lines(evaluate(body), CheckId.REPEATS) == (2,)
+
+
+def test_a_defective_image_names_its_line(tmp_path: Path) -> None:
+    ev = evaluate(_IMG_BODY.format(target="media/x.png"), base_dir=tmp_path)
+    assert _defect_lines(ev, CheckId.IMAGES) == (3,)
+
+
+def test_ocr_markers_name_a_line_for_each_marker() -> None:
+    body = "Text here.\n\nUnclear [unreadable] and [?] word.\n\nMore [?] text.\n"
+    ev = evaluate(body)
+    assert _defect_lines(ev, CheckId.LLM_OCR_MARKERS) == (3, 3, 5)
+
+
+def test_a_lost_page_names_its_line() -> None:
+    body = f"Some recognized text.\n\n{lost_page_marker(12)}\n\nMore text.\n"
+    assert _defect_lines(evaluate(body), CheckId.LOST_PAGES) == (3,)
+
+
+def test_a_signal_and_a_density_veto_carry_no_line() -> None:
+    ev = evaluate("Short text of a page.\n", source_pages=10)
+    assert all(d.lines == () and d.entries == () for d in ev.defects)

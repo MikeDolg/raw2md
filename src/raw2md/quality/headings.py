@@ -87,22 +87,22 @@ def count_headings(structural: list[Segment]) -> int:
     )
 
 
-def count_heading_issues(structural: list[Segment]) -> int:
-    """Count headings with a missing space or a level jump greater than one."""
-    issues = 0
+def heading_issue_positions(structural: list[Segment]) -> list[int]:
+    """Positions of the headings with a missing space or a level jump over one."""
+    issues: list[int] = []
     prev_level = 0
-    for line, protected in structural:
+    for position, (line, protected) in enumerate(structural):
         if protected:
             continue
         if _HEADING_NOSPACE_RE.match(line):
-            issues += 1
+            issues.append(position)
             continue
         m = HEADING_RE.match(line)
         if m is None:
             continue
         level = len(m.group(1))
         if prev_level and level - prev_level > 1:
-            issues += 1
+            issues.append(position)
         prev_level = level
     return issues
 
@@ -236,12 +236,14 @@ def _members_off_level(group: Sequence[_LadderHeading]) -> list[int]:
     return [member.position for member in group if member.level != mode]
 
 
-def count_flat_ladder(
+def flat_ladder_positions(
     structural: list[Segment],
     source_outline: SourceOutline | None,
     keywords: Keywords,
-) -> int:
-    """Headings the crowded level swallowed, where the document states a rank.
+) -> list[int]:
+    """Positions of the headings the crowded level swallowed.
+
+    Only where the document states a rank.
 
     A hierarchy crushed flat has no jumps and no group off its level. A flat
     ladder alone is fine, so a witness (`_stated_ranks`) must state several
@@ -251,46 +253,52 @@ def count_flat_ladder(
     """
     headings = _ladder_headings(structural)
     if len(headings) < _FLAT_LADDER_MIN_HEADINGS:
-        return 0
+        return []
     counts = Counter(heading.level for heading in headings)
     most = max(counts.values())
     if most <= len(headings) * _FLAT_LADDER_MIN_SHARE:
-        return 0
+        return []
     # A tie is impossible past two thirds; the tie-break is kept for symmetry.
     crowded = min(level for level, count in counts.items() if count == most)
     ranks = _stated_ranks(headings, structural, source_outline, keywords)
-    stated = Counter(
-        ranks[heading.position]
+    crowd = [
+        heading.position
         for heading in headings
         if heading.level == crowded and heading.position in ranks
-    )
+    ]
+    stated = Counter(ranks[position] for position in crowd)
     if not stated:
-        return 0
+        return []
     held = max(stated.values())
     own = min(rank for rank, count in stated.items() if count == held)
-    return sum(count for rank, count in stated.items() if rank != own)
+    return [position for position in crowd if ranks[position] != own]
 
 
-def count_lost_chapters(
+def lost_chapter_entries(
     structural: list[Segment], keywords: Keywords
-) -> tuple[int, int]:
-    """Chapters the body's printed contents states, and how many it never writes.
+) -> tuple[int, list[str]]:
+    """The chapters the printed contents states, and the entries never written.
 
     A lost chapter opening leaves no mark on the levels that remain. The
     witness is the printed contents, required; the source outline is not used:
     it lists front matter and indexes the body never writes as headings. A
     top-rank record is written when some heading carries its title, compared
-    by tokens (`_chapter_is_written`). Returns `(stated, unwritten)`.
+    by tokens (`_chapter_is_written`). Returns `(stated, unwritten)`, the
+    unwritten entries as their tokens joined by spaces.
     """
     contents = printed_outline(structural, keywords)
     if not contents.has_outline:
-        return 0, 0
+        return 0, []
     chapters = contents.tokens_at(_CHAPTER_RANK)
     if not chapters:
-        return 0, 0
+        return 0, []
     written = _written_chapters(structural)
-    found = sum(1 for chapter in chapters if _chapter_is_written(chapter, written))
-    return len(chapters), len(chapters) - found
+    unwritten = sorted(
+        " ".join(chapter)
+        for chapter in chapters
+        if not _chapter_is_written(chapter, written)
+    )
+    return len(chapters), unwritten
 
 
 @dataclass(frozen=True)

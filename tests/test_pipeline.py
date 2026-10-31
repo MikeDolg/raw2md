@@ -2548,3 +2548,21 @@ def test_debug_repeat_run_does_not_mix_stages(tmp_path: Path) -> None:
     assert (debug_dir / "cleaning.md").exists()
     assert not (debug_dir / "inspection.md").exists()
     assert not (debug_dir / "post.md").exists()
+
+
+def test_defect_lines_are_logged_at_debug(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.DEBUG, logger="raw2md")
+    src = tmp_path / "a.pdf"
+    src.write_bytes(b"%PDF-1.4 stub")
+    body = OK_BODY + f"\n{lost_page_marker(4)}\n"
+    registry = EngineRegistry([StubEngine(extensions=frozenset({"pdf"}), body=body)])
+
+    run_one(src, registry)
+
+    messages = [r.getMessage() for r in caplog.records if r.levelno == logging.DEBUG]
+    assert any(
+        m.startswith("a.pdf: lost_pages at body line ") and m.split()[-1].isdigit()
+        for m in messages
+    )

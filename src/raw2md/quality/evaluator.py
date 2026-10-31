@@ -50,11 +50,11 @@ from raw2md.mdtext.tables import broken_table_details, has_cell_separator
 from raw2md.mdtext.zones import Segment, mask_inline_code, segments
 from raw2md.quality.headings import (
     HEADING_RE,
-    count_flat_ladder,
-    count_heading_issues,
     count_headings,
     count_ladder_issues,
-    count_lost_chapters,
+    flat_ladder_positions,
+    heading_issue_positions,
+    lost_chapter_entries,
 )
 from raw2md.source_outline import SourceOutline
 from raw2md.source_text import SourceText, tokenize
@@ -267,6 +267,9 @@ class Defect:
     the total to 0. A signal and a count within its floor carry no halvings.
     `places` counts where the defect can occur and `share` is `x` over them,
     for the log only; a veto-only check and a signal leave both None.
+    `lines` are the body lines, counted from 1, where a check that reads the
+    body found the defect; `entries` name what a check found missing, where
+    no line holds it.
     """
 
     check: CheckId
@@ -275,6 +278,8 @@ class Defect:
     veto: bool = False
     places: int | None = None
     share: float | None = None
+    lines: tuple[int, ...] = ()
+    entries: tuple[str, ...] = ()
 
     @property
     def score(self) -> int:
@@ -296,6 +301,9 @@ def _counted_defect(
     floor: float,
     threshold: float,
     places: int,
+    *,
+    lines: Sequence[int] = (),
+    entries: Sequence[str] = (),
 ) -> Defect:
     """A count check's defect: `count` past `floor`, weighed against `threshold`.
 
@@ -310,7 +318,14 @@ def _counted_defect(
         halvings=excess / threshold if excess else 0.0,
         places=places,
         share=excess / places if places else None,
+        lines=_body_lines(lines),
+        entries=tuple(entries),
     )
+
+
+def _body_lines(positions: Sequence[int]) -> tuple[int, ...]:
+    """Body line numbers, from 1, of segment positions, from 0."""
+    return tuple(position + 1 for position in positions)
 
 
 @dataclass(frozen=True)
@@ -352,12 +367,13 @@ class _Body:
 
     `findings` counts the cleaning findings under the check that grades them;
     `finding_lines` is the size of the body they were measured on, not this
-    one.
+    one. `plain_positions` maps a line of `plain_text` to its segment position.
     """
 
     text: str
     structural: list[Segment]
     plain_text: str
+    plain_positions: list[int]
     lines: int
     findings: Counter[CheckId]
     finding_lines: int
@@ -410,6 +426,9 @@ def evaluate(  # noqa: PLR0913 -- each optional keyword input switches on its ow
         text=body,
         structural=structural,
         plain_text="\n".join(line for line, prot in structural if not prot),
+        plain_positions=[
+            position for position, (_, prot) in enumerate(structural) if not prot
+        ],
         lines=lines,
         findings=_count_findings(cleaning_findings),
         # Without it, this is the cleaning-stage call, and the bodies are the same.
@@ -525,9 +544,12 @@ def _math_checks(body: _Body, math_spans_before: int | None) -> _GroupResult:
     defects: list[Defect] = []
     metrics: dict[str, float] = {}
     math_spans_now = _count_math_spans(body.plain_text, body.structural)
-    invalid_formulas = _count_invalid_formulas(body.plain_text) + _count_formula_loops(
-        body.structural
-    )
+    invalid_positions = [
+        _plain_position(body, offset)
+        for offset in _invalid_formula_offsets(body.plain_text)
+    ]
+    invalid_positions += _formula_loop_positions(body.structural)
+    invalid_formulas = len(invalid_positions)
     if invalid_formulas:
         metrics["invalid_formulas"] = invalid_formulas
         defects.append(
@@ -540,6 +562,7 @@ def _math_checks(body: _Body, math_spans_before: int | None) -> _GroupResult:
                     _FORMULA_FLOOR, _FORMULA_HALVING_RATE_PER_1000_LINES, body.lines
                 ),
                 math_spans_now,
+                lines=invalid_positions,
             )
         )
 
@@ -572,11 +595,21 @@ def _math_checks(body: _Body, math_spans_before: int | None) -> _GroupResult:
             )
         )
 
-    runaway_math = _runaway_math_details(body.plain_text)
+    runaway_math, runaway_offsets = _runaway_math_details(body.plain_text)
     if runaway_math:
-        defects.append(Defect(CheckId.RUNAWAY_MATH, ", ".join(runaway_math), veto=True))
+        defects.append(
+            Defect(
+                CheckId.RUNAWAY_MATH,
+                ", ".join(runaway_math),
+                veto=True,
+                lines=_body_lines(
+                    [_plain_position(body, offset) for offset in runaway_offsets]
+                ),
+            )
+        )
 
-    greek_units = _count_greek_unit_suspects(body.structural)
+    greek_positions = _greek_unit_positions(body.structural)
+    greek_units = len(greek_positions)
     if greek_units:
         metrics["greek_units"] = greek_units
         defects.append(
@@ -587,6 +620,7 @@ def _math_checks(body: _Body, math_spans_before: int | None) -> _GroupResult:
                 0,
                 _ONE_DEFECT,
                 math_spans_now,
+                lines=greek_positions,
             )
         )
 
@@ -619,7 +653,8 @@ def _heading_checks(
     defects: list[Defect] = []
     metrics: dict[str, float] = {}
     headings = count_headings(body.structural)
-    heading_issues = count_heading_issues(body.structural)
+    heading_positions = heading_issue_positions(body.structural)
+    heading_issues = len(heading_positions)
     if heading_issues:
         metrics["heading_issues"] = heading_issues
         defects.append(
@@ -632,6 +667,7 @@ def _heading_checks(
                     _HEADING_FLOOR, _HEADING_HALVING_RATE_PER_1000_LINES, body.lines
                 ),
                 headings,
+                lines=heading_positions,
             )
         )
 
@@ -645,7 +681,8 @@ def _heading_checks(
             )
         )
 
-    flat_ladder = count_flat_ladder(body.structural, source_outline, keywords)
+    flat_positions = flat_ladder_positions(body.structural, source_outline, keywords)
+    flat_ladder = len(flat_positions)
     if flat_ladder:
         metrics["flat_ladder_headings"] = flat_ladder
         defects.append(
@@ -660,10 +697,12 @@ def _heading_checks(
                     body.lines,
                 ),
                 headings,
+                lines=flat_positions,
             )
         )
 
-    stated_chapters, lost_chapters = count_lost_chapters(body.structural, keywords)
+    stated_chapters, lost_entries = lost_chapter_entries(body.structural, keywords)
+    lost_chapters = len(lost_entries)
     if lost_chapters:
         metrics["lost_chapters"] = lost_chapters
         defects.append(
@@ -679,6 +718,7 @@ def _heading_checks(
                     )
                 ),
                 stated_chapters,
+                entries=lost_entries,
             )
         )
 
@@ -690,7 +730,8 @@ def _layout_checks(body: _Body) -> _GroupResult:
     defects: list[Defect] = []
     metrics: dict[str, float] = {}
     # The cleaner's own reading: a grid collapsed into one cell keeps its width.
-    broken_rows = len(broken_table_details(body.structural))
+    broken_positions = sorted(broken_table_details(body.structural))
+    broken_rows = len(broken_positions)
     if broken_rows:
         metrics["broken_tables"] = broken_rows
         defects.append(
@@ -703,11 +744,12 @@ def _layout_checks(body: _Body) -> _GroupResult:
                     _TABLE_FLOOR, _TABLE_HALVING_RATE_PER_1000_LINES, body.lines
                 ),
                 _count_table_rows(body.structural),
+                lines=broken_positions,
             )
         )
 
-    junk_lines, text_lines = _junk_lines(body.structural)
-    junk_share = junk_lines / text_lines if text_lines else 0.0
+    junk_positions, text_lines = _junk_lines(body.structural)
+    junk_share = len(junk_positions) / text_lines if text_lines else 0.0
     if junk_share:
         metrics["junk_share"] = round(junk_share, 3)
         defects.append(
@@ -717,14 +759,15 @@ def _layout_checks(body: _Body) -> _GroupResult:
                 halvings=junk_share / _JUNK_HALVING_SHARE,
                 places=text_lines,
                 share=junk_share,
+                lines=_body_lines(junk_positions),
             )
         )
 
     repeat_min_count = _scaled_threshold(
         _REPEAT_MIN_COUNT, _REPEAT_MIN_RATE_PER_1000_LINES, body.lines
     )
-    repeat_counts = _repeat_counts(body.structural, repeat_min_count)
-    repeats = len(repeat_counts)
+    repeat_groups = _repeat_groups(body.structural, repeat_min_count)
+    repeats = len(repeat_groups)
     if repeats:
         metrics["repeats"] = repeats
         defect = _counted_defect(
@@ -736,8 +779,12 @@ def _layout_checks(body: _Body) -> _GroupResult:
                 _REPEAT_FLOOR, _REPEAT_HALVING_RATE_PER_1000_LINES, body.lines
             ),
             body.lines,
+            lines=[group[0] for group in repeat_groups],
         )
-        if max(repeat_counts) > repeat_min_count * _REPEAT_LOOP_MULTIPLE:
+        if (
+            max(len(group) for group in repeat_groups)
+            > repeat_min_count * _REPEAT_LOOP_MULTIPLE
+        ):
             defect = replace(defect, veto=True)
         defects.append(defect)
 
@@ -756,16 +803,18 @@ def _media_checks(body: _Body, base_dir: Path | None) -> _GroupResult:
     defects: list[Defect] = []
     metrics: dict[str, float] = {}
     images = _count_bad_images(body.structural, base_dir)
-    if images.defective:
-        metrics["bad_images"] = images.defective
+    defective = len(images.defective_positions)
+    if defective:
+        metrics["bad_images"] = defective
         defects.append(
             _counted_defect(
                 CheckId.IMAGES,
-                f"{images.defective} defective images",
-                images.defective,
+                f"{defective} defective images",
+                defective,
                 0,
                 _ONE_DEFECT,
                 images.links,
+                lines=images.defective_positions,
             )
         )
 
@@ -833,7 +882,8 @@ def _llm_marker_checks(
     """
     defects: list[Defect] = []
     metrics: dict[str, float] = {}
-    ocr_markers = _count_ocr_markers(body.text)
+    marker_positions = _ocr_marker_positions(body.structural)
+    ocr_markers = len(marker_positions)
     if ocr_markers:
         metrics["ocr_markers"] = ocr_markers
         defects.append(
@@ -844,14 +894,21 @@ def _llm_marker_checks(
                 0,
                 _ONE_DEFECT,
                 body.lines,
+                lines=marker_positions,
             )
         )
 
-    lost_pages = _count_lost_pages(body.structural)
+    lost_positions = _lost_page_positions(body.structural)
+    lost_pages = len(lost_positions)
     if lost_pages:
         metrics["lost_pages"] = lost_pages
         defects.append(
-            Defect(CheckId.LOST_PAGES, f"{lost_pages} pages not recognized", veto=True)
+            Defect(
+                CheckId.LOST_PAGES,
+                f"{lost_pages} pages not recognized",
+                veto=True,
+                lines=_body_lines(lost_positions),
+            )
         )
 
     if inspection_chunks and inspection_chunks_done is not None:
@@ -1039,29 +1096,57 @@ def _is_mojibake(stats: _LetterStats) -> bool:
     )
 
 
-def _closed_math_span_contents(text: str) -> list[str]:
-    """The content of every closed `$$...$$` / `$...$` pair in `text`, in order.
+def _closed_math_spans(text: str) -> list[tuple[str, int]]:
+    """Every closed `$$...$$` / `$...$` pair in `text` as `(content, offset)`.
 
     Display spans go first and are removed, so inline spans cannot straddle
-    them. A lone `$` (currency) is never among them.
+    them. A lone `$` (currency) is never among them. The offset is that of
+    the opening delimiter in `text`.
     """
-    contents: list[str] = []
-    leftover: list[str] = []
+    spans: list[tuple[str, int]] = []
+    # Each piece of the leftover with its offset in `text`.
+    pieces: list[tuple[int, str]] = []
     last = 0
     for match in _DISPLAY_MATH_RE.finditer(text):
-        contents.append(match.group(1))
-        leftover.append(text[last : match.start()])
+        spans.append((match.group(1), match.start()))
+        pieces.append((last, text[last : match.start()]))
         last = match.end()
-    leftover.append(text[last:])
-    contents.extend(m.group(1) for m in _INLINE_MATH_RE.finditer("".join(leftover)))
-    return contents
-
-
-def _count_invalid_formulas(text: str) -> int:
-    """Count syntactically invalid math spans in `text`."""
-    return sum(
-        1 for content in _closed_math_span_contents(text) if not is_valid_math(content)
+    pieces.append((last, text[last:]))
+    joined = "".join(piece for _, piece in pieces)
+    spans.extend(
+        (match.group(1), _original_offset(pieces, match.start()))
+        for match in _INLINE_MATH_RE.finditer(joined)
     )
+    return spans
+
+
+def _original_offset(pieces: list[tuple[int, str]], joined_offset: int) -> int:
+    """The offset in the source text of `joined_offset` in the joined pieces."""
+    start = 0
+    for origin, piece in pieces:
+        if joined_offset < start + len(piece):
+            return origin + joined_offset - start
+        start += len(piece)
+    return pieces[-1][0] + joined_offset - start
+
+
+def _closed_math_span_contents(text: str) -> list[str]:
+    """The content of every closed math pair in `text`, display spans first."""
+    return [content for content, _ in _closed_math_spans(text)]
+
+
+def _invalid_formula_offsets(text: str) -> list[int]:
+    """Offsets in `text` of the syntactically invalid math spans."""
+    return [
+        offset
+        for content, offset in _closed_math_spans(text)
+        if not is_valid_math(content)
+    ]
+
+
+def _plain_position(body: _Body, offset: int) -> int:
+    """The segment position of the line of `body.plain_text` holding `offset`."""
+    return body.plain_positions[body.plain_text.count("\n", 0, offset)]
 
 
 def _count_math_spans(text: str, structural: list[Segment]) -> int:
@@ -1083,8 +1168,12 @@ def _count_math_spans(text: str, structural: list[Segment]) -> int:
     return closed + tails
 
 
-def _runaway_math_details(plain_text: str) -> list[str]:
-    """Details of the runaway-math check on `plain_text`; empty when it is sound.
+def _runaway_math_details(plain_text: str) -> tuple[list[str], list[int]]:
+    """Details of the runaway-math check on `plain_text`, and the offsets.
+
+    Both are empty when the text is sound. An offset is that of an unpaired
+    delimiter, or of the opening of a block that holds structure or is
+    oversize.
 
     An unclosed display delimiter turns everything up to the next formula into
     one math block. Signals: an odd delimiter count, a block holding document
@@ -1094,31 +1183,36 @@ def _runaway_math_details(plain_text: str) -> list[str]:
     """
     masked = mask_inline_code(plain_text)
     details: list[str] = []
-    delimiters = _count_display_delimiters(masked)
+    offsets: list[int] = []
+    delimiters, last_delimiter = _display_delimiters(masked)
     if delimiters % 2:
         details.append(f"{delimiters} display delimiters, one unpaired")
+        offsets.append(last_delimiter)
     over_structure = 0
     oversize = 0
     for match in _DISPLAY_MATH_RE.finditer(masked):
         content = match.group(1)
         if _holds_document_structure(content):
             over_structure += 1
+            offsets.append(match.start())
         elif _is_oversize_math_block(content):
             oversize += 1
+            offsets.append(match.start())
     if over_structure:
         details.append(f"{over_structure} display blocks over document structure")
     if oversize:
         details.append(f"{oversize} display blocks past the size cap")
-    return details
+    return details, offsets
 
 
-def _count_display_delimiters(text: str) -> int:
-    """Count the `$$` display delimiters of `text`.
+def _display_delimiters(text: str) -> tuple[int, int]:
+    """Count the `$$` display delimiters of `text`; give the offset of the last.
 
     A run glued between alphanumerics (`a$$b`) is two inline delimiters. A
     longer run is ambiguous and not counted.
     """
     count = 0
+    last = 0
     for match in _DOLLAR_RUN_RE.finditer(text):
         if match.end() - match.start() != 2:
             continue
@@ -1127,7 +1221,8 @@ def _count_display_delimiters(text: str) -> int:
         if before.isalnum() and after.isalnum():
             continue
         count += 1
-    return count
+        last = match.start()
+    return count, last
 
 
 def _holds_document_structure(content: str) -> bool:
@@ -1150,15 +1245,15 @@ def _is_oversize_math_block(content: str) -> bool:
     )
 
 
-def _count_greek_unit_suspects(structural: list[Segment]) -> int:
-    """Count math spans that are just an integer glued to Greek commands.
+def _greek_unit_positions(structural: list[Segment]) -> list[int]:
+    """Positions of the math spans that are an integer glued to Greek commands.
 
     Only on lines with Cyrillic prose outside the span. Not a cleaner rule:
     the reverse mapping (`\\kappa\\Gamma` to `кГ`) has no safe table, so it is
     a signal for inspection. Read over the inline-code mask.
     """
-    count = 0
-    for line, protected in structural:
+    positions: list[int] = []
+    for position, (line, protected) in enumerate(structural):
         if protected:
             continue
         masked = mask_inline_code(line)
@@ -1178,23 +1273,23 @@ def _count_greek_unit_suspects(structural: list[Segment]) -> int:
                 for ch in rest
                 if ch.isalpha()
             ):
-                count += 1
-    return count
+                positions.append(position)
+    return positions
 
 
-def _count_formula_loops(structural: list[Segment]) -> int:
-    """Count plain lines whose math span degenerated into a repetition loop.
+def _formula_loop_positions(structural: list[Segment]) -> list[int]:
+    """Positions of the plain lines whose math span became a repetition loop.
 
     Truncation often leaves the closing `$` looking escaped, so
     `_count_invalid_formulas` never sees the span. The cleaner trims the loops
     it finds, so this counts loops an LLM step wrote or a body graded outside
     the pipeline.
     """
-    return sum(
-        1
-        for line, protected in structural
+    return [
+        position
+        for position, (line, protected) in enumerate(structural)
         if not protected and math_repetition_loop(line)
-    )
+    ]
 
 
 def _count_table_rows(structural: list[Segment]) -> int:
@@ -1206,16 +1301,18 @@ def _count_table_rows(structural: list[Segment]) -> int:
     )
 
 
-def _junk_lines(structural: list[Segment]) -> tuple[int, int]:
-    """Return ``(junk, total)``: plain non-blank lines of service symbols only.
+def _junk_lines(structural: list[Segment]) -> tuple[list[int], int]:
+    """Return ``(junk positions, total)`` of the plain non-blank lines.
+
+    A junk line holds service symbols only.
 
     Structural symbol lines and setext underlines are excluded, as the cleaner
     keeps them; the previous line is tracked as the cleaner tracks it.
     """
     total = 0
-    junk = 0
+    junk: list[int] = []
     prev = ""
-    for line, protected in structural:
+    for position, (line, protected) in enumerate(structural):
         if protected:
             prev = line
             continue
@@ -1229,13 +1326,13 @@ def _junk_lines(structural: list[Segment]) -> tuple[int, int]:
             and not is_structural_symbol_line(core)
             and not is_setext_underline(core, prev)
         ):
-            junk += 1
+            junk.append(position)
         prev = line
     return junk, total
 
 
-def _repeat_counts(structural: list[Segment], min_count: float) -> list[int]:
-    """Occurrence counts of the short lines repeating `min_count` times or more.
+def _repeat_groups(structural: list[Segment], min_count: float) -> list[list[int]]:
+    """Positions of each short line repeating `min_count` times or more.
 
     Excluded as repeating by design: HTML image wrappers, math-only lines (an
     axis label under each plot), headings, a single short connective word
@@ -1262,7 +1359,7 @@ def _repeat_counts(structural: list[Segment], min_count: float) -> list[int]:
             continue
         positions.setdefault(core, []).append(index)
     return [
-        len(occurrences)
+        occurrences
         for occurrences in positions.values()
         if len(occurrences) >= min_count and _repeats_in_a_cluster(occurrences)
     ]
@@ -1279,11 +1376,15 @@ def _repeats_in_a_cluster(occurrences: list[int]) -> bool:
 
 @dataclass(frozen=True)
 class _ImageCounts:
-    """Local image links checked, missing, and defective (missing included)."""
+    """Local image links checked, missing, and the positions of defective ones.
+
+    A missing link is defective too. A line with two defective links is listed
+    twice.
+    """
 
     links: int = 0
     missing: int = 0
-    defective: int = 0
+    defective_positions: tuple[int, ...] = ()
 
 
 def _count_bad_images(structural: list[Segment], base_dir: Path | None) -> _ImageCounts:
@@ -1296,8 +1397,8 @@ def _count_bad_images(structural: list[Segment], base_dir: Path | None) -> _Imag
         return _ImageCounts()
     links = 0
     missing = 0
-    defective = 0
-    for line, protected in structural:
+    defective: list[int] = []
+    for position, (line, protected) in enumerate(structural):
         if protected:
             continue
         targets = [m.group(2) for m in IMAGE_RE.finditer(line)]
@@ -1312,15 +1413,15 @@ def _count_bad_images(structural: list[Segment], base_dir: Path | None) -> _Imag
             links += 1
             if not path.exists():
                 missing += 1
-                defective += 1
+                defective.append(position)
                 continue
             try:
                 size = path.stat().st_size
             except OSError:
                 continue
             if size < _IMAGE_MIN_BYTES or _is_single_color(path):
-                defective += 1
-    return _ImageCounts(links, missing, defective)
+                defective.append(position)
+    return _ImageCounts(links, missing, tuple(defective))
 
 
 def _is_single_color(path: Path) -> bool:
@@ -1365,9 +1466,17 @@ def _count_findings(findings: Sequence[Finding]) -> Counter[CheckId]:
     )
 
 
-def _count_ocr_markers(body: str) -> int:
-    """Count LLM-OCR uncertainty markers inserted into `body`."""
-    return sum(body.count(marker) for marker in _OCR_MARKERS)
+def _ocr_marker_positions(structural: list[Segment]) -> list[int]:
+    """Positions of the LLM-OCR uncertainty markers, one entry for each marker.
+
+    Protected zones count: a marker there is still in the result.
+    """
+    return [
+        position
+        for position, (line, _) in enumerate(structural)
+        for marker in _OCR_MARKERS
+        for _ in range(line.count(marker))
+    ]
 
 
 def _strip_media_targets(text: str) -> str:
@@ -1407,10 +1516,10 @@ def _source_coverage(body: str, source_text: SourceText) -> tuple[float, float] 
     )
 
 
-def _count_lost_pages(structural: list[Segment]) -> int:
-    """Count pages LLM OCR marked as not recognized, outside protected zones."""
-    return sum(
-        1
-        for line, protected in structural
+def _lost_page_positions(structural: list[Segment]) -> list[int]:
+    """Positions of the pages LLM OCR marked as lost, outside protected zones."""
+    return [
+        position
+        for position, (line, protected) in enumerate(structural)
         if not protected and is_lost_page_marker(line)
-    )
+    ]
