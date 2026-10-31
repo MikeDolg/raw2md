@@ -1,20 +1,19 @@
-"""Quality evaluation: deterministic checks that decide ok vs bad.
+"""Quality evaluation: deterministic checks that score a body as ok or bad.
 
-The evaluator never changes content. It returns an `Evaluation`: the status,
-the defects that fired, and two log hints, `repairable` (post could fix the
-markup) and `recognition_failure` (recognize again through an LLM).
+The evaluator never changes content. It returns an `Evaluation`: the total
+score, the status, the defects that fired, and two log hints, `repairable`
+and `recognition_failure`.
 
-Structural checks read the body as the final write produces it. A lost
-formula, a word split across a break, and a crushed block leave no trace in
-the text, so they are counted from the cleaning report instead.
+A graded check scores `100 * 2^(-x/h)`: `x` is its defect rate past a floor,
+`h` the rate that halves the score. The total is the product of the check
+scores, `100 * 2^(-sum(w * x/h))`, and the status is `ok` at `ok_score` or
+above. A veto, a defect that no rate describes, sets the total to 0.
+Repeated images and an inconsistent heading ladder are signals with no
+score: a legitimate document shows those shapes too.
 
-A fired check is not always `bad`. The eight small structural checks, and
-lost chapters, are `minor` within a size-scaled threshold: kept in `issues`,
-left out of the status. Repeated images and an inconsistent heading ladder
-are always minor: a legitimate document shows those shapes too.
-
-The checks run in fixed groups, and the order of the groups and of the checks
-inside each is the order of `issues`.
+Structural checks read the final body; a lost formula, a split word, and a
+crushed block leave no trace there, so they come from the cleaning report.
+The order of the check groups, and of the checks in each, is that of `issues`.
 """
 
 from __future__ import annotations
@@ -25,7 +24,7 @@ import statistics
 import unicodedata
 from collections import Counter
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from fractions import Fraction
 from itertools import pairwise
@@ -53,6 +52,7 @@ from raw2md.quality.headings import (
     HEADING_RE,
     count_flat_ladder,
     count_heading_issues,
+    count_headings,
     count_ladder_issues,
     count_lost_chapters,
 )
@@ -61,14 +61,21 @@ from raw2md.source_text import SourceText, tokenize
 
 _logger = logging.getLogger("raw2md")
 
-# Firing and escalation thresholds. The lower value of a pair makes the status
-# `bad`; the higher one escalates to a likely recognition failure.
+# The status default: a single graded check at its halving rate stays `ok`.
+DEFAULT_OK_SCORE = 50
+
+# A check scoring below this, or a veto, is listed in `issues`.
+_ISSUE_MAX_SCORE = 50
+
+# A veto bound, a hint bound, or a defect share that halves the score. A
+# failure share escalates to a likely recognition failure.
 _DENSITY_MIN_CHARS_PER_PAGE = 350
 _EMPTY_BODY_MIN_ALNUM = 20
 _UNREADABLE_MIN_LETTERS = 200
-_UNREADABLE_MAX_OTHER_SHARE = 0.15
+_UNREADABLE_HALVING_SHARE = 0.15
 _MOJIBAKE_MAX_ACCENTED_SHARE = 0.15
 _MOJIBAKE_MIN_CYRILLIC_SHARE = 0.05
+_JUNK_HALVING_SHARE = 0.02
 _JUNK_REPAIRABLE_SHARE = 0.02
 _JUNK_FAILURE_SHARE = 0.05
 _REPEAT_MAX_LEN = 80
@@ -94,40 +101,44 @@ _GREEK_UNIT_FAILURE_COUNT = 5
 _GREEK_UNIT_FAILURE_RATE_PER_1000_LINES = 2
 
 # Any lost chunk fires, since nothing else records the loss; below half the
-# chunks answered it decides the status. Not size-scaled: it is already a
-# share of the plan.
-_INSPECTION_COVERAGE_BAD_SHARE = 0.5
+# chunks answered it is a veto. Not size-scaled: it is already a share of the
+# plan.
+_INSPECTION_HALVING_SHARE = 0.5
+_INSPECTION_VETO_DONE_SHARE = 0.5
 
-# Where the eight small structural checks start deciding the status, as a
-# floor plus a rate per 1000 body lines. Calibrated on scans: a nearly clean
-# book had 3 heading jumps over 1500 lines, a damaged one 32 over 7900.
-# Headings, the flat ladder, repeats, and tables have no floor, so a short
-# document earns no free defect. Formulas and lost formulas keep a floor of 2,
-# half the escalation pair, so the bands stay ordered. The two report-only
-# checks run at twice that rate, each on its own count: unfinished repair
-# work, not a proven loss. Tables were calibrated on broken-row rates of 0 to
-# 22 per 1000 lines: the worst bodies still decide, those with a handful do not.
-_HEADING_BAD_COUNT = 0
-_HEADING_BAD_RATE_PER_1000_LINES = 2
-_FLAT_LADDER_BAD_COUNT = 0
-_FLAT_LADDER_BAD_RATE_PER_1000_LINES = 2
-_REPEAT_BAD_COUNT = 0
-_REPEAT_BAD_RATE_PER_1000_LINES = 1
-_FORMULA_BAD_COUNT = 2
-_FORMULA_BAD_RATE_PER_1000_LINES = 1
-_LOST_FORMULA_BAD_COUNT = 2
-_LOST_FORMULA_BAD_RATE_PER_1000_LINES = 1
-_TABLE_BAD_COUNT = 0
-_TABLE_BAD_RATE_PER_1000_LINES = 1
-_REPORTED_BAD_COUNT = 2
-_REPORTED_BAD_RATE_PER_1000_LINES = 2
+# The excess past the floor that halves a check's score, as a floor plus a rate
+# per 1000 body lines. Calibrated on scans: a nearly clean book had 3 heading
+# jumps over 1500 lines, a damaged one 32 over 7900. Headings, the flat
+# ladder, repeats, and tables have no floor, so a short document earns no free
+# defect. Formulas and lost formulas keep a floor of 2, half the escalation
+# pair, so the bands stay ordered. The two report-only checks run at twice
+# that rate, each on its own count: unfinished repair work, not a proven loss.
+# Tables were calibrated on broken-row rates of 0 to 22 per 1000 lines.
+_HEADING_FLOOR = 0
+_HEADING_HALVING_RATE_PER_1000_LINES = 2
+_FLAT_LADDER_FLOOR = 0
+_FLAT_LADDER_HALVING_RATE_PER_1000_LINES = 2
+_REPEAT_FLOOR = 0
+_REPEAT_HALVING_RATE_PER_1000_LINES = 1
+_FORMULA_FLOOR = 2
+_FORMULA_HALVING_RATE_PER_1000_LINES = 1
+_LOST_FORMULA_FLOOR = 2
+_LOST_FORMULA_HALVING_RATE_PER_1000_LINES = 1
+_TABLE_FLOOR = 0
+_TABLE_HALVING_RATE_PER_1000_LINES = 1
+_REPORTED_FLOOR = 2
+_REPORTED_HALVING_RATE_PER_1000_LINES = 2
+
+# Bad images, Greek units, and OCR markers have no floor and no size scale:
+# each defect halves the score.
+_ONE_DEFECT = 1
 
 # Weighed against the contents, not the body size. A quarter lost is the top
 # rank gone; the floor keeps out a single title misread by a typo.
-_LOST_CHAPTER_BAD_SHARE = Fraction(1, 4)
-_LOST_CHAPTER_BAD_COUNT = 1
+_LOST_CHAPTER_HALVING_SHARE = Fraction(1, 4)
+_LOST_CHAPTER_FLOOR = 1
 
-# A line repeating past this multiple of the minimum decides the status: a
+# A line repeating past this multiple of the minimum is a veto: a
 # loop swallowing a chapter is one distinct line. Legitimate repeats (a reused
 # caption, a lecture's outline label) top out near five times the minimum.
 _REPEAT_LOOP_MULTIPLE = 10
@@ -222,16 +233,53 @@ _REPORTED_DEFECT_CHECKS = (
 )
 
 
+# The graded checks weigh the same until a calibration against per-document
+# scores sets them apart.
+_CHECK_WEIGHTS = {
+    CheckId.UNREADABLE_CHARS: 1.0,
+    CheckId.FORMULAS: 1.0,
+    CheckId.LOST_FORMULAS: 1.0,
+    CheckId.GREEK_UNITS: 1.0,
+    CheckId.HEADINGS: 1.0,
+    CheckId.FLAT_LADDER: 1.0,
+    CheckId.LOST_CHAPTERS: 1.0,
+    CheckId.TABLES: 1.0,
+    CheckId.JUNK_LINES: 1.0,
+    CheckId.REPEATS: 1.0,
+    CheckId.IMAGES: 1.0,
+    CheckId.HYPHENATION: 1.0,
+    CheckId.FLATTENED_BLOCKS: 1.0,
+    CheckId.LLM_OCR_MARKERS: 1.0,
+    CheckId.INSPECTION_COVERAGE: 1.0,
+}
+
+
+def _score(halvings: float) -> int:
+    """The score `100 * 2^(-halvings)`, rounded to an integer from 0 to 100."""
+    return round(100 * 2**-halvings)
+
+
 @dataclass(frozen=True)
 class Defect:
-    """One fired check, with a short detail for the log.
+    """One fired check: a short detail for the log and its grade.
 
-    A `minor` defect is reported but does not make the result `bad`.
+    `halvings` is `x/h`; each one halves the score. A veto scores 0 and sets
+    the total to 0. A signal and a count within its floor carry no halvings.
+    `places` counts where the defect can occur and `share` is `x` over them,
+    for the log only; a veto-only check and a signal leave both None.
     """
 
     check: CheckId
     detail: str
-    minor: bool = False
+    halvings: float = 0.0
+    veto: bool = False
+    places: int | None = None
+    share: float | None = None
+
+    @property
+    def score(self) -> int:
+        """The check score, an integer from 0 to 100."""
+        return 0 if self.veto else _score(self.halvings)
 
 
 def _scaled_threshold(
@@ -241,11 +289,28 @@ def _scaled_threshold(
     return max(floor, rate_per_1000_lines * body_lines / 1000)
 
 
-def _within_threshold(
-    count: int, floor: float, rate_per_1000_lines: float, body_lines: int
-) -> bool:
-    """True when a fired check's count stays inside its size-scaled threshold."""
-    return count <= _scaled_threshold(floor, rate_per_1000_lines, body_lines)
+def _counted_defect(
+    check: CheckId,
+    detail: str,
+    count: int,
+    floor: float,
+    threshold: float,
+    places: int,
+) -> Defect:
+    """A count check's defect: `count` past `floor`, weighed against `threshold`.
+
+    The threshold `T` is the excess that halves the score, so `x/h` is
+    `excess / T`, and the number of places cancels out of the score. `T` is
+    positive whenever a defect is counted: a body that holds one has a line.
+    """
+    excess = max(0.0, count - floor)
+    return Defect(
+        check,
+        detail,
+        halvings=excess / threshold if excess else 0.0,
+        places=places,
+        share=excess / places if places else None,
+    )
 
 
 @dataclass(frozen=True)
@@ -253,11 +318,12 @@ class Evaluation:
     """Outcome of a quality evaluation.
 
     `metrics` are never written to the final header. The two hints are
-    independent and ignore the verdict. `defects` include minor ones, so an
-    `ok` result can carry defects.
+    independent and ignore the verdict. `defects` include every fired check,
+    so an `ok` result can carry defects.
     """
 
     status: ResultStatus
+    score: int
     defects: tuple[Defect, ...]
     repairable: bool
     recognition_failure: bool
@@ -265,8 +331,12 @@ class Evaluation:
 
     @property
     def issues(self) -> tuple[str, ...]:
-        """`CheckId` values of the fired defects, minor included, in evaluator order."""
-        return tuple(defect.check.value for defect in self.defects)
+        """`CheckId` values of the vetoes and the checks below 50, in order."""
+        return tuple(
+            defect.check.value
+            for defect in self.defects
+            if defect.veto or defect.score < _ISSUE_MAX_SCORE
+        )
 
     @property
     def defect_report(self) -> tuple[str, ...]:
@@ -319,11 +389,14 @@ def evaluate(  # noqa: PLR0913 -- each optional keyword input switches on its ow
     inspection_chunks: int | None = None,
     inspection_chunks_done: int | None = None,
     keywords: Keywords | None = None,
+    ok_score: int = DEFAULT_OK_SCORE,
 ) -> Evaluation:
-    """Run the quality checks over `body` and decide `ok`/`bad`.
+    """Run the quality checks over `body`, score it, and decide `ok`/`bad`.
 
-    A check whose input is omitted is skipped. `source_pages` feeds density,
-    `base_dir` the image checks, `source_text` the coverage metric.
+    The status is `ok` when no veto fired and the rounded total reaches
+    `ok_score`. A check whose input is omitted is skipped. `source_pages`
+    feeds density, `base_dir` the image checks, `source_text` the coverage
+    metric.
     `source_outline` outranks the body's own ranks in the flat-ladder check.
     `math_spans_before` is the count before the LLM steps, for the drift
     check. `cleaning_findings` feed the lost-formula, hyphenation, and
@@ -359,13 +432,13 @@ def evaluate(  # noqa: PLR0913 -- each optional keyword input switches on its ow
     metrics: dict[str, float] = {"body_lines": lines}
     for group in groups:
         metrics.update(group.metrics)
-    status = (
-        ResultStatus.BAD
-        if any(not defect.minor for defect in defects)
-        else ResultStatus.OK
-    )
+    score = _total_score(defects)
+    # A veto stays `bad` even at an `ok_score` of 0.
+    vetoed = any(defect.veto for defect in defects)
+    status = ResultStatus.BAD if vetoed or score < ok_score else ResultStatus.OK
     return Evaluation(
         status=status,
+        score=score,
         defects=defects,
         repairable=any(group.repairable for group in groups),
         recognition_failure=any(group.recognition_failure for group in groups),
@@ -373,40 +446,74 @@ def evaluate(  # noqa: PLR0913 -- each optional keyword input switches on its ow
     )
 
 
+def _total_score(defects: Sequence[Defect]) -> int:
+    """The total, `100 * 2^(-sum(w * x/h))`; any veto makes it 0."""
+    if any(defect.veto for defect in defects):
+        return 0
+    return _score(
+        sum(
+            _CHECK_WEIGHTS[defect.check] * defect.halvings
+            for defect in defects
+            if defect.halvings
+        )
+    )
+
+
 def _text_checks(body: _Body, source_pages: int | None) -> _GroupResult:
     """Density, an empty body, and unreadable text.
 
-    Each of them means recognition produced no usable text, so every defect
-    here is a recognition failure and none is repairable.
+    Low density, an empty body, mojibake, and unreadable text past its halving
+    share each mean that recognition produced no usable text: a recognition
+    failure, never repairable.
     """
     defects: list[Defect] = []
     metrics: dict[str, float] = {}
+    failure = False
     if source_pages:
         density = len(body.text) / source_pages
         metrics["density"] = round(density, 1)
         if density < _DENSITY_MIN_CHARS_PER_PAGE:
+            failure = True
             defects.append(
-                Defect(CheckId.TEXT_DENSITY, f"{density:.0f} chars per page")
+                Defect(CheckId.TEXT_DENSITY, f"{density:.0f} chars per page", veto=True)
             )
 
     alnum = sum(1 for ch in body.text if ch.isalnum())
     if alnum < _EMPTY_BODY_MIN_ALNUM:
-        defects.append(Defect(CheckId.EMPTY_BODY, f"{alnum} alphanumeric chars"))
+        failure = True
+        defects.append(
+            Defect(CheckId.EMPTY_BODY, f"{alnum} alphanumeric chars", veto=True)
+        )
 
     stats = _letter_stats(body.text)
     if stats.sample >= _UNREADABLE_MIN_LETTERS:
         metrics["unreadable_share"] = round(stats.unreadable_share, 3)
+        mojibake = _is_mojibake(stats)
+        failure = (
+            failure or mojibake or stats.unreadable_share > _UNREADABLE_HALVING_SHARE
+        )
         # Both signals mean unreadable text, so they share one defect.
         details: list[str] = []
-        if stats.unreadable_share > _UNREADABLE_MAX_OTHER_SHARE:
+        if stats.unreadable_share:
             details.append(_unreadable_detail(stats))
-        if _is_mojibake(stats):
+        if mojibake:
             metrics["mojibake_share"] = round(stats.accented_share, 3)
             details.append(f"{stats.accented_share:.0%} accented Latin over Cyrillic")
         if details:
-            defects.append(Defect(CheckId.UNREADABLE_CHARS, ", ".join(details)))
+            share = stats.unreadable_share
+            defects.append(
+                Defect(
+                    CheckId.UNREADABLE_CHARS,
+                    ", ".join(details),
+                    halvings=share / _UNREADABLE_HALVING_SHARE,
+                    # Mojibake breaks the whole text, not a countable share.
+                    veto=mojibake,
+                    places=stats.sample,
+                    share=share,
+                )
+            )
 
-    return _GroupResult(tuple(defects), metrics, recognition_failure=bool(defects))
+    return _GroupResult(tuple(defects), metrics, recognition_failure=failure)
 
 
 def _math_checks(body: _Body, math_spans_before: int | None) -> _GroupResult:
@@ -417,21 +524,22 @@ def _math_checks(body: _Body, math_spans_before: int | None) -> _GroupResult:
     """
     defects: list[Defect] = []
     metrics: dict[str, float] = {}
+    math_spans_now = _count_math_spans(body.plain_text, body.structural)
     invalid_formulas = _count_invalid_formulas(body.plain_text) + _count_formula_loops(
         body.structural
     )
     if invalid_formulas:
         metrics["invalid_formulas"] = invalid_formulas
         defects.append(
-            Defect(
+            _counted_defect(
                 CheckId.FORMULAS,
                 f"{invalid_formulas} invalid",
-                minor=_within_threshold(
-                    invalid_formulas,
-                    _FORMULA_BAD_COUNT,
-                    _FORMULA_BAD_RATE_PER_1000_LINES,
-                    body.lines,
+                invalid_formulas,
+                _FORMULA_FLOOR,
+                _scaled_threshold(
+                    _FORMULA_FLOOR, _FORMULA_HALVING_RATE_PER_1000_LINES, body.lines
                 ),
+                math_spans_now,
             )
         )
 
@@ -439,37 +547,47 @@ def _math_checks(body: _Body, math_spans_before: int | None) -> _GroupResult:
     if lost_formulas:
         metrics["lost_formulas"] = lost_formulas
         defects.append(
-            Defect(
+            _counted_defect(
                 CheckId.LOST_FORMULAS,
                 f"{lost_formulas} formulas lost",
-                minor=_within_threshold(
-                    lost_formulas,
-                    _LOST_FORMULA_BAD_COUNT,
-                    _LOST_FORMULA_BAD_RATE_PER_1000_LINES,
+                lost_formulas,
+                _LOST_FORMULA_FLOOR,
+                _scaled_threshold(
+                    _LOST_FORMULA_FLOOR,
+                    _LOST_FORMULA_HALVING_RATE_PER_1000_LINES,
                     body.finding_lines,
                 ),
+                # The lost formulas are no longer in the body.
+                math_spans_now + lost_formulas,
             )
         )
 
-    math_spans_now = _count_math_spans(body.plain_text, body.structural)
     metrics["math_spans"] = math_spans_now
     if math_spans_before is not None and math_spans_now != math_spans_before:
         defects.append(
             Defect(
                 CheckId.MATH_SPAN_DRIFT,
                 f"{math_spans_before} -> {math_spans_now} spans",
+                veto=True,
             )
         )
 
     runaway_math = _runaway_math_details(body.plain_text)
     if runaway_math:
-        defects.append(Defect(CheckId.RUNAWAY_MATH, ", ".join(runaway_math)))
+        defects.append(Defect(CheckId.RUNAWAY_MATH, ", ".join(runaway_math), veto=True))
 
     greek_units = _count_greek_unit_suspects(body.structural)
     if greek_units:
         metrics["greek_units"] = greek_units
         defects.append(
-            Defect(CheckId.GREEK_UNITS, f"{greek_units} greek LaTeX near integers")
+            _counted_defect(
+                CheckId.GREEK_UNITS,
+                f"{greek_units} greek LaTeX near integers",
+                greek_units,
+                0,
+                _ONE_DEFECT,
+                math_spans_now,
+            )
         )
 
     formula_failure_threshold = _scaled_threshold(
@@ -500,19 +618,20 @@ def _heading_checks(
     """
     defects: list[Defect] = []
     metrics: dict[str, float] = {}
+    headings = count_headings(body.structural)
     heading_issues = count_heading_issues(body.structural)
     if heading_issues:
         metrics["heading_issues"] = heading_issues
         defects.append(
-            Defect(
+            _counted_defect(
                 CheckId.HEADINGS,
                 f"{heading_issues} level/space issues",
-                minor=_within_threshold(
-                    heading_issues,
-                    _HEADING_BAD_COUNT,
-                    _HEADING_BAD_RATE_PER_1000_LINES,
-                    body.lines,
+                heading_issues,
+                _HEADING_FLOOR,
+                _scaled_threshold(
+                    _HEADING_FLOOR, _HEADING_HALVING_RATE_PER_1000_LINES, body.lines
                 ),
+                headings,
             )
         )
 
@@ -523,7 +642,6 @@ def _heading_checks(
             Defect(
                 CheckId.HEADING_LADDER,
                 f"{ladder_issues} headings off their group's level",
-                minor=True,
             )
         )
 
@@ -531,15 +649,17 @@ def _heading_checks(
     if flat_ladder:
         metrics["flat_ladder_headings"] = flat_ladder
         defects.append(
-            Defect(
+            _counted_defect(
                 CheckId.FLAT_LADDER,
                 f"{flat_ladder} headings merged onto one level",
-                minor=_within_threshold(
-                    flat_ladder,
-                    _FLAT_LADDER_BAD_COUNT,
-                    _FLAT_LADDER_BAD_RATE_PER_1000_LINES,
+                flat_ladder,
+                _FLAT_LADDER_FLOOR,
+                _scaled_threshold(
+                    _FLAT_LADDER_FLOOR,
+                    _FLAT_LADDER_HALVING_RATE_PER_1000_LINES,
                     body.lines,
                 ),
+                headings,
             )
         )
 
@@ -547,10 +667,18 @@ def _heading_checks(
     if lost_chapters:
         metrics["lost_chapters"] = lost_chapters
         defects.append(
-            Defect(
+            _counted_defect(
                 CheckId.LOST_CHAPTERS,
                 f"{lost_chapters} of {stated_chapters} stated chapters unwritten",
-                minor=lost_chapters <= _lost_chapter_threshold(stated_chapters),
+                lost_chapters,
+                _LOST_CHAPTER_FLOOR,
+                float(
+                    max(
+                        Fraction(_LOST_CHAPTER_FLOOR),
+                        _LOST_CHAPTER_HALVING_SHARE * stated_chapters,
+                    )
+                ),
+                stated_chapters,
             )
         )
 
@@ -566,22 +694,31 @@ def _layout_checks(body: _Body) -> _GroupResult:
     if broken_rows:
         metrics["broken_tables"] = broken_rows
         defects.append(
-            Defect(
+            _counted_defect(
                 CheckId.TABLES,
                 f"{broken_rows} broken rows",
-                minor=_within_threshold(
-                    broken_rows,
-                    _TABLE_BAD_COUNT,
-                    _TABLE_BAD_RATE_PER_1000_LINES,
-                    body.lines,
+                broken_rows,
+                _TABLE_FLOOR,
+                _scaled_threshold(
+                    _TABLE_FLOOR, _TABLE_HALVING_RATE_PER_1000_LINES, body.lines
                 ),
+                _count_table_rows(body.structural),
             )
         )
 
-    junk_share = _junk_share(body.structural)
-    if junk_share > _JUNK_REPAIRABLE_SHARE:
+    junk_lines, text_lines = _junk_lines(body.structural)
+    junk_share = junk_lines / text_lines if text_lines else 0.0
+    if junk_share:
         metrics["junk_share"] = round(junk_share, 3)
-        defects.append(Defect(CheckId.JUNK_LINES, f"{junk_share:.0%} junk lines"))
+        defects.append(
+            Defect(
+                CheckId.JUNK_LINES,
+                f"{junk_share:.0%} junk lines",
+                halvings=junk_share / _JUNK_HALVING_SHARE,
+                places=text_lines,
+                share=junk_share,
+            )
+        )
 
     repeat_min_count = _scaled_threshold(
         _REPEAT_MIN_COUNT, _REPEAT_MIN_RATE_PER_1000_LINES, body.lines
@@ -590,20 +727,19 @@ def _layout_checks(body: _Body) -> _GroupResult:
     repeats = len(repeat_counts)
     if repeats:
         metrics["repeats"] = repeats
-        runaway = max(repeat_counts) > repeat_min_count * _REPEAT_LOOP_MULTIPLE
-        defects.append(
-            Defect(
-                CheckId.REPEATS,
-                f"{repeats} repeated lines",
-                minor=not runaway
-                and _within_threshold(
-                    repeats,
-                    _REPEAT_BAD_COUNT,
-                    _REPEAT_BAD_RATE_PER_1000_LINES,
-                    body.lines,
-                ),
-            )
+        defect = _counted_defect(
+            CheckId.REPEATS,
+            f"{repeats} repeated lines",
+            repeats,
+            _REPEAT_FLOOR,
+            _scaled_threshold(
+                _REPEAT_FLOOR, _REPEAT_HALVING_RATE_PER_1000_LINES, body.lines
+            ),
+            body.lines,
         )
+        if max(repeat_counts) > repeat_min_count * _REPEAT_LOOP_MULTIPLE:
+            defect = replace(defect, veto=True)
+        defects.append(defect)
 
     return _GroupResult(
         tuple(defects),
@@ -619,24 +755,29 @@ def _media_checks(body: _Body, base_dir: Path | None) -> _GroupResult:
     """Defective and repeated images; only a missing link is repairable."""
     defects: list[Defect] = []
     metrics: dict[str, float] = {}
-    missing_images, bad_images = _count_bad_images(body.structural, base_dir)
-    if bad_images:
-        metrics["bad_images"] = bad_images
-        defects.append(Defect(CheckId.IMAGES, f"{bad_images} defective images"))
+    images = _count_bad_images(body.structural, base_dir)
+    if images.defective:
+        metrics["bad_images"] = images.defective
+        defects.append(
+            _counted_defect(
+                CheckId.IMAGES,
+                f"{images.defective} defective images",
+                images.defective,
+                0,
+                _ONE_DEFECT,
+                images.links,
+            )
+        )
 
     repeated_images = _count_repeated_images(body.structural)
     if repeated_images:
         metrics["repeated_images"] = repeated_images
-        # Always minor: a running logo after the image dedup looks the same.
+        # A signal: a running logo after the image dedup looks the same.
         defects.append(
-            Defect(
-                CheckId.REPEATED_IMAGES,
-                f"{repeated_images} paths reused 3+ times",
-                minor=True,
-            )
+            Defect(CheckId.REPEATED_IMAGES, f"{repeated_images} paths reused 3+ times")
         )
 
-    return _GroupResult(tuple(defects), metrics, repairable=missing_images > 0)
+    return _GroupResult(tuple(defects), metrics, repairable=images.missing > 0)
 
 
 def _reported_checks(body: _Body) -> _GroupResult:
@@ -655,15 +796,17 @@ def _reported_checks(body: _Body) -> _GroupResult:
         reported_defects += count
         metrics[check.value] = count
         defects.append(
-            Defect(
+            _counted_defect(
                 check,
                 f"{count} {detail}",
-                minor=_within_threshold(
-                    count,
-                    _REPORTED_BAD_COUNT,
-                    _REPORTED_BAD_RATE_PER_1000_LINES,
+                count,
+                _REPORTED_FLOOR,
+                _scaled_threshold(
+                    _REPORTED_FLOOR,
+                    _REPORTED_HALVING_RATE_PER_1000_LINES,
                     body.finding_lines,
                 ),
+                body.finding_lines,
             )
         )
 
@@ -693,22 +836,37 @@ def _llm_marker_checks(
     ocr_markers = _count_ocr_markers(body.text)
     if ocr_markers:
         metrics["ocr_markers"] = ocr_markers
-        defects.append(Defect(CheckId.LLM_OCR_MARKERS, f"{ocr_markers} OCR markers"))
+        defects.append(
+            _counted_defect(
+                CheckId.LLM_OCR_MARKERS,
+                f"{ocr_markers} OCR markers",
+                ocr_markers,
+                0,
+                _ONE_DEFECT,
+                body.lines,
+            )
+        )
 
     lost_pages = _count_lost_pages(body.structural)
     if lost_pages:
         metrics["lost_pages"] = lost_pages
-        defects.append(Defect(CheckId.LOST_PAGES, f"{lost_pages} pages not recognized"))
+        defects.append(
+            Defect(CheckId.LOST_PAGES, f"{lost_pages} pages not recognized", veto=True)
+        )
 
     if inspection_chunks and inspection_chunks_done is not None:
         inspection_coverage = inspection_chunks_done / inspection_chunks
         metrics["inspection_coverage"] = round(inspection_coverage, 3)
         if inspection_chunks_done < inspection_chunks:
+            undone = 1 - inspection_coverage
             defects.append(
                 Defect(
                     CheckId.INSPECTION_COVERAGE,
                     f"{inspection_chunks_done} of {inspection_chunks} chunks inspected",
-                    minor=inspection_coverage >= _INSPECTION_COVERAGE_BAD_SHARE,
+                    halvings=undone / _INSPECTION_HALVING_SHARE,
+                    veto=inspection_coverage < _INSPECTION_VETO_DONE_SHARE,
+                    places=inspection_chunks,
+                    share=undone,
                 )
             )
 
@@ -1039,15 +1197,17 @@ def _count_formula_loops(structural: list[Segment]) -> int:
     )
 
 
-def _lost_chapter_threshold(stated_chapters: int) -> Fraction:
-    """How many chapters may go unwritten before the loss decides the status."""
-    return max(
-        Fraction(_LOST_CHAPTER_BAD_COUNT), _LOST_CHAPTER_BAD_SHARE * stated_chapters
+def _count_table_rows(structural: list[Segment]) -> int:
+    """Count the plain lines that carry a table cell separator."""
+    return sum(
+        1
+        for line, protected in structural
+        if not protected and has_cell_separator(line.strip())
     )
 
 
-def _junk_share(structural: list[Segment]) -> float:
-    """Share of plain non-blank lines made only of service symbols.
+def _junk_lines(structural: list[Segment]) -> tuple[int, int]:
+    """Return ``(junk, total)``: plain non-blank lines of service symbols only.
 
     Structural symbol lines and setext underlines are excluded, as the cleaner
     keeps them; the previous line is tracked as the cleaner tracks it.
@@ -1071,7 +1231,7 @@ def _junk_share(structural: list[Segment]) -> float:
         ):
             junk += 1
         prev = line
-    return junk / total if total else 0.0
+    return junk, total
 
 
 def _repeat_counts(structural: list[Segment], min_count: float) -> list[int]:
@@ -1117,16 +1277,24 @@ def _repeats_in_a_cluster(occurrences: list[int]) -> bool:
     return statistics.median(gaps) <= _REPEAT_MAX_MEDIAN_GAP
 
 
-def _count_bad_images(
-    structural: list[Segment], base_dir: Path | None
-) -> tuple[int, int]:
-    """Return ``(missing_links, defective_total)`` for local image links.
+@dataclass(frozen=True)
+class _ImageCounts:
+    """Local image links checked, missing, and defective (missing included)."""
+
+    links: int = 0
+    missing: int = 0
+    defective: int = 0
+
+
+def _count_bad_images(structural: list[Segment], base_dir: Path | None) -> _ImageCounts:
+    """Count the local image links and the defective ones among them.
 
     Defective: missing, under 512 bytes, or single-color. Only a missing link
     is repairable. Markdown and HTML links both count.
     """
     if base_dir is None:
-        return 0, 0
+        return _ImageCounts()
+    links = 0
     missing = 0
     defective = 0
     for line, protected in structural:
@@ -1141,6 +1309,7 @@ def _count_bad_images(
             if path is None:
                 # Escapes base_dir once decoded; not ours to check.
                 continue
+            links += 1
             if not path.exists():
                 missing += 1
                 defective += 1
@@ -1151,7 +1320,7 @@ def _count_bad_images(
                 continue
             if size < _IMAGE_MIN_BYTES or _is_single_color(path):
                 defective += 1
-    return missing, defective
+    return _ImageCounts(links, missing, defective)
 
 
 def _is_single_color(path: Path) -> bool:

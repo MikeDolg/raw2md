@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import unicodedata
 from pathlib import Path
+from typing import Any
 
 import pytest
 from PIL import Image
@@ -146,6 +147,10 @@ def _detail(ev: Evaluation, check: CheckId) -> str:
     return next(d.detail for d in ev.defects if d.check is check)
 
 
+def _check_score(ev: Evaluation, check: CheckId) -> int:
+    return next(d.score for d in ev.defects if d.check is check)
+
+
 def test_unreadable_chars_fire_above_threshold() -> None:
     # 220 letters, 18% Greek: foreign to a Latin body.
     body = "a" * 180 + _GREEK_ALPHA * 40 + "\n"
@@ -164,11 +169,22 @@ def test_unreadable_skipped_below_letter_floor() -> None:
     assert not _fired(ev, CheckId.UNREADABLE_CHARS)
 
 
-def test_unreadable_not_flagged_at_low_share() -> None:
-    # 220 letters, 9% other, below the 15% threshold.
+def test_unreadable_below_the_halving_share_only_lowers_the_score() -> None:
+    # 220 letters, 9% other, below the 15% that halves the score.
     body = "a" * 200 + _GREEK_ALPHA * 20 + "\n"
     ev = evaluate(body)
-    assert not _fired(ev, CheckId.UNREADABLE_CHARS)
+    assert _check_score(ev, CheckId.UNREADABLE_CHARS) == 66
+    assert ev.status is ResultStatus.OK
+    assert ev.issues == ()
+    assert not ev.recognition_failure
+
+
+def test_unreadable_at_the_halving_share_scores_50() -> None:
+    # 200 letters, 15% Greek.
+    body = "a" * 170 + _GREEK_ALPHA * 30 + "\n"
+    ev = evaluate(body)
+    assert _check_score(ev, CheckId.UNREADABLE_CHARS) == 50
+    assert ev.score == 50
     assert ev.status is ResultStatus.OK
 
 
@@ -516,12 +532,14 @@ def test_lost_formula_is_counted_under_its_own_check() -> None:
     assert ev.metrics["lost_formulas"] == 1
 
 
-def test_single_lost_formula_stays_ok() -> None:
-    # Below the floor of 2: recorded in issues, not graded.
+def test_lost_formulas_within_the_floor_cost_nothing() -> None:
+    # The floor of 2 absorbs them: fired, scored 100, out of `issues`.
     body = "A formula recognition already lost.\n"
-    ev = evaluate(body, cleaning_findings=_left_standing("broken-formula", 1))
+    ev = evaluate(body, cleaning_findings=_left_standing("broken-formula", 2))
+    assert _check_score(ev, CheckId.LOST_FORMULAS) == 100
+    assert ev.score == 100
     assert ev.status is ResultStatus.OK
-    assert CheckId.LOST_FORMULAS.value in ev.issues
+    assert ev.issues == ()
 
 
 def test_a_reported_broken_table_is_graded_once() -> None:
@@ -533,11 +551,21 @@ def test_a_reported_broken_table_is_graded_once() -> None:
     assert ev.metrics["broken_tables"] == 1
 
 
-def test_lost_formulas_past_threshold_are_bad() -> None:
+def test_lost_formulas_score_50_a_threshold_past_the_floor() -> None:
+    # Over 1500 lines the threshold is 2, so the score halves at 2 + 2 lost.
     body = _filler_lines(1500)
-    ev = evaluate(body, cleaning_findings=_left_standing("broken-formula", 3))
+    ev = evaluate(body, cleaning_findings=_left_standing("broken-formula", 4))
+    assert _check_score(ev, CheckId.LOST_FORMULAS) == 50
+    assert ev.status is ResultStatus.OK
+    assert ev.metrics["lost_formulas"] == 4
+
+
+def test_lost_formulas_past_floor_and_threshold_are_bad() -> None:
+    body = _filler_lines(1500)
+    ev = evaluate(body, cleaning_findings=_left_standing("broken-formula", 5))
+    assert _check_score(ev, CheckId.LOST_FORMULAS) == 35
     assert ev.status is ResultStatus.BAD
-    assert ev.metrics["lost_formulas"] == 3
+    assert ev.issues == (CheckId.LOST_FORMULAS.value,)
 
 
 def test_lost_formula_drives_neither_hint() -> None:
@@ -553,11 +581,12 @@ def test_lost_formula_threshold_scales_with_the_cleaning_body() -> None:
     body = _filler_lines(10)
     ev = evaluate(
         body,
-        cleaning_findings=_left_standing("broken-formula", 3),
+        cleaning_findings=_left_standing("broken-formula", 5),
         cleaning_body_lines=10_000,
     )
+    # A threshold of 10 halves the score at 12 lost; 3 past the floor cost 19%.
+    assert _check_score(ev, CheckId.LOST_FORMULAS) == 81
     assert ev.status is ResultStatus.OK
-    assert CheckId.LOST_FORMULAS.value in ev.issues
 
 
 def test_lost_formulas_detail_reports_the_count() -> None:
@@ -945,8 +974,11 @@ def test_ladder_never_decides_the_status() -> None:
     )
     ev = evaluate(body)
     assert ev.metrics["heading_ladder_issues"] == 3
+    # A signal: fired, out of the total and out of `issues`.
+    assert _fired(ev, CheckId.HEADING_LADDER)
+    assert ev.score == 100
     assert ev.status is ResultStatus.OK
-    assert ev.issues == (CheckId.HEADING_LADDER.value,)
+    assert ev.issues == ()
 
 
 def test_ladder_ignores_a_heading_in_a_code_fence() -> None:
@@ -1196,9 +1228,9 @@ def test_one_demoted_section_does_not_count_the_rank_it_landed_in() -> None:
     assert ev.metrics["flat_ladder_headings"] == 1
 
 
-def test_a_flattened_heading_inside_the_threshold_stays_minor() -> None:
-    # One swallowed heading over 500 lines sits inside the scaled tolerance
-    # (2 per 1000 lines): recorded in `issues`, left out of the verdict.
+def test_a_flattened_heading_inside_the_threshold_keeps_the_result_ok() -> None:
+    # One swallowed heading over 500 lines sits at the scaled threshold
+    # (2 per 1000 lines): a score near 50, out of `issues`.
     headings = _levelled(
         (1, "1. Introduction"),
         (1, "2. Loads"),
@@ -1207,8 +1239,9 @@ def test_a_flattened_heading_inside_the_threshold_stays_minor() -> None:
     )
     ev = evaluate(_filler_lines(500) + "\n\n" + headings)
     assert ev.metrics["flat_ladder_headings"] == 1
+    assert _check_score(ev, CheckId.FLAT_LADDER) >= 50
     assert ev.status is ResultStatus.OK
-    assert CheckId.FLAT_LADDER.value in ev.issues
+    assert CheckId.FLAT_LADDER.value not in ev.issues
 
 
 # ---- lost chapters -----------------------------------------------------------
@@ -1236,8 +1269,9 @@ def test_a_chapter_the_contents_states_and_the_body_never_writes_is_counted() ->
     ev = evaluate(body)
     assert ev.metrics["lost_chapters"] == 12
     assert ev.status is ResultStatus.BAD
-    # The verdict is this check's own: nothing else the body carries decides it.
-    assert [d.check for d in ev.defects if not d.minor] == [CheckId.LOST_CHAPTERS]
+    # The verdict is this check's own: nothing else the body carries lowers it.
+    assert [d.check for d in ev.defects if d.score < 100] == [CheckId.LOST_CHAPTERS]
+    assert ev.issues == (CheckId.LOST_CHAPTERS.value,)
     # No hint follows: no step writes a heading the body does not carry.
     assert not ev.repairable
     assert not ev.recognition_failure
@@ -1348,16 +1382,28 @@ def test_a_body_printing_no_contents_states_no_chapter() -> None:
     assert not _fired(ev, CheckId.LOST_CHAPTERS)
 
 
-def test_one_chapter_inside_the_stated_share_stays_minor() -> None:
-    # One of twelve reads as a missed match: in `issues`, out of the verdict.
+def test_one_lost_chapter_is_absorbed_by_the_floor() -> None:
+    # One of twelve reads as a missed match: fired, scored 100.
     body = _TWELVE_CHAPTERS + _levelled(
         *[(2, f"Chapter {number}. General provisions") for number in range(1, 12)],
         (3, "First section"),
     )
     ev = evaluate(body)
     assert ev.metrics["lost_chapters"] == 1
-    assert CheckId.LOST_CHAPTERS.value in ev.issues
+    assert _check_score(ev, CheckId.LOST_CHAPTERS) == 100
+    assert CheckId.LOST_CHAPTERS.value not in ev.issues
     assert ev.status is ResultStatus.OK
+
+
+def test_lost_chapters_halve_the_score_a_quarter_past_the_floor() -> None:
+    # Twelve stated: the floor is 1 and a quarter is 3, so 4 lost score 50.
+    body = _TWELVE_CHAPTERS + _levelled(
+        *[(2, f"Chapter {number}. General provisions") for number in range(1, 9)],
+        (3, "First section"),
+    )
+    ev = evaluate(body)
+    assert ev.metrics["lost_chapters"] == 4
+    assert _check_score(ev, CheckId.LOST_CHAPTERS) == 50
 
 
 def test_a_chapter_the_body_underlines_is_found() -> None:
@@ -1599,11 +1645,12 @@ def test_junk_lines_above_share_are_flagged() -> None:
 
 
 def test_sparse_junk_below_share_is_ok() -> None:
-    lines = [f"Real sentence number {i} here" for i in range(100)]
-    lines += ["@@@"]  # 1 junk line of ~1%
+    lines = [f"Real sentence number {i} here" for i in range(99)]
+    lines += ["@@@"]  # 1 junk line of 1%, half the share that halves the score
     ev = evaluate("\n".join(lines) + "\n")
-    assert not _fired(ev, CheckId.JUNK_LINES)
+    assert _check_score(ev, CheckId.JUNK_LINES) == 71
     assert ev.status is ResultStatus.OK
+    assert not ev.repairable
 
 
 def test_display_math_and_setext_are_not_junk() -> None:
@@ -1986,11 +2033,12 @@ def test_repeated_image_alone_keeps_the_result_ok() -> None:
     # A reused logo is a signal to read, not a defect: the verdict stays ok.
     ev = evaluate(_repeated_image_body(3))
     assert ev.status is ResultStatus.OK
-    assert ev.issues == (CheckId.REPEATED_IMAGES.value,)
+    assert ev.score == 100
+    assert ev.issues == ()
     assert ev.metrics["repeated_images"] == 1
 
 
-def test_repeated_image_stays_minor_however_many_paths_repeat() -> None:
+def test_repeated_image_stays_a_signal_however_many_paths_repeat() -> None:
     body = _repeated_image_body(4) + _repeated_image_body(4, target="media/icon.png")
     ev = evaluate(body)
     assert ev.metrics["repeated_images"] == 2
@@ -2004,7 +2052,8 @@ def test_repeated_image_does_not_shield_a_deciding_check() -> None:
     )
     ev = evaluate(body)
     assert ev.status is ResultStatus.BAD
-    assert ev.issues == (CheckId.TABLES.value, CheckId.REPEATED_IMAGES.value)
+    assert ev.issues == (CheckId.TABLES.value,)
+    assert _fired(ev, CheckId.REPEATED_IMAGES)
 
 
 # ==== Reported group ==========================================================
@@ -2044,13 +2093,13 @@ def test_escalation_still_fires_above_scaled_threshold() -> None:
 
 
 def test_few_defects_in_a_long_body_do_not_make_it_bad() -> None:
-    # 2 defects over ~1500 lines stay inside the scaled threshold (floor 2,
-    # +2 per 1000 lines).
+    # 2 defects over ~1500 lines stay inside the floor of 2.
     body = _filler_lines(1500)
     ev = evaluate(body, cleaning_findings=_left_standing("hyphenation", 2))
     assert _fired(ev, CheckId.HYPHENATION)
+    assert _check_score(ev, CheckId.HYPHENATION) == 100
     assert ev.status is ResultStatus.OK
-    assert ev.issues == (CheckId.HYPHENATION.value,)
+    assert ev.issues == ()
 
 
 def test_defects_past_the_threshold_are_bad_before_they_escalate() -> None:
@@ -2074,7 +2123,7 @@ def test_the_report_decides_whatever_a_later_stage_wrote() -> None:
     body = _filler_lines(2000)
     ev = evaluate(body, cleaning_findings=_left_standing("hyphenation", 1))
     assert ev.status is ResultStatus.OK
-    assert ev.issues == (CheckId.HYPHENATION.value,)
+    assert ev.issues == ()
     assert ev.metrics["hyphenation"] == 1
     assert ev.defect_report == ("hyphenation (1 words split across a break)",)
 
@@ -2122,10 +2171,10 @@ def test_every_reported_defect_is_named_by_its_own_check() -> None:
         + _left_standing("flattened-paragraphs", 1)
         + _left_standing("run-in-heading", 1),
     )
-    assert ev.issues == (
-        CheckId.HYPHENATION.value,
-        CheckId.FLATTENED_BLOCKS.value,
-    )
+    assert [d.check for d in ev.defects] == [
+        CheckId.HYPHENATION,
+        CheckId.FLATTENED_BLOCKS,
+    ]
     assert ev.metrics["hyphenation"] == 2
     assert ev.metrics["flattened_blocks"] == 3
 
@@ -2140,15 +2189,17 @@ def test_a_crushed_block_is_named_by_its_own_check() -> None:
 
 
 def test_each_reported_check_is_weighed_on_its_own_count() -> None:
-    # Each defect has its own tolerance, not one shared by both.
+    # Each defect has its own floor, not one shared by both: one past each.
     body = _filler_lines(1500)
     ev = evaluate(
         body,
         cleaning_findings=_left_standing("hyphenation", 3)
         + _left_standing("flattened-block", 3),
     )
+    assert _check_score(ev, CheckId.HYPHENATION) == 79
+    assert _check_score(ev, CheckId.FLATTENED_BLOCKS) == 79
+    assert ev.score == 63
     assert ev.status is ResultStatus.OK
-    assert len(ev.issues) == 2
 
 
 def test_the_ocr_hint_sums_the_reported_checks() -> None:
@@ -2228,8 +2279,22 @@ def test_a_pass_missing_one_chunk_out_of_many_keeps_its_verdict() -> None:
     # A lost tail chunk is recorded, but it is not "barely inspected".
     ev = evaluate(_CLEAN_BODY, inspection_chunks=65, inspection_chunks_done=64)
     assert _fired(ev, CheckId.INSPECTION_COVERAGE)
-    assert "inspection_coverage" in ev.issues
+    assert _check_score(ev, CheckId.INSPECTION_COVERAGE) == 98
+    assert ev.issues == ()
     assert ev.status is ResultStatus.OK
+
+
+def test_a_pass_that_answered_half_its_chunks_scores_50() -> None:
+    ev = evaluate(_CLEAN_BODY, inspection_chunks=10, inspection_chunks_done=5)
+    assert _check_score(ev, CheckId.INSPECTION_COVERAGE) == 50
+    assert ev.status is ResultStatus.OK
+
+
+def test_a_pass_below_half_its_chunks_is_a_veto() -> None:
+    ev = evaluate(_CLEAN_BODY, inspection_chunks=10, inspection_chunks_done=4)
+    assert ev.score == 0
+    assert ev.status is ResultStatus.BAD
+    assert ev.issues == (CheckId.INSPECTION_COVERAGE.value,)
 
 
 def test_a_pass_missing_one_chunk_does_not_hide_another_defect() -> None:
@@ -2315,10 +2380,7 @@ def test_issues_empty_on_ok() -> None:
 
 def test_issues_lists_check_ids_in_evaluator_order() -> None:
     # Formulas is checked, and appended to defects, before headings.
-    body = (
-        "# Top\n\n### Skipped level two entirely here\n\n"
-        "Broken $a + {b$ inside this otherwise readable sentence.\n"
-    )
+    body = "# Top\n\n### Skipped level two entirely here\n\n" + _broken_formulas(5)
     ev = evaluate(body)
     assert ev.issues == (CheckId.FORMULAS.value, CheckId.HEADINGS.value)
     assert "source_coverage" not in ev.metrics
@@ -2367,8 +2429,8 @@ def test_few_heading_jumps_in_a_long_body_do_not_make_it_bad() -> None:
     ev = evaluate(body)
     assert _fired(ev, CheckId.HEADINGS)
     assert ev.status is ResultStatus.OK
-    # Reported, not judged: the header keeps the finding on an ok result.
-    assert ev.issues == (CheckId.HEADINGS.value,)
+    # Scored at the threshold or above, so the header leaves it out.
+    assert ev.issues == ()
     assert ev.metrics["heading_issues"] == 3
 
 
@@ -2394,9 +2456,10 @@ def test_few_invalid_formulas_in_a_long_body_do_not_make_it_bad() -> None:
 
 
 def test_invalid_formulas_past_the_threshold_are_bad_before_they_escalate() -> None:
-    # Between the two thresholds: bad, not yet a recognition failure.
-    body = _filler_lines(1500) + "\n" + _broken_formulas(3) + "\n"
+    # Floor 2 and threshold 2: 5 invalid score 35, at the escalation floor of 5.
+    body = _filler_lines(1500) + "\n" + _broken_formulas(5) + "\n"
     ev = evaluate(body)
+    assert _check_score(ev, CheckId.FORMULAS) == 35
     assert ev.status is ResultStatus.BAD
     assert not ev.recognition_failure
 
@@ -2427,27 +2490,37 @@ def test_several_repeated_lines_in_the_same_body_are_bad() -> None:
     assert ev.status is ResultStatus.BAD
 
 
-def test_a_check_without_a_threshold_decides_the_status_alone() -> None:
-    # Only the small structural checks are weighed; a `[?]` marker is a defect
-    # at any size.
+def test_one_defect_of_a_zero_threshold_check_scores_50() -> None:
+    # No floor and no size scale: a `[?]` marker halves the score at any size.
     body = _filler_lines(1500) + "\nOne word here is [?] to the recognizer.\n"
     ev = evaluate(body)
+    assert _check_score(ev, CheckId.LLM_OCR_MARKERS) == 50
+    assert ev.status is ResultStatus.OK
+    assert ev.issues == ()
+
+
+def test_two_defects_of_a_zero_threshold_check_score_25() -> None:
+    body = _filler_lines(1500) + "\nTwo words here are [?] and [?] to it.\n"
+    ev = evaluate(body)
+    assert _check_score(ev, CheckId.LLM_OCR_MARKERS) == 25
     assert ev.status is ResultStatus.BAD
     assert ev.issues == (CheckId.LLM_OCR_MARKERS.value,)
 
 
-def test_a_minor_defect_is_recorded_alongside_a_deciding_one() -> None:
-    body = (
-        _filler_lines(1500)
-        + "\n"
-        + _heading_jumps(3)
-        + "\nOne word here is [?] to the recognizer.\n"
+def test_two_checks_near_70_make_the_result_bad_with_no_issue() -> None:
+    # Floor 2, threshold 3.88 over 1940 lines: 4 of each score 70, the
+    # product 49. Neither check falls below 50, so `issues` stays empty.
+    ev = evaluate(
+        _filler_lines(200),
+        cleaning_findings=_left_standing("hyphenation", 4)
+        + _left_standing("flattened-block", 4),
+        cleaning_body_lines=1940,
     )
-    ev = evaluate(body)
+    assert _check_score(ev, CheckId.HYPHENATION) == 70
+    assert _check_score(ev, CheckId.FLATTENED_BLOCKS) == 70
+    assert ev.score == 49
     assert ev.status is ResultStatus.BAD
-    assert ev.issues == (CheckId.HEADINGS.value, CheckId.LLM_OCR_MARKERS.value)
-    minor = {defect.check for defect in ev.defects if defect.minor}
-    assert minor == {CheckId.HEADINGS}
+    assert ev.issues == ()
 
 
 def test_one_broken_table_row_in_a_long_body_does_not_make_it_bad() -> None:
@@ -2458,8 +2531,9 @@ def test_one_broken_table_row_in_a_long_body_does_not_make_it_bad() -> None:
     )
     ev = evaluate(body)
     assert ev.status is ResultStatus.OK
-    # Reported, not judged: the header keeps the finding on an ok result.
-    assert ev.issues == (CheckId.TABLES.value,)
+    # Scored above 50, so the header leaves it out.
+    assert _check_score(ev, CheckId.TABLES) > 50
+    assert ev.issues == ()
     assert ev.metrics["broken_tables"] == 1
 
 
@@ -2486,3 +2560,126 @@ def test_the_table_threshold_scales_with_the_body() -> None:
     table = _half_broken_table(16)
     assert evaluate(_filler_lines(1500) + "\n" + table).status is ResultStatus.BAD
     assert evaluate(_filler_lines(20_000) + "\n" + table).status is ResultStatus.OK
+
+
+# ---- the score model ---------------------------------------------------------
+
+
+def test_a_check_at_its_threshold_with_no_floor_scores_50() -> None:
+    # 1000 lines put the table threshold at one broken row.
+    body = (
+        _filler_lines(995)
+        + "\n| A | B | C |\n|---|---|---|\n| 1 | 2 |\n\nFollowing paragraph words.\n"
+    )
+    ev = evaluate(body)
+    assert ev.metrics["body_lines"] == 1000
+    assert _check_score(ev, CheckId.TABLES) == 50
+    assert ev.score == 50
+    assert ev.status is ResultStatus.OK
+
+
+def test_the_floor_absorbs_defects_before_any_score_is_lost() -> None:
+    body = _filler_lines(1500) + "\n" + _broken_formulas(2) + "\n"
+    ev = evaluate(body)
+    defect = next(d for d in ev.defects if d.check is CheckId.FORMULAS)
+    assert defect.halvings == 0
+    assert defect.score == 100
+    assert ev.score == 100
+
+
+def test_a_clean_check_leaves_the_total_unchanged() -> None:
+    body = _filler_lines(200) + "\nOne word here is [?] to the recognizer.\n"
+    without = evaluate(body)
+    with_clean_coverage = evaluate(body, inspection_chunks=4, inspection_chunks_done=4)
+    assert with_clean_coverage.score == without.score == 50
+
+
+def test_the_total_multiplies_the_check_scores(tmp_path: Path) -> None:
+    # One OCR marker (50) and one missing image (50) leave a quarter.
+    body = (
+        _filler_lines(200)
+        + "\nOne word here is [?] to the recognizer.\n\n![x](media/missing.png)\n"
+    )
+    ev = evaluate(body, base_dir=tmp_path)
+    assert _check_score(ev, CheckId.LLM_OCR_MARKERS) == 50
+    assert _check_score(ev, CheckId.IMAGES) == 50
+    assert ev.score == 25
+    assert ev.status is ResultStatus.BAD
+    assert ev.issues == ()
+
+
+def test_the_places_and_the_share_of_a_count_check_are_recorded() -> None:
+    body = _filler_lines(1500) + "\n" + _broken_formulas(5) + "\n"
+    ev = evaluate(body)
+    defect = next(d for d in ev.defects if d.check is CheckId.FORMULAS)
+    assert defect.places == 5
+    assert defect.share == pytest.approx(3 / 5)
+
+
+def _mojibake_body() -> str:
+    # Accented Latin over a Cyrillic guard, as a cp1251 font decodes it.
+    accented = chr(0xC0) + chr(0xE8) + chr(0xF0) + chr(0xEE)
+    cyrillic = "".join(chr(0x0430 + i) for i in range(20))
+    return (accented * 60 + " " + cyrillic + "\n") * 2
+
+
+_VETO_CASES: dict[str, tuple[str, dict[str, Any]]] = {
+    "empty_body": ("Hi there friend\n", {}),
+    "text_density": ("a" * 100 + "\n", {"source_pages": 10}),
+    "runaway_math": (
+        "Readable words before the block.\n\n$$\n# Heading\n$$\n",
+        {},
+    ),
+    "math_span_drift": (
+        "Two formulas $a=1$ and $b=2$ in a readable sentence here.\n",
+        {"math_spans_before": 3},
+    ),
+    "lost_pages": (f"Some recognized text.\n\n{lost_page_marker(4)}\n", {}),
+    "inspection_coverage": (
+        _CLEAN_BODY,
+        {"inspection_chunks": 10, "inspection_chunks_done": 1},
+    ),
+    "unreadable_chars": (_mojibake_body(), {}),
+    "repeats": (_filler_lines(1500) + "\n" + "Connective phrase here\n" * 40, {}),
+}
+
+
+@pytest.mark.parametrize("check", sorted(_VETO_CASES))
+def test_each_veto_sets_the_total_to_0(check: str) -> None:
+    body, inputs = _VETO_CASES[check]
+    ev = evaluate(body, **inputs)
+    vetoes = [d.check.value for d in ev.defects if d.veto]
+    assert vetoes == [check]
+    assert ev.score == 0
+    assert ev.status is ResultStatus.BAD
+    assert check in ev.issues
+
+
+def test_a_veto_stays_bad_at_an_ok_score_of_0() -> None:
+    ev = evaluate("Hi there friend\n", ok_score=0)
+    assert ev.status is ResultStatus.BAD
+
+
+def test_an_ok_score_of_0_passes_any_body_without_a_veto() -> None:
+    body = _filler_lines(40) + "\n" + _heading_jumps(5) + "\n"
+    ev = evaluate(body, ok_score=0)
+    assert ev.score == 0
+    assert ev.status is ResultStatus.OK
+    assert ev.issues == (CheckId.HEADINGS.value,)
+
+
+def test_an_ok_score_of_100_fails_any_lost_point() -> None:
+    body = _filler_lines(1500) + "\nOne word here is [?] to the recognizer.\n"
+    assert evaluate(_CLEAN_BODY, ok_score=100).status is ResultStatus.OK
+    assert evaluate(body, ok_score=100).status is ResultStatus.BAD
+
+
+def test_signals_stay_out_of_the_total() -> None:
+    body = _repeated_image_body(3) + _levelled(
+        (2, "LECTURE 1"), (3, "LECTURE 2"), (4, "LECTURE 3"), (5, "LECTURE 4")
+    )
+    ev = evaluate(body)
+    assert _fired(ev, CheckId.REPEATED_IMAGES)
+    assert _fired(ev, CheckId.HEADING_LADDER)
+    assert ev.score == 100
+    assert ev.issues == ()

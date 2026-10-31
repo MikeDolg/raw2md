@@ -165,7 +165,7 @@ def test_a_body_cleaning_empties_out_is_still_written(tmp_path: Path) -> None:
     assert result.outcome is Outcome.OK
     header = read_header(tmp_path / "a.md")
     assert header is not None
-    assert CheckId.LOST_FORMULAS.value in header.issues
+    assert header.issues == (CheckId.EMPTY_BODY.value,)
 
 
 def test_real_signatures_reach_their_engine(tmp_path: Path) -> None:
@@ -277,13 +277,13 @@ def test_ok_result_header_has_no_issues(tmp_path: Path) -> None:
     assert header.issues == ()
 
 
-def test_ok_result_records_an_issue_below_the_threshold(
+def test_ok_result_logs_a_check_within_its_floor(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.INFO, logger="raw2md")
     src = tmp_path / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
-    # One unbalanced span is recorded but not graded, so the result stays ok.
+    # One unbalanced span stays within the floor: logged, not in the header.
     body = OK_BODY + "A broken formula $a + {b$ in an otherwise readable line.\n"
     registry = EngineRegistry([StubEngine(extensions=frozenset({"pdf"}), body=body)])
 
@@ -292,7 +292,7 @@ def test_ok_result_records_an_issue_below_the_threshold(
     assert result.status is ResultStatus.OK
     header = read_header(tmp_path / "a.md")
     assert header is not None
-    assert header.issues == ("formulas",)
+    assert header.issues == ()
     assert "quality ok for a.pdf, below threshold: formulas" in caplog.text
 
 
@@ -345,8 +345,9 @@ def test_bad_result_recommends_llm_post_when_repairable(
     caplog.set_level(logging.WARNING, logger="raw2md")
     src = tmp_path / "a.pdf"
     _write_text_pdf(src, ["Body text of the source document."])
-    # A missing image file is repairable; re-recognition would not help.
-    body = OK_BODY + "\n![Figure 1](no-such-file.png)\n"
+    # A missing image file is repairable; re-recognition would not help. Two
+    # of them score 25, so the result is bad.
+    body = OK_BODY + "\n![Figure 1](no-such-file.png)\n\n![Figure 2](gone.png)\n"
     registry = EngineRegistry([StubEngine(extensions=frozenset({"pdf"}), body=body)])
 
     run_one(src, registry)
@@ -1881,9 +1882,11 @@ def test_inspection_partial_keeps_the_edits_of_the_chunks_that_ran(
     assert result.outcome is Outcome.LLM_ERROR
     header = read_header(tmp_path / "a.md")
     assert header is not None
-    # The field names the engine; coverage is the evaluator's entry.
+    # The field names the engine; coverage is the evaluator's entry. Half the
+    # chunks inspected score 50, which keeps the check out of `issues`.
     assert header.inspection == "insp"
-    assert "inspection_coverage" in header.issues
+    assert header.status is ResultStatus.OK
+    assert header.issues == ()
     text = (tmp_path / "a.md").read_text(encoding="utf-8")
     assert "legible" in text
     assert "[unreadable]" not in text
@@ -1907,7 +1910,7 @@ def test_inspection_partial_is_a_skip_when_a_chunk_is_oversize(
     header = read_header(tmp_path / "a.md")
     assert header is not None
     assert header.inspection == "insp"
-    assert "inspection_coverage" in header.issues
+    assert header.issues == ()
     # Inspection logs its own ladder below WARNING, so the file's outcome is
     # the one line.
     assert [r.levelname for r in caplog.records] == ["WARNING"]

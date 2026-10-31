@@ -823,14 +823,14 @@ def _warn_quality_verdict(
     """Surface the verdict, its defects, and the two repair hints.
 
     Defects are logged with the measured detail the header does not carry. An
-    `ok` file with issues gets an INFO line, so its header `issues` has a
-    match in the log. The repair hint waits for a `bad` verdict.
+    `ok` file with fired checks gets an INFO line, so its header `issues` has
+    a match in the log. The repair hint waits for a `bad` verdict.
     """
     if evaluation.status is ResultStatus.BAD:
         _logger.warning(
             "quality bad for %s: %s", source_name, ", ".join(evaluation.defect_report)
         )
-    elif evaluation.issues:
+    elif evaluation.defects:
         _logger.info(
             "quality ok for %s, below threshold: %s",
             source_name,

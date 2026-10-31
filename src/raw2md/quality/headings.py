@@ -78,6 +78,15 @@ _FLAT_LADDER_MIN_HEADINGS = 3
 _MAX_HEADING_LEVEL = 6
 
 
+def count_headings(structural: list[Segment]) -> int:
+    """Count the ATX headings, a marker glued to its text included."""
+    return sum(
+        1
+        for line, protected in structural
+        if not protected and (HEADING_RE.match(line) or _HEADING_NOSPACE_RE.match(line))
+    )
+
+
 def count_heading_issues(structural: list[Segment]) -> int:
     """Count headings with a missing space or a level jump greater than one."""
     issues = 0
