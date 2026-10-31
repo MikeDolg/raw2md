@@ -309,5 +309,5 @@ Three places show the result of the stage:
   cleaning did;
 - the log `~/.raw2md/logs/raw2md.log`: the number of findings of each kind, and
   each finding with its line number;
-- the header of the result: `status` and `issues`, where quality evaluation
-  sums up the findings.
+- the header of the result: `status`, `score`, and `issues`, where quality
+  evaluation sums up the findings.

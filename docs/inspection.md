@@ -146,8 +146,8 @@ size of a chunk.
 | A provider error on a chunk | the tool skips the chunk and processes the other chunks; the run ends with an LLM error |
 | The quota is spent, or the key is rejected | inspection stops, and the run ends with an LLM error; the edits of the chunks already done apply |
 | The first chunk got no reply | inspection does not apply; the header shows `inspection: failed` |
-| Not all chunks are done | `inspection_coverage` goes into `issues` |
-| Fewer than half of the chunks are done | `status: bad` |
+| Not all chunks are done | `inspection_coverage` lowers the score: 3 chunks of 4 give 71 |
+| Fewer than half of the chunks are done | a veto: the score is 0, and the status is `bad` |
 
 ## How to see the result
 

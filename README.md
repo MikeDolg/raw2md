@@ -77,7 +77,7 @@ The cleaning of a file then goes through three stages, and two of them are optio
 | `inspection` | PDF, DjVu | the `-i` flag | checks the text against the source      | [inspection.md](https://github.com/MikeDolg/raw2md/blob/main/docs/inspection.md) |
 | `post`       | all       | the `-p` flag | repairs the structure without the source | [post.md](https://github.com/MikeDolg/raw2md/blob/main/docs/post.md) |
 
-After cleaning, and again after each LLM stage, a deterministic [quality evaluation](https://github.com/MikeDolg/raw2md/blob/main/docs/quality.md) grades the text. Its verdict, `ok` or `bad`, goes into the header of the result together with the checks that fired.
+After cleaning, and again after each LLM stage, a deterministic [quality evaluation](https://github.com/MikeDolg/raw2md/blob/main/docs/quality.md) grades the text with a score from 0 to 100. The score, the verdict `ok` or `bad`, and the checks that lowered the score most go into the header of the result.
 
 For now, inspection runs on Gemini only, while post-processing can use either Gemini or Claude Code through `claude -p`.
 
@@ -184,7 +184,7 @@ notes.md            # Markdown source
 notes_cleaned.md    # result; the source stays untouched
 ```
 
-Every result starts with a header. The `status` field holds the verdict of the quality evaluation, and `issues` lists the checks that fired:
+Every result starts with a header. The `status` field holds the verdict of the quality evaluation, `score` holds its total score, and `issues` lists the checks that lowered the score most:
 
 ```yaml
 ---
@@ -195,7 +195,8 @@ inspection: none
 post: none
 converted_at: 2026-10-03
 source_hash: 9rZ2...
-status: ok
+status: bad
+score: 31
 issues:
 - headings
 ---
