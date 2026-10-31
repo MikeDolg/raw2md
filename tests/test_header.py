@@ -237,6 +237,39 @@ def test_from_raises_on_invalid_issues_type() -> None:
         from_yaml_block(block)
 
 
+def test_score_written_after_status_and_round_trips() -> None:
+    block = to_yaml_block(_make_header(score=83))
+    assert block.index("status: ok") < block.index("score: 83")
+    restored = from_yaml_block(block)
+    assert restored is not None
+    assert restored.score == 83
+
+
+def test_score_absent_when_none() -> None:
+    assert "score:" not in to_yaml_block(_make_header())
+
+
+def test_stub_has_no_score() -> None:
+    stub = build_stub("a.pdf", source_hash="h")
+    assert stub.score is None
+    assert "score:" not in to_yaml_block(stub)
+
+
+def test_header_without_score_parses_as_none() -> None:
+    restored = from_yaml_block(to_yaml_block(_make_header()))
+    assert restored is not None
+    assert restored.score is None
+
+
+@pytest.mark.parametrize("value", ["high", "83.5", "true"])
+def test_from_raises_on_non_integer_score(value: str) -> None:
+    block = to_yaml_block(_make_header()).replace(
+        "status: ok", f"status: ok\nscore: {value}"
+    )
+    with pytest.raises(HeaderParseError):
+        from_yaml_block(block)
+
+
 # ---- has_own_header ----------------------------------------------------------
 
 

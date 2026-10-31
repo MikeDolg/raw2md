@@ -33,6 +33,7 @@ from raw2md.paths import keywords_file, prompts_file, settings_file
 from raw2md.pipeline import FileResult, Outcome, RunContext, process_file
 from raw2md.progress import BatchProgress
 from raw2md.prompts import Prompts, PromptsError, load_prompts, resolve_prompt
+from raw2md.quality.evaluator import DEFAULT_OK_SCORE
 from raw2md.queue import (
     Queue,
     QueueError,
@@ -462,6 +463,11 @@ def _start_context(
             else settings.cleaning_witness_min
         ),
         keywords=run_settings.keywords,
+        ok_score=(
+            DEFAULT_OK_SCORE
+            if settings.quality_ok_score is None
+            else settings.quality_ok_score
+        ),
     )
 
 

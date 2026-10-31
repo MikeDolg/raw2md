@@ -17,6 +17,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from raw2md.exit_codes import ExitCode
 from raw2md.header import DEFAULT_ENGINE, RETIRED_ENGINE, is_reserved_llm_field_value
 from raw2md.paths import settings_file
+from raw2md.quality.evaluator import DEFAULT_OK_SCORE
 from raw2md.service import edit_file, parse_file_action, show_file
 
 ACCESS_TYPES = ("api", "cli")
@@ -74,6 +75,9 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "cleaning": {
         "witness_min": 20,
     },
+    "quality": {
+        "ok_score": DEFAULT_OK_SCORE,
+    },
     "log_file": True,
 }
 
@@ -122,7 +126,7 @@ class Settings:
 
     `log_file` can only be turned off by `--no-log-file`. None in
     `engine_recognition_batch_size` or `cleaning_witness_min` leaves the
-    built-in default in force.
+    built-in default in force; the same holds for `quality_ok_score`.
     """
 
     models: Mapping[str, ModelConfig]
@@ -130,6 +134,7 @@ class Settings:
     log_file: bool
     engine_recognition_batch_size: int | None = None
     cleaning_witness_min: int | None = None
+    quality_ok_score: int | None = None
 
 
 def access_has_vision(access: str) -> bool:
@@ -197,6 +202,7 @@ def parse_settings(data: Any) -> Settings:
         log_file=_parse_log_file(data.get("log_file")),
         engine_recognition_batch_size=_parse_engine(data.get(DEFAULT_ENGINE)),
         cleaning_witness_min=_parse_cleaning(data.get("cleaning")),
+        quality_ok_score=_parse_quality(data.get("quality")),
     )
 
 
@@ -421,6 +427,23 @@ def _parse_cleaning(raw: Any) -> int | None:
         raise SettingsError(
             f"'cleaning.witness_min' must be at least {_WITNESS_MIN_FLOOR}"
         )
+    return value
+
+
+def _parse_quality(raw: Any) -> int | None:
+    """Parse the optional `quality` section into the score a result needs for `ok`."""
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise SettingsError("'quality' must be an object")
+    value = raw.get("ok_score")
+    if value is None:
+        return None
+    # bool is an int subclass.
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise SettingsError("'quality.ok_score' must be an integer")
+    if not 0 <= value <= 100:
+        raise SettingsError("'quality.ok_score' must be between 0 and 100")
     return value
 
 

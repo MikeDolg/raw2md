@@ -81,7 +81,7 @@ from raw2md.output import (
     write_md,
 )
 from raw2md.progress import STAGE_NAMES, FileProgress, capture_engine_output
-from raw2md.quality.evaluator import Evaluation, evaluate
+from raw2md.quality.evaluator import DEFAULT_OK_SCORE, Evaluation, evaluate
 from raw2md.queue import (
     QueueItem,
     is_complete,
@@ -150,7 +150,7 @@ class RunContext:
     `progress_stream` None means stderr. `resume` skips files that already
     finished. The LLM operations are None when off. `temp_root` holds the
     per-file scratch folders and assembled PDFs; None for an injected registry.
-    `witness_min` and `keywords` are the run's resolved settings.
+    `witness_min`, `keywords`, and `ok_score` are the run's resolved settings.
     """
 
     config: RunConfig
@@ -164,6 +164,7 @@ class RunContext:
     temp_root: Path | None = None
     witness_min: int = DEFAULT_WITNESS_MIN
     keywords: Keywords = field(default_factory=default_keywords)
+    ok_score: int = DEFAULT_OK_SCORE
 
 
 @dataclass(frozen=True)
@@ -202,6 +203,7 @@ class _EvaluationContext:
     source_outline: SourceOutline
     cleaning_findings: tuple[Finding, ...]
     keywords: Keywords
+    ok_score: int
     math_spans_before: int | None = None
     cleaning_body_lines: int | None = None
     inspection_chunks: int | None = None
@@ -220,6 +222,7 @@ class _EvaluationContext:
             inspection_chunks=self.inspection_chunks,
             inspection_chunks_done=self.inspection_chunks_done,
             keywords=self.keywords,
+            ok_score=self.ok_score,
         )
 
 
@@ -675,6 +678,7 @@ def _finish(
         source_outline=conversion.outline,
         cleaning_findings=findings,
         keywords=clean_options.keywords,
+        ok_score=ctx.ok_score,
     )
     evaluation = evaluation_context.evaluate(cleaned)
     evaluation_context = replace(
@@ -749,6 +753,7 @@ def _finish(
         source_hash=conversion.source_hash,
     )
     header.status = evaluation.status
+    header.score = evaluation.score
     header.issues = evaluation.issues
     write_md(target, render_result(header, cleaned, emit_yaml=config.yaml_header))
     return FileResult(outcome, evaluation.status)
@@ -843,12 +848,16 @@ def _warn_quality_verdict(
     """
     if evaluation.status is ResultStatus.BAD:
         _logger.warning(
-            "quality bad for %s: %s", source_name, ", ".join(evaluation.defect_report)
+            "quality bad for %s, score %d: %s",
+            source_name,
+            evaluation.score,
+            ", ".join(evaluation.scored_report),
         )
     elif evaluation.defects:
         _logger.info(
-            "quality ok for %s, below threshold: %s",
+            "quality ok for %s, score %d, below threshold: %s",
             source_name,
+            evaluation.score,
             ", ".join(evaluation.defect_report),
         )
     # Repairing the markup of badly recognized text is wasted.

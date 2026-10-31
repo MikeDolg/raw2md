@@ -103,6 +103,7 @@ _KNOWN_FIELDS = frozenset(
         "converted_at",
         "source_hash",
         "status",
+        "score",
         "issues",
     }
 )
@@ -123,6 +124,8 @@ class ResultHeader:
     converted_at: datetime.date
     source_hash: str  # SHA-256 of source bytes, base64url without padding
     status: ResultStatus
+    # The quality score, 0 to 100; None on a stub and on a result of an older version.
+    score: int | None = None
     # CheckId values of the checks that fired, in evaluator order; empty on `ok`.
     issues: tuple[str, ...] = field(default_factory=tuple)
     # Temporary quality-metric fields; stripped at the final write.
@@ -182,6 +185,8 @@ def to_yaml_block(header: ResultHeader, *, include_extras: bool = False) -> str:
         "source_hash": header.source_hash,
         "status": header.status.value,
     }
+    if header.score is not None:
+        data["score"] = header.score
     if header.issues:
         data["issues"] = list(header.issues)
     if include_extras and header.extras:
@@ -206,6 +211,19 @@ def _parse_issues(value: object) -> tuple[str, ...]:
     if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
         raise ValueError(f"issues must be a list of strings, got {value!r}")
     return tuple(value)
+
+
+def _parse_score(value: object) -> int | None:
+    """Parse the optional `score` field; absent means a result without a score."""
+    if value is None:
+        return None
+    # bool is an int subclass.
+    if isinstance(value, bool) or not isinstance(value, int):
+        # ValueError, so the caller wraps it as HeaderParseError.
+        raise ValueError(  # noqa: TRY004
+            f"score must be an integer, got {value!r}"
+        )
+    return value
 
 
 def from_yaml_block(text: str) -> ResultHeader | None:
@@ -244,6 +262,7 @@ def from_yaml_block(text: str) -> ResultHeader | None:
             converted_at=converted_at,
             source_hash=str(data["source_hash"]),
             status=ResultStatus(data["status"]),
+            score=_parse_score(data.get("score")),
             issues=_parse_issues(data.get("issues")),
             extras={k: v for k, v in data.items() if k not in _KNOWN_FIELDS},
         )

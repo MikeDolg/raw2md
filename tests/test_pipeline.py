@@ -6,6 +6,7 @@ import io
 import json
 import logging
 from collections.abc import Iterator, Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import TextIO
 
@@ -293,7 +294,8 @@ def test_ok_result_logs_a_check_within_its_floor(
     header = read_header(tmp_path / "a.md")
     assert header is not None
     assert header.issues == ()
-    assert "quality ok for a.pdf, below threshold: formulas" in caplog.text
+    assert "quality ok for a.pdf, score " in caplog.text
+    assert ", below threshold: formulas" in caplog.text
 
 
 def test_bad_result_warns_with_check_names(
@@ -306,8 +308,43 @@ def test_bad_result_warns_with_check_names(
 
     run_one(src, registry)
 
-    assert "quality bad for a.pdf" in caplog.text
-    assert "empty_body" in caplog.text
+    assert "quality bad for a.pdf, score 0: empty_body" in caplog.text
+    assert "score 0" in caplog.text
+
+
+def test_ok_result_writes_its_score(tmp_path: Path) -> None:
+    src = tmp_path / "a.pdf"
+    src.write_bytes(b"%PDF-1.4 stub")
+    registry = EngineRegistry([StubEngine(extensions=frozenset({"pdf"}))])
+
+    run_one(src, registry)
+
+    header = read_header(tmp_path / "a.md")
+    assert header is not None
+    assert header.score == 100
+
+
+def test_ok_score_of_100_turns_a_lost_point_into_bad(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.WARNING, logger="raw2md")
+    src = tmp_path / "a.pdf"
+    src.write_bytes(b"%PDF-1.4 stub")
+    # One missing image link is the zero-floor check: score 50, no issue.
+    body = OK_BODY + "![chart](media/missing.png)\n"
+    registry = EngineRegistry([StubEngine(extensions=frozenset({"pdf"}), body=body)])
+    config = make_run_config(src)
+    ctx = replace(make_context(registry, config), ok_score=100)
+
+    result = process_file(QueueItem(source=src, include_extension=False), ctx)
+
+    assert result.status is ResultStatus.BAD
+    header = read_header(tmp_path / "a.md")
+    assert header is not None
+    assert header.status is ResultStatus.BAD
+    assert header.issues == ()
+    assert header.score == 50
+    assert "quality bad for a.pdf, score 50: images" in caplog.text
 
 
 def test_bad_result_recommends_llm_ocr_on_recognition_failure(

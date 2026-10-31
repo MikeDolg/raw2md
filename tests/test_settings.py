@@ -8,6 +8,7 @@ import pytest
 
 from raw2md.cleaning import DEFAULT_WITNESS_MIN
 from raw2md.paths import settings_file
+from raw2md.quality.evaluator import DEFAULT_OK_SCORE
 from raw2md.settings import (
     DEFAULT_SETTINGS,
     ModelConfig,
@@ -601,3 +602,44 @@ def test_cleaning_witness_bar_below_the_floor_rejected(value: int) -> None:
 def test_cleaning_witness_bar_non_integer_rejected(value: object) -> None:
     with pytest.raises(SettingsError, match="must be an integer"):
         parse_settings(_cleaning_data(witness_min=value))
+
+
+# --- quality ok score ------------------------------------------------------
+
+
+def _quality_data(**quality: Any) -> dict[str, Any]:
+    data = _cleaning_data()
+    data["quality"] = quality
+    return data
+
+
+def test_quality_section_absent_leaves_the_ok_score_unset() -> None:
+    assert parse_settings(_cleaning_data()).quality_ok_score is None
+
+
+@pytest.mark.parametrize("value", [0, 50, 100])
+def test_quality_ok_score_is_read(value: int) -> None:
+    assert parse_settings(_quality_data(ok_score=value)).quality_ok_score == value
+
+
+def test_default_settings_state_the_quality_ok_score() -> None:
+    assert default_settings().quality_ok_score == DEFAULT_OK_SCORE
+
+
+def test_quality_section_must_be_object() -> None:
+    data = _cleaning_data()
+    data["quality"] = ["not an object"]
+    with pytest.raises(SettingsError, match="'quality'"):
+        parse_settings(data)
+
+
+@pytest.mark.parametrize("value", [-1, 101])
+def test_quality_ok_score_out_of_range_rejected(value: int) -> None:
+    with pytest.raises(SettingsError, match="between 0 and 100"):
+        parse_settings(_quality_data(ok_score=value))
+
+
+@pytest.mark.parametrize("value", [50.5, "high", True])
+def test_quality_ok_score_non_integer_rejected(value: object) -> None:
+    with pytest.raises(SettingsError, match="must be an integer"):
+        parse_settings(_quality_data(ok_score=value))

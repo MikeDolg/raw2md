@@ -354,6 +354,24 @@ class Evaluation:
         )
 
     @property
+    def scored_report(self) -> tuple[str, ...]:
+        """`check (detail) score N` for the checks behind a `bad` verdict.
+
+        The vetoes and the checks below 50 come first. A total under `ok_score`
+        with no such check lists every check that lost a point.
+        """
+        issues = [
+            defect
+            for defect in self.defects
+            if defect.veto or defect.score < _ISSUE_MAX_SCORE
+        ]
+        shown = issues or [defect for defect in self.defects if defect.score < 100]
+        return tuple(
+            f"{defect.check.value} ({defect.detail}) score {defect.score}"
+            for defect in shown
+        )
+
+    @property
     def defect_report(self) -> tuple[str, ...]:
         """`check (detail)` per fired defect, in evaluator order, for the log."""
         return tuple(
