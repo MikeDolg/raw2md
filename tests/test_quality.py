@@ -2382,7 +2382,7 @@ def test_issues_empty_on_ok() -> None:
 
 def test_issues_lists_check_ids_in_evaluator_order() -> None:
     # Formulas is checked, and appended to defects, before headings.
-    body = "# Top\n\n### Skipped level two entirely here\n\n" + _broken_formulas(5)
+    body = _heading_jumps(6) + "\n\n" + _broken_formulas(5)
     ev = evaluate(body)
     assert ev.issues == (CheckId.FORMULAS.value, CheckId.HEADINGS.value)
     assert "source_coverage" not in ev.metrics
@@ -2443,11 +2443,20 @@ def test_many_heading_jumps_in_the_same_body_are_bad() -> None:
     assert ev.status is ResultStatus.BAD
 
 
-def test_a_single_heading_jump_in_a_short_body_is_still_bad() -> None:
-    # The tolerance has no floor: one jump in a short document is a real share.
+def test_a_single_heading_jump_in_a_short_body_costs_nothing() -> None:
     body = _filler_lines(40) + "\n" + _heading_jumps(1) + "\n"
     ev = evaluate(body)
-    assert ev.status is ResultStatus.BAD
+    assert _check_score(ev, CheckId.HEADINGS) == 100
+    assert ev.score == 100
+    assert ev.status is ResultStatus.OK
+
+
+def test_two_heading_jumps_in_a_short_body_score_past_the_floor() -> None:
+    # (2 - 1) / T with T = max(1, 2 * L / 1000) at L about 100 lines.
+    body = _filler_lines(40) + "\n" + _heading_jumps(2) + "\n"
+    ev = evaluate(body)
+    assert ev.metrics["heading_issues"] == 2
+    assert 0 < _check_score(ev, CheckId.HEADINGS) < 100
 
 
 def test_few_invalid_formulas_in_a_long_body_do_not_make_it_bad() -> None:
@@ -2663,7 +2672,7 @@ def test_a_veto_stays_bad_at_an_ok_score_of_0() -> None:
 
 
 def test_an_ok_score_of_0_passes_any_body_without_a_veto() -> None:
-    body = _filler_lines(40) + "\n" + _heading_jumps(5) + "\n"
+    body = _filler_lines(40) + "\n" + _heading_jumps(12) + "\n"
     ev = evaluate(body, ok_score=0)
     assert ev.score == 0
     assert ev.status is ResultStatus.OK

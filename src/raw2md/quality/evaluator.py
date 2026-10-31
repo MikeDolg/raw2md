@@ -109,13 +109,13 @@ _INSPECTION_VETO_DONE_SHARE = 0.5
 
 # The excess past the floor that halves a check's score, as a floor plus a rate
 # per 1000 body lines. Calibrated on scans: a nearly clean book had 3 heading
-# jumps over 1500 lines, a damaged one 32 over 7900. Headings, the flat
-# ladder, repeats, and tables have no floor, so a short document earns no free
-# defect. Formulas and lost formulas keep a floor of 2, half the escalation
-# pair, so the bands stay ordered. The two report-only checks run at twice
-# that rate, each on its own count: unfinished repair work, not a proven loss.
-# Tables were calibrated on broken-row rates of 0 to 22 per 1000 lines.
-_HEADING_FLOOR = 0
+# jumps over 1500 lines, a damaged one 32 over 7900. Headings forgive one
+# defect: on a short body the threshold is under one, and one jump would score
+# near 0. The flat ladder, repeats, and tables have no floor. Formulas and lost
+# formulas keep a floor of 2, half the escalation pair. The report-only checks
+# run at twice that rate: unfinished repair work, not a proven loss. Tables
+# were calibrated on broken-row rates of 0 to 22 per 1000 lines.
+_HEADING_FLOOR = 1
 _HEADING_HALVING_RATE_PER_1000_LINES = 2
 _FLAT_LADDER_FLOOR = 0
 _FLAT_LADDER_HALVING_RATE_PER_1000_LINES = 2
