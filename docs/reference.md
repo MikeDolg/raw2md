@@ -159,7 +159,7 @@ post: none
 converted_at: 2026-10-03
 source_hash: 9rZ2...
 status: bad
-score: 25
+score: 25.0
 issues:
 - headings
 ---
@@ -175,7 +175,7 @@ issues:
 | `converted_at` | the date of the conversion |
 | `source_hash` | the SHA-256 of the source in base64url; by this field, `resume` finds out that the file is already done |
 | `status` | `ok` or `bad`: the verdict of quality evaluation; `in_progress`: the tool still processes the file, or the run was interrupted |
-| `score` | the total score of quality evaluation, an integer from 0 to 100; the field is present only with `ok` or `bad`, and a result of an earlier raw2md version does not have it |
+| `score` | the total score of quality evaluation, a number from 0 to 100 with one decimal, such as `44.5`; the field is present only with `ok` or `bad`, and a result of an earlier raw2md version does not have it |
 | `issues` | the vetoes of quality evaluation that fired and the checks with a score below 50; the field is present only when the list is not empty |
 
 The tool writes `engine` for each file separately: in a run with
@@ -326,7 +326,7 @@ request several times with a growing pause.
 |---|---|---|---|
 | `raw2md-engine` | `recognition_batch_size` | the recognition batch size of the engine; a smaller number uses less video memory | `"default"`: the engine value for the video memory |
 | `cleaning` | `witness_min` | how many times a spelling must occur in the document before cleaning repairs a damaged word with it; 2 at least | 20 |
-| `quality` | `ok_score` | the total score that a result needs for `status: ok`, from 0 to 100; a [veto](quality.md#how-the-evaluation-works) gives `bad` at any value | 50 |
+| `quality` | `ok_score` | the total score that a result needs for `status: ok`, an integer from 0 to 100; a [veto](quality.md#how-the-evaluation-works) gives `bad` at any value | 50 |
 | – | `log_file` | whether to write the detailed log; `--no-log-file` turns the log off, but it cannot turn the log on | `true` |
 
 A `marker` section, the name of this section in raw2md 0.1.x, is a settings

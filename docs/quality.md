@@ -37,7 +37,7 @@ pair `1 / 2`:
 | 300 lines | 1 | 3 | 25 |
 | 3,000 lines | 6 | 1 | 100 |
 | 3,000 lines | 6 | 7 | 50 |
-| 3,000 lines | 6 | 8 | 45 |
+| 3,000 lines | 6 | 8 | 44.5 |
 
 A check keeps the score 100 up to its minimum, and only the defects past the
 minimum lower the score. The `formulas` check has the pair `2 / 1`. In a body
@@ -53,17 +53,22 @@ value of each check.
 
 The total score is `100 * 2^(-sum of x/h)` over all graded checks. Thus it is
 the product of the check scores, each taken as a fraction of 100. For example,
-two checks with the scores 71 and 63 give the total score 45. All checks
+two checks with the scores 70.7 and 63.0 give the total score 44.5. All checks
 weigh the same. A veto sets the total score to 0. A signal does not change it.
-The header shows the total score rounded to an integer.
+
+The total score and the score of each check are rounded to one decimal. In a
+long body, one more defect of a counted check often moves the total score by
+less than one point, and the decimal shows that change. A second decimal would
+show only the noise of the share checks, which changes with each letter.
 
 ### The status
 
 The status is `ok` when no veto fired and the total score is at least
 `ok_score`. The `quality.ok_score` field in
-[`settings.json`](reference.md#settingsjson) sets it: 50 by default. Thus one
-check at its halving value keeps the status `ok`, and two such checks give
-`bad`. A veto gives `bad` at any `ok_score`, 0 included.
+[`settings.json`](reference.md#settingsjson) sets it: an integer, 50 by
+default. The status uses the rounded total score that the header shows. Thus a
+total score of 49.96 shows as 50.0 and gives `ok`. One check at its halving
+value keeps the status `ok`, and two such checks give `bad`. A veto gives `bad` at any `ok_score`, 0 included.
 
 ### The `issues` field
 
@@ -178,7 +183,7 @@ counts its own findings.
 |---|---|---|---|
 | `llm_ocr_markers` | the `[unreadable]` and `[?]` markers that the model puts in LLM-OCR mode | 1 marker | `The [unreadable] valve.` |
 | `lost_pages` | a page that the model did not recognize in LLM-OCR mode | veto | `[page 3 not recognized]` |
-| `inspection_coverage` | inspection did not complete all chunks of the document, as a share of the chunks | half of the chunks not done; fewer than half of the chunks done is a veto | 3 chunks of 4 are done: the score is 71 |
+| `inspection_coverage` | inspection did not complete all chunks of the document, as a share of the chunks | half of the chunks not done; fewer than half of the chunks done is a veto | 3 chunks of 4 are done: the score is 70.7 |
 
 ### Thresholds
 
@@ -244,7 +249,7 @@ Three places show the result of the stage:
   `issues`, which appears only when the list is not empty;
 - the console: with `status: bad`, a warning with the total score and the
   checks in `issues`, each with its measured value and its score, for example
-  `quality bad for book.pdf, score 25: headings (3 level/space issues) score 25`,
+  `quality bad for book.pdf, score 25.0: headings (3 level/space issues) score 25.0`,
   and a hint from the table above. When `issues` is empty, the warning lists
   each check that lowered the total score. With `status: ok`, the console
   shows nothing;
@@ -254,7 +259,7 @@ The log adds these lines:
 
 | Line | When it shows |
 |---|---|
-| `quality ok for <file>, score <N>, below threshold: …` | `status: ok`, and a check fired; the line lists all such checks with their measured values |
+| `quality ok for <file>, score <score>, below threshold: …` | `status: ok`, and a check fired; the line lists all such checks with their measured values |
 | `<file>: <check> at body line <N>` | at the `DEBUG` level, once for each defect that a check finds at a line of the body; the count starts at 1 on the first line after the header |
 | `<file>: lost_chapters missing '<entry>'` | at the `DEBUG` level, once for each lost chapter: the entry of the table of contents |
 | the share of the result words that occur in the source, and the share of the source words that reach the result | a `pdf` or `djvu` with a text layer; these shares do not change the status |
