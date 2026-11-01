@@ -3,14 +3,17 @@
 Each bar is two stacked lines, a label and the bar beneath it, so both bars
 share a left edge and a width whatever the filename length. Engine output is
 redirected during a conversion call so raw2md-engine does not corrupt the
-bars.
+bars. The file bar also logs its progress at DEBUG, to the log file only: on
+each stage, on each new phase name, and on a heartbeat.
 """
 
 from __future__ import annotations
 
 import io
+import logging
 import re
 import sys
+import threading
 import time
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
@@ -63,9 +66,23 @@ _TQDM_COUNTER = re.compile(r"\|\s*(\d+/\d+)(?=\s|\[|$)")
 # A trailing counter of a phase label.
 _PHASE_COUNTER = re.compile(r"\s\d+/\d+$")
 
+# Seconds between two heartbeat records; a long engine phase emits nothing else.
+_HEARTBEAT_INTERVAL = 30.0
+
+_logger = logging.getLogger("raw2md.progress")
+
 
 def _now() -> float:
     return time.monotonic()
+
+
+def _format_elapsed(seconds: float) -> str:
+    """`m:ss`, or `h:mm:ss` from one hour on."""
+    hours, rest = divmod(int(seconds), 3600)
+    minutes, secs = divmod(rest, 60)
+    if hours:
+        return f"{hours}:{minutes:02d}:{secs:02d}"
+    return f"{minutes}:{secs:02d}"
 
 
 def _engine_phase_label(line: str) -> str | None:
@@ -147,15 +164,29 @@ class FileProgress:
     """Per-file stage bar (names the current stage), owned by the pipeline.
 
     `stages` is the route this file runs, known before conversion, so the bar
-    ends at exactly 100%.
+    ends at exactly 100%. `position` is `(index, total)` of the file in the
+    batch, shown in the log records. A daemon thread writes the heartbeat
+    record until `close()`, which the pipeline reaches on any exit.
     """
 
     def __init__(
-        self, filename: str, stages: Sequence[str], *, file: TextIO | None = None
+        self,
+        filename: str,
+        stages: Sequence[str],
+        *,
+        file: TextIO | None = None,
+        position: tuple[int, int] | None = None,
+        heartbeat_interval: float = _HEARTBEAT_INTERVAL,
     ) -> None:
+        self._filename = filename
+        self._position = position
         self._seen: set[str] = set()
+        # The heartbeat thread reads the stage and the phase as one pair.
+        self._lock = threading.Lock()
+        self._stage: str | None = None
         self._phase: str | None = None
         self._redrawn_at = 0.0
+        self._started_at = _now()
         stream = file if file is not None else sys.stderr
         # leave=False: the next file reuses the same two lines.
         self._label: _tqdm_mod.tqdm[None] = _tqdm_mod.tqdm(
@@ -175,6 +206,11 @@ class FileProgress:
             position=_FILE_BAR_POS,
             leave=False,
         )
+        self._stop = threading.Event()
+        self._heartbeat = threading.Thread(
+            target=self._beat, args=(heartbeat_interval,), daemon=True
+        )
+        self._heartbeat.start()
 
     def update_stage(self, stage: str) -> None:
         """Label the bar with `stage`, advancing the count the first time it is seen.
@@ -182,7 +218,12 @@ class FileProgress:
         A stage may report more than once. The count never passes the total, so
         a stage outside the planned route stalls rather than overshoots.
         """
-        self._phase = None
+        with self._lock:
+            stage_changed = stage != self._stage
+            self._stage = stage
+            self._phase = None
+        if stage_changed:
+            self._log_progress()
         self._bar.bar_format = _bracket_bar_format(stage)
         if stage in self._seen:
             self._bar.refresh()
@@ -204,14 +245,32 @@ class FileProgress:
         name_changed = self._phase is None or _PHASE_COUNTER.sub(
             "", phase
         ) != _PHASE_COUNTER.sub("", self._phase)
-        self._phase = phase
+        with self._lock:
+            self._phase = phase
+        if name_changed:
+            self._log_progress()
         self._bar.bar_format = _bracket_bar_format(phase)
         now = _now()
         if name_changed or now - self._redrawn_at >= _REDRAW_INTERVAL:
             self._redrawn_at = now
             self._bar.refresh()
 
+    def _beat(self, interval: float) -> None:
+        while not self._stop.wait(interval):
+            self._log_progress()
+
+    def _log_progress(self) -> None:
+        """Log `[i/N] name: stage, phase, elapsed`, leaving out the unknown parts."""
+        with self._lock:
+            parts = [part for part in (self._stage, self._phase) if part is not None]
+        parts.append(_format_elapsed(_now() - self._started_at))
+        place = f"[{self._position[0]}/{self._position[1]}] " if self._position else ""
+        _logger.debug("%s%s: %s", place, self._filename, ", ".join(parts))
+
     def close(self) -> None:
+        # The thread stops first: no heartbeat follows the return of close().
+        self._stop.set()
+        self._heartbeat.join()
         self._bar.close()
         self._label.close()
 

@@ -800,11 +800,13 @@ def test_ctrl_c_prints_summary_for_files_completed_so_far(
     monkeypatch.setattr("raw2md.orchestrator.screen_info", _spy_screen_info(calls))
     processed = {"n": 0}
 
-    def flaky_process_file(item: QueueItem, ctx: RunContext) -> FileResult:
+    def flaky_process_file(
+        item: QueueItem, ctx: RunContext, position: tuple[int, int] | None = None
+    ) -> FileResult:
         if processed["n"] >= 1:
             raise KeyboardInterrupt
         processed["n"] += 1
-        return _real_process_file(item, ctx)
+        return _real_process_file(item, ctx, position)
 
     monkeypatch.setattr("raw2md.orchestrator.process_file", flaky_process_file)
     with pytest.raises(KeyboardInterrupt):
@@ -815,6 +817,26 @@ def test_ctrl_c_prints_summary_for_files_completed_so_far(
     files, _elapsed, _rate, _errors, _bad_quality = finish_args
     assert files == 1
     assert queue_file().exists()
+
+
+def test_each_file_gets_its_place_in_the_batch(
+    home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    folder = home / "in"
+    folder.mkdir()
+    (folder / "a.pdf").write_bytes(b"x")
+    (folder / "b.pdf").write_bytes(b"y")
+    positions: list[tuple[int, int] | None] = []
+
+    def capturing_process_file(
+        item: QueueItem, ctx: RunContext, position: tuple[int, int] | None = None
+    ) -> FileResult:
+        positions.append(position)
+        return _real_process_file(item, ctx, position)
+
+    monkeypatch.setattr("raw2md.orchestrator.process_file", capturing_process_file)
+    run(make_run_config(folder), registry=registry_for(StubEngine()))
+    assert positions == [(1, 2), (2, 2)]
 
 
 # --- LLM post-processing startup gate and end-to-end -------------------------
@@ -1524,9 +1546,11 @@ def test_cleaning_witness_bar_from_settings_reaches_the_run_context(
     )
     captured: dict[str, object] = {}
 
-    def capturing_process_file(item: QueueItem, ctx: RunContext) -> FileResult:
+    def capturing_process_file(
+        item: QueueItem, ctx: RunContext, position: tuple[int, int] | None = None
+    ) -> FileResult:
         captured["witness_min"] = ctx.witness_min
-        return _real_process_file(item, ctx)
+        return _real_process_file(item, ctx, position)
 
     monkeypatch.setattr("raw2md.orchestrator.process_file", capturing_process_file)
     code = run(make_run_config(src), registry=registry_for(StubEngine()))
@@ -1541,9 +1565,11 @@ def test_no_cleaning_section_leaves_the_rules_own_witness_bar(
     src.write_bytes(b"x")
     captured: dict[str, object] = {}
 
-    def capturing_process_file(item: QueueItem, ctx: RunContext) -> FileResult:
+    def capturing_process_file(
+        item: QueueItem, ctx: RunContext, position: tuple[int, int] | None = None
+    ) -> FileResult:
         captured["witness_min"] = ctx.witness_min
-        return _real_process_file(item, ctx)
+        return _real_process_file(item, ctx, position)
 
     monkeypatch.setattr("raw2md.orchestrator.process_file", capturing_process_file)
     code = run(make_run_config(src), registry=registry_for(StubEngine()))
@@ -1578,9 +1604,11 @@ def test_keywords_from_file_reaches_the_run_context(
     (raw2md / "keywords.yaml").write_text(_MINIMAL_KEYWORDS, encoding="utf-8")
     captured: dict[str, object] = {}
 
-    def capturing_process_file(item: QueueItem, ctx: RunContext) -> FileResult:
+    def capturing_process_file(
+        item: QueueItem, ctx: RunContext, position: tuple[int, int] | None = None
+    ) -> FileResult:
         captured["keywords"] = ctx.keywords
-        return _real_process_file(item, ctx)
+        return _real_process_file(item, ctx, position)
 
     monkeypatch.setattr("raw2md.orchestrator.process_file", capturing_process_file)
     code = run(make_run_config(src), registry=registry_for(StubEngine()))
@@ -1596,9 +1624,11 @@ def test_no_keywords_file_leaves_the_shipped_dictionary(
     src.write_bytes(b"x")
     captured: dict[str, object] = {}
 
-    def capturing_process_file(item: QueueItem, ctx: RunContext) -> FileResult:
+    def capturing_process_file(
+        item: QueueItem, ctx: RunContext, position: tuple[int, int] | None = None
+    ) -> FileResult:
         captured["keywords"] = ctx.keywords
-        return _real_process_file(item, ctx)
+        return _real_process_file(item, ctx, position)
 
     monkeypatch.setattr("raw2md.orchestrator.process_file", capturing_process_file)
     code = run(make_run_config(src), registry=registry_for(StubEngine()))

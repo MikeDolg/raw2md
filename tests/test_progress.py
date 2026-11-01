@@ -1,16 +1,20 @@
-"""Tests for the progress reporter: stage names and output redirection."""
+"""Tests for the progress reporter: bars, output redirection, progress log."""
 
 from __future__ import annotations
 
 import io
+import logging
 import sys
+import threading
 
 import pytest
 
+from raw2md.logging_setup import setup_logging
 from raw2md.progress import (
     STAGE_NAMES,
     BatchProgress,
     FileProgress,
+    _format_elapsed,
     capture_engine_output,
 )
 
@@ -398,3 +402,166 @@ def test_capture_engine_output_without_on_phase_is_unchanged() -> None:
     with capture_engine_output(sink):
         print("Recognizing Layout: 100%|##|", end="", file=sys.stderr)  # noqa: T201 -- print is the literal output capture_engine_output intercepts
     assert sink.getvalue() == "Recognizing Layout: 100%|##|"
+
+
+# ---------------------------------------------------------------------------
+# progress log
+# ---------------------------------------------------------------------------
+
+_PROGRESS_LOGGER = "raw2md.progress"
+
+
+def _messages(caplog: pytest.LogCaptureFixture) -> list[str]:
+    return [r.getMessage() for r in caplog.records if r.name == _PROGRESS_LOGGER]
+
+
+class _RecordWaiter(logging.Handler):
+    """Sets `reached` once the logger has emitted `count` records."""
+
+    def __init__(self, count: int) -> None:
+        super().__init__(logging.DEBUG)
+        self._count = count
+        self.messages: list[str] = []
+        self.reached = threading.Event()
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.messages.append(record.getMessage())
+        if len(self.messages) >= self._count:
+            self.reached.set()
+
+
+@pytest.mark.parametrize(
+    ("seconds", "text"),
+    [
+        (0.0, "0:00"),
+        (754.9, "12:34"),
+        (3599.0, "59:59"),
+        (3600.0, "1:00:00"),
+        (3754.0, "1:02:34"),
+    ],
+)
+def test_format_elapsed(seconds: float, text: str) -> None:
+    assert _format_elapsed(seconds) == text
+
+
+def test_progress_log_records_stage_and_phase_with_place(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    clock = [1000.0]
+    monkeypatch.setattr("raw2md.progress._now", lambda: clock[0])
+    caplog.set_level(logging.DEBUG, logger=_PROGRESS_LOGGER)
+    buf = io.StringIO()
+    with FileProgress("book.pdf", _BASE_STAGES, file=buf, position=(2, 14)) as fp:
+        fp.update_stage("conversion")
+        clock[0] = 1754.0
+        fp.set_phase("OCR 340/1200")
+    assert _messages(caplog) == [
+        "[2/14] book.pdf: conversion, 0:00",
+        "[2/14] book.pdf: conversion, OCR 340/1200, 12:34",
+    ]
+    assert all(r.levelno == logging.DEBUG for r in caplog.records)
+
+
+def test_progress_log_without_place(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setattr("raw2md.progress._now", lambda: 1000.0)
+    caplog.set_level(logging.DEBUG, logger=_PROGRESS_LOGGER)
+    with FileProgress("book.pdf", _BASE_STAGES, file=io.StringIO()) as fp:
+        fp.update_stage("cleaning")
+    assert _messages(caplog) == ["book.pdf: cleaning, 0:00"]
+
+
+def test_progress_log_skips_a_counter_change_and_a_repeated_stage(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    clock = [1000.0]
+    monkeypatch.setattr("raw2md.progress._now", lambda: clock[0])
+    caplog.set_level(logging.DEBUG, logger=_PROGRESS_LOGGER)
+    with FileProgress("book.pdf", _BASE_STAGES, file=io.StringIO()) as fp:
+        fp.update_stage("conversion")
+        fp.set_phase("OCR 1/9")
+        clock[0] = 1005.0  # past the redraw throttle: only the log stays silent
+        fp.set_phase("OCR 2/9")
+        fp.set_phase("tables 1/4")
+        fp.update_stage("conversion")
+    assert _messages(caplog) == [
+        "book.pdf: conversion, 0:00",
+        "book.pdf: conversion, OCR 1/9, 0:00",
+        "book.pdf: conversion, tables 1/4, 0:05",
+    ]
+
+
+def test_progress_log_heartbeat_repeats_the_current_phase(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    logger = logging.getLogger(_PROGRESS_LOGGER)
+    monkeypatch.setattr(logger, "level", logging.DEBUG)
+    waiter = _RecordWaiter(count=4)
+    logger.addHandler(waiter)
+    try:
+        with FileProgress(
+            "book.pdf",
+            _BASE_STAGES,
+            file=io.StringIO(),
+            position=(1, 1),
+            heartbeat_interval=0.01,
+        ) as fp:
+            fp.update_stage("conversion")
+            fp.set_phase("OCR 7/9")
+            assert waiter.reached.wait(timeout=10)
+    finally:
+        logger.removeHandler(waiter)
+    assert waiter.messages[-1].startswith("[1/1] book.pdf: conversion, OCR 7/9, ")
+
+
+def test_progress_heartbeat_stops_at_close() -> None:
+    fp = FileProgress(
+        "book.pdf", _BASE_STAGES, file=io.StringIO(), heartbeat_interval=0.01
+    )
+    assert fp._heartbeat.is_alive()
+    fp.close()
+    assert not fp._heartbeat.is_alive()
+
+
+@pytest.mark.parametrize("error", [ValueError, KeyboardInterrupt])
+def test_progress_heartbeat_stops_when_the_body_raises(
+    error: type[BaseException],
+) -> None:
+    with (
+        pytest.raises(error),
+        FileProgress(
+            "book.pdf", _BASE_STAGES, file=io.StringIO(), heartbeat_interval=0.01
+        ) as fp,
+    ):
+        raise error
+    assert not fp._heartbeat.is_alive()
+
+
+def test_progress_log_stays_off_the_console(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import tqdm
+
+    calls: list[str] = []
+    monkeypatch.setattr(
+        tqdm.tqdm, "write", staticmethod(lambda s, file=None, **kw: calls.append(s))
+    )
+    logger = logging.getLogger("raw2md")
+    monkeypatch.setattr(logger, "level", logger.level)
+    monkeypatch.setattr(logger, "propagate", logger.propagate)
+    monkeypatch.setattr(logger, "handlers", [])
+    setup_logging(log_file=False)
+    console = logger.handlers[0]
+    waiter = _RecordWaiter(count=3)
+    logger.addHandler(waiter)
+    try:
+        with FileProgress(
+            "book.pdf", _BASE_STAGES, file=io.StringIO(), heartbeat_interval=0.01
+        ) as fp:
+            fp.update_stage("conversion")
+            fp.set_phase("OCR 1/9")
+            assert waiter.reached.wait(timeout=10)
+    finally:
+        console.close()
+    assert calls == []

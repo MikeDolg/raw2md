@@ -240,8 +240,9 @@ def _process_all(ctx: RunContext, queue: Queue) -> list[FileResult]:
     start = time.monotonic()
     try:
         with BatchProgress(len(queue.items), file=ctx.progress_stream) as bar:
-            for item in queue.items:
-                results.append(process_file(item, ctx))
+            total = len(queue.items)
+            for index, item in enumerate(queue.items, start=1):
+                results.append(process_file(item, ctx, position=(index, total)))
                 bar.advance()
     except KeyboardInterrupt:
         # The summary covers what finished before Ctrl+C.

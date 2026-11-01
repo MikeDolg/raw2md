@@ -253,23 +253,31 @@ class _InspectionPass:
         )
 
 
-def process_file(item: QueueItem, ctx: RunContext) -> FileResult:
+def process_file(
+    item: QueueItem, ctx: RunContext, position: tuple[int, int] | None = None
+) -> FileResult:
     """Run one file through the pipeline and return its outcome.
 
     The one sanctioned broad catch: an unforeseen error is logged with its
     traceback (file only), the stub is dropped, and the file gets no result.
     Ctrl+C still stops the run: `KeyboardInterrupt` is not an `Exception`.
+    `position` is `(index, total)` of the file in the batch, for the progress log.
     """
     target = item.output_target(ctx.config.output_dir)
     try:
-        return _dispatch(item, target, ctx)
+        return _dispatch(item, target, ctx, position)
     except Exception:
         _logger.exception("failed %s: unexpected error", item.source.name)
         _discard_stub_on_error(target)
         return FileResult(Outcome.NO_RESULT, None)
 
 
-def _dispatch(item: QueueItem, target: OutputTarget, ctx: RunContext) -> FileResult:
+def _dispatch(
+    item: QueueItem,
+    target: OutputTarget,
+    ctx: RunContext,
+    position: tuple[int, int] | None,
+) -> FileResult:
     """Route one file to its md, OCR, or engine handler."""
     source = item.source
     if not source.exists():
@@ -282,7 +290,9 @@ def _dispatch(item: QueueItem, target: OutputTarget, ctx: RunContext) -> FileRes
         if done is not None:
             return FileResult(Outcome.OK, done)
     stages = _route_stage_names(source, ctx)
-    with FileProgress(source.name, stages, file=ctx.progress_stream) as bar:
+    with FileProgress(
+        source.name, stages, file=ctx.progress_stream, position=position
+    ) as bar:
         suffix = source.suffix.lower()
         if suffix == _MD_EXTENSION:
             return _process_md(item, target, ctx, bar)
