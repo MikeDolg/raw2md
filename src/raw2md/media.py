@@ -84,7 +84,7 @@ def _dhash(path: Path) -> int | None:
                 (_FURNITURE_HASH_SIZE + 1, _FURNITURE_HASH_SIZE),
                 Image.Resampling.LANCZOS,
             )
-            pixels = list(small.getdata())
+            pixels = list(small.get_flattened_data())
     except (OSError, ValueError) as exc:
         _logger.info("furniture hash skipped for %s: %s", path.name, exc)
         return None

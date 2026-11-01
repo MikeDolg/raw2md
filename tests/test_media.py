@@ -6,6 +6,7 @@ import io
 import logging
 import random
 import sys
+import warnings
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from PIL import Image
 
 from raw2md.engines import ConversionError, media_path
 from raw2md.media import (
+    _dhash,
     convert_emf_media,
     dedupe_repeated_images,
     drop_furniture_images,
@@ -278,6 +280,17 @@ def _noise_png_bytes(seed: int, *, flip: tuple[int, int] | None = None) -> bytes
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     return buf.getvalue()
+
+
+def test_dhash_reads_pixels_without_a_deprecation_warning(tmp_path: Path) -> None:
+    path = tmp_path / "noise.png"
+    path.write_bytes(_noise_png_bytes(0))
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        fingerprint = _dhash(path)
+
+    assert fingerprint is not None
 
 
 def test_drop_furniture_images_drops_a_picture_repeated_across_pages(
