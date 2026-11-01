@@ -446,14 +446,41 @@ The console always shows:
 - the summary line: the number of files, the time, the speed in files per
   minute, the number of errors, and the number of `bad` results.
 
-During a run, two progress bars show: one for the current file, with the name
-of the stage, and one for the whole run.
+During a run, two progress bars show: one for the current file and one for
+the whole run. The bar of the file names the stage. When the stage reports a
+phase, the bar names the phase, with its counter if the phase has one:
+`OCR 340/1200`, `djvu pages 32/120`, `chunk 3/10`. A new counter of the same
+phase redraws the bar at most once a second.
+
+These are the phases of a `pdf` or `djvu` conversion:
+
+- `weights`, while the tool downloads the engine weights;
+- `loading models`, at the first conversion of the run;
+- `djvu pages k/N`, while DjVuLibre renders the pages of a `djvu` source;
+- `pages`, `structure`, `processors i/N`, and `rendering`, the steps of
+  `raw2md-engine`;
+- the phases of the engine models inside these steps, such as `layout`, `OCR`,
+  and `tables`.
 
 The tool writes the detailed log to `~/.raw2md/logs/raw2md.log` and overwrites
 it at the start of each run. The log holds the same lines as the console, plus
 the details of each stage. The output of the engine, its weight download
 included, does not go into the log. To
 turn the log off, use the `--no-log-file` flag or the `log_file: false` field.
+
+The log also records the progress of each file. The bars can stay the same
+for minutes during a long phase, and the log shows that the run continues. A
+record comes at each new stage, at each new phase, and every 30 seconds:
+
+```text
+2026-11-01 12:34:56,789 DEBUG raw2md.progress: [2/14] book.pdf: conversion, OCR 340/1200, 12:34
+```
+
+The record gives the place of the file in the run, the name of the file, the
+stage, the phase, and the time since the start of the file: `m:ss`, or
+`h:mm:ss` after one hour. A new counter of the same phase makes no record of
+its own, and the next 30-second record shows it. The tool writes each record
+to the file at once. The console does not show these records.
 The console colors the entries by level when the output goes to a terminal and
 the `NO_COLOR` variable is not set. The tool writes the result and the log in
 UTF-8 without a byte order mark.

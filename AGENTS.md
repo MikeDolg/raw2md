@@ -91,6 +91,17 @@ the task needs it:
 
 Both layers skip a test when its tool or its key is absent.
 
+## Long conversions
+
+A conversion with `raw2md-engine` can take minutes for each file. The
+progress bars on stderr can stay the same for minutes during a long phase, and
+in a pipe they come out as cursor movement sequences. To see that the run
+continues, read `~/.raw2md/logs/raw2md.log` during the run. The log gets a
+record at each new stage, at each new phase, and every 30 seconds. Do not pass
+`--no-log-file`, because it turns these records off.
+[docs/reference.md](docs/reference.md#console-and-log) gives the format of the
+record.
+
 ## Conventions
 
 - Cleaning is deterministic: the same input always gives the same output. A
