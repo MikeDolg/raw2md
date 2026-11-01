@@ -26,9 +26,15 @@ _HIDDEN = ("torch", _ENGINE)
 # disk.
 _SURYA_PREDICTORS = {
     "detection": "DetectionPredictor",
+    "layout": "LayoutPredictor",
+    "ocr_error": "OCRErrorPredictor",
     "recognition": "RecognitionPredictor",
     "table_rec": "TableRecPredictor",
 }
+
+# The `__init__` of this package builds the model; the builders need only a
+# plain submodule of it.
+_SURYA_PLAIN_PACKAGES = ("common.surya",)
 
 Loader = Callable[[str], types.ModuleType]
 
@@ -69,13 +75,21 @@ def _copy_root() -> Path:
     return Path(next(iter(spec.submodule_search_locations)))
 
 
+def _register_package_stub(root: Path, package: str) -> types.ModuleType:
+    name = f"{_ENGINE}.surya.{package}"
+    stub = types.ModuleType(name)
+    stub.__path__ = [str(root / "surya" / Path(*package.split(".")))]
+    stub.__spec__ = importlib.machinery.ModuleSpec(name, None, is_package=True)
+    sys.modules[name] = stub
+    return stub
+
+
 def _register_surya_stubs(root: Path) -> None:
+    for package in _SURYA_PLAIN_PACKAGES:
+        _register_package_stub(root, package)
     for package, predictor in _SURYA_PREDICTORS.items():
-        name = f"{_ENGINE}.surya.{package}"
-        stub = types.ModuleType(name)
-        stub.__path__ = [str(root / "surya" / package)]
-        stub.__spec__ = importlib.machinery.ModuleSpec(name, None, is_package=True)
-        sys.modules[name] = stub
+        stub = _register_package_stub(root, package)
+        name = stub.__name__
         schema = importlib.import_module(f"{name}.schema")
         for key, value in vars(schema).items():
             if isinstance(value, type) and value.__module__ == schema.__name__:

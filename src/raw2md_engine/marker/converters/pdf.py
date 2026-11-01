@@ -7,6 +7,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"  # disables a tokenizers warning
 import io
 import tempfile
 from collections import defaultdict
+from collections.abc import Callable
 from contextlib import contextmanager
 from typing import Annotated, Any
 
@@ -67,6 +68,9 @@ class PdfConverter(BaseConverter):
         TextProcessor,
         DebugProcessor,
     )
+    # Receives the name of each step before it runs: pages, structure,
+    # processors i/N, rendering. An exception in it is not caught.
+    phase_callback: Callable[[str], None] | None = None
 
     def __init__(
         self,
@@ -131,22 +135,31 @@ class PdfConverter(BaseConverter):
         layout_builder = self.resolve_dependencies(self.layout_builder_class)
         line_builder = self.resolve_dependencies(LineBuilder)
         ocr_builder = self.resolve_dependencies(OcrBuilder)
+        self._report_phase("pages")
         provider = PdfProvider(filepath, self.config)
         document = DocumentBuilder(self.config)(
             provider, layout_builder, line_builder, ocr_builder
         )
+        self._report_phase("structure")
         structure_builder_cls = self.resolve_dependencies(StructureBuilder)
         structure_builder_cls(document)
 
-        for processor in self.processor_list:
+        total = len(self.processor_list)
+        for index, processor in enumerate(self.processor_list, start=1):
+            self._report_phase(f"processors {index}/{total}")
             processor(document)
 
         return document
+
+    def _report_phase(self, phase: str) -> None:
+        if self.phase_callback is not None:
+            self.phase_callback(phase)
 
     def __call__(self, filepath: str | io.BytesIO):
         with self.filepath_to_str(filepath) as temp_path:
             document = self.build_document(temp_path)
             self.page_count = len(document.pages)
+            self._report_phase("rendering")
             renderer = self.resolve_dependencies(self.renderer)
             rendered = renderer(document)
         return rendered

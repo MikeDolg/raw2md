@@ -111,6 +111,9 @@ of the repository holds each change with its diff.
 - The Markdown renderer returns the HTML that it converts to Markdown
   (2026-11-01). Changed file, under src/raw2md_engine/:
   `marker/renderers/markdown.py`.
+- The PDF converter names each of its steps to an optional phase callback
+  before the step runs (2026-11-01). Changed file, under
+  src/raw2md_engine/: `marker/converters/pdf.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

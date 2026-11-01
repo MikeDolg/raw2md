@@ -1573,6 +1573,52 @@ def test_bundled_engine_loads_model_once_across_files(tmp_path: Path) -> None:
     assert fake.create_model_dict.call_count == 1
 
 
+def test_bundled_engine_reports_the_model_load_on_the_first_file_only(
+    tmp_path: Path,
+) -> None:
+    first = tmp_path / "a.pdf"
+    second = tmp_path / "b.pdf"
+    _write_pdf_bytes(first)
+    _write_pdf_bytes(second)
+    engine = BundledEngine(tmp_path)
+    phases: list[str] = []
+
+    with _install_fake_engine(_make_fake_engine()):
+        engine.convert(first, tmp_path / "a", ConvertOptions(on_phase=phases.append))
+        assert phases == ["loading models"]
+        engine.convert(second, tmp_path / "b", ConvertOptions(on_phase=phases.append))
+
+    assert phases == ["loading models"]
+
+
+def test_bundled_engine_hands_the_phase_callback_to_the_converter(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "doc.pdf"
+    _write_pdf_bytes(source)
+    fake = _make_fake_engine()
+    phases: list[str] = []
+
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path).convert(
+            source, tmp_path / "doc", ConvertOptions(on_phase=phases.append)
+        )
+
+    fake.converter_instance.phase_callback("rendering")
+    assert phases[-1] == "rendering"
+
+
+def test_bundled_engine_without_a_phase_callback_sets_none(tmp_path: Path) -> None:
+    source = tmp_path / "doc.pdf"
+    _write_pdf_bytes(source)
+    fake = _make_fake_engine()
+
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
+
+    assert fake.converter_instance.phase_callback is None
+
+
 def test_bundled_engine_downloads_missing_weights_before_the_models(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1601,7 +1647,7 @@ def test_bundled_engine_downloads_missing_weights_before_the_models(
 
     assert hub.filenames == [gone]
     assert downloads_before_models == [1]
-    assert phases[0] == "weights"
+    assert phases == ["weights", "loading models"]
     assert fake.create_model_dict.call_args.kwargs["weights_dir"] == str(weights_dir)
 
 
@@ -2578,6 +2624,41 @@ def test_djvu_renders_pages_in_bounded_groups(tmp_path: Path) -> None:
     assert ranges == ["-page=1-16", "-page=17-32", "-page=33-40"]
     tiff_paths: list[str] = img2pdf_mock.convert.call_args.args[0]
     assert len(tiff_paths) == 40
+
+
+def test_djvu_reports_each_page_group_before_it_renders(tmp_path: Path) -> None:
+    source = tmp_path / "book.djvu"
+    source.write_bytes(b"fake djvu")
+    phases: list[str] = []
+
+    with (
+        patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run(40)),
+        patch.dict(sys.modules, {"img2pdf": MagicMock()}),
+    ):
+        DjvuEngine(_make_stub_bundled_engine(), tmp_path).convert(
+            source, tmp_path / "book", ConvertOptions(on_phase=phases.append)
+        )
+
+    assert phases == ["djvu pages 16/40", "djvu pages 32/40", "djvu pages 40/40"]
+
+
+def test_djvu_reports_a_bare_phase_without_a_page_count(tmp_path: Path) -> None:
+    source = tmp_path / "book.djvu"
+    source.write_bytes(b"fake djvu")
+    phases: list[str] = []
+
+    with (
+        patch(
+            "raw2md.engines.djvu.subprocess.run",
+            side_effect=_fake_djvu_run(5, page_count_readable=False),
+        ),
+        patch.dict(sys.modules, {"img2pdf": MagicMock()}),
+    ):
+        DjvuEngine(_make_stub_bundled_engine(), tmp_path).convert(
+            source, tmp_path / "book", ConvertOptions(on_phase=phases.append)
+        )
+
+    assert phases == ["djvu pages"]
 
 
 def test_djvu_pages_are_assembled_in_page_order(tmp_path: Path) -> None:

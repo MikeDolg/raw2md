@@ -11,6 +11,7 @@ from ._helpers import Loader, engine_copy
 
 _TORCH_FREE = (
     "marker.settings",
+    "marker.converters.pdf",
     "marker.renderers",
     "marker.renderers.markdown",
     "marker.schema.text.line",

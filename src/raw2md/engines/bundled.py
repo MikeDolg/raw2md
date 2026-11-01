@@ -106,6 +106,8 @@ class BundledEngine(Engine):
         try:
             if self._models is None:
                 self._ensure_weights(options.on_phase)
+                if options.on_phase is not None:
+                    options.on_phase("loading models")
             with capture_engine_output(self._log_stream, on_phase=options.on_phase):
                 models = self._load_models()
                 text, images, html = self._run_engine(
@@ -114,6 +116,7 @@ class BundledEngine(Engine):
                     options.extract_media,
                     options.mark_pages,
                     None if engine_dir is None else engine_dir / _BLOCKS_STAGING_DIR,
+                    options.on_phase,
                 )
             media = (
                 self._save_images(images, media_dir) if options.extract_media else ()
@@ -184,11 +187,13 @@ class BundledEngine(Engine):
         extract_media: bool,
         mark_pages: bool,
         blocks_dir: Path | None,
+        on_phase: Callable[[str], None] | None,
     ) -> tuple[str, dict[str, Any], str]:
         """Run the engine on `source`: (markdown, images-by-name, render HTML).
 
         The converter keeps its default processors and its Markdown renderer.
-        With `blocks_dir` the engine writes its block tree there.
+        With `blocks_dir` the engine writes its block tree there. `on_phase`
+        receives the converter's own steps, which print no progress line.
         """
         from raw2md_engine.marker.converters.pdf import PdfConverter
         from raw2md_engine.marker.output import text_from_rendered
@@ -197,6 +202,7 @@ class BundledEngine(Engine):
             extract_media, mark_pages, self._recognition_batch_size, blocks_dir
         )
         converter = PdfConverter(config=config, artifact_dict=models)
+        converter.phase_callback = on_phase
         rendered = converter(str(source))
         text, _ext, images = text_from_rendered(rendered)
         if mark_pages:

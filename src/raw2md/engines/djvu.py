@@ -15,6 +15,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import replace
 from importlib.util import find_spec
@@ -48,6 +49,8 @@ _PAGE_SEPARATOR: str = "\f"
 # one window.
 _PAGES_PER_GROUP: int = 16
 
+_RENDER_PHASE: str = "djvu pages"
+
 # One TIFF per page: a multi-page TIFF of a book can exceed the 4 GB cap of the
 # classic container. Names carry the page number, so groups stay in sequence.
 _PAGE_TIFF_TEMPLATE: str = "page%04d.tiff"
@@ -58,12 +61,18 @@ _PAGE_NUMBER_RE = re.compile(r"\d+")
 _ASSEMBLED_PDF_NAME: str = "assembled.pdf"
 
 
-def djvu_to_pdf(source: Path, dest_pdf: Path, temp_root: Path) -> None:
+def djvu_to_pdf(
+    source: Path,
+    dest_pdf: Path,
+    temp_root: Path,
+    *,
+    on_phase: Callable[[str], None] | None = None,
+) -> None:
     """Convert a .djvu to a PDF at `dest_pdf` via ddjvu -> img2pdf.
 
     The TIFFs live in a temp dir under `temp_root`; a non-ASCII source is
     copied there. A staging `OSError` becomes `ConversionError`, a per-file
-    failure rather than a batch abort.
+    failure rather than a batch abort. `on_phase` receives the page groups.
     """
     try:
         temp_root.mkdir(parents=True, exist_ok=True)
@@ -79,7 +88,7 @@ def djvu_to_pdf(source: Path, dest_pdf: Path, temp_root: Path) -> None:
                 shutil.copy2(resolved, work_source)
             pages_dir = tmp / "pages"
             pages_dir.mkdir()
-            _assemble_pdf(_ddjvu_to_tiffs(work_source, pages_dir), dest_pdf)
+            _assemble_pdf(_ddjvu_to_tiffs(work_source, pages_dir, on_phase), dest_pdf)
     except OSError as exc:
         raise ConversionError(
             f"could not stage djvu source {source.name}: {exc}"
@@ -156,19 +165,25 @@ def _djvutxt(source: Path, page: int | None) -> str:
     return result.stdout.decode("utf-8", errors="replace")
 
 
-def _ddjvu_to_tiffs(source: Path, out_dir: Path) -> list[Path]:
+def _ddjvu_to_tiffs(
+    source: Path, out_dir: Path, on_phase: Callable[[str], None] | None
+) -> list[Path]:
     """Export every DjVu page to its own TIFF in `out_dir`, in page order.
 
     Without a page count the document renders in one call under one timeout.
+    Each group reports its last page before it renders, as `djvu pages k/N`.
     """
     total = page_count(source)
     if total is None:
+        if on_phase is not None:
+            on_phase(_RENDER_PHASE)
         _render_pages(source, out_dir, None)
     else:
         for first in range(1, total + 1, _PAGES_PER_GROUP):
-            _render_pages(
-                source, out_dir, (first, min(first + _PAGES_PER_GROUP - 1, total))
-            )
+            last = min(first + _PAGES_PER_GROUP - 1, total)
+            if on_phase is not None:
+                on_phase(f"{_RENDER_PHASE} {last}/{total}")
+            _render_pages(source, out_dir, (first, last))
     pages = sorted(out_dir.glob(_PAGE_TIFF_GLOB), key=_page_number)
     if not pages:
         raise ConversionError(f"ddjvu rendered no pages of {source.name}")
@@ -302,7 +317,7 @@ class DjvuEngine(Engine):
                     )
                 )
             pdf_path = pdf_dir / _ASSEMBLED_PDF_NAME
-            djvu_to_pdf(source, pdf_path, self._temp_root)
+            djvu_to_pdf(source, pdf_path, self._temp_root, on_phase=options.on_phase)
             result = self._bundled.convert(pdf_path, media_dir, options)
             if options.scratch_dir is not None:
                 result = replace(result, source_pdf=pdf_path)
