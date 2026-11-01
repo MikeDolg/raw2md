@@ -134,6 +134,8 @@ that ran:
 | File | When it appears | What it holds |
 |---|---|---|
 | `conversion.md` | always | the output of the converter |
+| `engine/render.html` | when `raw2md-engine` converts a `pdf` or a `djvu` | the HTML that `raw2md-engine` turns into `conversion.md` |
+| `engine/blocks.json` | together with `engine/render.html` | the pages and the blocks of `raw2md-engine` after its last processing step, without the page images |
 | `cleaning.md` | always | the text after cleaning |
 | `inspection.md` | with `-i` on `pdf` and `djvu` | the text after the inspection edits |
 | `acceptance.md` | together with `inspection.md` | the text after the acceptance pass |
@@ -143,7 +145,8 @@ that ran:
 The `.debug` folder of an earlier run is replaced together with the result, so
 the snapshots of different runs do not mix. Without `-d`, the tool does not
 touch the folder. If LLM-OCR ends with an error, `llm/ocr.txt` stays: it holds
-the replies that you already paid for.
+the replies that you already paid for. If `raw2md-engine` ends with an error,
+the `engine/` folder does not stay.
 
 ## Header
 
