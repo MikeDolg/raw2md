@@ -2398,6 +2398,20 @@ def test_debug_existing_folder_is_replaced(tmp_path: Path) -> None:
     assert (debug_dir / "conversion.md").read_text(encoding="utf-8") == OK_BODY
 
 
+def test_engine_gets_the_debug_folder_only_under_debug(tmp_path: Path) -> None:
+    src = tmp_path / "a.pdf"
+    src.write_bytes(b"%PDF-1.4 stub")
+    engine = StubEngine(extensions=frozenset({"pdf"}), body=OK_BODY)
+    registry = EngineRegistry([engine])
+
+    run_one(src, registry, debug=True)
+    assert engine.last_options is not None
+    assert engine.last_options.debug_dir == tmp_path / "a.debug"
+
+    run_one(src, registry)
+    assert engine.last_options.debug_dir is None
+
+
 def test_debug_omits_stages_not_run(tmp_path: Path) -> None:
     src = tmp_path / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")

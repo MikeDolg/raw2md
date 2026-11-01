@@ -66,19 +66,20 @@ class ConvertOptions:
     """Per-file conversion options passed to every engine.
 
     `extract_media` is False under `--disable-image-extraction`. `on_phase`
-    receives the current engine phase for the progress bar. `mark_pages` asks
-    an engine that knows page boundaries to write a `mdtext.pages.page_mark` above
-    each page, so inspection can address an edit by page; it is set only when
-    inspection runs, so other runs stay unmarked. `scratch_dir` is a folder
-    that lives as long as the file's processing: an engine that builds the pdf
-    it converts (the djvu chain) leaves it there for inspection. An engine
-    ignores an option it has no use for.
+    receives the engine phase for the progress bar. `mark_pages` asks an
+    engine that knows page boundaries for a `mdtext.pages.page_mark` above each
+    page; only inspection sets it, to address an edit by page. `scratch_dir`
+    lives as long as the file's processing: an engine that builds its pdf (the
+    djvu chain) leaves it there for inspection. `debug_dir` is the `--debug`
+    folder, where an engine keeps its own intermediate data. An engine ignores
+    an option it has no use for.
     """
 
     extract_media: bool = True
     on_phase: Callable[[str], None] | None = None
     mark_pages: bool = False
     scratch_dir: Path | None = None
+    debug_dir: Path | None = None
 
 
 @dataclass(frozen=True)

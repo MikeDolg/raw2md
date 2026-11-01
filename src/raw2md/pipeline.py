@@ -386,6 +386,7 @@ def _process_engine(
             on_phase=bar.set_phase,
             mark_pages=ctx.inspection is not None,
             scratch_dir=scratch_dir,
+            debug_dir=debug_dir_for(target) if ctx.config.debug else None,
         )
         # Engine output stays out of the log; this pair stands for it.
         _logger.info("converting %s via %s", source.name, engine.method.value)

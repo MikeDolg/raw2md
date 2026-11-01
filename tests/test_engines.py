@@ -1266,13 +1266,18 @@ def _make_fake_engine(
     model_banner: str | None = None,
     convert_banner: tuple[str, str] | None = None,
     convert_error: Exception | None = None,
+    html: str = "<p>BODY</p>",
+    writes_blocks: bool = True,
 ) -> SimpleNamespace:
     """Build mocks standing in for the library entry points of the engine.
 
     The banners make the fakes print, for output-isolation tests.
-    `convert_error` is raised inside the converter call.
+    Under `debug_json` the converter writes a block tree where the real
+    engine does, unless `writes_blocks` is False; `convert_error` is raised
+    after that, as a failure in the renderer would be.
     """
     loaded_models: dict[str, Any] = {"loaded": True}
+    configs: list[dict[str, Any]] = []
 
     def _create(device: Any = None, *, weights_dir: str) -> dict[str, Any]:
         if model_banner is not None:
@@ -1281,16 +1286,27 @@ def _make_fake_engine(
 
     create_model_dict = MagicMock(side_effect=_create)
 
-    def _convert(filepath: str) -> str:
+    def _convert(filepath: str) -> SimpleNamespace:
         if convert_banner is not None:
             print(convert_banner[0])  # noqa: T201 -- simulates the real engine's console output for the capture test
             print(convert_banner[1], file=sys.stderr)  # noqa: T201 -- simulates the real engine's console output for the capture test
+        config = configs[-1]
+        if writes_blocks and config.get("debug_json"):
+            stem = Path(filepath).name.rsplit(".", 1)[0]
+            folder = Path(config["debug_data_folder"]) / stem
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder / "blocks.json").write_text('[{"page_id": 0}]', encoding="utf-8")
         if convert_error is not None:
             raise convert_error
-        return "RENDERED"
+        return SimpleNamespace(html=html)
 
     converter_instance = MagicMock(side_effect=_convert)
-    pdf_converter = MagicMock(return_value=converter_instance)
+
+    def _converter(*, config: dict[str, Any], artifact_dict: Any) -> MagicMock:
+        configs.append(config)
+        return converter_instance
+
+    pdf_converter = MagicMock(side_effect=_converter)
     text_from_rendered = MagicMock(return_value=(body, "md", images or {}))
 
     return SimpleNamespace(
@@ -1707,6 +1723,101 @@ def test_bundled_engine_cleans_temp_on_failure(tmp_path: Path) -> None:
         BundledEngine(temp_root).convert(source, tmp_path / "out", ConvertOptions())
 
     assert list(temp_root.glob("raw2md_engine_*")) == []
+
+
+@pytest.mark.parametrize("name", ["doc.pdf", "blocks.json.pdf", "render.html.pdf"])
+def test_bundled_engine_keeps_render_html_and_blocks_under_debug(
+    tmp_path: Path, name: str
+) -> None:
+    # A source stem equal to a kept file name must not collide with it.
+    source = tmp_path / name
+    _write_pdf_bytes(source)
+    html = "<p>First line\nsecond line café</p>\n"
+    fake = _make_fake_engine(html=html)
+    debug_dir = tmp_path / "doc.debug"
+
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path).convert(
+            source, tmp_path / "doc", ConvertOptions(debug_dir=debug_dir)
+        )
+
+    engine_dir = debug_dir / "engine"
+    assert sorted(p.name for p in engine_dir.iterdir()) == [
+        "blocks.json",
+        "render.html",
+    ]
+    # Byte for byte: no newline translation on any platform.
+    assert (engine_dir / "render.html").read_bytes() == html.encode("utf-8")
+    blocks = json.loads((engine_dir / "blocks.json").read_text(encoding="utf-8"))
+    assert blocks == [{"page_id": 0}]
+    config = fake.pdf_converter.call_args.kwargs["config"]
+    assert config["debug_json"] is True
+    assert Path(config["debug_data_folder"]).parent == engine_dir
+
+
+def test_bundled_engine_keeps_blocks_of_a_copied_non_ascii_source(
+    tmp_path: Path,
+) -> None:
+    # The engine reads the ASCII copy, so it names the block tree's folder
+    # after the copy, not after the source.
+    source = tmp_path / "файл.pdf"
+    _write_pdf_bytes(source)
+    fake = _make_fake_engine()
+    debug_dir = tmp_path / "out.debug"
+
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path / "asciitmp").convert(
+            source, tmp_path / "out", ConvertOptions(debug_dir=debug_dir)
+        )
+
+    assert (debug_dir / "engine" / "blocks.json").is_file()
+
+
+def test_bundled_engine_failure_leaves_no_engine_snapshots(tmp_path: Path) -> None:
+    # The block tree is written before the failure; none of it may stay.
+    source = tmp_path / "doc.pdf"
+    _write_pdf_bytes(source)
+    fake = _make_fake_engine(convert_error=RuntimeError("boom"))
+    debug_dir = tmp_path / "doc.debug"
+
+    with _install_fake_engine(fake), pytest.raises(ConversionError, match="boom"):
+        BundledEngine(tmp_path).convert(
+            source, tmp_path / "doc", ConvertOptions(debug_dir=debug_dir)
+        )
+
+    assert not (debug_dir / "engine").exists()
+
+
+def test_bundled_engine_fails_when_the_engine_writes_no_blocks(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "doc.pdf"
+    _write_pdf_bytes(source)
+    fake = _make_fake_engine(writes_blocks=False)
+    debug_dir = tmp_path / "doc.debug"
+
+    with (
+        _install_fake_engine(fake),
+        pytest.raises(ConversionError, match=r"wrote no blocks\.json"),
+    ):
+        BundledEngine(tmp_path).convert(
+            source, tmp_path / "doc", ConvertOptions(debug_dir=debug_dir)
+        )
+
+    assert not (debug_dir / "engine").exists()
+
+
+def test_bundled_engine_writes_no_snapshots_without_debug(tmp_path: Path) -> None:
+    source = tmp_path / "doc.pdf"
+    _write_pdf_bytes(source)
+    fake = _make_fake_engine()
+    before = sorted(tmp_path.rglob("*"))
+
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path).convert(source, tmp_path / "doc", ConvertOptions())
+
+    assert sorted(tmp_path.rglob("*")) == before
+    assert "debug_json" not in fake.pdf_converter.call_args.kwargs["config"]
 
 
 def test_bundled_engine_extracts_images(tmp_path: Path) -> None:
@@ -2321,6 +2432,27 @@ def test_djvu_engine_names_no_pdf_without_a_scratch_dir(tmp_path: Path) -> None:
         )
 
     assert result.source_pdf is None
+
+
+def test_djvu_engine_passes_the_debug_folder_to_the_bundled_engine(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "book.djvu"
+    source.write_bytes(b"fake djvu")
+    debug_dir = tmp_path / "book.debug"
+    bundled = _make_stub_bundled_engine()
+    img2pdf_mock = MagicMock()
+    img2pdf_mock.convert.return_value = b"%PDF-fake"
+
+    with (
+        patch("raw2md.engines.djvu.subprocess.run", side_effect=_fake_djvu_run()),
+        patch.dict(sys.modules, {"img2pdf": img2pdf_mock}),
+    ):
+        DjvuEngine(bundled, tmp_path / "tmp").convert(
+            source, tmp_path / "book", ConvertOptions(debug_dir=debug_dir)
+        )
+
+    assert bundled.convert.call_args.args[2].debug_dir == debug_dir
 
 
 def test_djvu_engine_non_ascii_source_copied_to_temp(tmp_path: Path) -> None:

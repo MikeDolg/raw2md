@@ -7,7 +7,8 @@ fast test layer never loads a model.
 
 Under `mark_pages` the output is paginated and the separators become page
 marks. The marks carry page boundaries through cleaning, which rewrites and
-drops lines, so a line-index map would be stale by inspection.
+drops lines, so a line-index map would be stale by inspection. Under
+`debug_dir` a successful conversion keeps the render HTML and the block tree.
 
 The weights download before the first model load, only when the folder lacks
 a file of the pinned revision. The engine and the download print progress to
@@ -45,6 +46,13 @@ _PAGE_SEPARATOR = "<!-- raw2md-page-break -->"
 
 # The engine's pagination line: its 0-based page id, then the separator above.
 _PAGE_BREAK_RE = re.compile(r"^\{(\d+)\}" + re.escape(_PAGE_SEPARATOR) + r"$")
+
+_ENGINE_DEBUG_DIR = "engine"
+_BLOCKS_FILE = "blocks.json"
+_RENDER_FILE = "render.html"
+# The engine writes the block tree into `<folder>/<pdf stem>/`. A fixed
+# folder for it keeps a stem from colliding with the two kept file names.
+_BLOCKS_STAGING_DIR = "staging"
 
 
 class BundledEngine(Engine):
@@ -91,22 +99,33 @@ class BundledEngine(Engine):
         if not self.available():
             raise ConversionError(f"{DEFAULT_ENGINE} is not installed")
 
+        engine_dir = (
+            None if options.debug_dir is None else options.debug_dir / _ENGINE_DEBUG_DIR
+        )
         work_source, cleanup = self._prepare_ascii_input(source)
         try:
             if self._models is None:
                 self._ensure_weights(options.on_phase)
             with capture_engine_output(self._log_stream, on_phase=options.on_phase):
                 models = self._load_models()
-                text, images = self._run_engine(
-                    work_source, models, options.extract_media, options.mark_pages
+                text, images, html = self._run_engine(
+                    work_source,
+                    models,
+                    options.extract_media,
+                    options.mark_pages,
+                    None if engine_dir is None else engine_dir / _BLOCKS_STAGING_DIR,
                 )
             media = (
                 self._save_images(images, media_dir) if options.extract_media else ()
             )
             source_pages = self._count_pages(work_source)
+            if engine_dir is not None:
+                _keep_engine_debug(engine_dir, work_source, html)
         except ConversionError:
+            _drop_engine_debug(engine_dir)
             raise
         except Exception as exc:
+            _drop_engine_debug(engine_dir)
             raise ConversionError(_failure_reason(source, exc)) from exc
         finally:
             cleanup()
@@ -164,23 +183,25 @@ class BundledEngine(Engine):
         models: dict[str, Any],
         extract_media: bool,
         mark_pages: bool,
-    ) -> tuple[str, dict[str, Any]]:
-        """Run the engine on `source`, returning (markdown, images-by-name).
+        blocks_dir: Path | None,
+    ) -> tuple[str, dict[str, Any], str]:
+        """Run the engine on `source`: (markdown, images-by-name, render HTML).
 
         The converter keeps its default processors and its Markdown renderer.
+        With `blocks_dir` the engine writes its block tree there.
         """
         from raw2md_engine.marker.converters.pdf import PdfConverter
         from raw2md_engine.marker.output import text_from_rendered
 
         config = _converter_config(
-            extract_media, mark_pages, self._recognition_batch_size
+            extract_media, mark_pages, self._recognition_batch_size, blocks_dir
         )
         converter = PdfConverter(config=config, artifact_dict=models)
         rendered = converter(str(source))
         text, _ext, images = text_from_rendered(rendered)
         if mark_pages:
             text = _rewrite_page_breaks(text)
-        return text, images
+        return text, images, rendered.html
 
     def _save_images(self, images: dict[str, Any], media_dir: Path) -> tuple[str, ...]:
         """Write the engine's in-memory images into `media_dir`, sorted by name.
@@ -216,7 +237,10 @@ class BundledEngine(Engine):
 
 
 def _converter_config(
-    extract_media: bool, mark_pages: bool, recognition_batch_size: int | None
+    extract_media: bool,
+    mark_pages: bool,
+    recognition_batch_size: int | None,
+    blocks_dir: Path | None,
 ) -> dict[str, Any]:
     """The engine config of one conversion, as marker's command line builds it.
 
@@ -231,7 +255,34 @@ def _converter_config(
         config["page_separator"] = _PAGE_SEPARATOR
     if recognition_batch_size is not None:
         config["recognition_batch_size"] = recognition_batch_size
+    if blocks_dir is not None:
+        config["debug_json"] = True
+        config["debug_data_folder"] = str(blocks_dir)
     return config
+
+
+def _keep_engine_debug(engine_dir: Path, work_source: Path, html: str) -> None:
+    """Move the block tree up into `engine_dir` and write the render HTML.
+
+    The engine names the block tree's folder after the pdf it read, cut at the
+    last dot. A missing tree is a defect of raw2md, not of the source.
+    """
+    staging = engine_dir / _BLOCKS_STAGING_DIR
+    blocks = staging / work_source.name.rsplit(".", 1)[0] / _BLOCKS_FILE
+    if not blocks.is_file():
+        raise ConversionError(f"{DEFAULT_ENGINE} wrote no {_BLOCKS_FILE}: {blocks}")
+    blocks.replace(engine_dir / _BLOCKS_FILE)
+    shutil.rmtree(staging)
+    (engine_dir / _RENDER_FILE).write_text(html, encoding="utf-8", newline="")
+
+
+def _drop_engine_debug(engine_dir: Path | None) -> None:
+    """Remove a failed conversion's engine snapshots, so none is partial.
+
+    Best effort: a cleanup failure must not replace the conversion error.
+    """
+    if engine_dir is not None:
+        shutil.rmtree(engine_dir, ignore_errors=True)
 
 
 def _failure_reason(source: Path, exc: Exception) -> str:
