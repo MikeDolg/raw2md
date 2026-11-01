@@ -1994,8 +1994,12 @@ def test_inspection_full_chunked_pass_keeps_the_model_key(tmp_path: Path) -> Non
     assert header.status is ResultStatus.OK
 
 
-def test_inspection_chunked_pass_shows_the_chunk_count(tmp_path: Path) -> None:
+def test_inspection_chunked_pass_shows_the_chunk_count(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     # The stage bracket names the chunk in flight, so a slow pass moves.
+    ticks = iter(range(0, 1000, 5))
+    monkeypatch.setattr("raw2md.progress._now", lambda: float(next(ticks)))
     src = tmp_path / "a.pdf"
     _write_pdf_with_images(src, [None, None])
     provider = FakeProvider([PAGE_ONE_FIX, json.dumps({"edits": []})])

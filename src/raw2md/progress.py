@@ -9,7 +9,9 @@ bars.
 from __future__ import annotations
 
 import io
+import re
 import sys
+import time
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from typing import Self, TextIO, cast
@@ -52,6 +54,19 @@ _FILE_BAR_POS = 3
 
 _LABEL_BAR_FORMAT = "{desc}:"
 
+# A counter-only phase change redraws at most this often, in seconds.
+_REDRAW_INTERVAL = 1.0
+
+# The `n/total` of a tqdm line, before a space or a bracket; `340it` has none.
+_TQDM_COUNTER = re.compile(r"\|\s*(\d+/\d+)(?=\s|\[|$)")
+
+# A trailing counter of a phase label.
+_PHASE_COUNTER = re.compile(r"\s\d+/\d+$")
+
+
+def _now() -> float:
+    return time.monotonic()
+
 
 def _engine_phase_label(line: str) -> str | None:
     """Map one line of redirected engine output to a bracket label, or None.
@@ -64,6 +79,15 @@ def _engine_phase_label(line: str) -> str | None:
     if _TQDM_MARK in line:
         return _GENERIC_PHASE
     return None
+
+
+def _engine_phase_progress(line: str) -> str | None:
+    """Like `_engine_phase_label`, plus the `n/total` of the line when it has one."""
+    label = _engine_phase_label(line)
+    if label is None:
+        return None
+    counter = _TQDM_COUNTER.search(line)
+    return f"{label} {counter.group(1)}" if counter else label
 
 
 def _bracket_bar_format(text: str) -> str:
@@ -130,6 +154,8 @@ class FileProgress:
         self, filename: str, stages: Sequence[str], *, file: TextIO | None = None
     ) -> None:
         self._seen: set[str] = set()
+        self._phase: str | None = None
+        self._redrawn_at = 0.0
         stream = file if file is not None else sys.stderr
         # leave=False: the next file reuses the same two lines.
         self._label: _tqdm_mod.tqdm[None] = _tqdm_mod.tqdm(
@@ -156,6 +182,7 @@ class FileProgress:
         A stage may report more than once. The count never passes the total, so
         a stage outside the planned route stalls rather than overshoots.
         """
+        self._phase = None
         self._bar.bar_format = _bracket_bar_format(stage)
         if stage in self._seen:
             self._bar.refresh()
@@ -167,9 +194,22 @@ class FileProgress:
         self._bar.refresh()
 
     def set_phase(self, phase: str) -> None:
-        """Relabel the bracket with a sub-stage phase, without advancing the count."""
+        """Relabel the bracket with a sub-stage phase, without advancing the count.
+
+        A repeat of the current phase is dropped. A new phase name redraws at
+        once; a change of the trailing counter alone redraws once a second.
+        """
+        if phase == self._phase:
+            return
+        name_changed = self._phase is None or _PHASE_COUNTER.sub(
+            "", phase
+        ) != _PHASE_COUNTER.sub("", self._phase)
+        self._phase = phase
         self._bar.bar_format = _bracket_bar_format(phase)
-        self._bar.refresh()
+        now = _now()
+        if name_changed or now - self._redrawn_at >= _REDRAW_INTERVAL:
+            self._redrawn_at = now
+            self._bar.refresh()
 
     def close(self) -> None:
         self._bar.close()
@@ -195,23 +235,21 @@ class _NullWriter(io.TextIOBase):
 class _PhaseSniffer(io.TextIOBase):
     """A write sink that passes output through and lifts engine phases out of it.
 
-    A label is reported only when it changes: tqdm redraws each phase many
-    times. The bar writes to the stderr captured at its construction, so the
-    callback does not re-enter `write`.
+    Every progress line is reported with its counter; the bar drops repeats.
+    The bar writes to the stderr captured at its construction, so the callback
+    does not re-enter `write`.
     """
 
     def __init__(self, underlying: TextIO, on_phase: Callable[[str], None]) -> None:
         self._underlying = underlying
         self._on_phase = on_phase
-        self._last: str | None = None
 
     def write(self, s: str) -> int:
         written = self._underlying.write(s)
         # tqdm redraws with CR; one write may carry several redraws.
         for chunk in s.replace("\r", "\n").split("\n"):
-            label = _engine_phase_label(chunk)
-            if label is not None and label != self._last:
-                self._last = label
+            label = _engine_phase_progress(chunk)
+            if label is not None:
                 self._on_phase(label)
         return written
 

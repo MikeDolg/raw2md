@@ -308,27 +308,79 @@ def test_phase_sniffer_forwards_output_to_underlying() -> None:
     assert sink.getvalue() == "Recognizing Layout: 100%|##|\n"
 
 
-def test_phase_sniffer_reports_only_on_label_change() -> None:
-    # tqdm redraws a bar many times; the callback fires once per phase.
+def test_phase_sniffer_reports_each_counter() -> None:
     from raw2md.progress import _PhaseSniffer
 
     seen: list[str] = []
     sniffer = _PhaseSniffer(io.StringIO(), seen.append)
-    sniffer.write("\rRecognizing Layout:  10%|# |")
-    sniffer.write("\rRecognizing Layout:  90%|##|")  # same phase, redraw
-    sniffer.write("\rRecognizing Text:  10%|# |")  # phase changed
-    sniffer.write("plain log line, no phase")  # ignored, keeps last
+    sniffer.write("\rRecognizing Text:  10%|# | 340/1200 [00:01<00:09]")
+    sniffer.write("\rRecognizing Text:  20%|##| 341/1200 [00:02<00:09]")
+    sniffer.write("plain log line, no phase")
     sniffer.write("\rRecognizing tables: 100%|##|")
-    assert seen == ["layout", "OCR", "tables"]
+    assert seen == ["OCR 340/1200", "OCR 341/1200", "tables"]
 
 
-def test_phase_sniffer_splits_multiline_write() -> None:
-    from raw2md.progress import _PhaseSniffer
+@pytest.mark.parametrize(
+    ("line", "label"),
+    [
+        ("Recognizing Text:  28%|##| 340/1200 [00:01<00:09]", "OCR 340/1200"),
+        ("Recognizing Text: 100%|##| 2/2", "OCR 2/2"),
+        ("Recognizing Text: 340it [00:01, 5it/s]%|", "OCR"),
+        ("Loading model shards:  30%|###| 3/10 [00:01]", "raw2md-engine 3/10"),
+    ],
+)
+def test_engine_phase_progress_appends_counter(line: str, label: str) -> None:
+    from raw2md.progress import _engine_phase_progress
 
-    seen: list[str] = []
-    sniffer = _PhaseSniffer(io.StringIO(), seen.append)
-    sniffer.write("Recognizing Layout: 100%|##|\rRecognizing Text: 100%|##|\n")
-    assert seen == ["layout", "OCR"]
+    assert _engine_phase_progress(line) == label
+
+
+def test_engine_phase_progress_ignores_non_progress_line() -> None:
+    from raw2md.progress import _engine_phase_progress
+
+    assert _engine_phase_progress("a warning") is None
+
+
+def test_file_progress_repeated_phase_does_not_redraw(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("raw2md.progress._now", lambda: 100.0)
+    buf = io.StringIO()
+    with FileProgress("doc.pdf", _BASE_STAGES, file=buf) as fp:
+        fp.set_phase("OCR 1/9")
+        size = len(buf.getvalue())
+        fp.set_phase("OCR 1/9")
+        assert len(buf.getvalue()) == size
+
+
+def test_file_progress_counter_change_redraws_once_a_second(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clock = [100.0]
+    monkeypatch.setattr("raw2md.progress._now", lambda: clock[0])
+    buf = io.StringIO()
+    with FileProgress("doc.pdf", _BASE_STAGES, file=buf) as fp:
+        fp.set_phase("OCR 1/9")
+        size = len(buf.getvalue())
+        clock[0] = 100.5
+        fp.set_phase("OCR 2/9")
+        assert len(buf.getvalue()) == size
+        assert "[OCR 2/9]" in fp._bar.bar_format
+        clock[0] = 101.2
+        fp.set_phase("OCR 3/9")
+        assert len(buf.getvalue()) > size
+
+
+def test_file_progress_phase_name_change_redraws_at_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("raw2md.progress._now", lambda: 100.0)
+    buf = io.StringIO()
+    with FileProgress("doc.pdf", _BASE_STAGES, file=buf) as fp:
+        fp.set_phase("OCR 1/9")
+        size = len(buf.getvalue())
+        fp.set_phase("tables 1/4")
+        assert len(buf.getvalue()) > size
 
 
 def test_capture_engine_output_on_phase_reports_phases() -> None:
