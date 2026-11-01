@@ -138,7 +138,7 @@ def sent_media(op: InspectOperation) -> list[MediaPart]:
     return [p for p in provider.calls[0][1] if isinstance(p, MediaPart)]
 
 
-def edits_reply(*entries: dict[str, object]) -> str:
+def edits_reply(*entries: Mapping[str, object]) -> str:
     return json.dumps({"edits": list(entries)})
 
 

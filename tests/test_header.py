@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 
 import pytest
 
@@ -31,7 +31,7 @@ def _make_header(**overrides: object) -> ResultHeader:
         "engine": "marker",
         "inspection": "none",
         "post": "none",
-        "converted_at": datetime.date(2026, 6, 18),
+        "converted_at": dt.date(2026, 6, 18),
         "source_hash": "abc123",
         "status": ResultStatus.OK,
     }
@@ -80,7 +80,7 @@ def test_round_trip_all_permanent_fields() -> None:
     assert restored.engine == "marker"
     assert restored.inspection == "none"
     assert restored.post == "none"
-    assert restored.converted_at == datetime.date(2026, 6, 18)
+    assert restored.converted_at == dt.date(2026, 6, 18)
     assert restored.source_hash == "abc123"
     assert restored.status == ResultStatus.IN_PROGRESS
 

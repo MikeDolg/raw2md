@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 
@@ -51,7 +51,7 @@ def write_result(
         engine="marker",
         inspection="none",
         post="none",
-        converted_at=datetime.date.today(),  # noqa: DTZ011 -- local calendar date, mirrors header.py's own converted_at
+        converted_at=dt.date.today(),  # noqa: DTZ011 -- local calendar date, mirrors header.py's own converted_at
         source_hash=compute_source_hash(source_bytes),
         status=status,
     )
@@ -66,7 +66,7 @@ def write_own_header_md(path: Path, body: str = "body\n") -> None:
         engine="marker",
         inspection="none",
         post="none",
-        converted_at=datetime.date.today(),  # noqa: DTZ011 -- local calendar date, mirrors header.py's own converted_at
+        converted_at=dt.date.today(),  # noqa: DTZ011 -- local calendar date, mirrors header.py's own converted_at
         source_hash=compute_source_hash(body.encode("utf-8")),
         status=ResultStatus.OK,
     )
@@ -378,7 +378,7 @@ def test_md_readiness_hash_uses_body_not_header(tmp_path: Path) -> None:
         engine="marker",
         inspection="none",
         post="none",
-        converted_at=datetime.date.today(),  # noqa: DTZ011 -- local calendar date, mirrors header.py's own converted_at
+        converted_at=dt.date.today(),  # noqa: DTZ011 -- local calendar date, mirrors header.py's own converted_at
         source_hash=expected,
         status=ResultStatus.OK,
     )

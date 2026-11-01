@@ -20,8 +20,8 @@ LINE_MAPPING_TYPE = list[tuple[int, ProviderOutput]]
 class PageGroup(Group):
     block_type: BlockTypes = BlockTypes.Page
     # This is bytes if it is serialized
-    lowres_image: Image.Image | None | bytes = None
-    highres_image: Image.Image | None | bytes = None
+    lowres_image: Image.Image | bytes | None = None
+    highres_image: Image.Image | bytes | None = None
     children: list[Any | Block] | None = None
     layout_sliced: bool = (
         False  # Whether the layout model had to slice the image (order may be wrong)

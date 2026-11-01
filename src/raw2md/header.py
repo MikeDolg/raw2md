@@ -8,7 +8,7 @@ behind a `bad` verdict, stays and is written only when non-empty.
 from __future__ import annotations
 
 import base64
-import datetime
+import datetime as dt
 import hashlib
 import re
 from dataclasses import dataclass, field
@@ -121,7 +121,7 @@ class ResultHeader:
     engine: str  # DEFAULT_ENGINE, "pandoc", "clean", or a model key: what converted it
     inspection: str  # "none", "failed", or model key from settings.json
     post: str  # "none", "failed", "partial (done/total)", or model key
-    converted_at: datetime.date
+    converted_at: dt.date
     source_hash: str  # SHA-256 of source bytes, base64url without padding
     status: ResultStatus
     # The quality score, 0 to 100 with one decimal; None on a stub and on a
@@ -165,7 +165,7 @@ def build_stub(
         engine=engine,
         inspection=inspection or LLM_FIELD_NONE,
         post=post or LLM_FIELD_NONE,
-        converted_at=datetime.date.today(),  # noqa: DTZ011 -- local calendar date for the reader, not compared across zones
+        converted_at=dt.date.today(),  # noqa: DTZ011 -- local calendar date for the reader, not compared across zones
         source_hash=source_hash,
         status=ResultStatus.IN_PROGRESS,
     )
@@ -245,10 +245,10 @@ def from_yaml_block(text: str) -> ResultHeader | None:
     try:
         converted_at: object = data["converted_at"]
         if isinstance(converted_at, str):
-            converted_at = datetime.date.fromisoformat(converted_at)
+            converted_at = dt.date.fromisoformat(converted_at)
         # datetime is a subclass of date; the schema wants a date.
-        if isinstance(converted_at, datetime.datetime) or not isinstance(
-            converted_at, datetime.date
+        if isinstance(converted_at, dt.datetime) or not isinstance(
+            converted_at, dt.date
         ):
             # ValueError, so the handler below wraps it as HeaderParseError.
             raise ValueError(  # noqa: TRY004, TRY301

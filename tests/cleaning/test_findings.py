@@ -655,8 +655,10 @@ def test_multiline_display_formula_opening_line_is_not_anchored() -> None:
         [
             r"$$\left\{ \begin{matrix}",
             r"\frac{{\partial w}_{z}}{\partial z} = 0 \\",
-            r"\end{matrix} \right.\  \rightarrow \left\{ \begin{array}{r} a \\ "
-            r"\end{array} \right.$$",
+            (
+                r"\end{matrix} \right.\  \rightarrow \left\{ \begin{array}{r} a \\ "
+                r"\end{array} \right.$$"
+            ),
             "",
         ]
     )
@@ -1034,9 +1036,11 @@ def test_display_formula_with_its_number_shows_no_flattened_shape() -> None:
     assert not block_shows_defect(
         "flattened-block",
         [
-            r"$$W_1 = \frac{1}{3}(\beta_1 + \beta_2 t)(J_1 - 2) "
-            r"+ \frac{1}{3}(\beta_3 + \beta_4 t)(J_2 - 2) "
-            r"- \frac{1}{3}q(J_3 - 1)$$",
+            (
+                r"$$W_1 = \frac{1}{3}(\beta_1 + \beta_2 t)(J_1 - 2) "
+                r"+ \frac{1}{3}(\beta_3 + \beta_4 t)(J_2 - 2) "
+                r"- \frac{1}{3}q(J_3 - 1)$$"
+            ),
             "(15)",
         ],
     )
