@@ -108,7 +108,10 @@ of the repository holds each change with its diff.
   - Style: ruff formats every Python file of the copy and applies its safe
     fixes. `surya/detection/heatmap.py` takes its result class from
     `surya/detection/schema.py`, which breaks an import cycle.
+- The Markdown renderer returns the HTML that it converts to Markdown
+  (2026-11-01). Changed file, under src/raw2md_engine/:
+  `marker/renderers/markdown.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-10-25.
+Last change: 2026-11-01.
