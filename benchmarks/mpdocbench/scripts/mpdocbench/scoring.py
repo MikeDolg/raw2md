@@ -1,9 +1,6 @@
 """Score a converted run and write its result.
 
-A run converted with `-d` holds two bodies per document: the engine output
-(`conversion.md` under `<doc>.debug/`) and the final result (`<doc>.md`). Both
-are scored over the same documents, so the difference between the two columns
-is what raw2md adds to the engine.
+The scorer reads the final body `<doc>.md` of each document.
 
 The scorer lives in its own environment and is not importable from here, so it
 runs as a subprocess of the interpreter `--scorer-python` names, from its own
@@ -37,9 +34,6 @@ from mpdocbench.pins import (
 )
 from raw2md.header import ResultStatus, strip_own_header
 
-ENGINE = "engine"
-RESULT = "result"
-STAGES = (ENGINE, RESULT)
 NOT_AVAILABLE = "n/a"
 
 _METRIC_RESULT = "metric_result.json"
@@ -61,14 +55,8 @@ _CDM_TOOLS = ("xelatex", "magick")
 class Census:
     annotated: list[Document]
     missing: list[str]  # not fetched
-    failed: list[str]  # fetched, but raw2md left no body for one of the stages
+    failed: list[str]  # fetched, but raw2md left no finished body
     scored: list[Document]
-
-
-def body_path(outputs: Path, document: str, stage: str) -> Path:
-    if stage == RESULT:
-        return outputs / f"{document}.md"
-    return outputs / f"{document}.debug" / "conversion.md"
 
 
 def take_census(
@@ -93,31 +81,32 @@ def take_census(
 
 
 def _finished(outputs: Path, document: str) -> bool:
-    """Both bodies exist, and the result is not the stub of a conversion.
+    """The body exists, and it is not the stub of a conversion.
 
     raw2md writes an `in_progress` stub at the result name before it converts,
     so an interrupted run leaves a result file with no body behind.
     """
-    if not all(body_path(outputs, document, stage).is_file() for stage in STAGES):
+    body = outputs / f"{document}.md"
+    if not body.is_file():
         return False
-    text = body_path(outputs, document, RESULT).read_text(encoding="utf-8")
+    text = body.read_text(encoding="utf-8")
     header, _ = strip_own_header(text)
     return header is None or header.status is not ResultStatus.IN_PROGRESS
 
 
 def layout_predictions(
-    outputs: Path, folder: Path, documents: Sequence[Document], stage: str
+    outputs: Path, folder: Path, documents: Sequence[Document]
 ) -> None:
-    """Copy one stage body per document into `folder`, named as the scorer reads it."""
+    """Copy the body of each document into `folder`, named as the scorer reads it."""
     # A folder left from an earlier attempt would hand the scorer bodies that
     # this scoring never chose.
     if folder.exists():
         shutil.rmtree(folder)
     folder.mkdir(parents=True)
     for document in documents:
-        text = body_path(outputs, document.name, stage).read_text(encoding="utf-8")
-        # The result carries raw2md's YAML header, which the scorer would read
-        # as body text. The engine body has none.
+        text = (outputs / f"{document.name}.md").read_text(encoding="utf-8")
+        # The body carries raw2md's YAML header, which the scorer would read
+        # as body text.
         _, body = strip_own_header(text)
         (folder / f"{document.name}.md").write_text(
             body, encoding="utf-8", newline="\n"
@@ -271,8 +260,8 @@ def build_result(
     *,
     run_record: Mapping[str, Any],
     census: Census,
-    scores: Mapping[str, Mapping[str, Any]],
-    fallbacks: Mapping[str, int],
+    scores: Mapping[str, Any],
+    fallbacks: int,
     llm_requests: int,
     scoring_minutes: float,
     missing_reason: str | None,
@@ -284,12 +273,11 @@ def build_result(
         f"{key} is {NOT_AVAILABLE}: {reason}."
         for key, reason in sorted(pins.metrics_off.items())
     ]
-    notes += [
-        f"The {stage} text match fell back to the simple algorithm"
-        f" on {count} documents."
-        for stage, count in fallbacks.items()
-        if count
-    ]
+    if fallbacks:
+        notes.append(
+            f"The text match fell back to the simple algorithm"
+            f" on {fallbacks} documents."
+        )
     return {
         "benchmark": "MPDocBench-Parse",
         "raw2md": run_record.get("raw2md"),
@@ -327,10 +315,7 @@ def build_result(
             "failed_list": census.failed,
         },
         "llm_requests": llm_requests,
-        "scores": {
-            key: {stage: scores[stage].get(key, NOT_AVAILABLE) for stage in STAGES}
-            for key in scores[ENGINE]
-        },
+        "scores": dict(scores),
         "notes": notes,
     }
 
@@ -343,7 +328,7 @@ def score(
     skip_metrics: Sequence[str] = (),
     language: str | None = None,
 ) -> dict[str, Any]:
-    """Score both stages of a run and write `results.yaml`. Return it.
+    """Score a run and write `results.yaml`. Return it.
 
     A run of the whole set also scores one language subset: the documents of
     that language were converted already, so the subset needs no conversion.
@@ -387,44 +372,40 @@ def score(
         run.outputs,
     )
     if not census.scored:
-        raise BenchmarkError(f"{run.outputs} holds no document with both bodies")
+        raise BenchmarkError(f"{run.outputs} holds no finished document body")
 
     started = time.monotonic()
-    scores: dict[str, dict[str, Any]] = {}
-    fallbacks: dict[str, int] = {}
-    for stage in STAGES:
-        stage_dir = scoring_root.resolve() / stage
-        # The scorer names its output folder after the prediction folder, so
-        # the name carries the run: two runs scored from one clone would
-        # otherwise overwrite each other's output.
-        predictions = stage_dir / f"{prefix}-{stage}"
-        layout_predictions(run.outputs, predictions, census.scored, stage)
-        print(f"{stage}: scoring {len(census.scored)} documents", flush=True)
-        config = stage_dir / _CONFIG
-        dump_yaml(
-            config,
-            scorer_config(
-                active,
-                annotation=annotation,
-                predictions=predictions,
-                match_method=pins.match_method,
-                language=language,
-            ),
-        )
-        log = stage_dir / _LOG
-        metric_path = run_scorer(harness, scorer_python, config, predictions.name, log)
-        shutil.copyfile(metric_path, stage_dir / _METRIC_RESULT)
-        scores[stage] = headline_scores(
-            json.loads(metric_path.read_text(encoding="utf-8")), pins_used, active
-        )
-        fallbacks[stage] = count_fallbacks(log)
+    # The scorer names its output folder after the prediction folder, so the
+    # name carries the run: two runs scored from one clone would otherwise
+    # overwrite each other's output.
+    scoring_dir = scoring_root.resolve()
+    predictions = scoring_dir / prefix
+    layout_predictions(run.outputs, predictions, census.scored)
+    print(f"scoring {len(census.scored)} documents", flush=True)
+    config = scoring_dir / _CONFIG
+    dump_yaml(
+        config,
+        scorer_config(
+            active,
+            annotation=annotation,
+            predictions=predictions,
+            match_method=pins.match_method,
+            language=language,
+        ),
+    )
+    log = scoring_dir / _LOG
+    metric_path = run_scorer(harness, scorer_python, config, predictions.name, log)
+    shutil.copyfile(metric_path, scoring_dir / _METRIC_RESULT)
+    scores = headline_scores(
+        json.loads(metric_path.read_text(encoding="utf-8")), pins_used, active
+    )
 
     result = build_result(
         pins_used,
         run_record=run_record,
         census=census,
         scores=scores,
-        fallbacks=fallbacks,
+        fallbacks=count_fallbacks(log),
         llm_requests=count_llm_requests(run.outputs, census.scored),
         scoring_minutes=(time.monotonic() - started) / 60,
         missing_reason=fetched.get("missing_reason"),

@@ -174,7 +174,7 @@ def _parser() -> argparse.ArgumentParser:
         "results",
         type=Path,
         nargs="+",
-        help="results.yaml files, a pair of columns each",
+        help="results.yaml files, a column each",
     )
     return parser
 

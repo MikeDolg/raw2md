@@ -374,12 +374,12 @@ def test_convert_refuses_a_run_without_inputs(tmp_path: Path) -> None:
 # --- score ---------------------------------------------------------------------
 
 # Stands in for the harness: it reads its config, and writes an aggregate that
-# depends on the prediction folder, so the engine and the result differ.
+# is the same for every folder.
 _FAKE_SCORER = """
 import json, pathlib, sys, yaml
 config = yaml.safe_load(open(sys.argv[2], encoding="utf-8"))
 folder = pathlib.Path(config["end2end_eval"]["dataset"]["prediction"]["data_path"])
-value = 0.5 if folder.name.endswith("result") else 0.25
+value = 0.5
 out = pathlib.Path("result") / folder.name
 out.mkdir(parents=True)
 print("Time out for plain text match of a.pdf, match_gt2pred_simple will be used.")
@@ -405,13 +405,8 @@ def _scorable(tmp_path: Path) -> tuple[Pins, DataDir, RunDir]:
     )
     dump_yaml(data.record, {"missing": ["gone"], "missing_reason": "gated"})
     run = RunDir(tmp_path / "run")
-    (run.outputs / "done.debug").mkdir(parents=True)
-    (run.outputs / "done.debug" / "conversion.md").write_text(
-        "engine\n", encoding="utf-8"
-    )
+    run.outputs.mkdir(parents=True)
     (run.outputs / "done.md").write_text(_HEADER + "result\n", encoding="utf-8")
-    (run.outputs / "failed.debug").mkdir()
-    (run.outputs / "failed.debug" / "conversion.md").write_text("x\n", encoding="utf-8")
     dump_yaml(
         run.record,
         {
@@ -425,12 +420,12 @@ def _scorable(tmp_path: Path) -> tuple[Pins, DataDir, RunDir]:
     return pins, data, run
 
 
-def test_score_writes_both_columns_over_the_same_documents(tmp_path: Path) -> None:
+def test_score_writes_one_number_per_metric(tmp_path: Path) -> None:
     pins, data, run = _scorable(tmp_path)
     result = scoring.score(pins, data, run, Path(sys.executable))
-    assert result["scores"]["text_block.Edit_dist"] == {"engine": 0.25, "result": 0.5}
-    assert result["scores"]["head.HeadTEDS"] == {"engine": "n/a", "result": "n/a"}
-    assert result["scores"]["figure.FigureF1"] == {"engine": "n/a", "result": "n/a"}
+    assert result["scores"]["text_block.Edit_dist"] == 0.5
+    assert result["scores"]["head.HeadTEDS"] == "n/a"
+    assert result["scores"]["figure.FigureF1"] == "n/a"
     documents = result["documents"]
     assert (documents["annotated"], documents["missing"], documents["failed"]) == (
         3,
@@ -450,7 +445,7 @@ def test_score_writes_both_columns_over_the_same_documents(tmp_path: Path) -> No
 def test_score_strips_the_header_of_the_result(tmp_path: Path) -> None:
     pins, data, run = _scorable(tmp_path)
     scoring.score(pins, data, run, Path(sys.executable))
-    folder = run.scoring / "result" / "run-result"
+    folder = run.scoring / "run"
     assert (folder / "done.md").read_text(encoding="utf-8") == "result\n"
     assert sorted(path.name for path in folder.iterdir()) == ["done.md"]
 
@@ -464,9 +459,9 @@ def test_score_refuses_cdm_without_the_toolchain(
     with pytest.raises(BenchmarkError, match="skip-metric CDM"):
         scoring.score(pins, data, run, Path(sys.executable))
     result = scoring.score(pins, data, run, Path(sys.executable), ["CDM"])
-    assert result["scores"]["display_formula.CDM"] == {"engine": "n/a", "result": "n/a"}
+    assert result["scores"]["display_formula.CDM"] == "n/a"
     assert "CDM" not in result["scores"]
-    assert "| `display_formula`, CDM ↑ | n/a | n/a |" in report.render([result], pins)
+    assert "| `display_formula`, CDM ↑ | n/a |" in report.render([result], pins)
 
 
 def test_score_counts_the_stub_of_an_interrupted_conversion_as_failed(
@@ -521,10 +516,10 @@ def test_score_narrows_a_whole_set_run_to_a_language(tmp_path: Path) -> None:
     assert saved == result
     assert not run.results.exists()
     config = yaml.safe_load(
-        (run.scoring / "english" / "result" / "config.yaml").read_text(encoding="utf-8")
+        (run.scoring / "english" / "config.yaml").read_text(encoding="utf-8")
     )
     assert config["end2end_eval"]["dataset"]["filter"] == {"language": "english"}
-    assert (run.scoring / "english" / "result" / "run-english-result").is_dir()
+    assert (run.scoring / "english" / "run-english").is_dir()
 
 
 def test_score_keeps_the_whole_set_apart_from_its_subset(tmp_path: Path) -> None:
@@ -626,20 +621,17 @@ def test_report_prints_one_row_per_metric_with_its_direction(tmp_path: Path) -> 
     result = scoring.score(pins, data, run, Path(sys.executable))
     table = report.render([result], pins)
     assert "1 of 3 documents scored (1 missing, 1 failed)." in table
-    assert "| `text_block`, Edit_dist ↓ | 0.250 | 0.500 |" in table
-    assert "| `head`, HeadTEDS ↑ | n/a | n/a |" in table
+    assert "| `text_block`, Edit_dist ↓ | 0.500 |" in table
+    assert "| `head`, HeadTEDS ↑ | n/a |" in table
 
 
-def test_report_puts_each_result_in_its_own_pair_of_columns(tmp_path: Path) -> None:
+def test_report_puts_each_result_in_its_own_column(tmp_path: Path) -> None:
     pins, data, run = _scorable(tmp_path)
     scored = scoring.score(pins, data, run, Path(sys.executable))
     whole, english = {**scored, "language": "all"}, {**scored, "language": "english"}
     table = report.render([whole, english], pins)
-    assert (
-        "| Element, metric | Whole set, engine | Whole set, raw2md"
-        " | English, engine | English, raw2md |"
-    ) in table
-    assert "| `text_block`, Edit_dist ↓ | 0.250 | 0.500 | 0.250 | 0.500 |" in table
+    assert ("| Element, metric | Whole set | English |") in table
+    assert "| `text_block`, Edit_dist ↓ | 0.500 | 0.500 |" in table
     assert table.count("documents scored") == 2
 
 
@@ -649,7 +641,7 @@ def test_cli_report_reads_a_result_file(
     pins, data, run = _scorable(tmp_path)
     scoring.score(pins, data, run, Path(sys.executable))
     assert cli.main(["report", str(run.results)]) == 0
-    assert "| Element, metric | Engine | raw2md |" in capsys.readouterr().out
+    assert "| Element, metric | raw2md |" in capsys.readouterr().out
 
 
 def test_cli_build_asks_for_fetch_first(

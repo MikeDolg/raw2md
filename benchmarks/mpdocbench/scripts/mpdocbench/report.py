@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from mpdocbench.pins import Pins
-from mpdocbench.scoring import ENGINE, NOT_AVAILABLE, RESULT
+from mpdocbench.scoring import NOT_AVAILABLE
 
 _SET_NAMES = {"all": "Whole set", "english": "English"}
 
@@ -31,14 +31,12 @@ def _caption(result: Mapping[str, Any]) -> str:
 
 
 def render(results: Sequence[Mapping[str, Any]], pins: Pins) -> str:
-    """The scores with a pair of columns per result, and what each result ran."""
+    """The scores with a column per result, and what each result ran."""
     if len(results) == 1:
-        heads = ["Engine", "raw2md"]
+        heads = ["raw2md"]
     else:
         heads = [
-            f"{_SET_NAMES.get(result['language'], result['language'])}, {column}"
-            for result in results
-            for column in ("engine", "raw2md")
+            _SET_NAMES.get(result["language"], result["language"]) for result in results
         ]
     lines = [_caption(result) for result in results]
     lines += [
@@ -49,12 +47,6 @@ def render(results: Sequence[Mapping[str, Any]], pins: Pins) -> str:
     for key in results[0]["scores"]:
         element, metric = key.rsplit(".", 1)
         arrow = "↓" if metric in pins.lower_is_better else "↑"
-        cells = []
-        for result in results:
-            columns = result["scores"].get(key, {})
-            cells += [
-                _cell(columns.get(ENGINE, NOT_AVAILABLE)),
-                _cell(columns.get(RESULT, NOT_AVAILABLE)),
-            ]
+        cells = [_cell(result["scores"].get(key, NOT_AVAILABLE)) for result in results]
         lines.append(f"| `{element}`, {metric} {arrow} | " + " | ".join(cells) + " |")
     return "\n".join(lines) + "\n"
