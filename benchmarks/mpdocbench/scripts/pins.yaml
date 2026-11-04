@@ -51,16 +51,17 @@ metrics:
   reading_order: [Edit_dist]
   head: [HeadTEDS]
   display_formula: [CDM]
+  figure: [FigureF1]
 headline:
   Edit_dist: edit_whole
   TEDS: all
   Relation_F1: micro_f1
   HeadTEDS: all
   CDM: all
+  FigureF1: all
 lower_is_better: [Edit_dist]
 match_method: quick_match
 
 # Metrics of the benchmark that no run of raw2md can score, and why.
 metrics_off:
-  figure.FigureF1: the metric reads a figure box out of the image file name, which raw2md does not write
   table_relation.Relation_F1: the metric reads a merged table out of the HTML tables of a prediction, and raw2md writes a table as Markdown

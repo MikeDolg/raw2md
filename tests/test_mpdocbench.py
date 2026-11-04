@@ -390,10 +390,26 @@ json.dump({
 """
 
 
+def _write_blocks(outputs: Path, document: str, pages: list[dict[str, Any]]) -> None:
+    path = outputs / f"{document}.debug" / "engine" / "blocks.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(pages), encoding="utf-8")
+
+
+def _block(page_id: int, block_id: int, bbox: list[float]) -> dict[str, Any]:
+    return {"page_id": page_id, "block_id": block_id, "polygon": {"bbox": bbox}}
+
+
+def _page(
+    page_id: int, bbox: list[float], children: list[dict[str, Any]], block_id: int = 99
+) -> dict[str, Any]:
+    return {**_block(page_id, block_id, bbox), "children": children}
+
+
 def _scorable(tmp_path: Path) -> tuple[Pins, DataDir, RunDir]:
     pins = _pins(
         metrics={"text_block": ["Edit_dist"], "table": ["TEDS"], "head": ["HeadTEDS"]},
-        metrics_off={"figure.FigureF1": "no box"},
+        metrics_off={"table_relation.Relation_F1": "no merged table"},
     )
     data = DataDir(tmp_path / "data")
     harness = data.harness(pins)
@@ -407,6 +423,7 @@ def _scorable(tmp_path: Path) -> tuple[Pins, DataDir, RunDir]:
     run = RunDir(tmp_path / "run")
     run.outputs.mkdir(parents=True)
     (run.outputs / "done.md").write_text(_HEADER + "result\n", encoding="utf-8")
+    _write_blocks(run.outputs, "done", [])
     dump_yaml(
         run.record,
         {
@@ -425,7 +442,7 @@ def test_score_writes_one_number_per_metric(tmp_path: Path) -> None:
     result = scoring.score(pins, data, run, Path(sys.executable))
     assert result["scores"]["text_block.Edit_dist"] == 0.5
     assert result["scores"]["head.HeadTEDS"] == "n/a"
-    assert result["scores"]["figure.FigureF1"] == "n/a"
+    assert result["scores"]["table_relation.Relation_F1"] == "n/a"
     documents = result["documents"]
     assert (documents["annotated"], documents["missing"], documents["failed"]) == (
         3,
@@ -440,6 +457,49 @@ def test_score_writes_one_number_per_metric(tmp_path: Path) -> None:
     assert result["time"]["conversion_minutes"] == 5.0
     assert any("fell back" in note for note in result["notes"])
     assert yaml.safe_load(run.results.read_text(encoding="utf-8")) == result
+
+
+def test_rename_images_names_a_link_by_its_box_on_the_page() -> None:
+    pages = [
+        _page(0, [0, 0, 100, 200], []),
+        _page(1, [10, 20, 110, 220], [_block(1, 4, [60, 70, 110, 120])]),
+    ]
+    body = "text ![cap](doc/_page_1_Picture_4.jpeg) end"
+    assert (
+        scoring.rename_images(body, pages)
+        == "text ![cap](doc/page2_500_250_1000_500.jpeg) end"
+    )
+
+
+def test_rename_images_clamps_the_box_to_the_page() -> None:
+    pages = [_page(0, [0, 0, 100, 100], [_block(0, 1, [-5, 0, 130, 100])])]
+    assert (
+        scoring.rename_images("![](d/_page_0_Figure_1.png)", pages)
+        == "![](d/page1_0_0_1000_1000.png)"
+    )
+
+
+def test_rename_images_keeps_a_link_it_cannot_resolve() -> None:
+    pages = [_page(0, [0, 0, 100, 100], [_block(0, 1, [0, 0, 50, 50])])]
+    body = (
+        "![](d/_page_0_Picture_7.jpeg) ![](d/figure.png) ![](d/_page_3_Picture_1.png)"
+    )
+    assert scoring.rename_images(body, pages) == body
+
+
+def test_rename_images_skips_the_page_node_that_shares_the_block_id() -> None:
+    pages = [_page(0, [0, 0, 100, 100], [_block(0, 5, [0, 0, 50, 50])], block_id=5)]
+    assert (
+        scoring.rename_images("![](d/_page_0_Picture_5.jpeg)", pages)
+        == "![](d/page1_0_0_500_500.jpeg)"
+    )
+
+
+def test_score_refuses_a_document_without_engine_blocks(tmp_path: Path) -> None:
+    pins, data, run = _scorable(tmp_path)
+    (run.outputs / "done.debug" / "engine" / "blocks.json").unlink()
+    with pytest.raises(BenchmarkError, match="done has no"):
+        scoring.score(pins, data, run, Path(sys.executable))
 
 
 def test_score_strips_the_header_of_the_result(tmp_path: Path) -> None:

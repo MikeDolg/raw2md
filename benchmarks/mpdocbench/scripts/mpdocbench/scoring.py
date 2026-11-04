@@ -1,6 +1,8 @@
 """Score a converted run and write its result.
 
-The scorer reads the final body `<doc>.md` of each document.
+The scorer reads the final body `<doc>.md` of each document. It reads the box
+of a figure out of the image file name, so the copy of the body it gets names
+each image by its place on the page.
 
 The scorer lives in its own environment and is not importable from here, so it
 runs as a subprocess of the interpreter `--scorer-python` names, from its own
@@ -11,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -94,6 +97,78 @@ def _finished(outputs: Path, document: str) -> bool:
     return header is None or header.status is not ResultStatus.IN_PROGRESS
 
 
+# raw2md names an image after the engine block: `_page_<page>_<Type>_<block>`.
+_IMAGE_LINK = re.compile(
+    r"(!\[[^\]]*\]\()([^)\s]*/)?_page_(\d+)_[A-Za-z]+_(\d+)(\.\w+)(\))"
+)
+_SCALE = 1000  # the scorer reads coordinates as thousandths of the page
+
+
+def _find_block(node: Mapping[str, Any], page_id: int, block_id: int) -> Any:
+    """The block below `node` with this page and block id, or None."""
+    for child in node.get("children") or ():
+        if child.get("page_id") == page_id and child.get("block_id") == block_id:
+            return child
+        found = _find_block(child, page_id, block_id)
+        if found is not None:
+            return found
+    return None
+
+
+def _page_node(pages: Sequence[Mapping[str, Any]], page_id: int) -> Any:
+    return next((page for page in pages if page.get("page_id") == page_id), None)
+
+
+def _scorer_image_name(
+    pages: Sequence[Mapping[str, Any]], page_id: int, block_id: int
+) -> str | None:
+    """`page<N>_<x1>_<y1>_<x2>_<y2>` of a block, or None when it has no block."""
+    page = _page_node(pages, page_id)
+    if page is None:
+        return None
+    block = _find_block(page, page_id, block_id)
+    if block is None:
+        return None
+    left, top, right, bottom = page["polygon"]["bbox"]
+    width, height = right - left, bottom - top
+    x1, y1, x2, y2 = block["polygon"]["bbox"]
+    box = [
+        (x1 - left) / width,
+        (y1 - top) / height,
+        (x2 - left) / width,
+        (y2 - top) / height,
+    ]
+    coordinates = [min(_SCALE, max(0, round(value * _SCALE))) for value in box]
+    return f"page{page_id + 1}_" + "_".join(str(value) for value in coordinates)
+
+
+def rename_images(body: str, pages: Sequence[Mapping[str, Any]]) -> str:
+    """Name each image link of the body by the box of its engine block.
+
+    A link whose name does not parse, or whose block is gone, stays as it is.
+    """
+
+    def replace_link(match: re.Match[str]) -> str:
+        head, folder, page_id, block_id, extension, tail = match.groups()
+        name = _scorer_image_name(pages, int(page_id), int(block_id))
+        if name is None:
+            return match.group(0)
+        return f"{head}{folder or ''}{name}{extension}{tail}"
+
+    return _IMAGE_LINK.sub(replace_link, body)
+
+
+def _engine_pages(outputs: Path, document: str) -> list[Mapping[str, Any]]:
+    path = outputs / f"{document}.debug" / "engine" / "blocks.json"
+    if not path.is_file():
+        raise BenchmarkError(
+            f"{document} has no {path.relative_to(outputs)}; convert with -d,"
+            f" because the scorer reads the box of a figure from the image name"
+        )
+    pages: list[Mapping[str, Any]] = json.loads(path.read_text(encoding="utf-8"))
+    return pages
+
+
 def layout_predictions(
     outputs: Path, folder: Path, documents: Sequence[Document]
 ) -> None:
@@ -108,6 +183,7 @@ def layout_predictions(
         # The body carries raw2md's YAML header, which the scorer would read
         # as body text.
         _, body = strip_own_header(text)
+        body = rename_images(body, _engine_pages(outputs, document.name))
         (folder / f"{document.name}.md").write_text(
             body, encoding="utf-8", newline="\n"
         )
