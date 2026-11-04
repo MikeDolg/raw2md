@@ -689,6 +689,24 @@ def test_overall_follows_the_leaderboard_formula() -> None:
     assert scoring.overall_score(values, pins) == 67.5
 
 
+def test_overall_reproduces_a_published_leaderboard_row() -> None:
+    # One row of the scorer README table: Overall 80.70. The table gives edit
+    # distances as fractions and the other metrics on a 0-100 scale.
+    row = {
+        "text_block.Edit_dist": 0.048,
+        "merged_text_block.Edit_dist": 0.152,
+        "display_formula.CDM": 0.8714,
+        "table.TEDS": 0.8387,
+        "merged_table.TEDS": 0.8309,
+        "figure.FigureF1": 0.7499,
+        "reading_order.Edit_dist": 0.106,
+        "head.HeadTEDS": 0.4711,
+    }
+    overall = scoring.overall_score(row, load_pins())
+    assert isinstance(overall, float)
+    assert abs(overall - 80.70) < 0.01
+
+
 def test_overall_is_unavailable_when_one_key_is() -> None:
     pins = load_pins()
     values: dict[str, Any] = dict.fromkeys(pins.overall, 0.5)
