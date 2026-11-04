@@ -29,40 +29,20 @@ documents:
   failed_list: []
 llm_requests: 0
 scores:
-  text_block.Edit_dist:
-    engine: 0.1221
-    result: 0.13
-  merged_text_block.Edit_dist:
-    engine: 0.3021
-    result: 0.2987
-  table.TEDS:
-    engine: 0.6505
-    result: 0.6956
-  merged_table.TEDS:
-    engine: 0.4821
-    result: 0.5526
-  text_relation.Relation_F1:
-    engine: 0.1234
-    result: 0.1318
-  reading_order.Edit_dist:
-    engine: 0.2047
-    result: 0.2061
-  head.HeadTEDS:
-    engine: 0.4443
-    result: 0.453
-  display_formula.CDM:
-    engine: 0.8188
-    result: 0.8258
-  figure.FigureF1:
-    engine: n/a
-    result: n/a
-  table_relation.Relation_F1:
-    engine: n/a
-    result: n/a
+  text_block.Edit_dist: 0.13
+  merged_text_block.Edit_dist: 0.2987
+  table.TEDS: 0.6956
+  merged_table.TEDS: 0.5526
+  text_relation.Relation_F1: 0.1318
+  reading_order.Edit_dist: 0.2061
+  head.HeadTEDS: 0.453
+  display_formula.CDM: 0.8258
+  figure.FigureF1: 0.6518
+  table_relation.Relation_F1: n/a
 notes:
-- 'figure.FigureF1 is n/a: the metric reads a figure box out of the image file name, which raw2md does
-  not write.'
 - 'table_relation.Relation_F1 is n/a: the metric reads a merged table out of the HTML tables of a prediction,
   and raw2md writes a table as Markdown.'
-- The engine text match fell back to the simple algorithm on 2 documents.
-- The result text match fell back to the simple algorithm on 2 documents.
+- The text match fell back to the simple algorithm on 2 documents.
+- figure.FigureF1 was scored on 2026-11-04 from the same outputs as the other metrics, after the image
+  names were changed to carry the figure box.
+overall: 69.3
