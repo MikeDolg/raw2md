@@ -310,6 +310,22 @@ def headline_scores(
     return scores
 
 
+def overall_score(scores: Mapping[str, Any], pins: Pins) -> float | str:
+    """The leaderboard Overall: the mean of the pinned keys on a 0-100 scale.
+
+    An edit distance counts as `1 - x`. One key that reads `n/a` makes the
+    whole Overall `n/a`, because a mean over fewer keys is another number.
+    """
+    points: list[float] = []
+    for key in pins.overall:
+        number = scores.get(key, NOT_AVAILABLE)
+        if not isinstance(number, int | float):
+            return NOT_AVAILABLE
+        metric = key.rsplit(".", 1)[1]
+        points.append((1 - number if metric in pins.lower_is_better else number) * 100)
+    return round(sum(points) / len(points), 2)
+
+
 def count_fallbacks(log: Path) -> int:
     return sum(
         1
@@ -392,6 +408,7 @@ def build_result(
         },
         "llm_requests": llm_requests,
         "scores": dict(scores),
+        "overall": overall_score(scores, pins),
         "notes": notes,
     }
 

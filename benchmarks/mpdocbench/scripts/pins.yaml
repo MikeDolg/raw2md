@@ -60,6 +60,17 @@ headline:
   CDM: all
   FigureF1: all
 lower_is_better: [Edit_dist]
+
+# The keys the leaderboard averages into Overall, each on a 0-100 scale.
+overall:
+  - text_block.Edit_dist
+  - merged_text_block.Edit_dist
+  - display_formula.CDM
+  - table.TEDS
+  - merged_table.TEDS
+  - figure.FigureF1
+  - reading_order.Edit_dist
+  - head.HeadTEDS
 match_method: quick_match
 
 # Metrics of the benchmark that no run of raw2md can score, and why.

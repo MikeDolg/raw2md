@@ -49,4 +49,6 @@ def render(results: Sequence[Mapping[str, Any]], pins: Pins) -> str:
         arrow = "↓" if metric in pins.lower_is_better else "↑"
         cells = [_cell(result["scores"].get(key, NOT_AVAILABLE)) for result in results]
         lines.append(f"| `{element}`, {metric} {arrow} | " + " | ".join(cells) + " |")
+    overalls = [_cell(result.get("overall", NOT_AVAILABLE)) for result in results]
+    lines.append("| Overall ↑ | " + " | ".join(overalls) + " |")
     return "\n".join(lines) + "\n"

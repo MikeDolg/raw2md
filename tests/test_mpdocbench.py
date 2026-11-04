@@ -673,6 +673,30 @@ def test_count_llm_requests_reads_the_debug_traffic(tmp_path: Path) -> None:
     assert scoring.count_llm_requests(tmp_path, documents) == 2
 
 
+def test_overall_follows_the_leaderboard_formula() -> None:
+    pins = load_pins()
+    values = {
+        "text_block.Edit_dist": 0.20,
+        "merged_text_block.Edit_dist": 0.30,
+        "display_formula.CDM": 0.70,
+        "table.TEDS": 0.60,
+        "merged_table.TEDS": 0.50,
+        "figure.FigureF1": 0.40,
+        "reading_order.Edit_dist": 0.10,
+        "head.HeadTEDS": 0.80,
+    }
+    # eight points on the 0-100 scale, mean 67.5
+    assert scoring.overall_score(values, pins) == 67.5
+
+
+def test_overall_is_unavailable_when_one_key_is() -> None:
+    pins = load_pins()
+    values: dict[str, Any] = dict.fromkeys(pins.overall, 0.5)
+    values["display_formula.CDM"] = scoring.NOT_AVAILABLE
+    assert scoring.overall_score(values, pins) == scoring.NOT_AVAILABLE
+    assert scoring.overall_score({}, pins) == scoring.NOT_AVAILABLE
+
+
 # --- report and CLI ------------------------------------------------------------
 
 
@@ -683,6 +707,7 @@ def test_report_prints_one_row_per_metric_with_its_direction(tmp_path: Path) -> 
     assert "1 of 3 documents scored (1 missing, 1 failed)." in table
     assert "| `text_block`, Edit_dist ↓ | 0.500 |" in table
     assert "| `head`, HeadTEDS ↑ | n/a |" in table
+    assert table.rstrip().endswith("| Overall ↑ | n/a |")
 
 
 def test_report_puts_each_result_in_its_own_column(tmp_path: Path) -> None:

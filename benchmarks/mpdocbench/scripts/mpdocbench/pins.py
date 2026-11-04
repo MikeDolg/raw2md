@@ -40,6 +40,7 @@ class Pins:
     metrics: Mapping[str, list[str]]
     headline: Mapping[str, str]
     lower_is_better: frozenset[str]
+    overall: tuple[str, ...]
     match_method: str
     metrics_off: Mapping[str, str]
 
@@ -66,6 +67,7 @@ def load_pins(path: Path = PINS_PATH) -> Pins:
             metrics={key: list(value) for key, value in data["metrics"].items()},
             headline=dict(data["headline"]),
             lower_is_better=frozenset(data["lower_is_better"]),
+            overall=tuple(data["overall"]),
             match_method=str(data["match_method"]),
             metrics_off=dict(data.get("metrics_off") or {}),
         )
