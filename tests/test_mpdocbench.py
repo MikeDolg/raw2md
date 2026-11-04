@@ -505,7 +505,7 @@ def test_score_refuses_a_document_without_engine_blocks(tmp_path: Path) -> None:
 def test_score_strips_the_header_of_the_result(tmp_path: Path) -> None:
     pins, data, run = _scorable(tmp_path)
     scoring.score(pins, data, run, Path(sys.executable))
-    folder = run.scoring / "run"
+    folder = run.scoring / "predictions" / "run"
     assert (folder / "done.md").read_text(encoding="utf-8") == "result\n"
     assert sorted(path.name for path in folder.iterdir()) == ["done.md"]
 
@@ -579,7 +579,7 @@ def test_score_narrows_a_whole_set_run_to_a_language(tmp_path: Path) -> None:
         (run.scoring / "english" / "config.yaml").read_text(encoding="utf-8")
     )
     assert config["end2end_eval"]["dataset"]["filter"] == {"language": "english"}
-    assert (run.scoring / "english" / "run-english").is_dir()
+    assert (run.scoring / "english" / "predictions" / "run-english").is_dir()
 
 
 def test_score_keeps_the_whole_set_apart_from_its_subset(tmp_path: Path) -> None:
@@ -590,6 +590,7 @@ def test_score_keeps_the_whole_set_apart_from_its_subset(tmp_path: Path) -> None
     assert whole["documents"]["annotated"] == 4
     assert run.results.is_file()
     assert run.results_for("english").is_file()
+    assert (run.scoring / "english" / "config.yaml").is_file()
 
 
 def test_score_refuses_to_narrow_what_is_not_the_whole_set(tmp_path: Path) -> None:

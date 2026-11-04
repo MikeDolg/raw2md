@@ -472,7 +472,9 @@ def score(
     # name carries the run: two runs scored from one clone would otherwise
     # overwrite each other's output.
     scoring_dir = scoring_root.resolve()
-    predictions = scoring_dir / prefix
+    # A fixed parent keeps the copies apart from the output of a narrowed
+    # scoring, whose folder is named after the language.
+    predictions = scoring_dir / "predictions" / prefix
     layout_predictions(run.outputs, predictions, census.scored)
     print(f"scoring {len(census.scored)} documents", flush=True)
     config = scoring_dir / _CONFIG
