@@ -6,31 +6,36 @@
 - Code and scorer: [Tongyi-Zhiwen/Qwen-Doc](https://github.com/Tongyi-Zhiwen/Qwen-Doc), folder `MPDocBench`
 - Data: [zhoubb/MPDocBench](https://www.modelscope.cn/datasets/zhoubb/MPDocBench), [SlideVQA](https://huggingface.co/datasets/NTT-hil-insight/SlideVQA)
 
-| Element, metric | Whole set, engine | Whole set, raw2md | English, engine | English, raw2md |
-|---|---|---|---|---|
-| `text_block`, Edit_dist ↓ | 0.122 | 0.130 | 0.112 | 0.125 |
-| `merged_text_block`, Edit_dist ↓ | 0.302 | 0.299 | 0.285 | 0.280 |
-| `table`, TEDS ↑ | 0.650 | 0.696 | 0.664 | 0.706 |
-| `merged_table`, TEDS ↑ | 0.482 | 0.553 | 0.500 | 0.572 |
-| `text_relation`, Relation_F1 ↑ | 0.123 | 0.132 | 0.134 | 0.149 |
-| `reading_order`, Edit_dist ↓ | 0.205 | 0.206 | 0.209 | 0.212 |
-| `head`, HeadTEDS ↑ | 0.444 | 0.453 | 0.491 | 0.493 |
-| `display_formula`, CDM ↑ | 0.819 | 0.826 | 0.858 | 0.869 |
+| Element, metric | Whole set | English |
+|---|---|---|
+| `text_block`, Edit_dist ↓ | 0.130 | 0.125 |
+| `merged_text_block`, Edit_dist ↓ | 0.299 | 0.280 |
+| `table`, TEDS ↑ | 0.696 | 0.706 |
+| `merged_table`, TEDS ↑ | 0.553 | 0.572 |
+| `text_relation`, Relation_F1 ↑ | 0.132 | 0.149 |
+| `reading_order`, Edit_dist ↓ | 0.206 | 0.212 |
+| `head`, HeadTEDS ↑ | 0.453 | 0.493 |
+| `display_formula`, CDM ↑ | 0.826 | 0.869 |
+| `figure`, FigureF1 ↑ | 0.652 | 0.646 |
+| `table_relation`, Relation_F1 ↑ | n/a | n/a |
+| Overall ↑ | 69.30 | 70.87 |
 
-**engine** is the output of the engine before raw2md, and **raw2md** is the
-final Markdown file. The difference between the two is what raw2md adds.
+**Overall** is the summary score of the benchmark leaderboard: the mean of the
+eight rows other than `text_relation` and `table_relation`, on a 0–100 scale.
+An Edit_dist value `x` counts as `(1 − x) · 100`, and the value of any other
+metric as `x · 100`.
 
-All four columns come from one run of raw2md 0.3.0 without the LLM stages:
+Both columns come from one run of raw2md 0.3.0 without the LLM stages:
 `raw2md <pdf> -d -s -e raw2md-engine`. `raw2md-engine` is based on `marker`
-1.10.2. The English columns score the English documents of that run.
+1.10.2. The English column scores the English documents of that run.
 
 The result files are in [mpdocbench/results/](mpdocbench/results/).
 
-`FigureF1` and `table_relation` are not computable for raw2md: they read
-figure boxes from image file names and merged tables from HTML.
+`table_relation` is not computable for raw2md: the metric reads merged tables
+from HTML, and raw2md writes tables in Markdown.
 
 The English set is a part of the whole set and is not for comparison with
-other results. It shows what raw2md adds to the engine.
+other results.
 
 How to run: [mpdocbench/README.md](mpdocbench/README.md).
 
