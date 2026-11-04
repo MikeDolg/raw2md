@@ -15,6 +15,11 @@ def _cell(value: Any) -> str:
     return f"{value:.3f}" if isinstance(value, int | float) else str(value)
 
 
+def _overall_cell(value: Any) -> str:
+    """Overall is on a 0-100 scale with two decimals, as the leaderboard prints it."""
+    return f"{value:.2f}" if isinstance(value, int | float) else str(value)
+
+
 def _caption(result: Mapping[str, Any]) -> str:
     documents = result["documents"]
     coverage = f"{documents['scored']} of {documents['annotated']} documents scored"
@@ -49,6 +54,8 @@ def render(results: Sequence[Mapping[str, Any]], pins: Pins) -> str:
         arrow = "↓" if metric in pins.lower_is_better else "↑"
         cells = [_cell(result["scores"].get(key, NOT_AVAILABLE)) for result in results]
         lines.append(f"| `{element}`, {metric} {arrow} | " + " | ".join(cells) + " |")
-    overalls = [_cell(result.get("overall", NOT_AVAILABLE)) for result in results]
+    overalls = [
+        _overall_cell(result.get("overall", NOT_AVAILABLE)) for result in results
+    ]
     lines.append("| Overall ↑ | " + " | ".join(overalls) + " |")
     return "\n".join(lines) + "\n"

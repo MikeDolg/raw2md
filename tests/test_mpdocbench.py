@@ -729,6 +729,20 @@ def test_report_prints_one_row_per_metric_with_its_direction(tmp_path: Path) -> 
     assert table.rstrip().endswith("| Overall ↑ | n/a |")
 
 
+def test_report_prints_overall_with_two_decimals() -> None:
+    result = {
+        "raw2md": "1",
+        "command": "c",
+        "language": "all",
+        "scored_at": "2026-01-01",
+        "documents": {"scored": 1, "annotated": 1, "missing": 0, "failed": 0},
+        "scores": {"text_block.Edit_dist": 0.1},
+        "overall": 69.3,
+    }
+    table = report.render([result], load_pins())
+    assert table.rstrip().endswith("| Overall ↑ | 69.30 |")
+
+
 def test_report_puts_each_result_in_its_own_column(tmp_path: Path) -> None:
     pins, data, run = _scorable(tmp_path)
     scored = scoring.score(pins, data, run, Path(sys.executable))
