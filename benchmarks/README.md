@@ -8,19 +8,19 @@
 
 | Element, metric | Whole set, engine | Whole set, raw2md | English, engine | English, raw2md |
 |---|---|---|---|---|
-| `text_block`, Edit_dist ↓ | 0.122 | 0.130 | 0.112 | 0.126 |
+| `text_block`, Edit_dist ↓ | 0.122 | 0.130 | 0.112 | 0.125 |
 | `merged_text_block`, Edit_dist ↓ | 0.302 | 0.299 | 0.285 | 0.280 |
-| `table`, TEDS ↑ | 0.652 | 0.698 | 0.665 | 0.706 |
-| `merged_table`, TEDS ↑ | 0.489 | 0.553 | 0.500 | 0.573 |
+| `table`, TEDS ↑ | 0.650 | 0.696 | 0.664 | 0.706 |
+| `merged_table`, TEDS ↑ | 0.482 | 0.553 | 0.500 | 0.572 |
 | `text_relation`, Relation_F1 ↑ | 0.123 | 0.132 | 0.134 | 0.149 |
-| `reading_order`, Edit_dist ↓ | 0.204 | 0.205 | 0.209 | 0.211 |
-| `head`, HeadTEDS ↑ | 0.371 | 0.408 | 0.392 | 0.429 |
-| `display_formula`, CDM ↑ | 0.819 | 0.822 | 0.858 | 0.868 |
+| `reading_order`, Edit_dist ↓ | 0.205 | 0.206 | 0.209 | 0.212 |
+| `head`, HeadTEDS ↑ | 0.444 | 0.453 | 0.491 | 0.493 |
+| `display_formula`, CDM ↑ | 0.819 | 0.826 | 0.858 | 0.869 |
 
 **engine** is the output of the engine before raw2md, and **raw2md** is the
 final Markdown file. The difference between the two is what raw2md adds.
 
-All four columns come from one run of raw2md 0.2.1 without the LLM stages:
+All four columns come from one run of raw2md 0.3.0 without the LLM stages:
 `raw2md <pdf> -d -s -e raw2md-engine`. `raw2md-engine` is based on `marker`
 1.10.2. The English columns score the English documents of that run.
 
