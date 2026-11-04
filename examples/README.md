@@ -32,7 +32,7 @@ The `source_hash` field in the header of each result holds the same checksum in 
 
 ## Conversion
 
-raw2md 0.2.0 made all three results with this command:
+raw2md 0.3.0 made all three results with this command:
 
 ```bash
 raw2md SOURCE -i gemini_api -p gemini_api --disable-image-extraction
@@ -40,9 +40,9 @@ raw2md SOURCE -i gemini_api -p gemini_api --disable-image-extraction
 
 | Result | Time | Machine |
 |---|---|---|
-| `book.md` | 29 min 21 s | Ubuntu 22.04, NVIDIA RTX A5000, CUDA 13.2 |
-| `thesis.md` | 11 min 28 s | Ubuntu 22.04, NVIDIA RTX A5000, CUDA 13.2 |
-| `report.md` | 14 s | Windows 10, NVIDIA T1200 Laptop GPU |
+| `book.md` | 18 min 52 s | Ubuntu 22.04, NVIDIA RTX PRO 4000 Blackwell, CUDA 13.2 |
+| `thesis.md` | 6 min 40 s | Ubuntu 22.04, NVIDIA RTX PRO 4000 Blackwell, CUDA 13.2 |
+| `report.md` | 12 s | Windows 10, NVIDIA T1200 Laptop GPU |
 
 Key:
 

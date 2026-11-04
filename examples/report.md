@@ -1,14 +1,13 @@
 ---
-raw2md_version: 0.2.0
+raw2md_version: 0.3.0
 source: dancop evaluation final report draft .docx
 engine: pandoc
 inspection: none
 post: gemini_api
-converted_at: 2026-10-20
+converted_at: 2026-11-03
 source_hash: 0fgRXy9kle2j2JH2mrQOksFup8Lxw7ql-PYmg8OZFmg
 status: ok
-issues:
-- headings
+score: 76.8
 ---
 An Evaluation of the Derbyshire and Nottinghamshire Collaborative Outreach Programme
 
@@ -4225,7 +4224,7 @@ Learners who took activities run by the Central/Widening Access team reported a 
 </tbody>
 </table>
 
-### Derby Hub
+#### Derby Hub
 
 As with the other providers there is an increase in mean responses from before to after the activity. These increases in intention to apply to HE, knowing enough about options to make decisions and knowing about university were all statistically significant (see Table 20). The increase in knowing where to get information was not statistically significant, however increases in feeling confident about revising and knowing some revision techniques were both statistically significant.
 
@@ -4478,7 +4477,7 @@ As with the other providers there is an increase in mean responses from before t
 </tbody>
 </table>
 
-## Mansfield Hub
+### Mansfield Hub
 
 As with the other providers there is an increase in mean responses from before to after the activities run by Mansfield Hub. These increases in intention to apply, knowing enough about options to make decisions, knowing about university, the nature of the education and courses were all statistically significant (see Table 21).
 
@@ -4696,7 +4695,7 @@ As with the other providers there is an increase in mean responses from before t
 </tbody>
 </table>
 
-## Nottingham Hub
+### Nottingham Hub
 
 As with the other providers there is an increase in mean responses from before to after the activities run by Nottingham Hub. These increases in intention to apply, knowing enough about options to make decisions, knowing about university, the nature of the education and courses were all statistically significant (see Table 22).
 
@@ -7092,7 +7091,7 @@ Several comments related to their future options and careers with clear indicati
 | I didn’t really think about what I wanted to before but now I realise that I need to think about what I want to do. I can’t just leave it until the last minute and do whatever comes my way. | I’d rather do something that actually entertains me… sometimes I feel like helping other people out… it makes you feel better. And not just getting a normal job - that’s everyday life. I want a job that has meaning. | It makes you think about all the paths you can take. |
 | I want to get my head down more now because I know what the future holds. If you can focus then there’s quite a lot you could be doing but if you don’t get the grades you could end up doing anything or something that could lead you into something bad. Or being unemployed. | It helps you through the future AND through your past, it can help with mental health | It helps you out a lot in everyday situations |
 
-### Behaviour
+#### Behaviour
 
 Students were able to identify a number of behavioural changes. Most commonly this was about feeling more confident, having faith in themselves and believing in themselves more. For several of the male students a key change was feeling less angry, being able to manage their emotions and adopt more positive responses in challenging situations:
 
