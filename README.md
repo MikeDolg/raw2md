@@ -11,60 +11,50 @@
   <a href="https://github.com/MikeDolg/raw2md/blob/main/LICENSE"><img src="https://img.shields.io/github/license/MikeDolg/raw2md" alt="License"></a>
 </p>
 
-**raw2md** is an open-source Python command-line tool that converts PDF, DjVu, and DOCX documents into clean Markdown for retrieval-augmented generation (RAG) and other large language model (LLM) pipelines. It runs the conversion with its built-in engine `raw2md-engine`, with `pandoc`, or with Gemini, then repairs the defects that these engines leave in headings, tables, formulas, lists, and text. Markdown from another converter goes through the same cleaning.
+```bash
+uv tool install --python ">=3.11,<3.15" raw2md --torch-backend cu130
+```
 
-The cleaning uses deterministic rules and no LLM, so the same input always gives the same cleaned text. On the MPDocBench-Parse benchmark, the cleaning alone raises the aggregate score of the `raw2md-engine` output by 3.1%.
+**raw2md** is an open-source Python command-line tool that converts PDF, DjVu, and DOCX documents into clean Markdown for retrieval-augmented generation (RAG) and other large language model (LLM) pipelines. It recognizes PDF and DjVu with its own engine `raw2md-engine`, which is based on `marker` 1.10.2 by Datalab. It converts DOCX with `pandoc`. Deterministic rules then repair the defects in headings, tables, formulas, lists, and text. Markdown from another converter goes through the same cleaning. The rules use no LLM, so the same input always gives the same cleaned text.
+
+`raw2md-engine` runs on a low-end GPU: 4 GB of video memory is enough, for example on an NVIDIA T1200 laptop card. On the MPDocBench-Parse benchmark, raw2md without the LLM stages gets an Overall score of 69.30.
 
 Two optional LLM stages repair what the rules leave: inspection corrects recognition errors against the source pages, and post-processing repairs damaged markup.
-
-## What does raw2md fix?
-
-Converters leave typical defects in Markdown. In a RAG pipeline, these defects can split chunks in the wrong places and hide words from search. The `cleaning` stage repairs more than 70 types of defects ([full list](https://github.com/MikeDolg/raw2md/blob/main/docs/cleaning.md)), but only where the defect is unambiguous. For example:
-
-- running heads and page numbers → removed
-- wrong heading levels → corrected from the PDF bookmarks, the table of contents, or the numbering
-- tables cut by a page break → merged
-- words broken across lines → joined
-- paragraphs broken into short lines → joined
-- formulas cut into parts → joined
-- recognition loops → cut to one copy
-- navigation links of `raw2md-engine` and `marker` → replaced with their text
 
 ## Why raw2md?
 
 raw2md is built for large, mixed collections of long documents:
 
+- The tool focuses on the structure of the document: the heading levels, the tables, the lists, and the formulas. A RAG pipeline can then split the text by sections.
 - One command converts a whole folder. The tool picks the engine for each format: `raw2md-engine` for PDF, `pandoc` for DOCX, and DjVuLibre with `raw2md-engine` for DjVu.
 - A rule does not guess: it leaves an ambiguous defect in place and reports it.
-- Each result starts with a header that holds the verdict, `ok` or `bad`, and the checks that fired. The verdict shows which files need a review.
+- Each result starts with a header that holds a quality score from 0 to 100 and a verdict. The verdict is `ok` at a score of 50 or more by default, and `bad` below 50 or after a severe defect. The verdict shows which files need a review.
 - Without the LLM stages, the documents do not leave your machine.
 - An interrupted run continues with `raw2md resume` and skips the finished files.
 
 ## What's the impact?
 
-On the full [MPDocBench-Parse](https://arxiv.org/abs/2605.22100) set, the deterministic cleaning alone, with no LLM stage involved, lifts the seven-metric aggregate score of the underlying `raw2md-engine` output from 67.18 to 69.25. That is a gain of about 2.1 points, or 3.1% relative. The score follows the leaderboard formula, a normalized mean of the task scores, but without Figure F1: raw2md cannot be scored on that task. Therefore, the score is not comparable with the Overall column of the leaderboard.
+These are the scores of raw2md 0.3.0 without the LLM stages on the full [MPDocBench-Parse](https://arxiv.org/abs/2605.22100) set. The columns and the number format are the same as in the leaderboard of the benchmark:
 
-Most of the improvement lands in the document structure:
+| Model | Overall | Text Edit | Truncated Text Edit | Formula CDM | Table TEDS | Truncated Table TEDS | Figure F1 | Read Order | Heading TEDS |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| raw2md 0.3.0 | 69.30 | 0.130 | 0.299 | 82.58 | 69.56 | 55.26 | 65.18 | 0.206 | 45.30 |
 
-- table TEDS: 0.652 → 0.698 (+7%)
-- merged-table TEDS: 0.489 → 0.553 (+13%)
-- heading TEDS: 0.371 → 0.408 (+10%)
-
-Plain text, on the other hand, loses a little: the text edit distance grows from 0.122 to 0.130. You can find every metric in the [benchmark results](https://github.com/MikeDolg/raw2md/blob/main/benchmarks/README.md).
+The three edit distances (Text Edit, Truncated Text Edit, and Read Order) are better when they are lower. The other columns are on a 0–100 scale and are better when they are higher. Overall is the mean of the eight task scores, with each edit distance `x` counted as `(1 − x) · 100`. The [benchmark results](https://github.com/MikeDolg/raw2md/blob/main/benchmarks/README.md) give every metric, the scores on the English part, and the way to run the benchmark.
 
 The benchmark, however, tells only part of the story: raw2md is designed primarily for long, complex documents. The [examples](https://github.com/MikeDolg/raw2md/tree/main/examples) show how it copes with entire books:
 
 | Result      | Source type      | Pages | Engine   | Source   |
 |-------------|------------------|-------|----------|----------|
-| [`book.md`](https://github.com/MikeDolg/raw2md/blob/main/examples/book.md) | scanned PDF | 344 | `marker` | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Elementary_mechanism-_a_textbook_for_students_of_mechanical_engineering_(IA_cu31924031203742).pdf) |
-| [`thesis.md`](https://github.com/MikeDolg/raw2md/blob/main/examples/thesis.md) | born-digital PDF | 230 | `marker` | [University of Cambridge](https://www.repository.cam.ac.uk/items/04ec45a9-4b8b-4ece-b848-7806d4636412) |
+| [`book.md`](https://github.com/MikeDolg/raw2md/blob/main/examples/book.md) | scanned PDF | 344 | `raw2md-engine` | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Elementary_mechanism-_a_textbook_for_students_of_mechanical_engineering_(IA_cu31924031203742).pdf) |
+| [`thesis.md`](https://github.com/MikeDolg/raw2md/blob/main/examples/thesis.md) | born-digital PDF | 230 | `raw2md-engine` | [University of Cambridge](https://www.repository.cam.ac.uk/items/04ec45a9-4b8b-4ece-b848-7806d4636412) |
 | [`report.md`](https://github.com/MikeDolg/raw2md/blob/main/examples/report.md) | DOCX | – | `pandoc` | [University of Derby](https://derby-repository.worktribe.com/output/804857/an-evaluation-of-the-derbyshire-and-nottinghamshire-collaborative-outreach-programme) |
 
 ## How does it work?
 
 The first step, the conversion itself, runs on one of these engines:
 
-- `raw2md-engine` for PDF: a reduced copy of `marker` 1.10.2, `surya-ocr` 0.17.1, and `pdftext` 0.6.3 by Datalab, bundled with raw2md
+- `raw2md-engine` for PDF: an improved copy of `marker` 1.10.2, `surya-ocr` 0.17.1, and `pdftext` 0.6.3 by Datalab, bundled with raw2md
 - `pandoc` for DOCX
 - Gemini for OCR of PDF and DjVu files (the `-e` flag)
 - DjVuLibre to turn a DjVu file into a PDF before recognition
@@ -77,13 +67,24 @@ The cleaning of a file then goes through three stages, and two of them are optio
 | `inspection` | PDF, DjVu | the `-i` flag | checks the text against the source      | [inspection.md](https://github.com/MikeDolg/raw2md/blob/main/docs/inspection.md) |
 | `post`       | all       | the `-p` flag | repairs the structure without the source | [post.md](https://github.com/MikeDolg/raw2md/blob/main/docs/post.md) |
 
+The engines leave typical defects in Markdown. In a RAG pipeline, these defects can split chunks in the wrong places and hide words from search. The `cleaning` stage repairs more than 70 types of defects ([full list](https://github.com/MikeDolg/raw2md/blob/main/docs/cleaning.md)), but only where the defect is unambiguous. For example:
+
+- running heads and page numbers → removed
+- wrong heading levels → corrected from the PDF bookmarks, the table of contents, or the numbering
+- tables cut by a page break → merged
+- words broken across lines → joined
+- paragraphs broken into short lines → joined
+- formulas cut into parts → joined
+- recognition loops → cut to one copy
+- navigation links of `raw2md-engine` and `marker` → replaced with their text
+
 After cleaning, and again after each LLM stage, a deterministic [quality evaluation](https://github.com/MikeDolg/raw2md/blob/main/docs/quality.md) grades the text with a score from 0 to 100. The score, the verdict `ok` or `bad`, and the checks that lowered the score most go into the header of the result.
 
 For now, inspection runs on Gemini only, while post-processing can use either Gemini or Claude Code through `claude -p`.
 
 ## What languages are supported?
 
-Most of the testing used English and Russian sources, with a few German, French, and Italian ones on top. Chinese was never part of the testing, but the full-set results suggest that the structural repairs carry over to it. More than half of the MPDocBench set is Chinese, and yet the gains on the full set match those on its English part. The seven-metric aggregate grows by 3.10% relative on the full set and by 3.14% on the English part. The table and heading scores also grow by about the same amount on both.
+Most of the testing used English and Russian sources, with a few German, French, and Italian ones on top.
 
 ## Installation
 
