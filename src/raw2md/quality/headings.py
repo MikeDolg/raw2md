@@ -290,8 +290,6 @@ def lost_chapter_entries(
     if not contents.has_outline:
         return 0, []
     chapters = contents.tokens_at(_CHAPTER_RANK)
-    if not chapters:
-        return 0, []
     written = _written_chapters(structural)
     unwritten = sorted(
         " ".join(chapter)
