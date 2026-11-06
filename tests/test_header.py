@@ -474,6 +474,24 @@ def test_from_raises_on_invalid_converted_at_type() -> None:
         from_yaml_block(block)
 
 
+def test_from_reads_a_quoted_converted_at() -> None:
+    # A YAML tool that re-saves the header may quote the date into a string.
+    block = to_yaml_block(_make_header()).replace(
+        "converted_at: 2026-06-18", "converted_at: '2026-06-18'"
+    )
+    restored = from_yaml_block(block)
+    assert restored is not None
+    assert restored.converted_at == dt.date(2026, 6, 18)
+
+
+def test_from_raises_on_a_quoted_converted_at_that_is_no_date() -> None:
+    block = to_yaml_block(_make_header()).replace(
+        "converted_at: 2026-06-18", "converted_at: '18.06.2026'"
+    )
+    with pytest.raises(HeaderParseError):
+        from_yaml_block(block)
+
+
 def test_extras_collision_with_permanent_field_is_ignored() -> None:
     header = _make_header(status=ResultStatus.IN_PROGRESS)
     header.extras["status"] = "bad"  # attempt to overwrite permanent field

@@ -2621,3 +2621,27 @@ def test_defect_lines_are_logged_at_debug(
         m.startswith("a.pdf: lost_pages at body line ") and m.split()[-1].isdigit()
         for m in messages
     )
+
+
+def test_defect_entries_are_logged_at_debug(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    # A lost chapter has no body line, so the log names its contents entry.
+    caplog.set_level(logging.DEBUG, logger="raw2md")
+    src = tmp_path / "a.pdf"
+    src.write_bytes(b"%PDF-1.4 stub")
+    rows = "".join(
+        f"| Chapter {number}. General provisions |  | {number + 2} |\n"
+        for number in range(1, 13)
+    )
+    body = (
+        f"# Contents\n\n| Part | Title | Page |\n|---|---|---|\n{rows}"
+        "|  | First section | 15 |\n\n"
+        "## First section\n\nThis is plain text for the check.\n"
+    )
+    registry = EngineRegistry([StubEngine(extensions=frozenset({"pdf"}), body=body)])
+
+    run_one(src, registry)
+
+    messages = [r.getMessage() for r in caplog.records if r.levelno == logging.DEBUG]
+    assert "a.pdf: lost_chapters missing 'chapter 1 general provisions'" in messages

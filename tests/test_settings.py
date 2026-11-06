@@ -617,6 +617,10 @@ def test_quality_section_absent_leaves_the_ok_score_unset() -> None:
     assert parse_settings(_cleaning_data()).quality_ok_score is None
 
 
+def test_quality_section_without_ok_score_leaves_it_unset() -> None:
+    assert parse_settings(_quality_data()).quality_ok_score is None
+
+
 @pytest.mark.parametrize("value", [0, 50, 100])
 def test_quality_ok_score_is_read(value: int) -> None:
     assert parse_settings(_quality_data(ok_score=value)).quality_ok_score == value
