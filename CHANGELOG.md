@@ -3,6 +3,23 @@
 Each section holds the notes of one release, newest first. The GitHub release
 of the version carries the same text.
 
+## v0.3.0 - 2026-11-06
+
+### Bug fixes
+
+- Fix the deterministic defects of the engine copy ([#26](https://github.com/MikeDolg/raw2md/pull/26))
+- Stop two quality checks from failing correct output ([#30](https://github.com/MikeDolg/raw2md/pull/30))
+
+### Features
+
+- Grade each quality check and write a score to the header ([#31](https://github.com/MikeDolg/raw2md/pull/31))
+- Save the engine's HTML and block tree in the .debug folder ([#32](https://github.com/MikeDolg/raw2md/pull/32))
+- Show engine phase progress and log it for agents ([#35](https://github.com/MikeDolg/raw2md/pull/35))
+- Move to torch 2.14 and current releases; the engine output changes ([#36](https://github.com/MikeDolg/raw2md/pull/36))
+- Score Figure F1 and Overall in the MPDocBench benchmark ([#38](https://github.com/MikeDolg/raw2md/pull/38))
+
+Full changelog: <https://github.com/MikeDolg/raw2md/compare/v0.2.2...v0.3.0>
+
 ## v0.2.2 - 2026-10-23
 
 ### Bug fixes
