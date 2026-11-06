@@ -37,7 +37,7 @@ raw2md is built for large, mixed collections of long documents:
 These are the scores of raw2md 0.3.0 without the LLM stages on the full [MPDocBench-Parse](https://arxiv.org/abs/2605.22100) set. The columns and the number format are the same as in the leaderboard of the benchmark:
 
 | Model | Overall | Text Edit | Truncated Text Edit | Formula CDM | Table TEDS | Truncated Table TEDS | Figure F1 | Read Order | Heading TEDS |
-|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|---|---|---|---|---|---|---|---|---|---|
 | raw2md 0.3.0 | 69.30 | 0.130 | 0.299 | 82.58 | 69.56 | 55.26 | 65.18 | 0.206 | 45.30 |
 
 The three edit distances (Text Edit, Truncated Text Edit, and Read Order) are better when they are lower. The other columns are on a 0–100 scale and are better when they are higher. Overall is the mean of the eight task scores, with each edit distance `x` counted as `(1 − x) · 100`. The [benchmark results](https://github.com/MikeDolg/raw2md/blob/main/benchmarks/README.md) give every metric, the scores on the English part, and the way to run the benchmark.
