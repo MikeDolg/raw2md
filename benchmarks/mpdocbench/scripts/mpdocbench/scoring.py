@@ -297,9 +297,13 @@ def copy_per_sample_files(result_dir: Path, scoring_dir: Path) -> list[str]:
     """Copy the per-sample score files of the scorer into `scoring_dir`.
 
     Returns the names copied. A file that the scorer did not write is skipped.
+    A file of an earlier scoring that the scorer did not write again is removed,
+    so the folder matches the aggregate beside it.
     """
     copied = []
     for pattern in _PER_SAMPLE_PATTERNS:
+        for stale in scoring_dir.glob(pattern):
+            stale.unlink()
         for path in sorted(result_dir.glob(pattern)):
             shutil.copyfile(path, scoring_dir / path.name)
             copied.append(path.name)

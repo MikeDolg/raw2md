@@ -481,6 +481,19 @@ def test_copy_per_sample_files_skips_a_file_the_scorer_did_not_write(
     assert sorted(path.name for path in target.iterdir()) == sorted(copied)
 
 
+def test_copy_per_sample_files_removes_a_file_of_an_earlier_scoring(
+    tmp_path: Path,
+) -> None:
+    result_dir = tmp_path / "result"
+    result_dir.mkdir()
+    target = tmp_path / "scoring"
+    target.mkdir()
+    (target / "old_per_sample_CDM.json").write_text("[]", encoding="utf-8")
+    (target / "metric_result.json").write_text("{}", encoding="utf-8")
+    assert scoring.copy_per_sample_files(result_dir, target) == []
+    assert [path.name for path in target.iterdir()] == ["metric_result.json"]
+
+
 def test_score_keeps_the_per_sample_files_of_the_scorer(tmp_path: Path) -> None:
     pins, data, run = _scorable(tmp_path)
     harness = data.harness(pins)
