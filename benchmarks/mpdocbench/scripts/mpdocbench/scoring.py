@@ -40,6 +40,16 @@ from raw2md.header import ResultStatus, strip_own_header
 NOT_AVAILABLE = "n/a"
 
 _METRIC_RESULT = "metric_result.json"
+# The scorer writes one file per metric next to the aggregate, with a score for
+# each page, table, formula, heading, or document. A metric that is off leaves
+# no file.
+_PER_SAMPLE_PATTERNS = (
+    "*_per_page_edit.json",
+    "*_per_table_TEDS.json",
+    "*_per_sample_CDM.json",
+    "*_per_sample_HeadTEDS.json",
+    "*_per_doc_FigureF1.json",
+)
 _CONFIG = "config.yaml"
 _LOG = "scorer.log"
 # What the scorer prints when a text match runs past its 30 seconds and falls
@@ -283,6 +293,19 @@ def run_scorer(
     return metric_path
 
 
+def copy_per_sample_files(result_dir: Path, scoring_dir: Path) -> list[str]:
+    """Copy the per-sample score files of the scorer into `scoring_dir`.
+
+    Returns the names copied. A file that the scorer did not write is skipped.
+    """
+    copied = []
+    for pattern in _PER_SAMPLE_PATTERNS:
+        for path in sorted(result_dir.glob(pattern)):
+            shutil.copyfile(path, scoring_dir / path.name)
+            copied.append(path.name)
+    return copied
+
+
 def headline_scores(
     metric_result: Mapping[str, Any], pins: Pins, active: Mapping[str, Sequence[str]]
 ) -> dict[str, Any]:
@@ -491,6 +514,7 @@ def score(
     log = scoring_dir / _LOG
     metric_path = run_scorer(harness, scorer_python, config, predictions.name, log)
     shutil.copyfile(metric_path, scoring_dir / _METRIC_RESULT)
+    copy_per_sample_files(metric_path.parent, scoring_dir)
     scores = headline_scores(
         json.loads(metric_path.read_text(encoding="utf-8")), pins_used, active
     )

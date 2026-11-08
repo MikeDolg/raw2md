@@ -33,7 +33,7 @@ current directory:
 | Folder | What goes there |
 |---|---|
 | `mpdocbench-data/` | `upstream/` – the scorer clone; `images/` – the pages; the page archive |
-| `mpdocbench-run/` | `pdfs/` – one PDF per document; `outputs/` – raw2md output; `scoring/` – the copies of the Markdown files that the scorer reads, and the scorer logs |
+| `mpdocbench-run/` | `pdfs/` – one PDF per document; `outputs/` – raw2md output; `scoring/` – the copies of the Markdown files that the scorer reads, the scorer logs, `metric_result.json`, and the per-sample score files of the scorer (`*_per_page_edit.json`, `*_per_table_TEDS.json`, `*_per_sample_CDM.json`, `*_per_sample_HeadTEDS.json`, `*_per_doc_FigureF1.json`) |
 | `mpdocbench-scorer/` | the Python environment of the scorer |
 
 The result is `mpdocbench-run/results.yaml`: the score of each metric and

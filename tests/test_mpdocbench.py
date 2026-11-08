@@ -459,6 +459,43 @@ def test_score_writes_one_number_per_metric(tmp_path: Path) -> None:
     assert yaml.safe_load(run.results.read_text(encoding="utf-8")) == result
 
 
+def test_copy_per_sample_files_skips_a_file_the_scorer_did_not_write(
+    tmp_path: Path,
+) -> None:
+    result_dir = tmp_path / "result"
+    result_dir.mkdir()
+    (result_dir / "run_quick_match_text_block_per_page_edit.json").write_text(
+        "{}", encoding="utf-8"
+    )
+    (result_dir / "run_quick_match_table_per_table_TEDS.json").write_text(
+        "[]", encoding="utf-8"
+    )
+    (result_dir / "metric_result.json").write_text("{}", encoding="utf-8")
+    target = tmp_path / "scoring"
+    target.mkdir()
+    copied = scoring.copy_per_sample_files(result_dir, target)
+    assert copied == [
+        "run_quick_match_text_block_per_page_edit.json",
+        "run_quick_match_table_per_table_TEDS.json",
+    ]
+    assert sorted(path.name for path in target.iterdir()) == sorted(copied)
+
+
+def test_score_keeps_the_per_sample_files_of_the_scorer(tmp_path: Path) -> None:
+    pins, data, run = _scorable(tmp_path)
+    harness = data.harness(pins)
+    (harness / "pdf_validation.py").write_text(
+        _FAKE_SCORER
+        + 'open(out / "run_table_per_table_TEDS.json", "w", encoding="utf-8")'
+        + '.write("[1]")\n',
+        encoding="utf-8",
+    )
+    scoring.score(pins, data, run, Path(sys.executable))
+    kept = run.scoring / "run_table_per_table_TEDS.json"
+    assert kept.read_text(encoding="utf-8") == "[1]"
+    assert not (run.scoring / "run_text_block_per_page_edit.json").exists()
+
+
 def test_rename_images_names_a_link_by_its_box_on_the_page() -> None:
     pages = [
         _page(0, [0, 0, 100, 200], []),
