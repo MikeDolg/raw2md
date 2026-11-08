@@ -136,10 +136,10 @@ the author, not a parsed list.
 | A table without data rows | `\| Size \| Weight \|`, `\|---\|---\|` | `Size Weight` |
 | All values written into one cell of the header row; each column holds values of one kind | `\| Size \| Weight \| M6<br>10<br>M8<br>12… \|` | the rows `\| M6 \| 10 \|`, `\| M8 \| 12 \|`, and so on |
 | Text attached to the header row | `The sizes are: \| Size \| Weight \|` | the paragraph `The sizes are:` and the table |
-| Rows with `\|` and no delimiter row; at least 2 rows and 2 columns | `\| Size \| Weight \|`, `\| M6 \| 10 \|` | `\|---\|---\|` under the first row |
+| Rows with `\|` and no delimiter row; at least 2 rows and 2 columns; a block where a row opens with a list marker (`-`, `1.`) stays a list | `\| Size \| Weight \|`, `\| M6 \| 10 \|` | `\|---\|---\|` under the first row |
 | The delimiter row as the first line of the block | `\|---\|---\|` above the rows | the delimiter row under the first row |
 | An empty column | `\| Size \| \| Weight \|` | `\| Size \| Weight \|` |
-| The values of two adjacent cells written into one cell, and the other cell is empty | `\| 1,000.0 1,027.3 \| \|` | `\| 1,000.0 \| 1,027.3 \|` |
+| The values of two adjacent cells written into one cell, and the other cell is empty; a number with group spaces, such as `17 440` or `1 250 000`, stays whole | `\| 1,000.0 1,027.3 \| \|` | `\| 1,000.0 \| 1,027.3 \|` |
 | The values of a row shifted across the columns; repaired only when the kinds of values allow exactly one layout | a part number and the sizes in one cell | each value in its own column |
 | A table of contents in one column | `\| 1 Pumps ........ 5 \|` | `1 Pumps 5` |
 | `<br>` in a cell of the table of contents | `1 Pumps and<br>valves` | `1 Pumps and valves` |
@@ -171,7 +171,8 @@ part. The table rules do not change the values in the cells.
 | A letter of another alphabet in a word; a word whose letters all exist in both alphabets does not change | `Cоntrol` (a Cyrillic `о`) | `Control` |
 | A space inside a Roman numeral | `Fig. V II.11` | `Fig. VII.11` |
 | A space inside a clause number; the sequence `1. 2. 3.` stays | `82. 1. Scope` | `82.1. Scope` |
-| No space after the `#` signs of a heading | `##Text` | `## Text` |
+| No space after the `#` signs of a heading, when the text does not come from `raw2md-engine` | `##Text` | `## Text` |
+| A `#` sign joined to a word when `raw2md-engine` converts the file; the engine writes each heading with a space, so the sign is text, such as a hashtag | `#Summer` | `\#Summer` |
 | A running head: a title and a page number repeat 4 times or more, one page apart | `Hydraulic Pump Manual`, `Page 14` | deleted |
 | A word break with a hyphen; the join needs a confirmation from the PDF text layer, or a joined word that occurs in the text 2 times or more; `S7-200` is not joined | `actu-`, `ator` | `actuator` |
 | A hyphen in a compound word; repaired when the other spelling occurs 3 times more often | `costeffective`, `load-ing` | `cost-effective`, `loading` |
