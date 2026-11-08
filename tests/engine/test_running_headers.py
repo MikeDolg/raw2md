@@ -1,4 +1,4 @@
-"""A running header that alternates between even and odd pages is ignored."""
+"""A running header is ignored; a title that repeats in the text is kept."""
 
 from __future__ import annotations
 
@@ -8,19 +8,27 @@ from ._helpers import Loader
 
 _PAGES = 40
 _CHAPTERS = ("Basic Terms", "Field Methods", "Sample Storage", "Final Notes")
+_PAGE_HEIGHT = 1000.0
+_HEADER_TOP = 50.0
 
 
-def _block(page: int, text: str) -> SimpleNamespace:
+def _block(page: int, text: str, top: float = _HEADER_TOP) -> SimpleNamespace:
     return SimpleNamespace(
         page_id=page,
+        polygon=SimpleNamespace(y_start=top),
         raw_text=lambda document: text,
         ignore_for_output=False,
     )
 
 
+def _document() -> SimpleNamespace:
+    page = SimpleNamespace(polygon=SimpleNamespace(y_start=0.0, height=_PAGE_HEIGHT))
+    return SimpleNamespace(get_page=lambda page_id: page)
+
+
 def _filter(engine: Loader, blocks: list[SimpleNamespace]) -> list[bool]:
     processor = engine("marker.processors.ignoretext").IgnoreTextProcessor()
-    processor.filter_common_elements(SimpleNamespace(), blocks)
+    processor.filter_common_elements(_document(), blocks)
     return [b.ignore_for_output for b in blocks]
 
 
@@ -64,3 +72,47 @@ def test_header_on_one_parity_needs_three_pages_in_a_row(engine: Loader) -> None
     blocks = [_block(page, text) for page, text in enumerate(texts)]
 
     assert not any(_filter(engine, blocks))
+
+
+def test_copies_at_one_height_are_ignored(engine: Loader) -> None:
+    # The copies of a running header move by a few thousandths of the page.
+    tops = [50.0, 52.0, 49.0, 51.0, 55.0, 50.0, 48.0, 53.0]
+    blocks = [_block(page, "Annual Review", top) for page, top in enumerate(tops)]
+
+    assert _filter(engine, blocks) == [True] * len(tops)
+
+
+def test_title_that_moves_down_the_page_is_kept(engine: Loader) -> None:
+    tops = [310.0, 450.0, 580.0, 710.0, 360.0, 620.0]
+    blocks = [_block(page, "Main Ideas", top) for page, top in enumerate(tops)]
+
+    assert not any(_filter(engine, blocks))
+
+
+def test_copy_away_from_the_header_height_is_kept(engine: Loader) -> None:
+    tops = [50.0, 50.0, 50.0, 50.0, 600.0]
+    blocks = [_block(page, "Annual Review", top) for page, top in enumerate(tops)]
+
+    assert _filter(engine, blocks) == [True, True, True, True, False]
+
+
+def test_two_copies_at_a_height_are_too_few(engine: Loader) -> None:
+    # Each copy at 100 has one other copy there; the rest stand alone.
+    tops = [100.0, 100.0, 400.0, 600.0, 800.0]
+    blocks = [_block(page, "Main Ideas", top) for page, top in enumerate(tops)]
+
+    assert not any(_filter(engine, blocks))
+
+
+def test_numbered_captions_at_one_height_are_kept(engine: Loader) -> None:
+    blocks = [_block(page, f"Tab. 3.{page + 1}", 760.0) for page in range(8)]
+
+    assert not any(_filter(engine, blocks))
+
+
+def test_text_key_keeps_a_number_after_a_dot(engine: Loader) -> None:
+    clean_text = engine("marker.processors.ignoretext").IgnoreTextProcessor.clean_text
+
+    assert clean_text("Tab. 3.4") != clean_text("Tab. 3.6")
+    assert clean_text("Page 12") == "Page"
+    assert clean_text("Tab. 34") == "Tab."

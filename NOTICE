@@ -114,7 +114,11 @@ of the repository holds each change with its diff.
 - The PDF converter names each of its steps to an optional phase callback
   before the step runs (2026-11-01). Changed file, under
   src/raw2md_engine/: `marker/converters/pdf.py`.
+- The repeated text processor hides a copy of a running header only when
+  at least two other copies stand at its height, and its text key keeps a
+  number that follows a dot (2026-11-08). Changed file, under
+  src/raw2md_engine/: `marker/processors/ignoretext.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-11-01.
+Last change: 2026-11-08.

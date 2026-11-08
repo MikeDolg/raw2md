@@ -38,6 +38,15 @@ class IgnoreTextProcessor(BaseProcessor):
         "The minimum fuzzy match score (0-100) required to classify a text block as similar to a common element.",
         "Higher values enforce stricter matching.",
     ] = 90
+    copy_height_tolerance: Annotated[
+        float,
+        "The largest difference of the top edges of two copies of a common element, as a share of the page height.",
+        "A running header keeps its place on the page; a title that repeats in the text moves.",
+    ] = 0.02
+    min_copies_at_height: Annotated[
+        int,
+        "The number of other copies at the height of a block that keeps the block ignored.",
+    ] = 2
 
     def __call__(self, document: Document):
         first_blocks = []
@@ -64,8 +73,14 @@ class IgnoreTextProcessor(BaseProcessor):
     def clean_text(text):
         text = text.replace("\n", "").strip()
         text = re.sub(r"^\d+\s*", "", text)  # remove numbers at the start of the line
-        text = re.sub(r"\s*\d+$", "", text)  # remove numbers at the end of the line
+        # remove numbers at the end of the line, but not after a dot: `Tab. 3.4`
+        text = re.sub(r"\s*(?<![.\d])\d+$", "", text)
         return text
+
+    @staticmethod
+    def relative_top(document, block: Block) -> float:
+        page = document.get_page(block.page_id).polygon
+        return (block.polygon.y_start - page.y_start) / page.height
 
     def filter_common_elements(self, document, blocks: list[Block]):
         # We can't filter if we don't have enough pages to find common elements
@@ -107,10 +122,18 @@ class IgnoreTextProcessor(BaseProcessor):
         if len(common) == 0:
             return
 
-        for t, b in zip(text, blocks):
-            # Check against all common elements
-            if any(
-                fuzz.ratio(t, common_element) > self.text_match_threshold
-                for common_element in common
-            ):
-                b.ignore_for_output = True
+        tops = [self.relative_top(document, b) for b in blocks]
+        for common_element in common:
+            copies = [
+                i
+                for i, t in enumerate(text)
+                if fuzz.ratio(t, common_element) > self.text_match_threshold
+            ]
+            for i in copies:
+                at_height = sum(
+                    1
+                    for j in copies
+                    if j != i and abs(tops[j] - tops[i]) <= self.copy_height_tolerance
+                )
+                if at_height >= self.min_copies_at_height:
+                    blocks[i].ignore_for_output = True
