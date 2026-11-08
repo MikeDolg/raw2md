@@ -18,6 +18,7 @@ from itertools import pairwise
 
 from raw2md.cleaning.headings import contents_zones
 from raw2md.cleaning.math import unescape_math_pipes
+from raw2md.cleaning.segments import LIST_MARKER_RE
 from raw2md.keywords import Keywords
 from raw2md.mdtext.lines import ATX_HEADING_RE, is_table_separator
 from raw2md.mdtext.math_spans import math_span_ranges
@@ -1222,7 +1223,9 @@ def _delimiterless_block(
 
     `idx` must open the block, and a delimiter row inside it refuses the
     block. A pipe inside inline code divides no cell: prose quoting a shell
-    pipeline on two lines would otherwise become a table.
+    pipeline on two lines would otherwise become a table. A row opened by a
+    list marker is a list item whose text holds a pipe, so it refuses the
+    block too.
     """
     if not _separator_opens_block(seg_list, idx):
         return None
@@ -1259,6 +1262,8 @@ def _delimiterless_block(
     ):
         return None
     if any(_cell_edge_inside_math(seg_list[row][0]) for row in rows):
+        return None
+    if any(LIST_MARKER_RE.match(seg_list[row][0].lstrip()) for row in rows):
         return None
     return cur, rows, marks
 

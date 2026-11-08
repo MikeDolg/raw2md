@@ -250,6 +250,27 @@ def test_a_delimiterless_block_with_a_math_pipe_is_left_alone() -> None:
     assert clean_in_place(text) == text
 
 
+def test_list_items_holding_pipes_are_not_made_a_table() -> None:
+    text = (
+        "Intro paragraph.\n\n"
+        "1) Compare N(x | a) and N(x | b).\n"
+        "   - (A) first | second\n"
+        "   - (B) third | fourth\n"
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_single_list_marker_row_refuses_the_whole_block() -> None:
+    for marker in ("-", "*", "+", "1.", "2)"):
+        text = f"Intro paragraph.\n\n{marker} a | b\nc | d\n"
+        assert clean_in_place(text) == text
+
+
+def test_pipe_rows_without_a_list_marker_are_still_mended() -> None:
+    text = "Intro paragraph.\n\n| a | b |\n| c | d |\n"
+    assert "|---|---|" in clean_in_place(text).split("\n")
+
+
 def test_prose_whose_only_pipes_are_inside_code_is_left_alone() -> None:
     text = (
         "Intro paragraph.\n\n"
