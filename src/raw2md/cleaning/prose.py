@@ -39,6 +39,7 @@ from raw2md.cleaning.segments import (
     prose_reading,
     skip_hyphen_gap,
 )
+from raw2md.header import ConversionMethod
 from raw2md.keywords import Keywords, word_pattern
 from raw2md.mdtext.lines import (
     ATX_HEADING_RE,
@@ -107,6 +108,15 @@ _HOMOGLYPH_WORD_RE = re.compile(rf"[A-Za-z{CYRILLIC_UPPER}{CYRILLIC_LOWER}]+")
 
 # `##Text` -> `## Text`; a lone `#` and seven or more `#` are no heading.
 _HEADING_SPACE_RE = re.compile(r"^( {0,3}#{1,6})(?=[^#\s])")
+
+# The same glued marker, split for the escape: `#Summer` -> `\#Summer`.
+_HEADING_GLUED_RE = re.compile(r"^( {0,3})(#{1,6})(?=[^#\s])")
+
+# The bundled engine writes every ATX heading with its space, so a glued `#`
+# in its body is text, such as a hashtag or a rank.
+_GLUED_HASH_IS_TEXT = frozenset(
+    {ConversionMethod.BUNDLED, ConversionMethod.DJVU_BUNDLED}
+)
 
 # A drop cap or heavy type reads a word's head as bold: `**I**nterface`, or a
 # Cyrillic initial `**А**` glued to its word.  # noqa: RUF003
@@ -207,13 +217,17 @@ def _strip_html_alt_path(match: re.Match[str]) -> str:
     return f"{prefix}{suffix}"
 
 
-def classify_and_fix(text: str) -> list[Segment]:
+def classify_and_fix(
+    text: str, method: ConversionMethod | None = None
+) -> list[Segment]:
     """Classify via `segments`, then fix or drop each plain line in place.
 
     The previous line tells a setext underline from junk. A line of a
     multi-line display formula only loses noise: a matrix row of alignment
-    marks (`& & . & \\\\`) would otherwise read as junk.
+    marks (`& & . & \\\\`) would otherwise read as junk. On a bundled route a
+    glued `#` is escaped as text; elsewhere it gets its heading space.
     """
+    escape_hash = method in _GLUED_HASH_IS_TEXT
     result: list[Segment] = []
     prev_line = ""
     seg_list = segments(text)
@@ -227,7 +241,7 @@ def classify_and_fix(text: str) -> list[Segment]:
             result.append((strip_line_noise(line), False))
             prev_line = line
             continue
-        fixed = _fix_plain_line(line, prev_line)
+        fixed = _fix_plain_line(line, prev_line, escape_hash)
         prev_line = line
         if fixed is None:
             continue
@@ -243,7 +257,7 @@ def strip_line_noise(line: str) -> str:
     return _INVISIBLE_FORMAT_RE.sub("", line).rstrip()
 
 
-def _fix_plain_line(line: str, prev_line: str) -> str | None:
+def _fix_plain_line(line: str, prev_line: str, escape_hash: bool) -> str | None:
     """Apply per-line plain fixes; return the fixed line, or None to drop it."""
     stripped = strip_line_noise(line)
     if _is_junk_line(stripped, prev_line):
@@ -252,6 +266,8 @@ def _fix_plain_line(line: str, prev_line: str) -> str | None:
     stripped = _strip_glued_emphasis(stripped)
     stripped = _join_spaced_roman(stripped)
     stripped = _join_split_entry_number(stripped)
+    if escape_hash:
+        return _HEADING_GLUED_RE.sub(r"\1\\\2", stripped)
     return _HEADING_SPACE_RE.sub(r"\1 ", stripped)
 
 

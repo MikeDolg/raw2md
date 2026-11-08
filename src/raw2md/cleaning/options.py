@@ -18,9 +18,9 @@ class CleanOptions:
 
     `base_dir` resolves image links; without it links are not checked. With
     `disable_image_extraction` a link to a missing image is removed, not
-    reported. `method` is the route the body came from; only heading recovery
-    reads it, and ``None`` disables that recovery. `llm_ocr` marks a body that
-    LLM-OCR recognized: the route extracts no media, so any image link is
+    reported. `method` is the route the body came from; heading recovery and
+    the glued-`#` escape read it, and ``None`` disables both. `llm_ocr` marks
+    a body that LLM-OCR recognized: the route extracts no media, so any image link is
     fabricated. `source_text` and `outline` are the source's own text layer and
     outline; their empty defaults confirm nothing, so a rule stays conservative.
     `witness_min` is the attestation threshold of `repair_attested_tokens`.

@@ -9,8 +9,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from raw2md.cleaner import CleanOptions, clean, clean_in_place
+from raw2md.cleaning.prose import classify_and_fix
 from raw2md.header import ConversionMethod
 from raw2md.mdtext.pages import page_mark, page_mark_number, split_page_marks
+from raw2md.quality.headings import heading_issue_positions
 
 
 def _corpus_fixtures() -> list[Path]:
@@ -277,3 +279,32 @@ def test_page_marks_do_not_change_cleaning_of_a_defective_body() -> None:
 
     assert cleaned_marked == clean(plain, CleanOptions())
     assert len(pages) == page
+
+
+def test_glued_hash_is_escaped_on_bundled_routes() -> None:
+    for method in (ConversionMethod.BUNDLED, ConversionMethod.DJVU_BUNDLED):
+        options = CleanOptions(method=method)
+        assert clean_in_place("#Summer\n", options) == "\\#Summer\n"
+        assert clean_in_place("##x\n", options) == "\\##x\n"
+
+
+def test_glued_hash_escape_is_idempotent() -> None:
+    options = CleanOptions(method=ConversionMethod.BUNDLED)
+    once = clean_in_place("#Summer\n\nbody\n", options)
+    assert clean_in_place(once, options) == once
+
+
+def test_glued_hash_keeps_its_space_elsewhere() -> None:
+    methods = (
+        ConversionMethod.CLEAN,
+        ConversionMethod.LLM_OCR,
+        ConversionMethod.PANDOC,
+        None,
+    )
+    for method in methods:
+        assert clean_in_place("##Title\n", CleanOptions(method=method)) == "## Title\n"
+
+
+def test_escaped_hash_is_no_heading_defect() -> None:
+    structural = classify_and_fix("#Summer\n", ConversionMethod.BUNDLED)
+    assert heading_issue_positions(structural) == []

@@ -969,4 +969,4 @@ def test_recovery_is_on_for_the_clean_route() -> None:
 
 def test_route_does_not_gate_the_other_cleaning_rules() -> None:
     options = CleanOptions(method=ConversionMethod.BUNDLED)
-    assert clean_in_place("##Text\n", options) == "## Text\n"
+    assert clean_in_place("Text   \n", options) == "Text\n"

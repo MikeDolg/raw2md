@@ -123,7 +123,7 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     text = strip_alt_file_paths(text)
     if options.llm_ocr:
         text = strip_ocr_fabrications(text, options.keywords)
-    seg_list = classify_and_fix(text)
+    seg_list = classify_and_fix(text, options.method)
     seg_list = strip_html_anchors(seg_list)
     seg_list = strip_heading_emphasis(seg_list)
     # Before every rule that reads a heading's number: a stray leading glyph
