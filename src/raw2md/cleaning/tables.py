@@ -28,6 +28,7 @@ from raw2md.mdtext.tables import (
     cell_values,
     crushed_run_placements,
     has_cell_separator,
+    reads_as_a_grouped_number,
     rebuild_table_row,
     table_cells,
     table_column_forms,
@@ -991,9 +992,14 @@ def _recut_round(cells: list[str], attested: list[bool]) -> list[str] | None:
 
 
 def _swallowed_values(cell: str) -> list[str] | None:
-    """The cell's values when its whole text is a run of them, else None."""
+    """The cell's values when its whole text is a run of them, else None.
+
+    Parts that read as one number typeset with group spaces are no run.
+    """
     values = cell.split()
     if len(values) < 2 or not all(_VALUE_TOKEN_RE.fullmatch(v) for v in values):
+        return None
+    if reads_as_a_grouped_number(values):
         return None
     return values
 

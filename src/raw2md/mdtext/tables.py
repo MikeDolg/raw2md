@@ -219,10 +219,10 @@ def _crushed_cell_rows(cell: str, *, sole: bool) -> list[list[str]]:
 
 def _run_rows(rows: list[list[str]]) -> list[list[str]]:
     """`rows` as the run they read as, or nothing where they read as one number."""
-    return [] if all(_reads_as_a_grouped_number(row) for row in rows) else rows
+    return [] if all(reads_as_a_grouped_number(row) for row in rows) else rows
 
 
-def _reads_as_a_grouped_number(pieces: list[str]) -> bool:
+def reads_as_a_grouped_number(pieces: list[str]) -> bool:
     """True when the pieces are one number the page typeset with group spaces.
 
     `17 440`, `1 250 000`. Neither the row nor the table tells it from two

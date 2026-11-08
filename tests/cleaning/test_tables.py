@@ -622,6 +622,27 @@ def test_swallowed_values_do_not_cross_a_cell_holding_text() -> None:
     assert clean_in_place(text) == text
 
 
+def test_a_number_with_group_spaces_is_not_recut() -> None:
+    for space in (" ", chr(0xA0), chr(0x202F)):
+        text = (
+            "| A      | B | C  |\n"
+            "|--------|---|----|\n"
+            "| 1      | 2 | 3  |\n"
+            f"| 17{space}440 |   | 30 |\n"
+        )
+        assert clean_in_place(text) == text
+
+
+def test_decimal_parts_with_a_space_are_still_recut() -> None:
+    text = (
+        "| A   | B   | C    |\n"
+        "|-----|-----|------|\n"
+        "| 1.5 | 2.5 | 3.5  |\n"
+        "| 1,000.0 1,027.3 |   | 30.5 |\n"
+    )
+    assert "| 1,000.0 | 1,027.3 |" in clean_in_place(text)
+
+
 def test_a_cell_of_several_words_is_not_a_run_of_values() -> None:
     text = (
         "| A               | B | C  |\n"
