@@ -241,9 +241,14 @@ class OcrBuilder(BaseBuilder):
                     self.replace_line_spans(document, document_page, block, flat_spans)
                 else:
                     # Clear out any old lines. Mark as removed for the json ocr renderer
-                    for line in block.contained_blocks(
+                    detected_lines = block.contained_blocks(
                         document_page, block_types=[BlockTypes.Line]
-                    ):
+                    )
+                    if detected_lines:
+                        block.detected_line_polygons = [
+                            copy.deepcopy(line.polygon) for line in detected_lines
+                        ]
+                    for line in detected_lines:
                         line.removed = True
                     block.structure = []
 

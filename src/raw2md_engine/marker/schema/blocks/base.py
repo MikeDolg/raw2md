@@ -100,6 +100,9 @@ class Block(BaseModel):
     lowres_image: Image.Image | None = None
     highres_image: Image.Image | None = None
     removed: bool = False  # Has block been replaced by new block?
+    # The detector lines of a block that OCR read as a whole: its new lines
+    # all carry the frame of the block.
+    detected_line_polygons: list[PolygonBox] | None = None
     _metadata: dict | None = None
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -313,6 +316,17 @@ class Block(BaseModel):
             children=child_content,
             section_hierarchy=section_hierarchy,
         )
+
+    def line_polygons(self, document: Document) -> list[PolygonBox]:
+        """The frames of the text lines of the block, in the order of the lines.
+
+        The detector frames win over the lines of the structure, so the count
+        of frames can differ from the count of text lines.
+        """
+        if self.detected_line_polygons:
+            return self.detected_line_polygons
+        lines = self.contained_blocks(document, (BlockTypes.Line,))
+        return [line.polygon for line in lines]
 
     def line_height(self, document: Document) -> float:
         lines = self.contained_blocks(document, (BlockTypes.Line,))

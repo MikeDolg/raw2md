@@ -123,6 +123,10 @@ of the repository holds each change with its diff.
   Changed files, under src/raw2md_engine/: `marker/util.py`,
   `marker/providers/pdf.py`, `marker/builders/ocr.py`, and
   `marker/processors/table.py`.
+- A block that OCR reads as a whole keeps the frames of its detector lines,
+  and one block method returns the line frames of any block (2026-11-11).
+  Changed files, under src/raw2md_engine/: `marker/builders/ocr.py` and
+  `marker/schema/blocks/base.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
