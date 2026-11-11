@@ -131,6 +131,13 @@ of the repository holds each change with its diff.
   space when Han, kana, or fullwidth punctuation meet at the cut
   (2026-11-11). Changed file, under src/raw2md_engine/:
   `marker/renderers/markdown.py`.
+- The text processor joins a paragraph cut by a page, a column, or a
+  figure. It steps over pictures, captions, and footnotes, reads the text
+  at the cut as well as the line frames, and moves the second half behind
+  the first, so the figure follows the joined paragraph. A hyphen at the
+  cut stays before a capital or a digit (2026-11-11). Changed files, under
+  src/raw2md_engine/: `marker/processors/text.py`,
+  `marker/processors/debug.py`, and `marker/renderers/markdown.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

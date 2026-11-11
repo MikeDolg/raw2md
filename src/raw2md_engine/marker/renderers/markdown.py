@@ -96,6 +96,9 @@ class Markdownify(MarkdownConverter):
                 if regex.compile(
                     rf".*[\p{{Ll}}|\d][{hyphens}]\s?$", regex.DOTALL
                 ).match(text):  # handle hypenation across pages
+                    # Before a capital or a digit the hyphen belongs to the word.
+                    if not self._next_starts_lowercase(el):
+                        return text.rstrip()
                     return regex.split(rf"[{hyphens}]\s?$", text)[0]
                 if self._joins_without_space(el, text):
                     return text
@@ -103,6 +106,13 @@ class Markdownify(MarkdownConverter):
             if block_type == BlockTypes.ListGroup:
                 return f"{text}"
         return f"{text}\n\n" if text else ""  # default convert_p behavior
+
+    @staticmethod
+    def _next_starts_lowercase(el):
+        following = el.find_next("p")
+        if following is None:
+            return False
+        return bool(regex.match(r"\s*\p{Ll}", following.get_text()))
 
     @staticmethod
     def _joins_without_space(el, text):

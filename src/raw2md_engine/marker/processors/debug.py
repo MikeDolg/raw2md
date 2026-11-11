@@ -88,7 +88,7 @@ class DebugProcessor(BaseProcessor):
                 labels=[str(i) for i in line_ids],
             )
 
-            png_image = self.render_layout_boxes(page, png_image)
+            png_image = self.render_layout_boxes(document, page, png_image)
 
             debug_file = os.path.join(self.debug_folder, f"pdf_page_{page.page_id}.png")
             png_image.save(debug_file)
@@ -120,18 +120,26 @@ class DebugProcessor(BaseProcessor):
                 label_font_size=24,
             )
 
-            png_image = self.render_layout_boxes(page, png_image)
+            png_image = self.render_layout_boxes(document, page, png_image)
 
             debug_file = os.path.join(
                 self.debug_folder, f"layout_page_{page.page_id}.png"
             )
             png_image.save(debug_file)
 
-    def render_layout_boxes(self, page, png_image):
+    def render_layout_boxes(self, document, page, png_image):
         layout_bboxes = []
         layout_labels = []
-        for block_id in page.structure:
-            child = page.get_block(block_id)
+        # A joined paragraph can move a block into the structure of an earlier
+        # page, so the blocks of this page come from every page structure.
+        block_ids = [
+            block_id
+            for holder in document.pages
+            for block_id in holder.structure or []
+            if block_id.page_id == page.page_id
+        ]
+        for block_id in block_ids:
+            child = document.get_block(block_id)
             if child.block_type in [BlockTypes.Line, BlockTypes.Span]:
                 continue
 

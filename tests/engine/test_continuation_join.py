@@ -34,6 +34,8 @@ def _render(engine: Loader, first: str, second: str) -> str:
     [
         ("the ro-", "d and the plate", "the rod and the plate"),
         ("the ro¬", "d and the plate", "the rod and the plate"),
+        ("the Anglo-", "Saxon plate", "the Anglo-Saxon plate"),
+        ("from 25-", "100 mm", "from 25-100 mm"),
         ("the rod —", "and the plate", "the rod — and the plate"),
         ("the rod—", "and the plate", "the rod— and the plate"),
         (_HAN, _HAN_TAIL, _HAN + _HAN_TAIL),
