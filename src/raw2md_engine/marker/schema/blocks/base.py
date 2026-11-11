@@ -329,10 +329,10 @@ class Block(BaseModel):
         return [line.polygon for line in lines]
 
     def line_height(self, document: Document) -> float:
-        lines = self.contained_blocks(document, (BlockTypes.Line,))
-        if len(lines) == 0:
+        polygons = self.line_polygons(document)
+        if len(polygons) == 0:
             return 0
-        return self.polygon.height / len(lines)
+        return self.polygon.height / len(polygons)
 
     def update_metadata(self, **kwargs):
         if self.metadata is None:

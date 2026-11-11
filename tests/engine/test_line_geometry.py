@@ -100,3 +100,35 @@ def test_line_mode_gives_the_frames_of_the_lines(engine: Loader) -> None:
     assert block.detected_line_polygons is None
     assert _corners(block.line_polygons(page)) == _LINES
     assert block.raw_text(page) == "".join(text + "\n" for text in texts)
+
+
+def test_line_height_counts_the_detector_frames(engine: Loader) -> None:
+    page, block, _ = _page_with_block(engine)
+    expected = (_BLOCK[3] - _BLOCK[1]) / len(_LINES)
+
+    _ocr(engine, page, [block.id], [_TEXT])
+
+    assert block.line_height(page) == expected
+
+
+def test_line_height_of_a_block_in_line_mode(engine: Loader) -> None:
+    page, block, lines = _page_with_block(engine)
+    expected = (_BLOCK[3] - _BLOCK[1]) / len(_LINES)
+
+    _ocr(engine, page, [line.id for line in lines], ["a", "b", "c"])
+
+    assert block.line_height(page) == expected
+
+
+def test_line_height_without_lines_is_zero(engine: Loader) -> None:
+    schema: ModuleType = engine("marker.schema")
+    page = engine("marker.schema.groups.page").PageGroup(
+        polygon=_box(engine, (0.0, 0.0, *_PAGE)), page_id=0
+    )
+    block = page.add_full_block(
+        engine("marker.schema.blocks").Text(
+            polygon=_box(engine, _BLOCK), page_id=0, block_type=schema.BlockTypes.Text
+        )
+    )
+
+    assert block.line_height(page) == 0

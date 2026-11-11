@@ -138,6 +138,10 @@ of the repository holds each change with its diff.
   cut stays before a capital or a digit (2026-11-11). Changed files, under
   src/raw2md_engine/: `marker/processors/text.py`,
   `marker/processors/debug.py`, and `marker/renderers/markdown.py`.
+- The line height of a block divides the block height by the count of
+  detector line frames, so a heading that OCR reads as one text line gets
+  the height of one line (2026-11-11). Changed file, under
+  src/raw2md_engine/: `marker/schema/blocks/base.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
