@@ -55,6 +55,8 @@ def get_formatted_table_text(element):
     return full_text
 
 
+_UNSPACED = regex.compile(r"[\p{Han}\p{Hiragana}\p{Katakana}　-〿＀-￯]")
+
 HEADING_TAGS = frozenset(("h1", "h2", "h3", "h4", "h5", "h6"))
 
 
@@ -86,7 +88,7 @@ class Markdownify(MarkdownConverter):
         return text
 
     def convert_p(self, el, text, parent_tags):
-        hyphens = r"-—¬"
+        hyphens = r"-¬"
         has_continuation = el.has_attr("class") and "has-continuation" in el["class"]
         if has_continuation:
             block_type = BlockTypes[el["block-type"]]
@@ -95,10 +97,25 @@ class Markdownify(MarkdownConverter):
                     rf".*[\p{{Ll}}|\d][{hyphens}]\s?$", regex.DOTALL
                 ).match(text):  # handle hypenation across pages
                     return regex.split(rf"[{hyphens}]\s?$", text)[0]
+                if self._joins_without_space(el, text):
+                    return text
                 return f"{text} "
             if block_type == BlockTypes.ListGroup:
                 return f"{text}"
         return f"{text}\n\n" if text else ""  # default convert_p behavior
+
+    @staticmethod
+    def _joins_without_space(el, text):
+        # Han, kana, and fullwidth punctuation are written without spaces;
+        # Hangul and Latin words are not.
+        following = el.find_next("p")
+        if following is None:
+            return False
+        first = text.rstrip()[-1:]
+        second = following.get_text().lstrip()[:1]
+        return bool(
+            first and second and _UNSPACED.match(first) and _UNSPACED.match(second)
+        )
 
     def convert_b(self, el, text, parent_tags):
         # A heading is already emphasized; italic stays, as it can mark a variable.

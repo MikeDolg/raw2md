@@ -127,6 +127,10 @@ of the repository holds each change with its diff.
   and one block method returns the line frames of any block (2026-11-11).
   Changed files, under src/raw2md_engine/: `marker/builders/ocr.py` and
   `marker/schema/blocks/base.py`.
+- A paragraph cut by a page keeps a trailing dash, and it joins without a
+  space when Han, kana, or fullwidth punctuation meet at the cut
+  (2026-11-11). Changed file, under src/raw2md_engine/:
+  `marker/renderers/markdown.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
