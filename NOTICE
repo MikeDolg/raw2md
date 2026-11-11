@@ -118,7 +118,12 @@ of the repository holds each change with its diff.
   at least two other copies stand at its height, and its text key keeps a
   number that follows a dot (2026-11-08). Changed file, under
   src/raw2md_engine/: `marker/processors/ignoretext.py`.
+- The text fixer keeps fullwidth forms and curly quotes, and repairs the
+  rest as before. Math keeps the default configuration (2026-11-11).
+  Changed files, under src/raw2md_engine/: `marker/util.py`,
+  `marker/providers/pdf.py`, `marker/builders/ocr.py`, and
+  `marker/processors/table.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-11-08.
+Last change: 2026-11-11.

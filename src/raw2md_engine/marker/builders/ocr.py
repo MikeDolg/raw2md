@@ -17,7 +17,11 @@ from raw2md_engine.marker.schema.text.char import Char
 from raw2md_engine.marker.schema.text.line import Line
 from raw2md_engine.marker.schema.text.span import Span
 from raw2md_engine.marker.settings import settings
-from raw2md_engine.marker.util import get_closing_tag_type, get_opening_tag_type
+from raw2md_engine.marker.util import (
+    fix_text_keep_width,
+    get_closing_tag_type,
+    get_opening_tag_type,
+)
 from raw2md_engine.surya.common.surya.schema import TaskNames
 from raw2md_engine.surya.recognition import OCRResult, RecognitionPredictor, TextChar
 
@@ -404,7 +408,7 @@ class OcrBuilder(BaseBuilder):
 
             if not current_span:
                 current_span = SpanClass(
-                    text=fix_text(char.text),
+                    text=fix_text_keep_width(char.text, math="math" in formats),
                     formats=list(formats),
                     page_id=page.page_id,
                     polygon=char_box,
@@ -417,7 +421,9 @@ class OcrBuilder(BaseBuilder):
                 self.store_char(marker_char, current_chars, page)
                 continue
 
-            current_span.text = fix_text(current_span.text + char.text)
+            current_span.text = fix_text_keep_width(
+                current_span.text + char.text, math="math" in formats
+            )
             self.store_char(marker_char, current_chars, page)
 
             # Tokens inside a math span don't have valid boxes, so we skip the merging

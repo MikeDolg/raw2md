@@ -3,7 +3,6 @@ from collections import Counter, defaultdict
 from copy import deepcopy
 from typing import Annotated
 
-from ftfy import fix_text
 from PIL import Image
 
 from raw2md_engine.marker.logger import get_logger
@@ -13,7 +12,11 @@ from raw2md_engine.marker.schema.blocks.tablecell import TableCell
 from raw2md_engine.marker.schema.document import Document
 from raw2md_engine.marker.schema.polygon import PolygonBox
 from raw2md_engine.marker.settings import settings
-from raw2md_engine.marker.util import matrix_intersection_area, unwrap_math
+from raw2md_engine.marker.util import (
+    fix_text_keep_width,
+    matrix_intersection_area,
+    unwrap_math,
+)
 from raw2md_engine.marker.utils.image import is_blank_image
 from raw2md_engine.pdftext.extraction import table_output
 from raw2md_engine.surya.detection import DetectionPredictor, TextDetectionResult
@@ -218,7 +221,7 @@ class TableProcessor(BaseProcessor):
 
             # In case the above steps left no more latex math - We can unwrap
             text = unwrap_math(text)
-            text = self.normalize_spaces(fix_text(text))
+            text = self.normalize_spaces(fix_text_keep_width(text))
             fixed_text.append(text)
         return fixed_text
 

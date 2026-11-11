@@ -4,6 +4,7 @@ from importlib import import_module
 from typing import Annotated
 
 import numpy as np
+from ftfy import TextFixerConfig, fix_text
 from pydantic import BaseModel
 
 from raw2md_engine.marker.schema.polygon import PolygonBox
@@ -212,3 +213,25 @@ def unwrap_math(text: str, math_symbols: list[str] = MATH_SYMBOLS) -> str:
 
     # Otherwise, return as-is
     return text
+
+
+TEXT_FIXER_CONFIG = TextFixerConfig(fix_character_width=False, uncurl_quotes=False)
+
+
+def fix_text_keep_width(text: str, math: bool = False) -> str:
+    """Repair mojibake without narrowing fullwidth forms or straightening quotes.
+
+    Math is TeX, where a straight quote is a prime and punctuation is ASCII, so
+    it takes the default configuration: the whole text when `math` is set, and
+    each `<math>` segment otherwise.
+    """
+    if math:
+        return fix_text(text)
+    parts = []
+    last = 0
+    for match in MATH_TAG_PATTERN.finditer(text):
+        parts.append(fix_text(text[last : match.start()], config=TEXT_FIXER_CONFIG))
+        parts.append(fix_text(match.group(0)))
+        last = match.end()
+    parts.append(fix_text(text[last:], config=TEXT_FIXER_CONFIG))
+    return "".join(parts)

@@ -6,7 +6,6 @@ from typing import Annotated
 
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_c
-from ftfy import fix_text
 from PIL import Image
 from pypdfium2 import PdfDocument, PdfiumError
 
@@ -22,6 +21,7 @@ from raw2md_engine.marker.schema.polygon import PolygonBox
 from raw2md_engine.marker.schema.registry import get_block_class
 from raw2md_engine.marker.schema.text.line import Line
 from raw2md_engine.marker.schema.text.span import Span
+from raw2md_engine.marker.util import fix_text_keep_width
 from raw2md_engine.pdftext.extraction import dictionary_output
 from raw2md_engine.pdftext.pdf.utils import flatten as flatten_pdf_page
 
@@ -245,7 +245,7 @@ class PdfProvider(BaseProvider):
                         )
                         superscript = span.get("superscript", False)
                         subscript = span.get("subscript", False)
-                        text = self.normalize_spaces(fix_text(span["text"]))
+                        text = self.normalize_spaces(fix_text_keep_width(span["text"]))
                         if superscript or subscript:
                             text = text.strip()
 
