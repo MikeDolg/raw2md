@@ -3,8 +3,9 @@
 Early passes read a line at a time: alt-text paths, invisible characters,
 junk lines, homoglyphs, glued emphasis, split numbers, heading spaces, page
 anchors, and the page band. After the structural passes come the rules the
-body's own spelling decides: hyphen rejoin, crushed paragraphs, letter-spaced
-runs, whole-paragraph emphasis, and compound hyphens. `collapse_blanks` closes
+body's own spelling decides: hyphen rejoin, crushed paragraphs, paragraphs cut
+by a page or a figure, letter-spaced runs, whole-paragraph emphasis, and
+compound hyphens. `collapse_blanks` closes
 every cleaning run.
 
 `letter_spaced_runs` and `spacing_witness` export the spacing reading for the
@@ -27,11 +28,13 @@ from raw2md.cleaning.segments import (
     CYRILLIC_LOWER,
     CYRILLIC_UPPER,
     LIST_ITEM_RE,
+    LIST_MARKER_RE,
     WORD_RUN_RE,
     block_content_lines,
     block_continues,
     block_end,
     body_word_counts,
+    declares_a_symbol,
     display_block_lines,
     flattened_paragraph_runs,
     is_image_only_line,
@@ -46,6 +49,7 @@ from raw2md.mdtext.lines import (
     is_html_media_wrapper_line,
     is_setext_underline,
     is_structural_symbol_line,
+    is_thematic_break,
 )
 from raw2md.mdtext.links import IMAGE_RE, mask_addresses
 from raw2md.mdtext.math_spans import (
@@ -945,6 +949,396 @@ def _repeats_at_the_seam(tail: str, head: str) -> bool:
         before[-count:] == after[:count]
         for count in range(_SEAM_REPEAT_MIN_WORDS, min(len(before), len(after)) + 1)
     )
+
+
+# ---- cut paragraphs ---------------------------------------------------------
+
+# Routes whose body arrives with no layout to join a cut paragraph by: the
+# bundled engine joins by geometry, and a docx has no page to cut at.
+_CUT_PARAGRAPH_METHODS = frozenset(
+    {ConversionMethod.LLM_OCR, ConversionMethod.DJVU_LLM_OCR, ConversionMethod.CLEAN}
+)
+
+# A mark that closes a sentence: ASCII, the ellipsis, and the CJK and
+# fullwidth forms of `.`, `!`, `?`, `:`, `;`.
+_SENTENCE_END_CHARS = frozenset(
+    ".!?:;"
+    + "".join(
+        chr(code)
+        for code in (0x2026, 0x3002, 0xFF0E, 0xFF61, 0xFF01, 0xFF1F, 0xFF1A, 0xFF1B)
+    )
+)
+
+# Read past after a sentence mark, beside closing quotes and brackets: the
+# straight and fullwidth quotes.
+_SENTENCE_TAIL_EXTRA = frozenset("\"'" + chr(0xFF02) + chr(0xFF07))
+_SENTENCE_TAIL_CATEGORIES = frozenset({"Pe", "Pf", "Pi"})
+
+# A line that opens a structure, not a paragraph. Display math, an HTML line,
+# a quote, a footnote definition, and a bracketed note such as a lost page.
+_STRUCTURE_OPENERS = ("$$", "\\[", "\\begin", "<", ">", "[")
+
+# Indentation that turns a line after a blank into indented code.
+_INDENTED_CODE_PREFIXES = ("    ", "\t")
+
+# A caption number: arabic, or a roman chapter number (`Fig. IV.2`).
+_CAPTION_START_TAIL = r"\.?[ \t]*(?:\d|[IVXL]+\b)"
+
+# A key and a dash open a figure legend entry (`4 - spindle`), whose block is
+# a list without its markers.
+_LEGEND_ENTRY_RE = re.compile(rf"^(?:\d{{1,3}}|\w)\s*[-{chr(0x2013)}{chr(0x2014)}]\s")
+
+# Fewer words than this make a margin line, a signature mark, or a catchword,
+# not the head of a paragraph.
+_CUT_FIRST_HALF_MIN_WORDS = 4
+
+# The letters of a lowercase roman page number before a running title
+# (`xviii Contents`).
+_ROMAN_FOLIO_LETTERS = frozenset("ivxlc")
+
+# A link or an address at the end of a line closes a reference entry.
+_LINK_TAIL_RE = re.compile(r"(?:\]\([^)]*\)|https?://\S+)$")
+
+# A bare web or e-mail address, which a colophon or a masthead sets apart.
+_ADDRESS_WORD_RE = re.compile(
+    r"www\.\S+|\S+@\S+\.\S+|\S+\.(?:com|org|net|edu|gov|info|io)(?:/\S*)?",
+    re.IGNORECASE,
+)
+
+# A head that restates this many words of the tail is a fragment emitted
+# twice, not the rest of the sentence.
+_CUT_RESTATED_MIN_WORDS = 4
+
+
+def join_cut_paragraphs(
+    seg_list: list[Segment], method: ConversionMethod | None, keywords: Keywords
+) -> list[Segment]:
+    """Join a paragraph that a page, a figure, or a caption cut in two.
+
+    Only on a route with no layout of its own: LLM-OCR and a md input. The text
+    at the cut is the evidence: the first half ends with no sentence mark and
+    the second opens with a lowercase letter that starts no item. A body with
+    page marks joins across a page mark only; a body without them at any
+    paragraph break. The search steps over blank lines, page marks, images,
+    and captions, which move after the joined paragraph. A hyphen at the cut
+    is left to `rejoin_hyphenation`, which needs an attested spelling.
+    """
+    if method not in _CUT_PARAGRAPH_METHODS:
+        return seg_list
+    seams = _cut_paragraph_seams(seg_list, keywords)
+    if not seams:
+        return seg_list
+    _logger.info("cut paragraphs joined: %d", len(seams))
+    return _apply_cut_seams(seg_list, seams)
+
+
+def _cut_paragraph_seams(
+    seg_list: list[Segment], keywords: Keywords
+) -> dict[int, tuple[int, int]]:
+    """The second half ``[start, end)`` of each cut, keyed by the first half's end."""
+    blocks = _cut_scan_blocks(seg_list)
+    marked = any(
+        not protected and page_mark_number(line) is not None
+        for line, protected in seg_list
+    )
+    captions = _caption_start(keywords.caption_labels)
+    seams: dict[int, tuple[int, int]] = {}
+    # What the paragraph joined so far carries into the next seam, so the
+    # joined body reads the same on a second pass: its words, and a crossed
+    # page mark, which the join moves down to the next block.
+    joined_words = 0
+    crossed_mark = False
+    idx = 0
+    while idx < len(blocks):
+        start, end = blocks[idx]
+        words = joined_words + sum(
+            len(_SEAM_WORD_RE.findall(seg_list[k][0])) for k in range(start, end)
+        )
+        need_mark = marked and not crossed_mark
+        joined_words, crossed_mark = 0, False
+        if words < _CUT_FIRST_HALF_MIN_WORDS or not _is_cut_prose(
+            seg_list, start, end, captions
+        ):
+            idx += 1
+            continue
+        nxt = _second_half(seg_list, blocks, idx, captions, need_mark=need_mark)
+        if nxt is None:
+            idx += 1
+            continue
+        second = blocks[nxt]
+        if not _cut_text_evidence(seg_list[end - 1][0], seg_list[second[0]][0]):
+            idx += 1
+            continue
+        seams[end] = second
+        # The joined paragraph ends where the second half ends.
+        joined_words = words
+        crossed_mark = marked
+        idx = nxt
+    return seams
+
+
+def _cut_scan_blocks(seg_list: list[Segment]) -> list[tuple[int, int]]:
+    """``[start, end)`` runs of plain lines that are neither blank nor a page mark."""
+    blocks: list[tuple[int, int]] = []
+    idx = 0
+    count = len(seg_list)
+    while idx < count:
+        if not _is_cut_content(seg_list[idx]):
+            idx += 1
+            continue
+        end = idx
+        while end < count and _is_cut_content(seg_list[end]):
+            end += 1
+        blocks.append((idx, end))
+        idx = end
+    return blocks
+
+
+def _is_cut_content(segment: Segment) -> bool:
+    line, protected = segment
+    return not protected and bool(line.strip()) and page_mark_number(line) is None
+
+
+def _second_half(
+    seg_list: list[Segment],
+    blocks: list[tuple[int, int]],
+    idx: int,
+    captions: re.Pattern[str],
+    *,
+    need_mark: bool,
+) -> int | None:
+    """Index into `blocks` of the paragraph that may carry on block `idx`.
+
+    The gap may hold blank lines, page marks, images, and captions only.
+    Under `need_mark` it must hold a page mark.
+    """
+    end = blocks[idx][1]
+    crossed_mark = False
+    for nxt in range(idx + 1, len(blocks)):
+        start, stop = blocks[nxt]
+        gap = seg_list[end:start]
+        if any(protected for _, protected in gap):
+            return None
+        crossed_mark = crossed_mark or any(
+            page_mark_number(line) is not None for line, _ in gap
+        )
+        if _is_stepped_block(seg_list, start, stop, captions):
+            end = stop
+            continue
+        if need_mark and not crossed_mark:
+            return None
+        if not _is_cut_prose(seg_list, start, stop, captions):
+            return None
+        return nxt
+    return None
+
+
+def _is_stepped_block(
+    seg_list: list[Segment], start: int, end: int, captions: re.Pattern[str]
+) -> bool:
+    """True for a block of images, or a caption, that may stand inside a paragraph."""
+    lines = [seg_list[k][0] for k in range(start, end)]
+    if all(is_image_only_line(line) for line in lines):
+        return True
+    return captions.match(lines[0].lstrip().lstrip("*_")) is not None
+
+
+def _is_cut_prose(
+    seg_list: list[Segment], start: int, end: int, captions: re.Pattern[str]
+) -> bool:
+    """True when the block ``[start, end)`` is plain paragraph text.
+
+    A heading, a list item, a legend entry, a table row, display math, a
+    quote, HTML, code, a caption, and a line of only images or only math make
+    it structure.
+    """
+    first = seg_list[start][0]
+    if first.startswith(_INDENTED_CODE_PREFIXES):
+        return False
+    if captions.match(first.lstrip().lstrip("*_")) is not None:
+        return False
+    for k in range(start, end):
+        core = seg_list[k][0].strip()
+        if (
+            ATX_HEADING_RE.match(core)
+            or LIST_MARKER_RE.match(core)
+            or _LEGEND_ENTRY_RE.match(core)
+            or core.startswith(_STRUCTURE_OPENERS)
+            or "|" in core
+            or "$$" in core
+            or is_thematic_break(core)
+            or is_setext_underline(core, seg_list[k - 1][0] if k > start else "")
+            or is_image_only_line(core)
+            or is_math_only_line(core)
+        ):
+            return False
+    return True
+
+
+def _cut_text_evidence(tail_line: str, head_line: str) -> bool:
+    """True when the text at the cut shows one sentence running on.
+
+    A word on both sides of the seam is a catchword, and a head that restates
+    the tail is a fragment emitted twice.
+    """
+    tail = demark_seam_end(tail_line)
+    head = head_line.lstrip()
+    if not _tail_runs_on(tail) or not _head_runs_on(head):
+        return False
+    tail_words = [word.casefold() for word in _SEAM_WORD_RE.findall(tail)]
+    head_words = [word.casefold() for word in _SEAM_WORD_RE.findall(head)]
+    if tail_words and head_words and tail_words[-1] == head_words[0]:
+        return False
+    # A number closes an index entry, and its subentry opens in lowercase.
+    if tail_words and tail_words[-1].isdigit():
+        return False
+    if _restates(tail_words, head_words[:_CUT_RESTATED_MIN_WORDS]):
+        return False
+    return not _repeats_at_the_seam(tail, head)
+
+
+def _tail_runs_on(tail: str) -> bool:
+    """True when `tail` breaks off a sentence: no sentence mark, link, or address.
+
+    It carries a lowercase letter; a hyphen at its end is the rejoin's.
+    """
+    if not tail or not any(ch.islower() for ch in tail):
+        return False
+    if tail.endswith(("-", chr(0x00AC))) or _closes_sentence(tail):
+        return False
+    return _LINK_TAIL_RE.search(tail) is None and not _is_address(
+        tail.rsplit(maxsplit=1)[-1]
+    )
+
+
+def _head_runs_on(head: str) -> bool:
+    """True when `head` opens in lowercase and starts no item, legend, or margin.
+
+    An item opens like `b)` or `b. `, a legend like `k =`, a running title
+    after a roman folio, and a colophon line with a bare address.
+    """
+    if not head or not head[0].islower():
+        return False
+    if head[1:2] == ")" or (head[1:2] == "." and head[2:3].isspace()):
+        return False
+    if declares_a_symbol(head) or _opens_with_roman_folio(head):
+        return False
+    return not _is_address(head.split(maxsplit=1)[0])
+
+
+def _is_address(word: str) -> bool:
+    return _ADDRESS_WORD_RE.fullmatch(word.rstrip(".,;:)")) is not None
+
+
+def _restates(words: list[str], run: list[str]) -> bool:
+    """True when `run`, of full length, stands as one stretch in `words`."""
+    if len(run) < _CUT_RESTATED_MIN_WORDS:
+        return False
+    return any(
+        words[pos : pos + len(run)] == run for pos in range(len(words) - len(run) + 1)
+    )
+
+
+def _opens_with_roman_folio(head: str) -> bool:
+    words = head.split(maxsplit=2)
+    return (
+        len(words) >= 2
+        and set(words[0]) <= _ROMAN_FOLIO_LETTERS
+        and words[1][0].isupper()
+    )
+
+
+def _closes_sentence(tail: str) -> bool:
+    """True when `tail` ends on a sentence mark, past closing quotes and brackets."""
+    end = len(tail)
+    while end and (
+        tail[end - 1] in _SENTENCE_TAIL_EXTRA
+        or unicodedata.category(tail[end - 1]) in _SENTENCE_TAIL_CATEGORIES
+    ):
+        end -= 1
+    return end > 0 and tail[end - 1] in _SENTENCE_END_CHARS
+
+
+@lru_cache(maxsize=8)
+def _caption_start(records: tuple[str, ...]) -> re.Pattern[str]:
+    # A caption opens with its label and number; the label alone opens prose.
+    return re.compile(word_pattern(records).pattern + _CAPTION_START_TAIL)
+
+
+def _apply_cut_seams(
+    seg_list: list[Segment], seams: dict[int, tuple[int, int]]
+) -> list[Segment]:
+    """The body with each seam joined and its gap moved after the paragraph.
+
+    Images and captions move after the joined paragraph. A page mark goes
+    with a figure that opens its page, or else waits for the next line that
+    opens content: placed between blanks, its removal would leave two.
+    """
+    out: list[Segment] = []
+    pending: list[str] = []
+    carried: list[str] = []
+    idx = 0
+    count = len(seg_list)
+    while idx < count:
+        second = seams.get(idx)
+        if second is not None:
+            start, end = second
+            last, _ = out.pop()
+            out.append((f"{last.rstrip()} {seg_list[start][0].lstrip()}", False))
+            out.extend(seg_list[k] for k in range(start + 1, end))
+            moved, marks = _split_cut_gap([seg_list[k][0] for k in range(idx, start)])
+            if moved and any(page_mark_number(line) is not None for line in moved):
+                moved = [*carried, *moved]
+                carried.clear()
+            if moved:
+                if pending:
+                    pending.append("")
+                pending.extend(moved)
+            carried.extend(marks)
+            idx = end
+            continue
+        line, protected = seg_list[idx]
+        if pending:
+            out.append(("", False))
+            out.extend((moved_line, False) for moved_line in pending)
+            pending.clear()
+            if protected or line.strip():
+                out.append(("", False))
+        if carried and (protected or line.strip()):
+            out.extend((mark, False) for mark in carried)
+            carried.clear()
+        out.append((line, protected))
+        idx += 1
+    if pending:
+        out.append(("", False))
+        out.extend((moved_line, False) for moved_line in pending)
+    out.extend((mark, False) for mark in carried)
+    return out
+
+
+def _split_cut_gap(gap: list[str]) -> tuple[list[str], list[str]]:
+    """The gap lines that move after the paragraph, and the marks that wait.
+
+    A page that opens on a figure keeps its mark right above that figure.
+    """
+    first_mark = next(
+        (pos for pos, line in enumerate(gap) if page_mark_number(line) is not None),
+        len(gap),
+    )
+    before, after = gap[:first_mark], gap[first_mark:]
+    marks = [line for line in after if page_mark_number(line) is not None]
+    if any(line.strip() and page_mark_number(line) is None for line in after):
+        return _trim_blank_edges(gap), []
+    return _trim_blank_edges(before), marks
+
+
+def _trim_blank_edges(lines: list[str]) -> list[str]:
+    start, end = 0, len(lines)
+    while start < end and not lines[start].strip():
+        start += 1
+    while end > start and not lines[end - 1].strip():
+        end -= 1
+    return lines[start:end]
 
 
 # ---- letter-spaced runs -----------------------------------------------------

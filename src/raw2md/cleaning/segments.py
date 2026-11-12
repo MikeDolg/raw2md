@@ -218,10 +218,15 @@ def block_continues(previous: Sequence[str], following: Sequence[str]) -> bool:
     head = following[0].lstrip() if following else ""
     if not tail or not head:
         return False
-    if _DEFINITION_HEAD_RE.match(head):
+    if declares_a_symbol(head):
         return False
     cut_off = tail[-1].islower() or tail[-1] in _UNFINISHED_TAIL_CHARS
     return cut_off and head[0].islower()
+
+
+def declares_a_symbol(head: str) -> bool:
+    """True when `head` opens a legend entry (`k =`): no clause carries on into one."""
+    return _DEFINITION_HEAD_RE.match(head) is not None
 
 
 def blocks_are_adjacent(seg_list: list[Segment], end: int, next_start: int) -> bool:

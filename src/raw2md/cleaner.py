@@ -44,6 +44,7 @@ from raw2md.cleaning import (
     group_settled_headings,
     headings_settled_before_nesting,
     join_contents_entry_breaks,
+    join_cut_paragraphs,
     join_flattened_paragraphs,
     join_letter_spaced_headings,
     join_letter_spaced_runs,
@@ -216,6 +217,9 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     # After the rejoin: a fragment still ending in a break holds a split
     # nothing attested, and this rule leaves it.
     seg_list = join_flattened_paragraphs(seg_list)
+    # After both joins above: a hyphen at a cut is the rejoin's, and a crushed
+    # column is the flattened join's, which reads its whole run.
+    seg_list = join_cut_paragraphs(seg_list, options.method, options.keywords)
     seg_list = join_letter_spaced_runs(seg_list)
     # After the rejoin, whose joined spellings the counts must weigh.
     seg_list = settle_compound_hyphens(seg_list)
