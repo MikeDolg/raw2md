@@ -29,6 +29,7 @@ of rules lists them. The module paths start at `src/raw2md/`.
 | A running head recognized as a heading: the number and the title repeat while the section is still open | a second `## 5.2 Filters` | deleted; a repeat without the number stays |
 | The heading `Contents` repeated on each page of a table of contents, at any level; only a running head can stand between the copies, and a copy with more text after the word stays | `## Contents`, the rows, `#### CONTENTS.`, the rows | `## Contents`, with all the rows under it |
 | The level does not match the depth of the number | `## 4`, `## 4.1`, `#### 4.3.1` | `# 4`, `## 4.1`, `### 4.3.1` |
+| Headings of one number form at different levels, or at the level of the section that holds them | `## 1 Intro`, `## (1) Scope`, `## (2) Terms`, `## 2 Methods` | `## 1 Intro`, `### (1) Scope`, `### (2) Terms`, `## 2 Methods` |
 | A lost heading: a separate paragraph with a multi-level number that continues the numbering of the adjacent headings | `4.2 Valves` between `## 4.1` and `## 4.3` | `## 4.2 Valves` |
 | An unnumbered heading at the level of its section or higher | `## Notes` under `## 4.1 Pumps` | `### Notes` |
 | A heading series (`Chapter 1`, `Chapter 2`, and so on) or a heading with 3 copies or more at different levels | `## Chapter 1`, `### Chapter 2`, `## Chapter 3` | all at the level of the majority |
@@ -62,6 +63,14 @@ extra conditions:
   whose title starts in the same column. This works only when such a cell in
   the table of contents holds `§`. Without it, the cell can hold the number of
   a chapter (`| 1. | Pumps | 5 |`).
+- **The form of a number** is the shape of the number before the title: a word
+  with a dotted number (`Section 1.1:`), an arabic number in parentheses or
+  before `)` or `、` (`(2)`, `2)`, `2、`), or a CJK number (`第一章`, `（一）`,
+  `一、`). Headings of one form are peers. A form takes its level where its
+  numbering starts at 1: one level under the nearest heading of another form
+  above it. A number that continues the number of that heading (`2 Beta`, then
+  `(3) Gamma`) puts the form beside it. A form needs 2 different numbers, and a
+  caption word (`Figure 1.1:`) makes no form. The rule makes no new heading.
 - **A docx without styles**: the rules in the last two rows of the table work
   only on a `docx` or `md` input. The document must also have no heading at
   all.
@@ -73,6 +82,7 @@ extra conditions:
 | 200 characters: the length of a heading | `_HEADING_MAX_LENGTH` | `cleaning/headings.py` |
 | 3 copies: a heading series | `_HEADING_CLASS_MIN_SIZE` | `cleaning/headings.py` |
 | 3 copies: a repeated heading | `_REPEATED_TITLE_MIN_COPIES` | `cleaning/headings.py` |
+| 2 different numbers: a number form | `_NUMBER_FORM_MIN_NUMBERS` | `cleaning/headings.py` |
 | 3 numbers in sequence: a docx without styles | `_LADDER_MIN` | `cleaning/headings.py` |
 | 3 paragraphs in capital letters: a docx without styles | `_CAPS_SEED_MIN` | `cleaning/headings.py` |
 | half of the PDF bookmarks in the text | `_OUTLINE_SKELETON_MIN_SHARE` | `cleaning/headings.py` |
@@ -119,6 +129,8 @@ after it. Otherwise the formula stays as it was.
 | Defect | Before | After |
 |---|---|---|
 | A numbered list recognized as a bulleted list; the numbers run in sequence | `- 1. Drain`, a nested `- 2. Remove`, `- 3. Fit` | `1. Drain`, `2. Remove`, `3. Fit` |
+| The same list with blank lines between the items; the blank lines stay | `- 1. Drain`, a blank line, `- 2. Fit` | `1. Drain`, a blank line, `2. Fit` |
+| An item one level deeper than the item before it, and its number is the next number of the same scheme; the item moves with its nested items | `- (1) Oil`, a nested `- (2) Water` | `- (1) Oil`, `- (2) Water` |
 | A single item one level deeper after two items or more; two such items or more count as a real nested list | `- Oil`, `- Water`, a nested `- Air` | `- Oil`, `- Water`, `- Air` |
 | A bold number without a space in a list item | `- **10.**Check` | `- **10.** Check` |
 | The `•` symbol at the start of a line | `• Stainless steel` | `- Stainless steel` |
@@ -126,6 +138,12 @@ after it. Otherwise the formula stays as it was.
 
 Numbers with a gap (`2023.`, `2025.`) stay as they are. They are the text of
 the author, not a parsed list.
+
+A numbering scheme is arabic numbers, Latin letters, or Cyrillic letters, each
+with `.`, with `)`, or in parentheses. A letter is a single one. Roman numbers
+are not a scheme, because `i`, `v`, and `x` are also letters: `i)` after `h)`
+stays nested. An item also stays nested when indented text after a blank line
+continues the last item of the list.
 
 ### 4. Tables
 
@@ -178,7 +196,27 @@ part. The table rules do not change the values in the cells.
 | A hyphen in a compound word; repaired when the other spelling occurs 3 times more often | `costeffective`, `load-ing` | `cost-effective`, `loading` |
 | A letter-spaced word; repaired when the spelling without spaces occurs in the text 2 times or more | `i m p o r t a n t` | `important` |
 | A paragraph broken into lines: 6 short paragraphs or more in a row, where a phrase breaks off and continues with a lowercase letter | `The pump is started`, `only after the tank`, and so on | `The pump is started only after the tank …` |
+| A paragraph cut in two by a page, an image, or a caption; LLM-OCR and `md` input only | `The pump feeds the tank while the`, `![Pump](pump.png)`, `Figure 2. The pump.`, `valve stays closed.` | `The pump feeds the tank while the valve stays closed.`, then the image and the caption |
 | Consecutive blank lines and spaces at the end of a line | | one blank line; the spaces deleted |
+
+The join of a cut paragraph reads the text at the cut. The first half has 4
+words or more. It ends without a sentence mark (`.`, `!`, `?`, `…`, `:`, `;`,
+or their CJK forms), a number, a link, or an address. The second half starts
+with a lowercase letter and does not open an item (`b)`) or a symbol legend
+(`k =`). In LLM-OCR mode, the second half starts on the next page. In an `md`
+input, any paragraph break counts. Only blank lines, images, and captions can
+stand between the halves. A caption starts with a word from the
+`caption_labels` list of `keywords.yaml` and a number. A heading, a list item,
+a table, a formula, or a protected zone stops the join.
+
+The rule does not join three cases:
+
+- a hyphen at the cut: the word break rule above joins it when it can
+  confirm the joined word;
+- CJK text: it has no lowercase letters, so the text does not show that the
+  sentence continues;
+- the `raw2md-engine` and `docx` routes: the engine joins such a paragraph by
+  the page layout, and a `docx` has no pages.
 
 | Threshold | Constant | Module |
 |---|---|---|
@@ -189,6 +227,7 @@ part. The table rules do not change the values in the cells.
 | 3 times more often: the spelling of a compound word | `_COMPOUND_MAJORITY_RATIO` | `cleaning/prose.py` |
 | 2 times: a letter-spaced word without spaces in the text | `_SPACED_WITNESS_MIN` | `cleaning/prose.py` |
 | 6 paragraphs: a paragraph broken into lines | `FLATTENED_PARAGRAPH_MIN_RUN` | `cleaning/segments.py` |
+| 4 words: the first half of a cut paragraph | `_CUT_FIRST_HALF_MIN_WORDS` | `cleaning/prose.py` |
 
 ### 6. Repeats
 
