@@ -142,6 +142,9 @@ of the repository holds each change with its diff.
   detector line frames, so a heading that OCR reads as one text line gets
   the height of one line (2026-11-11). Changed file, under
   src/raw2md_engine/: `marker/schema/blocks/base.py`.
+- The nesting of a list item needs the start of its first text line and
+  the frame of the item both to move right of the parent (2026-11-12). Changed file, under
+  src/raw2md_engine/: `marker/processors/list.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

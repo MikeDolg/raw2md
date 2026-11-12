@@ -59,6 +59,26 @@ class ListProcessor(BaseProcessor):
                     page_break and next_block_in_first_quadrant
                 )
 
+    @staticmethod
+    def _text_x_start(item: ListItem, page) -> float:
+        polygons = item.line_polygons(page)
+        if polygons:
+            return polygons[0].x_start
+        return item.polygon.x_start
+
+    def _is_indented(self, item: ListItem, parent: ListItem, page) -> bool:
+        """Whether the item sits right of the parent by the indent step.
+
+        The first line and the frame must both move right. A frame wider
+        than the text, or a paragraph indent on the first line alone, is no
+        nesting.
+        """
+        indent = self.min_x_indent * page.polygon.width
+        return (
+            self._text_x_start(item, page) > self._text_x_start(parent, page) + indent
+            and item.polygon.x_start > parent.polygon.x_start + indent
+        )
+
     def list_group_indentation(self, document: Document):
         for page in document.pages:
             for block in page.contained_blocks(document, self.block_types):
@@ -75,9 +95,9 @@ class ListProcessor(BaseProcessor):
                     if list_item_block.block_type != BlockTypes.ListItem:
                         continue
 
-                    while stack and list_item_block.polygon.x_start <= stack[
-                        -1
-                    ].polygon.x_start + (self.min_x_indent * page.polygon.width):
+                    while stack and not self._is_indented(
+                        list_item_block, stack[-1], page
+                    ):
                         stack.pop()
 
                     if (
@@ -85,9 +105,7 @@ class ListProcessor(BaseProcessor):
                         and list_item_block.polygon.y_start > stack[-1].polygon.y_start
                     ):
                         list_item_block.list_indent_level = stack[-1].list_indent_level
-                        if list_item_block.polygon.x_start > stack[
-                            -1
-                        ].polygon.x_start + (self.min_x_indent * page.polygon.width):
+                        if self._is_indented(list_item_block, stack[-1], page):
                             list_item_block.list_indent_level += 1
 
                     next_list_item_block = block.get_next_block(page, list_item_block)
