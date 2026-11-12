@@ -308,3 +308,29 @@ def test_cjk_paragraph_with_a_short_last_line_stays_apart(engine: Loader) -> Non
     pages = _cjk_pages(engine, 300)
 
     assert len(_paragraphs(_join(engine, pages))) == 2
+
+
+def test_ignored_text_block_does_not_undo_a_join(engine: Loader) -> None:
+    pages = _Pages(engine, 2)
+    pages.text(0, [("The valve opens when the pressure in the", (50, 600, 300, 618))])
+    pages.block(0, "Picture", (50, 630, 550, 700))
+    ignored = pages.text(0, [("Running note without a stop", (50, 710, 300, 728))])
+    ignored.ignore_for_output = True
+    pages.text(1, [("chamber exceeds the spring force.", (50, 60, 400, 78))])
+
+    paragraphs = _paragraphs(_join(engine, pages))
+
+    assert paragraphs[0] == (
+        "The valve opens when the pressure in the chamber exceeds the spring force."
+    )
+    assert paragraphs[1].startswith("![](")
+
+
+def test_german_closing_quote_ends_the_sentence(engine: Loader) -> None:
+    opening = chr(0x201E)
+    closing = chr(0x201C)
+    pages = _Pages(engine, 2)
+    pages.text(0, [(f"He said {opening}Stop.{closing}", (50, 700, 300, 718))])
+    pages.text(1, [("ebay is a name.", (50, 600, 400, 618))])
+
+    assert len(_paragraphs(_join(engine, pages))) == 2

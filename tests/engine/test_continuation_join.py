@@ -11,6 +11,8 @@ _HAN_TAIL = chr(0x6D4B) + chr(0x8BD5)
 _FULL_COMMA = chr(0xFF0C)
 _HANGUL = chr(0xD55C) + chr(0xAE00)
 _HANGUL_TAIL = chr(0xB2E4) + chr(0xC74C)
+_FULL_WORD = "".join(chr(0xFF41 + i) for i in range(3))
+_FULL_WORD_TAIL = "".join(chr(0xFF44 + i) for i in range(3))
 
 
 def _render(engine: Loader, first: str, second: str) -> str:
@@ -34,6 +36,8 @@ def _render(engine: Loader, first: str, second: str) -> str:
     [
         ("the ro-", "d and the plate", "the rod and the plate"),
         ("the ro¬", "d and the plate", "the rod and the plate"),
+        ("Mc¬", "Donald", "McDonald"),
+        (_FULL_WORD, _FULL_WORD_TAIL, f"{_FULL_WORD} {_FULL_WORD_TAIL}"),
         ("the Anglo-", "Saxon plate", "the Anglo-Saxon plate"),
         ("from 25-", "100 mm", "from 25-100 mm"),
         ("the rod —", "and the plate", "the rod — and the plate"),

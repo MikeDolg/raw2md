@@ -55,7 +55,10 @@ def get_formatted_table_text(element):
     return full_text
 
 
-_UNSPACED = regex.compile(r"[\p{Han}\p{Hiragana}\p{Katakana}　-〿＀-￯]")
+# Fullwidth Latin letters and digits are words and keep their spaces.
+_UNSPACED = regex.compile(
+    r"[\p{Han}\p{Hiragana}\p{Katakana}　-〿]|(?![\p{L}\p{N}])[＀-￯]"
+)
 
 HEADING_TAGS = frozenset(("h1", "h2", "h3", "h4", "h5", "h6"))
 
@@ -96,8 +99,11 @@ class Markdownify(MarkdownConverter):
                 if regex.compile(
                     rf".*[\p{{Ll}}|\d][{hyphens}]\s?$", regex.DOTALL
                 ).match(text):  # handle hypenation across pages
-                    # Before a capital or a digit the hyphen belongs to the word.
-                    if not self._next_starts_lowercase(el):
+                    # Before a capital or a digit a literal hyphen belongs to
+                    # the word; a soft hyphen never does.
+                    if text.rstrip().endswith("-") and not (
+                        self._next_starts_lowercase(el)
+                    ):
                         return text.rstrip()
                     return regex.split(rf"[{hyphens}]\s?$", text)[0]
                 if self._joins_without_space(el, text):

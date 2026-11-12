@@ -11,7 +11,7 @@ from raw2md_engine.marker.schema.document import Document
 # A sentence mark, optionally followed by closing quotes and brackets.
 _SENTENCE_END = regex.compile(
     r"[.!?…:;。．｡！？：；]"
-    r"[\p{Pe}\p{Pf}\"'＂＇]*$"
+    r"[\p{Pe}\p{Pf}\p{Pi}\"'＂＇]*$"
 )
 _WORD_HYPHEN = regex.compile(r"\p{L}[-¬]$")
 _LINE_BREAK_MARK = regex.compile(r"[\p{Ll}\d][-—¬]$")
@@ -51,7 +51,7 @@ class TextProcessor(BaseProcessor):
         joins: list[tuple[Block, Block, list[Block]]] = []
         for page in document.pages:
             for block in page.contained_blocks(document, self.block_types):
-                if block.structure is None:
+                if block.structure is None or block.ignore_for_output:
                     continue
                 found = self.find_second_half(document, block)
                 if found is None:
