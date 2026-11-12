@@ -155,6 +155,11 @@ of the repository holds each change with its diff.
   punctuation and number after it. A formula line ends without a space
   (2026-11-12). Changed files, under src/raw2md_engine/:
   `marker/processors/equation.py` and `marker/renderers/markdown.py`.
+- A picture keeps the frame of the layout model, and a detector line goes
+  to a picture only when at least half of its area lies inside that frame.
+  A text line beside a chart goes to another block by overlap or by
+  distance, or to a new text block (2026-11-12). Changed file, under src/raw2md_engine/:
+  `marker/schema/groups/page.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

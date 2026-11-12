@@ -16,6 +16,12 @@ from raw2md_engine.marker.util import matrix_intersection_area, sort_text_lines
 
 LINE_MAPPING_TYPE = list[tuple[int, ProviderOutput]]
 
+# A picture keeps the frame of the layout model. A line goes to a picture only
+# when at least this share of its area lies inside that frame. A picture
+# renders none of its lines, so a text line beside a chart goes to text.
+PICTURE_BLOCK_TYPES = (BlockTypes.Picture, BlockTypes.Figure)
+PICTURE_LINE_MIN_INSIDE = 0.5
+
 
 class PageGroup(Group):
     block_type: BlockTypes = BlockTypes.Page
@@ -145,6 +151,15 @@ class PageGroup(Group):
         ]
 
         intersection_matrix = matrix_intersection_area(line_bboxes, block_bboxes)
+
+        line_areas = np.array(
+            [provider_output.line.polygon.area for provider_output in provider_outputs]
+        )
+        for block_idx, block in enumerate(blocks):
+            if block.block_type not in PICTURE_BLOCK_TYPES:
+                continue
+            column = intersection_matrix[:, block_idx]
+            column[column < line_areas * PICTURE_LINE_MIN_INSIDE] = 0
 
         for line_idx, line in enumerate(provider_outputs):
             intersection_line = intersection_matrix[line_idx]
@@ -289,7 +304,8 @@ class PageGroup(Group):
                 spans = provider_output.spans
                 self.add_full_block(line)
                 block.add_structure(line)
-                block.polygon = block.polygon.merge([line.polygon])
+                if block.block_type not in PICTURE_BLOCK_TYPES:
+                    block.polygon = block.polygon.merge([line.polygon])
                 block.text_extraction_method = text_extraction_method
                 for span_idx, span in enumerate(spans):
                     self.add_full_block(span)
@@ -341,6 +357,8 @@ class PageGroup(Group):
             provider_output: ProviderOutput = provider_outputs[line_idx]
             line = provider_output.line
             for block in valid_blocks:
+                if block.block_type in PICTURE_BLOCK_TYPES:
+                    continue
                 # We want to assign to blocks closer in y than x
                 dist = line.polygon.center_distance(block.polygon, x_weight=5)
                 if min_dist_idx is None or dist < min_dist:
