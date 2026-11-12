@@ -1140,7 +1140,30 @@ def _is_stepped_block(
     lines = [seg_list[k][0] for k in range(start, end)]
     if all(is_image_only_line(line) for line in lines):
         return True
-    return captions.match(lines[0].lstrip().lstrip("*_")) is not None
+    if captions.match(lines[0].lstrip().lstrip("*_")) is None:
+        return False
+    return not any(
+        _is_structure_line(seg_list, k, start)
+        and not is_image_only_line(lines[k - start])
+        for k in range(start + 1, end)
+    )
+
+
+def _is_structure_line(seg_list: list[Segment], k: int, start: int) -> bool:
+    """True when line `k` of the block that opens at `start` is not paragraph text."""
+    core = seg_list[k][0].strip()
+    return bool(
+        ATX_HEADING_RE.match(core)
+        or LIST_MARKER_RE.match(core)
+        or _LEGEND_ENTRY_RE.match(core)
+        or core.startswith(_STRUCTURE_OPENERS)
+        or "|" in core
+        or "$$" in core
+        or is_thematic_break(core)
+        or is_setext_underline(core, seg_list[k - 1][0] if k > start else "")
+        or is_image_only_line(core)
+        or is_math_only_line(core)
+    )
 
 
 def _is_cut_prose(
@@ -1157,22 +1180,7 @@ def _is_cut_prose(
         return False
     if captions.match(first.lstrip().lstrip("*_")) is not None:
         return False
-    for k in range(start, end):
-        core = seg_list[k][0].strip()
-        if (
-            ATX_HEADING_RE.match(core)
-            or LIST_MARKER_RE.match(core)
-            or _LEGEND_ENTRY_RE.match(core)
-            or core.startswith(_STRUCTURE_OPENERS)
-            or "|" in core
-            or "$$" in core
-            or is_thematic_break(core)
-            or is_setext_underline(core, seg_list[k - 1][0] if k > start else "")
-            or is_image_only_line(core)
-            or is_math_only_line(core)
-        ):
-            return False
-    return True
+    return not any(_is_structure_line(seg_list, k, start) for k in range(start, end))
 
 
 def _cut_text_evidence(tail_line: str, head_line: str) -> bool:
@@ -1287,10 +1295,9 @@ def _apply_cut_seams(
             out.append((f"{last.rstrip()} {seg_list[start][0].lstrip()}", False))
             out.extend(seg_list[k] for k in range(start + 1, end))
             moved, marks = _split_cut_gap([seg_list[k][0] for k in range(idx, start)])
-            if moved and any(page_mark_number(line) is not None for line in moved):
+            if moved:
                 moved = [*carried, *moved]
                 carried.clear()
-            if moved:
                 if pending:
                     pending.append("")
                 pending.extend(moved)

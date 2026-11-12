@@ -276,3 +276,24 @@ def test_paragraph_after_a_page_cut_joins_where_its_mark_lands() -> None:
 def test_index_entry_and_its_subentry_do_not_join() -> None:
     text = "Pressure of the steam in the boiler 12, 48\n\nmean value 51\n"
     assert clean_in_place(text, MD) == text
+
+
+def test_caption_block_with_a_heading_does_not_join_across_it() -> None:
+    text = (
+        "The pump feeds the tank while the\n"
+        "\n"
+        "Figure 2. The pump\n"
+        "# Section\n"
+        "\n"
+        "valve stays closed.\n"
+    )
+    assert clean_in_place(text, MD) == text
+
+
+def test_caption_after_two_joins_follows_its_page_mark() -> None:
+    text = _ocr_pages(
+        "The pump feeds the tank while the",
+        "valve stays closed and the\n\nFigure 2. The pump\n\nreturn line runs on.",
+    )
+    out = clean_in_place(text, OCR)
+    assert out.index(page_mark(2)) < out.index("Figure 2.")

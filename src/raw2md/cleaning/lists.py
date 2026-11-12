@@ -57,12 +57,14 @@ def _parse_list_item(line: str) -> _ListItem | None:
 
 
 def _walk_item_blocks(
-    seg_list: list[Segment], fix: Callable[[list[_ListItem]], list[str]]
+    seg_list: list[Segment], fix: Callable[[list[_ListItem], bool], list[str]]
 ) -> list[Segment]:
     """Group adjacent item lines into blocks and rewrite each with `fix`.
 
     A rule needs the block's base indent: a deep item is a nested child when a
-    shallower item vouches for it, and indented code otherwise.
+    shallower item vouches for it, and indented code otherwise. `fix` also gets
+    whether indented text continues the last item after blank lines: moving
+    that item would turn the text into code.
     """
     out: list[Segment] = []
     idx = 0
@@ -80,8 +82,19 @@ def _walk_item_blocks(
                 break
             block.append(item)
             idx += 1
-        out.extend((fixed, False) for fixed in fix(block))
+        open_tail = _indented_tail(seg_list, idx)
+        out.extend((fixed, False) for fixed in fix(block, open_tail))
     return out
+
+
+def _indented_tail(seg_list: list[Segment], idx: int) -> bool:
+    """True when the first non-blank line from `idx` is indented plain text."""
+    while idx < len(seg_list) and _is_blank(seg_list[idx]):
+        idx += 1
+    if idx == len(seg_list):
+        return False
+    line, protected = seg_list[idx]
+    return not protected and line[:1] in " \t"
 
 
 def normalize_lists(seg_list: list[Segment]) -> list[Segment]:
@@ -147,16 +160,41 @@ def _restore_loose_series(seg_list: list[Segment]) -> list[Segment]:
             series.append((gap_end, nxt))
             probe = gap_end + 1
         if len(series) >= 2:
-            for pos, (item, _number, _delim) in series:
-                line, _ = _restore_item(item, item.indent)
+            stops = [pos for pos, _ in series[1:]] + [count]
+            for (pos, (item, _number, _delim)), stop in zip(series, stops, strict=True):
+                line, shift = _restore_item(item, item.indent)
                 out[pos] = (line, False)
+                if shift:
+                    _shift_body(out, pos + 1, stop, item.indent, shift)
         idx = probe
     return out
 
 
+def _shift_body(
+    seg_list: list[Segment], start: int, stop: int, indent: int, delta: int
+) -> None:
+    """Shift in place the lines of an item's body, up to a line at its indent.
+
+    A restored marker changes width, so the nested items and the continuation
+    text under it move by the same delta to stay inside the item.
+    """
+    for pos in range(start, stop):
+        line, protected = seg_list[pos]
+        if protected:
+            return
+        if not line.strip():
+            continue
+        cur = len(line) - len(line.lstrip(" "))
+        if cur <= indent:
+            return
+        seg_list[pos] = (" " * max(0, cur + delta) + line.lstrip(" "), False)
+
+
 def separate_bold_list_marker(seg_list: list[Segment]) -> list[Segment]:
     """Insert the space the engine drops after a numbered marker demoted to bold."""
-    return _walk_item_blocks(seg_list, _separate_bold_marker_block)
+    return _walk_item_blocks(
+        seg_list, lambda items, _open_tail: _separate_bold_marker_block(items)
+    )
 
 
 def _separate_bold_marker_block(items: list[_ListItem]) -> list[str]:
@@ -252,6 +290,7 @@ _LABEL_TEXT_RE = re.compile(
     rf"^(?:\((?P<paren>{_LABEL})\)|(?P<bare>{_LABEL})(?P<delim>[.)]))(?=\s|$)"
 )
 _ORDERED_MARKER_RE = re.compile(r"^(\d{1,9})([.)])$")
+_ROMAN_ONE_POS = _LATIN_LOWER.index("i") + 1
 
 
 def _scheme_label(it: _ListItem) -> tuple[tuple[str, str], int] | None:
@@ -291,6 +330,9 @@ def _lift_sequential(items: list[_ListItem]) -> list[_ListItem]:
             continue
         if prev_label[0] != cur_label[0] or cur_label[1] != prev_label[1] + 1:
             continue
+        # `i)` under `h)` may open a roman sub-list.
+        if cur_label[0][0].startswith("latin") and cur_label[1] == _ROMAN_ONE_POS:
+            continue
         delta = prev.indent - cur.indent
         old_indent = cur.indent
         items[idx] = _reindent(cur, delta)
@@ -298,13 +340,14 @@ def _lift_sequential(items: list[_ListItem]) -> list[_ListItem]:
     return items
 
 
-def _fix_list_block(items: list[_ListItem]) -> list[str]:
+def _fix_list_block(items: list[_ListItem], open_tail: bool) -> list[str]:
     """Rewrite one list block with conservative repairs.
 
     Lift an item whose number follows its predecessor's (`_lift_sequential`),
-    then restore a demoted numbered list (`_is_demoted_numbered`), or else
-    flatten a lone spurious child (`_lone_child_index`). A real sub-list of two
-    or more items stays; the ordered-marker guard keeps re-cleaning a no-op.
+    unless indented text continues the last item (`open_tail`), then restore
+    a demoted numbered list (`_is_demoted_numbered`), or else flatten a lone
+    spurious child (`_lone_child_index`). A real sub-list of two or more
+    items stays; the ordered-marker guard keeps re-cleaning a no-op.
     """
     if len(items) < 2:
         return [it.raw for it in items]
@@ -313,8 +356,9 @@ def _fix_list_block(items: list[_ListItem]) -> list[str]:
     # Deeper is indented code, which is not a protected zone.
     if base > 3:
         return [it.raw for it in items]
-    items = _lift_sequential(items)
-    base = min(it.indent for it in items)
+    if not open_tail:
+        items = _lift_sequential(items)
+        base = min(it.indent for it in items)
     if _is_demoted_numbered(items, base):
         return _restore_numbered_block(items, base)
     flatten = _lone_child_index(items, base)

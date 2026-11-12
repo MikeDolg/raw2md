@@ -383,3 +383,29 @@ def test_loose_series_broken_by_a_paragraph_is_left_alone() -> None:
 def test_loose_series_restore_is_idempotent() -> None:
     once = clean_in_place("Lead-in.\n\n- 1. One point\n\n- 2. Two point\n")
     assert clean_in_place(once) == once
+
+
+def test_loose_series_shifts_the_children_of_a_restored_item() -> None:
+    text = (
+        "Lead-in.\n\n- 1. First point\n\n- 2. Second point\n  - child a\n  - child b\n"
+    )
+    assert clean_in_place(text) == (
+        "Lead-in.\n\n1. First point\n\n2. Second point\n   - child a\n   - child b\n"
+    )
+
+
+def test_loose_series_shifts_the_continuation_of_a_restored_item() -> None:
+    text = "Lead-in.\n\n- 1. First point\n\n- 2. Second point\n\n  More of two.\n"
+    assert clean_in_place(text) == (
+        "Lead-in.\n\n1. First point\n\n2. Second point\n\n   More of two.\n"
+    )
+
+
+def test_roman_sublist_under_a_letter_item_is_kept() -> None:
+    text = "- g) A\n- h) B\n  - i) one\n  - ii) two\n"
+    assert clean_in_place(text) == text
+
+
+def test_lift_is_declined_when_indented_text_continues_the_item() -> None:
+    text = "21. A\n   22. B\n\n        Continued text.\n"
+    assert clean_in_place(text) == text
