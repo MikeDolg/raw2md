@@ -90,6 +90,56 @@ def test_nested_run_that_does_not_itself_qualify_stays_nested() -> None:
     )
 
 
+def test_parenthesised_numbers_are_lifted_to_one_level() -> None:
+    text = "- (1) A\n  - (2) B\n  - (3) C\n"
+    assert clean_in_place(text) == "- (1) A\n- (2) B\n- (3) C\n"
+
+
+def test_letter_series_is_lifted_to_one_level() -> None:
+    text = "- a) A\n  - b) B\n- c) C\n"
+    assert clean_in_place(text) == "- a) A\n- b) B\n- c) C\n"
+
+
+def test_ordered_numbers_with_deeper_neighbour_are_lifted() -> None:
+    text = "21. A\n   22. B\n23. C\n"
+    assert clean_in_place(text) == "21. A\n22. B\n23. C\n"
+
+
+def test_cyrillic_letter_series_is_lifted_to_one_level() -> None:
+    letters = [chr(c) for c in (0x0430, 0x0431, 0x0432)]
+    text = "".join(
+        f"{'  ' if k == 1 else ''}- {ch}) item\n" for k, ch in enumerate(letters)
+    )
+    expected = "".join(f"- {ch}) item\n" for ch in letters)
+    assert clean_in_place(text) == expected
+
+
+def test_cyrillic_alphabet_has_no_short_i_between_i_and_ka() -> None:
+    # The letter after `и` in a numbering scheme is `к`, so `к` follows `и`.
+    text = f"- {chr(0x0438)}) A\n  - {chr(0x043A)}) B\n"
+    assert clean_in_place(text) == f"- {chr(0x0438)}) A\n- {chr(0x043A)}) B\n"
+
+
+def test_bullet_carrying_paren_number_is_lifted_with_descendants() -> None:
+    text = "- (1) A\n  - (2) B\n    - n1\n    - n2\n- (3) C\n"
+    assert clean_in_place(text) == "- (1) A\n- (2) B\n  - n1\n  - n2\n- (3) C\n"
+
+
+def test_different_scheme_child_stays_nested() -> None:
+    text = "- (1) A\n  - (a) B\n  - (b) C\n"
+    assert clean_in_place(text) == text
+
+
+def test_roman_numerals_are_not_touched() -> None:
+    text = "- i) A\n  - ii) B\n"
+    assert clean_in_place(text) == text
+
+
+def test_gapped_paren_numbers_stay_nested() -> None:
+    text = "- (1) A\n  - (3) B\n"
+    assert clean_in_place(text) == text
+
+
 def test_nested_numbered_sublist_restore_is_idempotent() -> None:
     text = "- 1. A\n- 2. B\n- 3. Step:\n  - 1. Sub A\n  - 2. Sub B\n- 4. C\n"
     once = clean(text)

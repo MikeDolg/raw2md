@@ -173,12 +173,78 @@ def promote_dingbat_bullet(seg_list: list[Segment]) -> list[Segment]:
     return out
 
 
-def _fix_list_block(items: list[_ListItem]) -> list[str]:
-    """Rewrite one list block with one of two exclusive, conservative repairs.
+# Cyrillic alphabets without the letters that a numbering scheme skips.
+_CYR_LOWER = "".join(chr(c) for c in range(0x0430, 0x0450) if c != 0x0439)
+_CYR_UPPER = "".join(chr(c) for c in range(0x0410, 0x0430) if c != 0x0419)
+_LATIN_LOWER = "abcdefghijklmnopqrstuvwxyz"
+_LATIN_UPPER = _LATIN_LOWER.upper()
+_ALPHABETS = {
+    "latin_lower": _LATIN_LOWER,
+    "latin_upper": _LATIN_UPPER,
+    "cyr_lower": _CYR_LOWER,
+    "cyr_upper": _CYR_UPPER,
+}
+_LABEL = rf"\d{{1,9}}|[{_LATIN_LOWER}{_LATIN_UPPER}{_CYR_LOWER}{_CYR_UPPER}]"
 
-    Restore a demoted numbered list (`_is_demoted_numbered`), or else flatten a
-    lone spurious child (`_lone_child_index`). A real sub-list of two or more
-    items stays; the ordered-marker guard keeps re-cleaning a no-op.
+# A scheme label at the head of bullet text: `(2)`, `2)`, `2.`, `b)`. A letter
+# is a single one, so a roman `ii)` is no label.
+_LABEL_TEXT_RE = re.compile(
+    rf"^(?:\((?P<paren>{_LABEL})\)|(?P<bare>{_LABEL})(?P<delim>[.)]))(?=\s|$)"
+)
+_ORDERED_MARKER_RE = re.compile(r"^(\d{1,9})([.)])$")
+
+
+def _scheme_label(it: _ListItem) -> tuple[tuple[str, str], int] | None:
+    """Return `((alphabet, form), value)` of the item's own number, or None."""
+    ordered = _ORDERED_MARKER_RE.match(it.marker)
+    if ordered is not None:
+        return ("digit", ordered.group(2)), int(ordered.group(1))
+    if it.marker not in _BULLET_MARKERS:
+        return None
+    m = _LABEL_TEXT_RE.match(it.content)
+    if m is None:
+        return None
+    token = m.group("paren") or m.group("bare")
+    form = "()" if m.group("paren") else m.group("delim")
+    if token.isdigit():
+        return ("digit", form), int(token)
+    for name, alphabet in _ALPHABETS.items():
+        pos = alphabet.find(token)
+        if pos >= 0:
+            return (name, form), pos + 1
+    return None
+
+
+def _lift_sequential(items: list[_ListItem]) -> list[_ListItem]:
+    """Lift an item to the level of its predecessor when their numbers follow.
+
+    Two adjacent items with consecutive numbers of one scheme are siblings. The
+    deeper one moves to the predecessor's indent with its descendants.
+    """
+    items = list(items)
+    for idx in range(1, len(items)):
+        prev, cur = items[idx - 1], items[idx]
+        if cur.indent <= prev.indent:
+            continue
+        prev_label, cur_label = _scheme_label(prev), _scheme_label(cur)
+        if prev_label is None or cur_label is None:
+            continue
+        if prev_label[0] != cur_label[0] or cur_label[1] != prev_label[1] + 1:
+            continue
+        delta = prev.indent - cur.indent
+        old_indent = cur.indent
+        items[idx] = _reindent(cur, delta)
+        _shift_descendants(items, idx + 1, old_indent, delta)
+    return items
+
+
+def _fix_list_block(items: list[_ListItem]) -> list[str]:
+    """Rewrite one list block with conservative repairs.
+
+    Lift an item whose number follows its predecessor's (`_lift_sequential`),
+    then restore a demoted numbered list (`_is_demoted_numbered`), or else
+    flatten a lone spurious child (`_lone_child_index`). A real sub-list of two
+    or more items stays; the ordered-marker guard keeps re-cleaning a no-op.
     """
     if len(items) < 2:
         return [it.raw for it in items]
@@ -187,6 +253,8 @@ def _fix_list_block(items: list[_ListItem]) -> list[str]:
     # Deeper is indented code, which is not a protected zone.
     if base > 3:
         return [it.raw for it in items]
+    items = _lift_sequential(items)
+    base = min(it.indent for it in items)
     if _is_demoted_numbered(items, base):
         return _restore_numbered_block(items, base)
     flatten = _lone_child_index(items, base)
