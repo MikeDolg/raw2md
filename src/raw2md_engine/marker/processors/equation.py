@@ -1,17 +1,23 @@
 import re
 from typing import Annotated
 
+import regex
 from bs4 import BeautifulSoup
-from ftfy import TextFixerConfig, fix_text
+from ftfy import fix_text
 from PIL import Image
 
 from raw2md_engine.marker.processors import BaseProcessor
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.document import Document
 from raw2md_engine.marker.settings import settings
+from raw2md_engine.marker.util import fix_text_keep_width
 from raw2md_engine.surya.recognition import OCRResult, RecognitionPredictor
 
 MATH_TAG_PATTERN = re.compile(r"<math[^>]*>(.*?)</math>")
+# The model may open or close a formula with a literal `\n`; `\nabla` stays.
+MATH_NEWLINE_PATTERN = re.compile(r"^\\n(?![a-zA-Z])|\\n$")
+# A word is two letters or more of any script; a lone letter is a variable.
+WORD_PATTERN = regex.compile(r"(?:\p{L}\p{M}*){2,}")
 
 
 class EquationProcessor(BaseProcessor):
@@ -92,33 +98,44 @@ class EquationProcessor(BaseProcessor):
                 page_predictions, page_equation_block_ids
             ):
                 block = document.get_block(block_id)
-                block.html = self.fix_latex(block_prediction)
+                block.html = self.block_html(block_prediction, block.raw_text(document))
+
+    def block_html(self, prediction: str, layer_text: str):
+        html = self.fix_latex(prediction)
+        # Without math the model read plain text, which the text layer of the
+        # block holds exactly; an empty html renders that layer.
+        if "<math" not in html and layer_text.strip():
+            return ""
+        return html
 
     def fix_latex(self, math_html: str):
-        math_html = math_html.strip()
-        soup = BeautifulSoup(math_html, "html.parser")
-        opening_math_tag = soup.find("math")
+        """Keep every formula and the text around it.
 
-        # No math block found
-        if not opening_math_tag:
-            return ""
-
-        # Force block format
-        opening_math_tag.attrs["display"] = "block"
-        fixed_math_html = str(soup)
-
-        # Sometimes model outputs newlines at the beginning/end of tags
-        fixed_math_html = re.sub(
-            r"^<math display=\"block\">\\n(?![a-zA-Z])",
-            '<math display="block">',
-            fixed_math_html,
-        )
-        fixed_math_html = re.sub(r"\\n</math>$", "</math>", fixed_math_html)
-        fixed_math_html = re.sub(r"<br>", "", fixed_math_html)
-        fixed_math_html = fix_text(
-            fixed_math_html, config=TextFixerConfig(unescape_html=True)
-        )
-        return fixed_math_html
+        Text outside the formulas with a word in it makes a line with inline
+        math. Otherwise each formula is a display formula, and the punctuation
+        and numbers stay between them in order.
+        """
+        soup = BeautifulSoup(math_html.strip(), "html.parser")
+        for br in soup.find_all("br"):
+            br.replace_with(" ")
+        math_tags = soup.find_all("math")
+        for tag in math_tags:
+            tag.string = fix_text(MATH_NEWLINE_PATTERN.sub("", tag.get_text()))
+        texts = [t for t in soup.find_all(string=True) if not t.find_parent("math")]
+        fixed = [fix_text_keep_width(str(text)) for text in texts]
+        is_line = any(WORD_PATTERN.search(text) for text in fixed)
+        for text, new in zip(texts, fixed, strict=True):
+            # Each display formula takes a line of its own, so the text between
+            # two of them keeps no spaces; a bare space keeps a blank line.
+            text.replace_with(
+                new.strip() or new if len(math_tags) > 1 and not is_line else new
+            )
+        for tag in math_tags:
+            if is_line:
+                tag.attrs.pop("display", None)
+            else:
+                tag.attrs["display"] = "block"
+        return str(soup)
 
     def get_latex_batched(
         self,

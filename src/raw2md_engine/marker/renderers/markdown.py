@@ -111,6 +111,10 @@ class Markdownify(MarkdownConverter):
                 return f"{text} "
             if block_type == BlockTypes.ListGroup:
                 return f"{text}"
+        # A formula line keeps no trailing space of its last inline formula,
+        # which would read as a paragraph cut by the page.
+        if el.get("block-type") == BlockTypes.Equation.name:
+            text = text.rstrip(" ")
         return f"{text}\n\n" if text else ""  # default convert_p behavior
 
     @staticmethod

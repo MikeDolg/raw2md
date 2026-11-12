@@ -148,6 +148,13 @@ of the repository holds each change with its diff.
 - The nesting of a list item needs the start of its first text line and
   the frame of the item both to move right of the parent (2026-11-12).
   Changed file, under src/raw2md_engine/: `marker/processors/list.py`.
+- The equation processor keeps the text of a formula block. A reading
+  without math stays a paragraph when the block has no text layer. A
+  reading with a word outside its formulas is a line with inline math.
+  Any other reading puts each formula on its own display line, with its
+  punctuation and number after it. A formula line ends without a space
+  (2026-11-12). Changed files, under src/raw2md_engine/:
+  `marker/processors/equation.py` and `marker/renderers/markdown.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
