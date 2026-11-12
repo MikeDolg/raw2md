@@ -7,6 +7,7 @@ leave.
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import replace
 
 import pytest
@@ -18,6 +19,7 @@ from raw2md.cleaning.headings import (
     _vote_groups,
     close_section_level_gaps,
     detect_oversize_headings,
+    heading_class,
 )
 from raw2md.keywords import default_keywords
 from raw2md.mdtext.zones import segments
@@ -144,6 +146,198 @@ def test_a_catalogue_number_does_not_set_a_heading_level() -> None:
         "#### 4-138 Bushing\n\n"
         "#### Fig. 5.4 Slot\n"
     )
+
+    assert clean_in_place(text) == text
+
+
+# ---- heading levels from the form of the number ------------------------------
+
+CJK_ONE = chr(0x4E00)
+CJK_TWO = chr(0x4E8C)
+CJK_ORDINAL = chr(0x7B2C)
+CJK_CHAPTER = chr(0x7AE0)
+CJK_COMMA = chr(0x3001)
+FULLWIDTH_OPEN = chr(0xFF08)
+FULLWIDTH_CLOSE = chr(0xFF09)
+
+
+def test_the_cjk_code_points_are_what_the_rule_reads() -> None:
+    assert [unicodedata.name(ch) for ch in (CJK_COMMA, FULLWIDTH_OPEN)] == [
+        "IDEOGRAPHIC COMMA",
+        "FULLWIDTH LEFT PARENTHESIS",
+    ]
+    assert all(
+        unicodedata.name(ch).startswith("CJK UNIFIED IDEOGRAPH")
+        for ch in (CJK_ONE, CJK_TWO, CJK_ORDINAL, CJK_CHAPTER)
+    )
+
+
+def test_a_series_word_with_a_dotted_number_nests_under_its_chapter() -> None:
+    text = (
+        "# Chapter 1\n\n# Section 1.1: Scope\n\n# Section 1.2: Terms\n\n"
+        "# Chapter 2\n\n# Section 2.1: Loads\n\n"
+        "# Chapter 3\n\n# Section 3.1: Joints\n"
+    )
+
+    assert clean_in_place(text) == (
+        "# Chapter 1\n\n## Section 1.1: Scope\n\n## Section 1.2: Terms\n\n"
+        "# Chapter 2\n\n## Section 2.1: Loads\n\n"
+        "# Chapter 3\n\n## Section 3.1: Joints\n"
+    )
+
+
+def test_a_series_word_with_a_dotted_number_levels_one_depth_as_peers() -> None:
+    text = "# Chapter 1.2 General\n\n### Chapter 1.3 Other\n\n## Chapter 1.4 More\n"
+
+    assert clean_in_place(text) == (
+        "# Chapter 1.2 General\n\n# Chapter 1.3 Other\n\n# Chapter 1.4 More\n"
+    )
+
+
+@pytest.mark.parametrize("number", ["({})", "{})", FULLWIDTH_OPEN + "{}" + ")"])
+def test_headings_of_one_number_form_are_peers(number: str) -> None:
+    first, second, third = (number.format(n) for n in (1, 2, 3))
+    text = f"## {first} Alpha\n\n### {second} Beta\n\n## {third} Gamma\n"
+
+    assert clean_in_place(text) == (
+        f"## {first} Alpha\n\n## {second} Beta\n\n## {third} Gamma\n"
+    )
+
+
+def test_a_cjk_signed_number_nests_under_a_cjk_ordinal_chapter() -> None:
+    chapter = f"{CJK_ORDINAL}{{}}{CJK_CHAPTER}"
+    text = (
+        f"# {chapter.format(CJK_ONE)} Overview\n\n"
+        f"# {CJK_ONE}{CJK_COMMA}Scope\n\n"
+        f"# {CJK_TWO}{CJK_COMMA}Terms\n\n"
+        f"# {chapter.format(CJK_TWO)} Duties\n\n"
+        f"# {CJK_ONE}{CJK_COMMA}Staff\n"
+    )
+
+    assert clean_in_place(text) == (
+        f"# {chapter.format(CJK_ONE)} Overview\n\n"
+        f"## {CJK_ONE}{CJK_COMMA}Scope\n\n"
+        f"## {CJK_TWO}{CJK_COMMA}Terms\n\n"
+        f"# {chapter.format(CJK_TWO)} Duties\n\n"
+        f"## {CJK_ONE}{CJK_COMMA}Staff\n"
+    )
+
+
+def test_a_form_first_met_under_another_form_ranks_below_it_for_good() -> None:
+    signed = f"{{}}{CJK_COMMA}"
+    paren = f"{FULLWIDTH_OPEN}{{}}{FULLWIDTH_CLOSE}"
+    text = (
+        f"## {signed.format(CJK_ONE)}Scope\n\n"
+        f"## {paren.format(CJK_ONE)}Alpha\n\n"
+        f"## {paren.format(CJK_TWO)}Beta\n\n"
+        f"## {signed.format(CJK_TWO)}Terms\n\n"
+        f"## {paren.format(CJK_ONE)}Gamma\n"
+    )
+
+    assert clean_in_place(text) == (
+        f"## {signed.format(CJK_ONE)}Scope\n\n"
+        f"### {paren.format(CJK_ONE)}Alpha\n\n"
+        f"### {paren.format(CJK_TWO)}Beta\n\n"
+        f"## {signed.format(CJK_TWO)}Terms\n\n"
+        f"### {paren.format(CJK_ONE)}Gamma\n"
+    )
+
+
+def test_a_form_ranks_where_its_series_opens_not_where_it_continues() -> None:
+    signed = f"{{}}{CJK_COMMA}"
+    paren = f"{FULLWIDTH_OPEN}{{}}{FULLWIDTH_CLOSE}"
+    text = (
+        f"### {paren.format(CJK_ONE)}Alpha\n\n"
+        f"### {paren.format(CJK_TWO)}Beta\n\n"
+        f"### {signed.format(CJK_TWO)}Terms\n\n"
+        f"### {paren.format(CJK_ONE)}Gamma\n\n"
+        f"### {signed.format(chr(0x4E09))}Loads\n"
+    )
+
+    assert clean_in_place(text) == text
+
+
+def test_titled_headings_of_a_form_outvote_its_bare_numbers() -> None:
+    chapter = f"{CJK_ORDINAL}{{}}{CJK_CHAPTER}"
+    text = (
+        f"## Contents\n\n#### {chapter.format(CJK_ONE)}\n\n#### Earth\n\n"
+        f"#### {chapter.format(CJK_TWO)}\n\n#### Air\n\n"
+        f"## {chapter.format(CJK_ONE)} Earth\n\n### Space\n"
+    )
+
+    assert clean_in_place(text) == (
+        f"## Contents\n\n## {chapter.format(CJK_ONE)}\n\n### Earth\n\n"
+        f"## {chapter.format(CJK_TWO)}\n\n### Air\n\n"
+        f"## {chapter.format(CJK_ONE)} Earth\n\n### Space\n"
+    )
+
+
+def test_a_form_not_ranked_yet_ranks_no_other_form() -> None:
+    section = f"{CJK_ORDINAL}{{}}{chr(0x8282)}"
+    text = (
+        f"## Notes\n\n### {chr(0x4E94)}{CJK_COMMA}Alpha\n\n"
+        f"## {chr(0x516D)}{CJK_COMMA}Beta\n\n"
+        f"## {section.format(CJK_ONE)} Scope\n\n## {CJK_ONE}{CJK_COMMA}Gamma\n\n"
+        f"## {section.format(CJK_TWO)} Terms\n\n## {CJK_ONE}{CJK_COMMA}Delta\n"
+    )
+
+    assert clean_in_place(text) == (
+        f"## Notes\n\n### {chr(0x4E94)}{CJK_COMMA}Alpha\n\n"
+        f"### {chr(0x516D)}{CJK_COMMA}Beta\n\n"
+        f"## {section.format(CJK_ONE)} Scope\n\n### {CJK_ONE}{CJK_COMMA}Gamma\n\n"
+        f"## {section.format(CJK_TWO)} Terms\n\n### {CJK_ONE}{CJK_COMMA}Delta\n"
+    )
+
+
+def test_a_number_continuing_the_open_series_stands_beside_it() -> None:
+    text = "## 1 Alpha\n\n## 2 Beta\n\n# (3) Gamma\n\n## 4 Delta\n\n# (5) Omega\n"
+
+    assert clean_in_place(text) == (
+        "## 1 Alpha\n\n## 2 Beta\n\n## (3) Gamma\n\n## 4 Delta\n\n## (5) Omega\n"
+    )
+
+
+def test_a_form_set_shallower_than_the_last_form_is_not_under_it() -> None:
+    text = (
+        "### (1) Alpha\n\n### (2) Beta\n\n"
+        f"# {CJK_ONE}{CJK_COMMA}Scope\n\n# {CJK_TWO}{CJK_COMMA}Terms\n"
+    )
+
+    assert clean_in_place(text) == (
+        "## (1) Alpha\n\n## (2) Beta\n\n"
+        f"# {CJK_ONE}{CJK_COMMA}Scope\n\n# {CJK_TWO}{CJK_COMMA}Terms\n"
+    )
+
+
+def test_a_form_keeps_the_level_the_outline_states() -> None:
+    text = "## 1 Intro\n\n## (1) Scope\n\n## (2) Terms\n\n## 2 Methods\n"
+
+    assert clean_in_place(text) == (
+        "## 1 Intro\n\n### (1) Scope\n\n### (2) Terms\n\n## 2 Methods\n"
+    )
+    assert clean_in_place(text, outlined((2, "(1) Scope"))) == text
+
+
+def test_a_form_with_one_number_ranks_nothing() -> None:
+    text = "# Chapter 1\n\n# (1) Scope\n\n# Chapter 2\n\n# (1) Loads\n\n# Chapter 3\n"
+
+    assert clean_in_place(text) == text
+    assert clean_in_place(text.replace("(1) Loads", "(2) Loads")) == (
+        "# Chapter 1\n\n## (1) Scope\n\n# Chapter 2\n\n## (2) Loads\n\n# Chapter 3\n"
+    )
+
+
+def test_a_caption_word_with_a_dotted_number_is_no_form() -> None:
+    text = (
+        "# Chapter 1\n\n# Figure 1.1: Plan\n\n# Figure 1.2: Elevation\n\n"
+        "# Chapter 2\n\n# Chapter 3\n"
+    )
+
+    assert clean_in_place(text) == text
+
+
+def test_the_number_form_makes_no_heading_of_a_plain_line() -> None:
+    text = "## (1) Alpha\n\n(2) Beta stays a paragraph.\n\n## (3) Gamma\n"
 
     assert clean_in_place(text) == text
 
@@ -1015,13 +1209,9 @@ def test_part_code_with_a_letter_suffix_is_not_a_class() -> None:
     assert clean_in_place(text) == text
 
 
-def test_dotted_numbers_are_not_a_class() -> None:
-    text = (
-        "# Chapter 1.2 General\n\nA\n\n"
-        "### Chapter 1.3 Other\n\nB\n\n"
-        "## Chapter 1.4 More\n\nC\n"
-    )
-    assert clean_in_place(text) == text
+@pytest.mark.parametrize("title", ["Chapter 1.2 General", "Chapter 1.3 Other"])
+def test_dotted_numbers_are_not_a_class(title: str) -> None:
+    assert heading_class(title) is None
 
 
 def test_section_sign_heading_class_converges_to_the_class_mode() -> None:

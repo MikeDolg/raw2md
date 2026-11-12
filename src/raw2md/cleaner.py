@@ -50,6 +50,7 @@ from raw2md.cleaning import (
     join_wrapped_contents_entries,
     keep_table_delimiter_under_header,
     lay_out_table_blocks,
+    level_headings_by_number_form,
     lift_prose_from_display_math,
     mend_pipe_block_missing_delimiter,
     normalize_heading_numbering,
@@ -277,6 +278,10 @@ def _settle_heading_levels(
     """Decide every heading's level from the evidence the document itself gives."""
     seg_list, stated = apply_outline_levels(seg_list, outline)
     seg_list, stated = normalize_heading_numbering(seg_list, options.method, stated)
+    # After the numbering, whose dotted headings rank the forms under them. A
+    # leveled form holds its level the way a settled group does: what nests
+    # under it is measured against it, and no vote moves it.
+    seg_list, formed = level_headings_by_number_form(seg_list, options.keywords, stated)
     # A settled group applies from the next round, since its vote reads levels
     # this round validates. A self-numbered series and repeated unnumbered
     # titles settle up front: the nesting rule has nothing to tell them.
@@ -284,10 +289,11 @@ def _settle_heading_levels(
     for _ in range(_HEADING_LEVEL_SETTLE_ROUNDS):
         fixed = normalize_repeated_heading_levels(
             normalize_unnumbered_heading_levels(
-                seg_list, options.keywords, stated, settled
+                seg_list, options.keywords, stated, settled | formed
             ),
             options.keywords,
             stated,
+            formed,
         )
         settled = group_settled_headings(fixed, options.keywords, stated)
         if fixed == seg_list:
@@ -297,7 +303,7 @@ def _settle_heading_levels(
     # and the sections the lift missed keep their hole. The collapse is
     # monotonic, so the lift still sees the holes it would have seen.
     return close_section_level_gaps(
-        collapse_unused_heading_levels(seg_list), stated, settled
+        collapse_unused_heading_levels(seg_list), stated, settled | formed
     )
 
 

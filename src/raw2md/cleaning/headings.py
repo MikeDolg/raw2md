@@ -5,10 +5,11 @@ a leading ornament glyph, split a run-in heading from its paragraph, rebuild a
 letter-spaced title, demote an oversize heading, drop a running header
 restated as a heading and a contents heading restated on each contents page,
 take levels from the source outline or the printed contents, level by
-numbering depth and recover headings lost to plain text, nest unnumbered
-headings under their section, level repeats and numbered series to one level,
-and close the gaps in the ladder. Two detectors only report: an oversize
-recovered heading and a run-in heading the strict split declines.
+numbering depth and recover headings lost to plain text, level headings by
+the form of their number, nest unnumbered headings under their section, level
+repeats and numbered series to one level, and close the gaps in the ladder.
+Two detectors only report: an oversize recovered heading and a run-in heading
+the strict split declines.
 """
 
 from __future__ import annotations
@@ -280,6 +281,53 @@ _ANCHORED_VOTE_MIN_SIZE = 4
 # scatter such titles over two to four levels, below the share above (84 of
 # 149, 19 of 86).
 _REPEATED_TITLE_MIN_COPIES = 3
+
+# CJK numerals, the enumeration comma, the fullwidth stop and parentheses, and
+# the ordinal prefix with its rank units (chapter, section, part, volume,
+# article). Code points, since ruff reads several of them as confusables.
+_CJK_ONE = chr(0x4E00)
+_CJK_NUMERALS = (
+    "".join(map(chr, (0x3007, 0x4E00, 0x4E8C, 0x4E09, 0x56DB, 0x4E94, 0x516D)))
+    + "".join(map(chr, (0x4E03, 0x516B, 0x4E5D, 0x5341, 0x767E, 0x5343, 0x96F6)))
+    + chr(0x4E24)
+)
+_CJK_ENUM_COMMA = chr(0x3001)
+_FULLWIDTH_STOP = chr(0xFF0E)
+_OPEN_PARENS = "(" + chr(0xFF08)
+_CLOSE_PARENS = ")" + chr(0xFF09)
+_CJK_ORDINAL_PREFIX = chr(0x7B2C)
+_CJK_RANK_UNITS = "".join(
+    map(chr, (0x7AE0, 0x8282, 0x7BC0, 0x7BC7, 0x90E8, 0x7F16, 0x7DE8))
+) + "".join(map(chr, (0x5377, 0x56DE, 0x6761, 0x689D)))
+
+# The numbering forms whose headings the form rule levels, each with the parts
+# that tell one form from another and the number. A series word with a dotted
+# number (`Section 1.2:`) is one word, so a sentence citing a value is not one.
+_WORD_DOTTED_FORM_RE = re.compile(
+    r"^([^\W\d_]+\.?)[ \t]+(\d+(?:\.\d+)+)(?=[.:]?(?:\s|$))"
+)
+_PAREN_FORM_RE = re.compile(rf"^[{_OPEN_PARENS}](\d+)[{_CLOSE_PARENS}]")
+_CLOSED_FORM_RE = re.compile(rf"^(\d+)([{_CLOSE_PARENS}{_CJK_ENUM_COMMA}])")
+_CJK_ORDINAL_FORM_RE = re.compile(
+    rf"^{_CJK_ORDINAL_PREFIX}([{_CJK_NUMERALS}\d]+)([{_CJK_RANK_UNITS}])"
+)
+_CJK_PAREN_FORM_RE = re.compile(
+    rf"^[{_OPEN_PARENS}]([{_CJK_NUMERALS}]+)[{_CLOSE_PARENS}]"
+)
+_CJK_SIGNED_FORM_RE = re.compile(
+    rf"^([{_CJK_NUMERALS}]+)([{_CJK_ENUM_COMMA}.{_FULLWIDTH_STOP}])"
+)
+_NUMBER_FORMS = (
+    ("cjk-ordinal", _CJK_ORDINAL_FORM_RE),
+    ("cjk-paren", _CJK_PAREN_FORM_RE),
+    ("cjk-signed", _CJK_SIGNED_FORM_RE),
+    ("paren", _PAREN_FORM_RE),
+    ("closed", _CLOSED_FORM_RE),
+)
+
+# Distinct numbers a numbering form needs before it ranks anything: one heading,
+# or one number repeated, is no series.
+_NUMBER_FORM_MIN_NUMBERS = 2
 
 
 def strip_heading_emphasis(seg_list: list[Segment]) -> list[Segment]:
@@ -1653,6 +1701,235 @@ def _fits_sequence(
 
 
 @dataclass(frozen=True)
+class _FormHeading:
+    """An ATX heading whose title opens with a numbering form.
+
+    `leveled` marks a form this rule levels. A dotted number and a word series
+    (`Chapter 2`) have rules of their own, so they only rank the forms under
+    them.
+    """
+
+    idx: int
+    indent: str
+    level: int
+    form: tuple[str, ...]
+    number: str
+    leveled: bool
+    titled: bool
+
+
+def level_headings_by_number_form(
+    seg_list: list[Segment], keywords: Keywords, stated: frozenset[int]
+) -> tuple[list[Segment], frozenset[int]]:
+    """Level the headings of one numbering form as peers, a level under its parent.
+
+    A form is the shape of a heading's number: a series word with a dotted
+    number, an arabic number in parentheses or before a closing sign, a CJK
+    ordinal, a CJK number in parentheses or before a sign. A form takes its
+    level at the first heading `_form_rank` reads, and keeps the level most of
+    its headings carry where none is read. A heading in `stated` keeps its
+    level, and a form with one takes their mode. Only the `#` count changes.
+    Returns the result and the leveled headings.
+    """
+    headings = _ranking_forms(_form_headings(seg_list, keywords))
+    levels = _stated_form_levels(headings, stated)
+    # Open form headings with their ranked levels, outermost first. A form not
+    # ranked yet stands at its written level.
+    open_forms: list[tuple[_FormHeading, int]] = []
+    for heading in headings:
+        if heading.leveled and heading.form not in levels:
+            rank = _form_rank(heading, headings, open_forms, levels)
+            if rank is not None:
+                levels[heading.form] = rank
+        want = heading.level
+        if heading.leveled and heading.idx not in stated:
+            want = levels.get(heading.form, want)
+        while open_forms and open_forms[-1][1] >= want:
+            open_forms.pop()
+        open_forms.append((heading, want))
+    result = list(seg_list)
+    for heading in headings:
+        if not heading.leveled or heading.idx in stated:
+            continue
+        if heading.form not in levels:
+            levels[heading.form] = _form_mode(heading.form, headings)
+        want = levels[heading.form]
+        if want == heading.level:
+            continue
+        line, protected = result[heading.idx]
+        rest = line[len(heading.indent) + heading.level :]
+        result[heading.idx] = (f"{heading.indent}{'#' * want}{rest}", protected)
+    return result, frozenset(heading.idx for heading in headings if heading.leveled)
+
+
+def _opens_series(number: str) -> bool:
+    """True when `number` is one, the last part of a dotted number included."""
+    return number.rsplit(".", 1)[-1] in {"1", _CJK_ONE}
+
+
+def _ranking_forms(headings: list[_FormHeading]) -> list[_FormHeading]:
+    """The headings whose form ranks: `_NUMBER_FORM_MIN_NUMBERS` distinct numbers.
+
+    A word series ranks only as a numbered series by its own bars: two headings
+    sharing a first word turn up by chance.
+    """
+    numbers: dict[tuple[str, ...], set[str]] = {}
+    for heading in headings:
+        numbers.setdefault(heading.form, set()).add(heading.number)
+    sizes = Counter(heading.form for heading in headings)
+    return [
+        heading
+        for heading in headings
+        if len(numbers[heading.form]) >= _NUMBER_FORM_MIN_NUMBERS
+        and (
+            heading.form[0] != "class"
+            or (
+                sizes[heading.form] >= _HEADING_CLASS_MIN_SIZE
+                and not all(map(is_single_letter_roman, numbers[heading.form]))
+            )
+        )
+    ]
+
+
+def _form_headings(seg_list: list[Segment], keywords: Keywords) -> list[_FormHeading]:
+    """The headings of the plain zones that open with a numbering form, in order.
+
+    A title past `_HEADING_MAX_LENGTH` is a paragraph with a marker and has none.
+    """
+    captions = word_pattern(keywords.caption_labels)
+    out: list[_FormHeading] = []
+    for idx, (line, protected) in enumerate(seg_list):
+        if protected:
+            continue
+        m = _ATX_LEVEL_RE.match(line)
+        if m is None:
+            continue
+        title = _heading_text(line).strip()
+        if len(title) > _HEADING_MAX_LENGTH:
+            continue
+        found = _number_form(line, title, captions)
+        if found is None:
+            continue
+        form, number, leveled, end = found
+        titled = any(ch.isalpha() for ch in title[end:])
+        out.append(
+            _FormHeading(
+                idx, m.group(1), len(m.group(2)), form, number, leveled, titled
+            )
+        )
+    return out
+
+
+def _number_form(
+    line: str, title: str, captions: re.Pattern[str]
+) -> tuple[tuple[str, ...], str, bool, int] | None:
+    """The form of a heading's number, the number, whether this rule levels it.
+
+    The last item is where the number ends in `title`. A caption word
+    (`keywords.yaml`) names a figure or a table, not a series.
+    """
+    numbered = _HEADING_NUM_RE.match(line)
+    if numbered is not None:
+        number = numbered.group(3)
+        depth = str(len(_section_number(number)))
+        return ("dotted", depth), number, False, title.find(number) + len(number)
+    word = _WORD_DOTTED_FORM_RE.match(title)
+    if word is not None:
+        if captions.match(word.group(1)):
+            return None
+        depth = str(len(_section_number(word.group(2))))
+        form = ("word", word.group(1).casefold(), depth)
+        return form, word.group(2), True, word.end()
+    for kind, pattern in _NUMBER_FORMS:
+        m = pattern.match(title)
+        if m is not None:
+            signs = tuple(_fold_form_sign(sign) for sign in m.groups()[1:])
+            return (kind, *signs), m.group(1), True, m.end()
+    found = heading_class(title)
+    if found is None or captions.match(found[0]):
+        return None
+    return ("class", found[0]), found[1], False, len(title)
+
+
+def _fold_form_sign(sign: str) -> str:
+    """A form's sign with its fullwidth spelling folded onto the ASCII one."""
+    if sign == _FULLWIDTH_STOP:
+        return "."
+    if sign in _CLOSE_PARENS:
+        return ")"
+    return sign
+
+
+def _stated_form_levels(
+    headings: list[_FormHeading], stated: frozenset[int]
+) -> dict[tuple[str, ...], int]:
+    """The mode of the stated members of each leveled form that has any."""
+    by_form: dict[tuple[str, ...], list[int]] = {}
+    for heading in headings:
+        if heading.leveled and heading.idx in stated:
+            by_form.setdefault(heading.form, []).append(heading.level)
+    return {form: _level_mode(levels) for form, levels in by_form.items()}
+
+
+def _form_rank(
+    heading: _FormHeading,
+    headings: list[_FormHeading],
+    open_forms: list[tuple[_FormHeading, int]],
+    levels: dict[tuple[str, ...], int],
+) -> int | None:
+    """The level the form of `heading` takes there, or None to wait for another.
+
+    A number one past an open form heading's number continues that series in
+    another spelling, so the form stands beside it, whatever its level. A series
+    opening at one stands one under the innermost open form heading not set
+    deeper: a heading set shallower has left that section. With none, it keeps
+    the level most of its headings carry. A series starting at another number
+    continues one opened off the page, so where it stands ranks nothing, and
+    its headings rank no other form until it is ranked.
+    """
+    parents = [
+        (parent, ranked)
+        for parent, ranked in reversed(open_forms)
+        if not parent.leveled or parent.form in levels
+    ]
+    for parent, ranked in parents:
+        if _continues(parent.number, heading.number):
+            return ranked
+    if not _opens_series(heading.number):
+        return None
+    for parent, ranked in parents:
+        if parent.level <= heading.level:
+            return min(_MAX_HEADING_LEVEL, ranked + 1)
+    return _form_mode(heading.form, headings)
+
+
+def _form_mode(form: tuple[str, ...], headings: list[_FormHeading]) -> int:
+    """The level most headings of `form` carry, the shallower on a tie.
+
+    Headings that carry a title outvote bare numbers: a number set apart from
+    its title stands in a contents column or on a chapter's opening page, set
+    in a type of its own.
+    """
+    members = [heading for heading in headings if heading.form == form]
+    titled = [heading for heading in members if heading.titled] or members
+    return _level_mode([heading.level for heading in titled])
+
+
+def _continues(previous: str, number: str) -> bool:
+    """True when both are plain arabic numbers and `number` is the next one."""
+    return (
+        previous.isdecimal() and number.isdecimal() and int(number) == int(previous) + 1
+    )
+
+
+def _level_mode(levels: list[int]) -> int:
+    """The level most of `levels` carry, the shallower on a tie."""
+    counts = Counter(levels)
+    most = max(counts.values())
+    return min(level for level, count in counts.items() if count == most)
+
+
+@dataclass(frozen=True)
 class _HeadingViolation:
     """An unnumbered heading that does not stand one level below its section.
 
@@ -2213,7 +2490,10 @@ def _level_vote_occurrences(
 
 
 def normalize_repeated_heading_levels(
-    seg_list: list[Segment], keywords: Keywords, stated: frozenset[int]
+    seg_list: list[Segment],
+    keywords: Keywords,
+    stated: frozenset[int],
+    held: frozenset[int] = frozenset(),
 ) -> list[Segment]:
     """Level every repeat of one heading's text to the group's own mode.
 
@@ -2222,7 +2502,8 @@ def normalize_repeated_heading_levels(
     different levels are explained by different parents. A vote groups repeats
     of one bare title, or the members of one numbered class
     (`_HEADING_CLASS_RE`), and takes the mode, the shallower on a tie. A title
-    past `_HEADING_MAX_LENGTH` does not vote. Only the `#` count changes.
+    past `_HEADING_MAX_LENGTH` does not vote. A heading in `held` votes but keeps
+    its level. Only the `#` count changes.
     """
     occurrences = _level_vote_occurrences(seg_list, keywords, stated)
     levels = _settled_levels(seg_list, occurrences)
@@ -2235,7 +2516,7 @@ def normalize_repeated_heading_levels(
     result = list(seg_list)
     for occ in occurrences:
         want = levels.get(occ.idx)
-        if want is None or want == occ.level:
+        if want is None or want == occ.level or occ.idx in held:
             continue
         line, protected = result[occ.idx]
         rest = line[len(occ.indent) + occ.level :]
