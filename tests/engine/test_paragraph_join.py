@@ -326,6 +326,51 @@ def test_ignored_text_block_does_not_undo_a_join(engine: Loader) -> None:
     assert paragraphs[1].startswith("![](")
 
 
+def test_label_read_as_text_is_no_half(engine: Loader) -> None:
+    pages = _Pages(engine, 2)
+    pages.text(0, [("The valve opens when the pressure in the", (50, 600, 300, 618))])
+    pages.text(0, [("Fig. 14", (50, 700, 120, 718))])
+    pages.text(1, [("chamber exceeds the spring force.", (50, 60, 400, 78))])
+
+    assert "Fig. 14" in _paragraphs(_join(engine, pages))
+
+
+def test_label_with_a_formula_is_no_half(engine: Loader) -> None:
+    pages = _Pages(engine, 2)
+    pages.text(0, [("Probl. 2.43 \\theta > \\phi", (50, 700, 200, 718))])
+    pages.text(1, [("the tension of the cable.", (50, 60, 400, 78))])
+
+    assert len(_paragraphs(_join(engine, pages))) == 2
+
+
+def test_sentence_that_opens_with_a_label_joins(engine: Loader) -> None:
+    pages = _Pages(engine, 2)
+    pages.text(0, [("Fig. 2 shows how the valve opens when the", (50, 700, 300, 718))])
+    pages.text(1, [("chamber exceeds the spring force.", (50, 60, 400, 78))])
+
+    assert _join(engine, pages) == (
+        "Fig. 2 shows how the valve opens when the chamber exceeds the spring force."
+    )
+
+
+def test_repeated_footer_is_stepped_over(engine: Loader) -> None:
+    footer = "Notes of an invented course (no rights reserved)"
+    pages = _Pages(engine, 3)
+    pages.text(0, [("The valve opens when the pressure in the", (50, 600, 300, 618))])
+    pages.text(0, [(footer, (50, 760, 400, 778))])
+    pages.text(1, [("chamber exceeds the spring force.", (50, 60, 400, 78))])
+    pages.text(1, [(footer, (50, 760, 400, 778))])
+    pages.text(2, [("The spring closes it again.", (50, 60, 400, 78))])
+    pages.text(2, [(footer, (50, 760, 400, 778))])
+
+    paragraphs = _paragraphs(_join(engine, pages))
+
+    assert paragraphs[0] == (
+        "The valve opens when the pressure in the chamber exceeds the spring force."
+    )
+    assert paragraphs.count(footer) == 3
+
+
 def test_german_closing_quote_ends_the_sentence(engine: Loader) -> None:
     opening = chr(0x201E)
     closing = chr(0x201C)

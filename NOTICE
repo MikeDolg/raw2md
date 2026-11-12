@@ -135,8 +135,10 @@ of the repository holds each change with its diff.
   figure. It steps over pictures, captions, and footnotes, reads the text
   at the cut as well as the line frames, and moves the second half behind
   the first, so the figure follows the joined paragraph. A hyphen `-` at
-  the cut stays before a capital or a digit, and a soft hyphen `¬` goes
-  (2026-11-11). Changed files, under
+  the cut stays before a capital or a digit, and a soft hyphen `¬` goes.
+  A text block that holds only a label and a number is no half, and a text
+  block that repeats on three pages or more is stepped over
+  (2026-11-12). Changed files, under
   src/raw2md_engine/: `marker/processors/text.py`,
   `marker/processors/debug.py`, and `marker/renderers/markdown.py`.
 - The line height of a block divides the block height by the count of

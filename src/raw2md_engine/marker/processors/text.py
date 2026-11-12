@@ -18,6 +18,13 @@ _LINE_BREAK_MARK = regex.compile(r"[\p{Ll}\d][-—¬]$")
 _LOWERCASE_START = regex.compile(r"^\p{Ll}")
 # A lowercase letter that opens an item, as in `a)` or `b. `, starts no word.
 _ITEM_LETTER = regex.compile(r"^\p{Ll}(\)|\.\s)")
+# A label and a number that open a caption, as in `Fig. 14` or `Probl. 2.43`.
+_LABEL_NUMBER = regex.compile(r"^\p{Lu}\p{L}{0,11}\.?\s*\d+(?:\.\d+)*")
+# A TeX command such as `\theta` is no word.
+_WORD = regex.compile(r"(?<![\\\p{L}])\p{L}{3,}")
+# A text block on this many pages is a running line or a watermark, not prose.
+_REPEATED_PAGES = 3
+_REPEATED_MIN_WORDS = 3
 
 
 class TextProcessor(BaseProcessor):
@@ -44,14 +51,18 @@ class TextProcessor(BaseProcessor):
 
     def __init__(self, config):
         super().__init__(config)
+        self.repeated_texts: set[str] = set()
 
     def __call__(self, document: Document):
+        self.repeated_texts = self.find_repeated_texts(document)
         # All joins are found on the reading order of the layout, before any
         # block moves.
         joins: list[tuple[Block, Block, list[Block]]] = []
         for page in document.pages:
             for block in page.contained_blocks(document, self.block_types):
                 if block.structure is None or block.ignore_for_output:
+                    continue
+                if self.is_repeated(document, block) or self.is_label(document, block):
                     continue
                 found = self.find_second_half(document, block)
                 if found is None:
@@ -78,14 +89,43 @@ class TextProcessor(BaseProcessor):
             candidate.block_type in self.ignored_block_types
             or candidate.block_type in self.stepped_block_types
             or candidate.ignore_for_output
+            or self.is_repeated(document, candidate)
         ):
             between.append(candidate)
             candidate = document.get_next_block(candidate)
         if candidate is None or candidate.block_type not in self.block_types:
             return None
-        if candidate.structure is None:
+        if candidate.structure is None or self.is_label(document, candidate):
             return None
         return candidate, between
+
+    def find_repeated_texts(self, document: Document) -> set[str]:
+        pages_of: dict[str, set] = {}
+        for page in document.pages:
+            for block in page.contained_blocks(document, self.block_types):
+                text = self.normalized_text(document, block)
+                if len(text.split()) >= _REPEATED_MIN_WORDS:
+                    pages_of.setdefault(text, set()).add(page.page_id)
+        return {
+            text for text, pages in pages_of.items() if len(pages) >= _REPEATED_PAGES
+        }
+
+    @staticmethod
+    def normalized_text(document: Document, block: Block) -> str:
+        return " ".join(block.raw_text(document).split())
+
+    def is_repeated(self, document: Document, block: Block) -> bool:
+        if block.block_type not in self.block_types:
+            return False
+        return self.normalized_text(document, block) in self.repeated_texts
+
+    @staticmethod
+    def is_label(document: Document, block: Block) -> bool:
+        # A label with a number and no word after it is a caption that the
+        # layout read as text; a sentence that opens with a label has words.
+        text = block.raw_text(document).strip()
+        found = _LABEL_NUMBER.match(text)
+        return found is not None and not _WORD.search(text[found.end() :])
 
     def renders(self, block: Block) -> bool:
         return block.block_type in self.stepped_block_types and not (
