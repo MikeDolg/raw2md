@@ -89,9 +89,69 @@ def normalize_lists(seg_list: list[Segment]) -> list[Segment]:
 
     The engine demotes a flat numbered list to alternately indented bullets whose
     text is the number, and strays a lone bullet one level deep. Both are
-    valid CommonMark, so only the block shape shows them.
+    valid CommonMark, so only the block shape shows them. A series of such
+    bullets split by blank lines is a loose list and is restored too.
     """
-    return _walk_item_blocks(seg_list, _fix_list_block)
+    return _restore_loose_series(_walk_item_blocks(seg_list, _fix_list_block))
+
+
+def _numbered_bullet(segment: Segment) -> tuple[_ListItem, int, str] | None:
+    """Return the item, its number and delimiter for a `- N.` bullet, else None."""
+    line, protected = segment
+    if protected:
+        return None
+    item = _parse_list_item(line)
+    if item is None or item.indent > 3 or item.marker not in _BULLET_MARKERS:
+        return None
+    m = _NUMBER_TEXT_RE.match(item.content)
+    if m is None:
+        return None
+    return item, int(m.group(1)), m.group(2)
+
+
+def _is_blank(segment: Segment) -> bool:
+    line, protected = segment
+    return not protected and not line.strip()
+
+
+def _restore_loose_series(seg_list: list[Segment]) -> list[Segment]:
+    """Turn `- N.` bullets split by blank lines into one ordered list.
+
+    The series needs two or more items at one indent, consecutive numbers with
+    one delimiter, and only blank lines between them. The blank lines stay.
+    """
+    out = list(seg_list)
+    count = len(out)
+    idx = 0
+    while idx < count:
+        first = _numbered_bullet(out[idx])
+        if first is None:
+            idx += 1
+            continue
+        series = [(idx, first)]
+        probe = idx + 1
+        while True:
+            gap_end = probe
+            while gap_end < count and _is_blank(out[gap_end]):
+                gap_end += 1
+            nxt = _numbered_bullet(out[gap_end]) if gap_end < count else None
+            last_item, last_number, last_delim = series[-1][1]
+            if (
+                nxt is None
+                or gap_end == probe
+                or nxt[0].indent != last_item.indent
+                or nxt[1] != last_number + 1
+                or nxt[2] != last_delim
+            ):
+                break
+            series.append((gap_end, nxt))
+            probe = gap_end + 1
+        if len(series) >= 2:
+            for pos, (item, _number, _delim) in series:
+                line, _ = _restore_item(item, item.indent)
+                out[pos] = (line, False)
+        idx = probe
+    return out
 
 
 def separate_bold_list_marker(seg_list: list[Segment]) -> list[Segment]:

@@ -348,3 +348,38 @@ def test_a_bullet_glyph_opening_an_unbordered_table_row_is_left_alone() -> None:
 def test_literal_bullet_promotion_is_idempotent() -> None:
     once = clean_in_place("Lead-in.\n\n• one item\n• two item\n")
     assert clean_in_place(once) == once
+
+
+# ---- numbered bullets split by blank lines ------------------------------------
+
+
+def test_loose_numbered_bullet_series_becomes_an_ordered_list() -> None:
+    text = "Lead-in.\n\n- 1. First point\n\n- 2. Second point\n\n- 3. Third point\n"
+    assert clean_in_place(text) == (
+        "Lead-in.\n\n1. First point\n\n2. Second point\n\n3. Third point\n"
+    )
+
+
+def test_loose_series_keeps_the_paren_delimiter() -> None:
+    text = "Lead-in.\n\n- 1) First point\n\n- 2) Second point\n"
+    assert clean_in_place(text) == "Lead-in.\n\n1) First point\n\n2) Second point\n"
+
+
+def test_loose_series_with_a_numbering_gap_is_left_alone() -> None:
+    text = "Lead-in.\n\n- 1. First point\n\n- 3. Third point\n"
+    assert clean_in_place(text) == text
+
+
+def test_a_single_loose_numbered_bullet_is_left_alone() -> None:
+    text = "Lead-in.\n\n- 2. Lone point\n\nAfter.\n"
+    assert clean_in_place(text) == text
+
+
+def test_loose_series_broken_by_a_paragraph_is_left_alone() -> None:
+    text = "Lead-in.\n\n- 1. First point\n\nA paragraph.\n\n- 2. Second point\n"
+    assert clean_in_place(text) == text
+
+
+def test_loose_series_restore_is_idempotent() -> None:
+    once = clean_in_place("Lead-in.\n\n- 1. One point\n\n- 2. Two point\n")
+    assert clean_in_place(once) == once
