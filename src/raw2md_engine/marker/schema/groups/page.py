@@ -267,7 +267,9 @@ class PageGroup(Group):
                 dist = block.polygon.center_distance(
                     existing_block.polygon, x_weight=5, absolute=True
                 )
-                if (dist > 0 and min_dist_idx is None) or dist < min_dist:
+                if (min_dist is None and dist > 0) or (
+                    min_dist is not None and dist < min_dist
+                ):
                     min_dist = dist
                     min_dist_idx = existing_block.id
 

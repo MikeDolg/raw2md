@@ -158,7 +158,9 @@ of the repository holds each change with its diff.
 - A picture keeps the frame of the layout model, and a detector line goes
   to a picture only when at least half of its area lies inside that frame.
   A text line beside a chart goes to another block by overlap or by
-  distance, or to a new text block (2026-11-12). Changed file, under src/raw2md_engine/:
+  distance, or to a new text block. A new block whose center equals the
+  center of an existing block no longer fails the placement
+  (2026-11-13). Changed file, under src/raw2md_engine/:
   `marker/schema/groups/page.py`.
 - A new processor hides a picture whose frame lies in the top or the
   bottom 15 % of the page and repeats at one place, each edge within

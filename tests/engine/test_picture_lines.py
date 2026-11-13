@@ -19,6 +19,9 @@ _LINE_BESIDE: _Box = (250.0, 285.0, 550.0, 315.0)
 _LINE_IN_CHART: _Box = (150.0, 200.0, 250.0, 215.0)
 # Two thirds of this label lie inside the chart, the rest sticks out.
 _LABEL_ON_EDGE: _Box = (360.0, 288.0, 410.0, 302.0)
+# A wide line whose center is the center of a small picture.
+_SMALL_PICTURE: _Box = (200.0, 200.0, 300.0, 300.0)
+_WIDE_LINE_SAME_CENTER: _Box = (100.0, 240.0, 400.0, 260.0)
 
 
 def _box(engine: Loader, box: _Box) -> Any:
@@ -73,6 +76,20 @@ def test_line_inside_a_chart_stays_with_it(engine: Loader) -> None:
 
     assert _lines_of(page, picture) == [_LINE_IN_CHART, _LABEL_ON_EDGE]
     assert tuple(picture.polygon.bbox) == _PICTURE
+
+
+def test_line_sharing_the_center_of_a_lone_picture_makes_a_new_block(
+    engine: Loader,
+) -> None:
+    page = _page(engine)
+    picture = _add(engine, page, "Picture", _SMALL_PICTURE)
+
+    page.merge_blocks([_line(engine, _WIDE_LINE_SAME_CENTER)], "pdftext")
+
+    new_blocks = [block for block in page.children if block.source == "heuristics"]
+    assert len(new_blocks) == 1
+    assert _lines_of(page, new_blocks[0]) == [_WIDE_LINE_SAME_CENTER]
+    assert _lines_of(page, picture) == []
 
 
 def test_line_without_a_text_block_makes_a_new_one(engine: Loader) -> None:
