@@ -149,12 +149,12 @@ of the repository holds each change with its diff.
   the frame of the item both to move right of the parent (2026-11-12).
   Changed file, under src/raw2md_engine/: `marker/processors/list.py`.
 - The equation processor keeps the text of a formula block. A reading
-  without math stays a paragraph when the block has no text layer. A
-  reading with a word outside its formulas is a line with inline math.
-  Any other reading puts each formula on its own display line, with its
-  punctuation and number after it. A formula line ends without a space
-  (2026-11-12). Changed files, under src/raw2md_engine/:
-  `marker/processors/equation.py` and `marker/renderers/markdown.py`.
+  without math gives the text layer of the block, or a paragraph when the
+  block has no text layer. A reading with a word outside its formulas is
+  a line with inline math. Any other reading puts each formula on its own
+  display line and keeps the punctuation and the numbers between the
+  formulas in order (2026-11-12). Changed file, under src/raw2md_engine/:
+  `marker/processors/equation.py`.
 - A picture keeps the frame of the layout model, and a detector line goes
   to a picture only when at least half of its area lies inside that frame.
   A text line beside a chart goes to another block by overlap or by
@@ -170,9 +170,10 @@ of the repository holds each change with its diff.
   `marker/processors/image_furniture.py`. Changed files:
   `marker/converters/pdf.py` and `marker/renderers/html.py`.
 - The Markdown renderer ends each paragraph without continuation without a
-  space, so a caption that ends in an italic span at the foot of a page
-  does not read as a paragraph cut by the page (2026-11-13). Changed file,
-  under src/raw2md_engine/: `marker/renderers/markdown.py`.
+  space, so a paragraph that ends in an italic span or an inline formula
+  at the foot of a page does not read as a paragraph cut by the page
+  (2026-11-13). Changed file, under src/raw2md_engine/:
+  `marker/renderers/markdown.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
