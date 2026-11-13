@@ -111,10 +111,10 @@ class Markdownify(MarkdownConverter):
                 return f"{text} "
             if block_type == BlockTypes.ListGroup:
                 return f"{text}"
-        # A formula line keeps no trailing space of its last inline formula,
-        # which would read as a paragraph cut by the page.
-        if el.get("block-type") == BlockTypes.Equation.name:
-            text = text.rstrip(" ")
+        # A paragraph without continuation keeps no trailing space, such as
+        # the space after a last italic span or inline formula: the page
+        # break rewrite reads a trailing space as a paragraph cut by the page.
+        text = text.rstrip(" ")
         return f"{text}\n\n" if text else ""  # default convert_p behavior
 
     @staticmethod

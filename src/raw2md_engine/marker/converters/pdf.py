@@ -25,6 +25,7 @@ from raw2md_engine.marker.processors.document_toc import DocumentTOCProcessor
 from raw2md_engine.marker.processors.equation import EquationProcessor
 from raw2md_engine.marker.processors.footnote import FootnoteProcessor
 from raw2md_engine.marker.processors.ignoretext import IgnoreTextProcessor
+from raw2md_engine.marker.processors.image_furniture import ImageFurnitureProcessor
 from raw2md_engine.marker.processors.line_numbers import LineNumbersProcessor
 from raw2md_engine.marker.processors.list import ListProcessor
 from raw2md_engine.marker.processors.order import OrderProcessor
@@ -60,6 +61,7 @@ class PdfConverter(BaseConverter):
         EquationProcessor,
         FootnoteProcessor,
         IgnoreTextProcessor,
+        ImageFurnitureProcessor,
         LineNumbersProcessor,
         ListProcessor,
         PageHeaderProcessor,

@@ -160,7 +160,18 @@ of the repository holds each change with its diff.
   A text line beside a chart goes to another block by overlap or by
   distance, or to a new text block (2026-11-12). Changed file, under src/raw2md_engine/:
   `marker/schema/groups/page.py`.
+- A new processor hides a picture whose frame lies in the top or the
+  bottom 15 % of the page and repeats at one place, each edge within
+  0.015 of the page side, on three pages or more. The renderer neither
+  shows nor saves a hidden picture, and the block stays in the document
+  (2026-11-13). Added file, under src/raw2md_engine/:
+  `marker/processors/image_furniture.py`. Changed files:
+  `marker/converters/pdf.py` and `marker/renderers/html.py`.
+- The Markdown renderer ends each paragraph without continuation without a
+  space, so a caption that ends in an italic span at the foot of a page
+  does not read as a paragraph cut by the page (2026-11-13). Changed file,
+  under src/raw2md_engine/: `marker/renderers/markdown.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-11-12.
+Last change: 2026-11-13.

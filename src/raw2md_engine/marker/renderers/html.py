@@ -95,7 +95,9 @@ class HTMLRenderer(BaseRenderer):
                     break
 
             if ref_block_id.block_type in self.image_blocks:
-                if self.extract_images:
+                if document.get_block(ref_block_id).ignore_for_output:
+                    ref.decompose()
+                elif self.extract_images:
                     image = self.extract_image(document, ref_block_id)
                     image_name = f"{ref_block_id.to_path()}.{settings.OUTPUT_IMAGE_FORMAT.lower()}"
                     images[image_name] = image
