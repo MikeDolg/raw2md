@@ -1,12 +1,13 @@
 """Rules that fix a GFM table's own grid.
 
 Only mechanical repairs live here: collapse a bodyless table, lay out a
-one-column contents table, reunite a table cut by a page break, join a row of
-wrapped cell lines into the row above, fold a page printed several columns
-up, drop an empty column, recut swallowed and crushed cells, split a paragraph
-glued onto the header, sink a stray separator, give a pipe block its
-delimiter, and lay every block out. A table too damaged to
-repair stays for the reporting pass. Cell math belongs to the math rules.
+one-column contents table, reunite a table cut by a page break, cut a row
+that stacks several rows, join a row of wrapped cell lines into the row above,
+fold a page printed several columns up, drop an empty column, recut swallowed
+and crushed cells, split a paragraph glued onto the header, sink a stray
+separator, give a pipe block its delimiter, and lay every block out. A table
+too damaged to repair stays for the reporting pass. Cell math belongs to the
+math rules.
 
 `open_math_html_cells` fixes no grid: it opens an HTML table cell around a
 formula, so it works on the text inside a protected zone.

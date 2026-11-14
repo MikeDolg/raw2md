@@ -151,6 +151,8 @@ continues the last item of the list.
 |---|---|---|
 | Records laid out in several column groups, with a repeated header row | `\| No. \| Size \| No. \| Size \|` | `\| No. \| Size \|`, with the records one under another |
 | A table cut by a page break: the header row repeats, and no text separates the parts | two tables with the same header row | one table |
+| A body row that stacks several rows: the first cell and 2 other cells hold the same number of values, 2 or more, with `<br>` between them, and so does each other filled cell; an empty cell stays empty in each new row; the row stays as it is when a value after the first starts with a lowercase letter or `(`, because such a line ends the value above it | `\| M6<br>M8 \| 10<br>12 \| 1.2<br>1.5 \|` | `\| M6 \| 10 \| 1.2 \|`, `\| M8 \| 12 \| 1.5 \|` |
+| The wrapped lines of a row written as a row of their own: the first cell is empty, each filled cell stands under a filled cell and starts with a lowercase letter, and its first word does not fit beside the line above in the width of the column; a column of numbers stays empty in the row | `\| Pump \| Steel housing with \| 12 \|`, `\| \| a cast cover \| \|` | `\| Pump \| Steel housing with a cast cover \| 12 \|` |
 | A table without data rows | `\| Size \| Weight \|`, `\|---\|---\|` | `Size Weight` |
 | All values written into one cell of the header row; each column holds values of one kind | `\| Size \| Weight \| M6<br>10<br>M8<br>12… \|` | the rows `\| M6 \| 10 \|`, `\| M8 \| 12 \|`, and so on |
 | Text attached to the header row | `The sizes are: \| Size \| Weight \|` | the paragraph `The sizes are:` and the table |
@@ -170,10 +172,39 @@ one part: cleaning deletes the repeated heading `Contents` first, so the rules
 reach the rows of every page. Another heading between the pages still ends the
 part. The table rules do not change the values in the cells.
 
+The width of a column for a row of wrapped lines is the longest line in the
+column, in characters. A column of short codes stacks its values as grouped
+rows, not as wrapped lines. Therefore the rule does not join a cell in a column
+whose longest line is shorter than 8 characters. A wrapped line that starts
+with a capital letter or a digit stays a row of its own, because the text alone
+cannot tell it from a new value.
+
+On the `raw2md-engine` route, the engine repairs two of these defects before
+cleaning, because it knows the position of each line on the page:
+
+- **A table cut by a page break.** The engine joins the table that ends a page
+  with the table that starts the next page. Only running heads, footers, and
+  hidden blocks can stand between the parts. The column counts must be
+  equal, or differ by one when the narrower part lines up with the columns of
+  the wider part. The second part must repeat the header row of the first part
+  cell for cell, or start with a data row. The repeated rows go. A second part
+  that starts with a header row of its own stays a separate table. A header
+  row that changes at the repeat counts as a header row of its own.
+- **The lines of a cell.** The engine joins two lines of a cell with a space
+  when the second line starts right under the first, and its first word does
+  not fit in the free width of the first line in the column. Otherwise the
+  second line is a new value, and the engine writes `<br>` between the two. On
+  a page that OCR reads, a cell keeps each line as a value, because the
+  recognizer gives no position for a line in the cell.
+
+The cleaning rule for a cut table stays on every route. It joins the tables of
+the other routes and the parts that the engine keeps apart.
+
 | Threshold | Constant | Module |
 |---|---|---|
 | 2 rows: rows with `\|` and no delimiter row | `_DELIMITERLESS_MIN_ROWS` | `cleaning/tables.py` |
 | 2 columns: rows with `\|` and no delimiter row | `_DELIMITERLESS_MIN_WIDTH` | `cleaning/tables.py` |
+| 8 characters: the shortest column where a row of wrapped lines joins | `_MIN_WRAPPED_COLUMN` | `cleaning/tables.py` |
 | 120 characters: the width of an aligned table | `_TABLE_WIDTH_CEILING` | `cleaning/tables.py` |
 
 ### 5. Text
