@@ -27,7 +27,8 @@ class TableMergeProcessor(BaseProcessor):
       narrower part overlaps one column of the wider part along x;
     - the first rows of the second part repeat the first rows of the first
       part cell for cell, or the table model reads its first row as data.
-    The repeated rows go. A second part that opens with a header of its own
+    Only header rows repeat past the first row, and the join stops when a
+    cell spans over the cut. The repeated rows go. A second part that opens with a header of its own
     stays a table of its own, and so does a table whose first row repeats a
     run of its own cells: records set side by side. The cells keep their page; a table that runs
     over three pages or more joins as a chain.
@@ -120,16 +121,25 @@ class TableMergeProcessor(BaseProcessor):
         ):
             return False
         repeated = 0
-        for head_row, part_row in zip(head_rows, part_rows, strict=False):
+        for index, (head_row, part_row) in enumerate(
+            zip(head_rows, part_rows, strict=False)
+        ):
             if self.row_key(head_row, head_map) != self.row_key(part_row, part_map):
+                break
+            # Past the first row only a header row repeats; equal data rows
+            # are records.
+            if index and not any(cell.header_row for cell in (*head_row, *part_row)):
                 break
             repeated += 1
         if repeated == len(part_rows):
             return False
-        if not repeated and any(cell.header_row for cell in part_rows[0]):
-            return False
-
+        # A header row that did not repeat belongs to a table of its own.
+        # A cell that spans over the cut cannot move with the rows after it.
         first_kept = part_rows[repeated][0].row_id
+        if any(cell.header_row for cell in part_rows[repeated]) or any(
+            cell.row_id < first_kept < cell.row_id + cell.rowspan for cell in part_cells
+        ):
+            return False
         kept = [cell for cell in part_cells if cell.row_id >= first_kept]
         offset = max(cell.row_id + cell.rowspan for cell in head_cells) - first_kept
         for cell in kept:

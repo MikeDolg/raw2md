@@ -22,11 +22,24 @@ _COLUMNS = [50.0, 200.0, 350.0, 500.0]
 _RIGHT = 550.0
 
 Rows = list[list[str]]
+SpanRows = list[list[str | None]]
 
 
-def _table(rows: Rows, header: bool = True, columns: list[int] | None = None) -> Any:
-    """A table part; `columns` picks the columns of `_COLUMNS` that it holds."""
-    return SimpleNamespace(kind="table", rows=rows, header=header, columns=columns)
+def _table(
+    rows: Rows | SpanRows,
+    header: bool | int = True,
+    columns: list[int] | None = None,
+    spans: dict[tuple[int, int], int] | None = None,
+) -> Any:
+    """A table part.
+
+    `header` is the number of header rows, `columns` picks the columns of
+    `_COLUMNS` that it holds, and `spans` gives the rowspan of a cell. A cell
+    that a span covers is `None` in `rows`.
+    """
+    return SimpleNamespace(
+        kind="table", rows=rows, header=int(header), columns=columns, spans=spans or {}
+    )
 
 
 def _block(kind: str) -> Any:
@@ -55,16 +68,18 @@ def _add_table(engine: Loader, page: Any, spec: Any) -> None:
     for row_id, row in enumerate(spec.rows):
         top = 100 + row_id * _ROW
         for col_id, text in enumerate(row):
+            if text is None:
+                continue
             column = picked[col_id]
             cell = blocks.TableCell(
                 polygon=_box(engine, [edges[column], top, edges[column + 1], top + 18]),
                 text_lines=[text] if text else [],
-                rowspan=1,
+                rowspan=spec.spans.get((row_id, col_id), 1),
                 colspan=1,
                 row_id=row_id,
                 col_id=col_id,
                 is_header=row_id == 0,
-                header_row=row_id == 0 and spec.header,
+                header_row=row_id < spec.header,
                 page_id=page.page_id,
             )
             page.add_full_block(cell)
@@ -211,3 +226,36 @@ def test_records_set_side_by_side_stay_apart(engine: Loader) -> None:
     second = _table([["Length", "3", "Depth", "5"]], header=False)
 
     assert _tables(engine, [[first], [second]]) == [first.rows, second.rows]
+
+
+def test_equal_data_rows_after_the_header_are_records(engine: Loader) -> None:
+    first = _table([["Name", "Value"], ["Mass", "2"]])
+    second = _table([["Name", "Value"], ["Mass", "2"], ["Area", "4"]])
+
+    assert _tables(engine, [[first], [second]]) == [
+        [["Name", "Value"], ["Mass", "2"], ["Mass", "2"], ["Area", "4"]]
+    ]
+
+
+def test_headers_that_differ_in_a_later_row_stay_apart(engine: Loader) -> None:
+    first = _table([["Name", "Value"], ["Unit", "kg"], ["Mass", "2"]], header=2)
+    second = _table([["Name", "Value"], ["Unit", "lb"], ["Area", "4"]], header=2)
+
+    assert _tables(engine, [[first], [second]]) == [first.rows, second.rows]
+
+
+def test_two_row_header_repeated_in_full_joins(engine: Loader) -> None:
+    first = _table([["Name", "Value"], ["Unit", "kg"], ["Mass", "2"]], header=2)
+    second = _table([["Name", "Value"], ["Unit", "kg"], ["Area", "4"]], header=2)
+
+    assert _tables(engine, [[first], [second]]) == [[*first.rows, ["Area", "4"]]]
+
+
+def test_span_across_the_cut_keeps_the_parts_apart(engine: Loader) -> None:
+    rows: SpanRows = [["", ""], [None, "42"]]
+    second = _table(rows, header=False, spans={(0, 0): 2})
+
+    assert _tables(engine, [[_table(_DATA)], [second]]) == [
+        _DATA,
+        [["", ""], ["?", "42"]],
+    ]
