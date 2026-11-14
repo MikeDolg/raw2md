@@ -153,8 +153,11 @@ of the repository holds each change with its diff.
   block has no text layer. A reading with a word outside its formulas is
   a line with inline math. Any other reading puts each formula on its own
   display line and keeps the punctuation and the numbers between the
-  formulas in order (2026-11-12). Changed file, under src/raw2md_engine/:
-  `marker/processors/equation.py`.
+  formulas in order. A formula enclosed by brackets or parentheses, or one
+  wrapped in square brackets, stays inline on the line under the formula
+  before it. A bracketed condition outside the formulas, with a relation
+  and no word of three letters or more, is not a word (2026-11-14).
+  Changed file, under src/raw2md_engine/: `marker/processors/equation.py`.
 - A picture keeps the frame of the layout model, and a detector line goes
   to a picture only when at least half of its area lies inside that frame.
   A text line beside a chart goes to another block by overlap or by
@@ -177,4 +180,4 @@ of the repository holds each change with its diff.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-11-13.
+Last change: 2026-11-14.

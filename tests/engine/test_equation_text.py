@@ -89,6 +89,37 @@ def test_single_letter_outside_math_keeps_formulas(engine: Loader) -> None:
     assert html.count('display="block"') == 2
 
 
+def test_bracketed_condition_stays_inline_under_its_formula(engine: Loader) -> None:
+    lines = _lines(engine, r"<math>y = 1/x</math> [ <math>x \neq 0</math> ].")
+    assert lines == ["$$y = 1/x$$", r"[ $x \neq 0$ ]."]
+
+
+def test_parenthesized_formula_stays_inline_under_its_formula(engine: Loader) -> None:
+    lines = _lines(engine, "<math>y = 2x</math> (<math>x > 0</math>), <math>z</math>")
+    assert lines == ["$$y = 2x$$", "( $x > 0$ ),", "$$z$$"]
+
+
+def test_condition_outside_math_is_not_prose(engine: Loader) -> None:
+    lines = _lines(engine, r"<math>y = 1/x</math> (4) [ab \neq 0].")
+    assert [line.strip() for line in lines] == ["$$y = 1/x$$", r"(4) [ab \neq 0]."]
+
+
+@pytest.mark.parametrize("group", ["[See note to 12]", "[rate = 5]"])
+def test_bracketed_prose_makes_a_line(engine: Loader, group: str) -> None:
+    html = _processor(engine).fix_latex(f"<math>y = 2x</math> {group}.")
+    assert "display" not in html
+
+
+def test_formula_wrapped_in_brackets_stays_inline(engine: Loader) -> None:
+    lines = _lines(engine, "<math>y = 2x</math> <math>[0 < x < 1].</math>")
+    assert [line.strip() for line in lines] == ["$$y = 2x$$", "$[0 < x < 1].$"]
+
+
+def test_number_in_parentheses_keeps_display_formulas(engine: Loader) -> None:
+    html = _processor(engine).fix_latex("<math>a</math> (1) [<math>b</math>")
+    assert html.count('display="block"') == 2
+
+
 def test_math_keeps_a_command_that_opens_with_n(engine: Loader) -> None:
     html = _processor(engine).fix_latex(r"<math>\nabla f = 0\n</math>")
     assert html == r'<math display="block">\nabla f = 0</math>'

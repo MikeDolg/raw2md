@@ -18,6 +18,16 @@ MATH_TAG_PATTERN = re.compile(r"<math[^>]*>(.*?)</math>")
 MATH_NEWLINE_PATTERN = re.compile(r"^\\n(?![a-zA-Z])|\\n$")
 # A word is two letters or more of any script; a lone letter is a variable.
 WORD_PATTERN = regex.compile(r"(?:\p{L}\p{M}*){2,}")
+BRACKET_PAIRS = {("[", "]"), ("(", ")")}
+# A condition such as `[ab \neq 0]` states a relation and holds no word of
+# three letters or more once its commands are dropped, so it is not prose.
+SQUARE_GROUP_PATTERN = re.compile(r"\[[^\[\]]*\]")
+RELATION_PATTERN = re.compile(
+    r"[<>=]|\\(?:neq|ne|leqslant|geqslant|leq|le|geq|ge|ll|gg|equiv|approx"
+    r"|sim|in|notin|to)(?![A-Za-z])"
+)
+COMMAND_PATTERN = re.compile(r"\\[A-Za-z]+")
+CONDITION_WORD_PATTERN = regex.compile(r"(?:\p{L}\p{M}*){3,}")
 
 
 class EquationProcessor(BaseProcessor):
@@ -123,7 +133,10 @@ class EquationProcessor(BaseProcessor):
             tag.string = fix_text(MATH_NEWLINE_PATTERN.sub("", tag.get_text()))
         texts = [t for t in soup.find_all(string=True) if not t.find_parent("math")]
         fixed = [fix_text_keep_width(str(text)) for text in texts]
-        is_line = any(WORD_PATTERN.search(text) for text in fixed)
+        is_line = any(
+            WORD_PATTERN.search(SQUARE_GROUP_PATTERN.sub(self.drop_condition, text))
+            for text in fixed
+        )
         for text, new in zip(texts, fixed, strict=True):
             # Each display formula takes a line of its own, so the text between
             # two of them keeps no spaces; a bare space keeps a blank line.
@@ -131,11 +144,33 @@ class EquationProcessor(BaseProcessor):
                 new.strip() or new if len(math_tags) > 1 and not is_line else new
             )
         for tag in math_tags:
-            if is_line:
+            if is_line or self.is_bracketed(tag):
                 tag.attrs.pop("display", None)
             else:
                 tag.attrs["display"] = "block"
         return str(soup)
+
+    @staticmethod
+    def drop_condition(group: re.Match) -> str:
+        body = group.group(0)
+        if not RELATION_PATTERN.search(body):
+            return body
+        if CONDITION_WORD_PATTERN.search(COMMAND_PATTERN.sub(" ", body)):
+            return body
+        return " "
+
+    @staticmethod
+    def is_bracketed(tag) -> bool:
+        # A condition such as `[ n != 1 ].` stays inline on the line under its
+        # formula, where the brackets can fold it back into that formula.
+        content = tag.get_text().strip().rstrip(".,;").rstrip()
+        if content.startswith("[") and content.endswith("]"):
+            return True
+        before, after = tag.previous_sibling, tag.next_sibling
+        if not isinstance(before, str) or not isinstance(after, str):
+            return False
+        opener, closer = before.rstrip()[-1:], after.lstrip()[:1]
+        return (opener, closer) in BRACKET_PAIRS
 
     def get_latex_batched(
         self,
