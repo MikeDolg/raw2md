@@ -1,10 +1,11 @@
 """Rules that fix a GFM table's own grid.
 
 Only mechanical repairs live here: collapse a bodyless table, lay out a
-one-column contents table, reunite a table cut by a page break, fold a page
-printed several columns up, drop an empty column, recut swallowed and crushed
-cells, split a paragraph glued onto the header, sink a stray separator, give a
-pipe block its delimiter, and lay every block out. A table too damaged to
+one-column contents table, reunite a table cut by a page break, join a row of
+wrapped cell lines into the row above, fold a page printed several columns
+up, drop an empty column, recut swallowed and crushed cells, split a paragraph
+glued onto the header, sink a stray separator, give a pipe block its
+delimiter, and lay every block out. A table too damaged to
 repair stays for the reporting pass. Cell math belongs to the math rules.
 
 `open_math_html_cells` fixes no grid: it opens an HTML table cell around a
@@ -816,6 +817,155 @@ def drop_bodyless_table(seg_list: list[Segment]) -> list[Segment]:
         out.extend(skipped)
         idx = row_idx
     return out
+
+
+def join_continuation_rows(seg_list: list[Segment]) -> list[Segment]:
+    """Join a body row that carries the wrapped lines of the row above into it.
+
+    The row opens on an empty cell under a filled one and fills only cells
+    whose line above it broke off: each opens on a lowercase letter with no
+    item mark, and its first word would not fit beside the line above
+    (`_line_is_full`). A column the table writes as numbers
+    (`_numeric_columns`) stays empty. The cells join one for one with a
+    space. Body rows of the separator's width only; a cell edge inside math
+    refuses the pair.
+    """
+    out = list(seg_list)
+    drop: set[int] = set()
+    count = len(out)
+    idx = 0
+    while idx < count:
+        block = _table_block(out, idx)
+        if block is None:
+            idx += 1
+            continue
+        sep_idx, body_end = block
+        drop.update(_continuation_rows(out, idx, sep_idx, body_end))
+        idx = body_end
+    if not drop:
+        return seg_list
+    return [segment for idx, segment in enumerate(out) if idx not in drop]
+
+
+def _continuation_rows(
+    seg_list: list[Segment], header: int, sep_idx: int, body_end: int
+) -> list[int]:
+    """Join the block's continuation rows into the rows above; return their indices.
+
+    The row above takes the joined text in `seg_list`, so a further line is
+    read against the row as joined; that keeps the pass idempotent.
+    """
+    width = len(table_cells(seg_list[sep_idx][0]))
+    header_line = seg_list[header][0]
+    if len(table_cells(header_line)) != width:
+        return []
+    rows = [
+        row
+        for row in range(sep_idx + 1, body_end)
+        if not is_table_separator(seg_list[row][0].strip())
+        and len(table_cells(seg_list[row][0])) == width
+    ]
+    numeric = _numeric_columns(
+        table_column_forms((seg_list[row][0] for row in rows), width, header_line)
+    )
+    columns = _column_line_lengths([table_cells(seg_list[row][0]) for row in rows])
+    kept = set(rows)
+    joined: list[int] = []
+    above: int | None = None
+    for row in range(sep_idx + 1, body_end):
+        line = seg_list[row][0]
+        if row not in kept or _cell_edge_inside_math(line):
+            above = None
+            continue
+        cells = table_cells(line)
+        if above is not None:
+            above_line, above_protected = seg_list[above]
+            above_cells = table_cells(above_line)
+            if _continues_the_row_above(above_cells, cells, numeric, columns):
+                seg_list[above] = (
+                    rebuild_table_row(above_line, _joined_cells(above_cells, cells)),
+                    above_protected,
+                )
+                joined.append(row)
+                continue
+        above = row
+    return joined
+
+
+def _numeric_columns(forms: ColumnForms) -> list[bool]:
+    """Per column: whether every form the table shows in it is a number.
+
+    A number holds a digit run and no letter run; a column no full row
+    showed is not numeric.
+    """
+    return [
+        bool(column) and all("9" in form and "A" not in form for form in column)
+        for column in forms
+    ]
+
+
+def _column_line_lengths(rows: list[list[str]]) -> list[int]:
+    """Per column: the longest printed line its cells hold, in characters."""
+    return [
+        max(
+            (
+                len(piece.strip())
+                for cells in rows
+                for piece in CELL_BREAK_RE.split(cells[col])
+            ),
+            default=0,
+        )
+        for col in range(len(rows[0]) if rows else 0)
+    ]
+
+
+def _continues_the_row_above(
+    above: list[str], cells: list[str], numeric: list[bool], columns: list[int]
+) -> bool:
+    """True when `cells` reads as the wrapped lines of the row `above`."""
+    if cells[0].strip() or not above[0].strip():
+        return False
+    filled = [col for col, cell in enumerate(cells) if cell.strip()]
+    return bool(filled) and all(
+        above[col].strip()
+        and not numeric[col]
+        and _reads_as_a_wrapped_line(cells[col])
+        and _line_is_full(above[col], cells[col], columns[col])
+        for col in filled
+    )
+
+
+# A letter or roman item mark (`b)`, `ii.`): the line opens an item of its own.
+_ITEM_MARK_RE = re.compile(r"(?:[ivxlcdm]+|[a-z])[.)]\s", re.IGNORECASE)
+
+
+def _reads_as_a_wrapped_line(cell: str) -> bool:
+    """True when the cell opens mid-phrase: on a lowercase letter, with no item mark.
+
+    A row under a merged cell, a list set one item per row, and a group
+    label all open on a capital, a digit, or a mark, as a new value does.
+    """
+    text = cell.strip()
+    return text[:1].islower() and _ITEM_MARK_RE.match(text) is None
+
+
+def _line_is_full(above: str, cell: str, column: int) -> bool:
+    """True when the first word of `cell` would not fit beside the line above.
+
+    The column's longest line stands for its width. A short value over a
+    lowercase one (`none` over `oil`) leaves room, so the two are values.
+    """
+    last = CELL_BREAK_RE.split(above)[-1].strip()
+    first = CELL_BREAK_RE.split(cell)[0].split()
+    return bool(first) and len(last) + 1 + len(first[0]) > column
+
+
+def _joined_cells(above: list[str], below: list[str]) -> list[str]:
+    """The cells of two rows joined one for one, a space between two texts."""
+    return [
+        f" {top.strip()} {bottom.strip()} " if bottom.strip() else top
+        for top, bottom in zip(above, below, strict=True)
+    ]
 
 
 def drop_empty_table_columns(seg_list: list[Segment]) -> list[Segment]:

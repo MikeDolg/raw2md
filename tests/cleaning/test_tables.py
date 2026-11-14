@@ -844,6 +844,120 @@ def test_crushed_run_layout_inside_a_fence_is_not_touched() -> None:
     assert clean_in_place(text) == text
 
 
+# ---- in-place fix: a row carrying the wrapped lines of the row above ----------
+
+# A row whose first two cells wrapped onto a row of their own.
+_WRAPPED_ROW_TABLE = (
+    "| Part | Description | Material | Mass |\n"
+    "|---|---|---|---|\n"
+    "| KX-10 | Housing for the small | cast | 1.2 |\n"
+    "|  | gear unit | aluminium |  |\n"
+    "| KX-20 | Cover | steel | 0.4 |\n"
+)
+
+
+def test_wrapped_lines_in_two_text_cells_join_the_row_above() -> None:
+    assert clean_in_place(_WRAPPED_ROW_TABLE) == laid_out_table(
+        "| Part | Description | Material | Mass |",
+        "| KX-10 | Housing for the small gear unit | cast aluminium | 1.2 |",
+        "| KX-20 | Cover | steel | 0.4 |",
+    )
+
+
+def test_joining_wrapped_lines_is_idempotent() -> None:
+    once = clean_in_place(_WRAPPED_ROW_TABLE)
+    assert clean_in_place(once) == once
+
+
+def test_a_wrap_over_three_lines_joins_whole() -> None:
+    text = (
+        "| Part | Description | Mass |\n"
+        "|---|---|---|\n"
+        "| KX-10 | Housing for the | 1.2 |\n"
+        "|  | small gear set |  |\n"
+        "|  | unit |  |\n"
+    )
+    assert clean_in_place(text) == laid_out_table(
+        "| Part | Description | Mass |",
+        "| KX-10 | Housing for the small gear set unit | 1.2 |",
+    )
+
+
+def test_a_row_under_a_merged_cell_with_numbers_stays() -> None:
+    text = laid_out_table(
+        "| Group | Item | Value |",
+        "| Seals | ring | 12 |",
+        "|  | disc | 15 |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_word_in_a_column_of_numbers_keeps_its_row() -> None:
+    text = laid_out_table(
+        "| Group | Item | Value |",
+        "| Seals | ring | 12 |",
+        "|  | disc | n/a |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_cell_under_an_empty_cell_stays() -> None:
+    text = laid_out_table(
+        "| Part | Description | Note | Mass |",
+        "| KX-10 | Housing for the small |  | 1.2 |",
+        "|  | gear unit | spare |  |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_row_under_the_header_stays() -> None:
+    text = laid_out_table(
+        "| Part | Description |",
+        "|  | housing for the gear unit |",
+        "| KX-20 | Cover |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_row_opening_on_a_capital_is_a_value_of_its_own() -> None:
+    text = laid_out_table(
+        "| Mode | Signal | Meaning |",
+        "| Standby | Amber | Waiting for input |",
+        "|  | Dark | Unit idle |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_short_value_over_a_lowercase_one_keeps_its_row() -> None:
+    text = laid_out_table(
+        "| Grade | Finish | Packing |",
+        "| A | matt | box |",
+        "|  |  | bag |",
+        "| B | polished | crate and pallet |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_row_opening_on_an_item_mark_is_a_value_of_its_own() -> None:
+    text = laid_out_table(
+        "| Chapter | Title |",
+        "| 5. | Investment in the fund |",
+        "|  | ii. general information |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_row_below_a_separator_shaped_row_stays() -> None:
+    text = (
+        "| Part | Description |\n"
+        "|---|---|\n"
+        "| KX-10 | Housing for the |\n"
+        "|---|---|\n"
+        "|  | gear unit |\n"
+    )
+    assert "| KX-10 | Housing for the gear unit |" not in clean_in_place(text)
+
+
 # ---- in-place fix: empty table columns ---------------------------------------
 
 

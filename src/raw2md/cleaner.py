@@ -44,6 +44,7 @@ from raw2md.cleaning import (
     group_settled_headings,
     headings_settled_before_nesting,
     join_contents_entry_breaks,
+    join_continuation_rows,
     join_cut_paragraphs,
     join_flattened_paragraphs,
     join_letter_spaced_headings,
@@ -195,6 +196,10 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     # Before the column rules: without rows, every header cell reads as a
     # column that no row fills.
     seg_list = drop_bodyless_table(seg_list)
+    # Before the column rules, which read a wrapped line's blanks as cells
+    # a value is missing from; after the reunion, so the column forms read
+    # the whole table.
+    seg_list = join_continuation_rows(seg_list)
     seg_list = drop_empty_table_columns(seg_list)
     # After the empty-column drop, which rewrites the column indices.
     seg_list = recut_swallowed_cells(seg_list)
