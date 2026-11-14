@@ -840,9 +840,14 @@ def split_stacked_rows(seg_list: list[Segment]) -> list[Segment]:
         sep_idx, body_end = block
         out.extend(seg_list[idx : sep_idx + 1])
         width = len(table_cells(seg_list[sep_idx][0]))
+        header = _normalized_cells(seg_list[idx][0])
         for row in range(sep_idx + 1, body_end):
             line, protected = seg_list[row]
-            pieces = _stacked_pieces(line, width)
+            pieces = (
+                None
+                if _normalized_cells(line) == header
+                else _stacked_pieces(line, width)
+            )
             if pieces is None:
                 out.append(seg_list[row])
                 continue
@@ -854,12 +859,20 @@ def split_stacked_rows(seg_list: list[Segment]) -> list[Segment]:
     return out
 
 
+def _normalized_cells(line: str) -> list[str]:
+    return [" ".join(cell.split()) for cell in table_cells(line)]
+
+
 def _stacked_pieces(line: str, width: int) -> list[list[str]] | None:
     """Per cell, its N padded values; an empty cell gives N copies of itself.
 
     None when the row is not a stack of N >= 2 rows.
     """
-    if is_table_separator(line.strip()) or _cell_edge_inside_math(line):
+    if (
+        is_table_separator(line.strip())
+        or _cell_edge_inside_math(line)
+        or _ends_in_escaped_pipe(line)
+    ):
         return None
     cells = table_cells(line)
     if len(cells) != width or not cells[0].strip():
@@ -876,6 +889,8 @@ def _stacked_pieces(line: str, width: int) -> list[list[str]] | None:
         return None
     if any(_opens_mid_value(piece) for pieces in filled for piece in pieces[1:]):
         return None
+    if any(_splits_inline_markup(piece) for pieces in filled for piece in pieces):
+        return None
     return [
         [f" {piece} " for piece in pieces] if pieces else [cell] * depth
         for pieces, cell in zip(split, cells, strict=True)
@@ -888,7 +903,23 @@ def _opens_mid_value(piece: str) -> bool:
     Such a line finishes the value above it, a wrapped word or a unit
     note, so the cell is one value on two lines and not a stack.
     """
-    return piece[:1].islower() or piece[:1] == "("
+    visible = piece.lstrip("*_`~ ")
+    return visible[:1].islower() or visible[:1] == "("
+
+
+def _splits_inline_markup(piece: str) -> bool:
+    """True when a cut left a code, bold, strike, or math delimiter unpaired."""
+    return (
+        piece.count("`") % 2 == 1
+        or len(re.findall(r"(?<!\\)\$", piece)) % 2 == 1
+        or piece.count("**") % 2 == 1
+        or piece.count("~~") % 2 == 1
+    )
+
+
+def _ends_in_escaped_pipe(line: str) -> bool:
+    """True when the row's last printed character is a `\\|`, not a border."""
+    return line.rstrip().endswith("\\|")
 
 
 def join_continuation_rows(seg_list: list[Segment]) -> list[Segment]:
@@ -946,7 +977,11 @@ def _continuation_rows(
     above: int | None = None
     for row in range(sep_idx + 1, body_end):
         line = seg_list[row][0]
-        if row not in kept or _cell_edge_inside_math(line):
+        if (
+            row not in kept
+            or _cell_edge_inside_math(line)
+            or _ends_in_escaped_pipe(line)
+        ):
             above = None
             continue
         cells = table_cells(line)
@@ -1021,12 +1056,19 @@ def _reads_as_a_wrapped_line(cell: str) -> bool:
     return text[:1].islower() and _ITEM_MARK_RE.match(text) is None
 
 
+# A column whose longest line is shorter holds codes and short values, which
+# stack as grouped rows; the width of such a column shows no wrapping.
+_MIN_WRAPPED_COLUMN = 8
+
+
 def _line_is_full(above: str, cell: str, column: int) -> bool:
     """True when the first word of `cell` would not fit beside the line above.
 
     The column's longest line stands for its width. A short value over a
     lowercase one (`none` over `oil`) leaves room, so the two are values.
     """
+    if column < _MIN_WRAPPED_COLUMN:
+        return False
     last = CELL_BREAK_RE.split(above)[-1].strip()
     first = CELL_BREAK_RE.split(cell)[0].split()
     return bool(first) and len(last) + 1 + len(first[0]) > column

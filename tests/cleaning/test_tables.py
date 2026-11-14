@@ -938,6 +938,26 @@ def test_a_short_value_over_a_lowercase_one_keeps_its_row() -> None:
     assert clean_in_place(text) == text
 
 
+def test_grouped_values_in_a_column_of_short_codes_keep_their_rows() -> None:
+    text = laid_out_table(
+        "| Grade | Finish | Packing |",
+        "| A | matt | box |",
+        "|  |  | bag |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_continuation_row_ending_on_an_escaped_pipe_keeps_its_row() -> None:
+    text = (
+        "| Part | Description | Note |\n"
+        "|---|---|---|\n"
+        "| KX-10 | Housing for the small | one\\|\n"
+        "|  | gear unit | two\\|\n"
+        "| KX-20 | Cover for the unit assembly | three\\|\n"
+    )
+    assert "two\\|" in clean_in_place(text)
+
+
 def test_a_row_opening_on_an_item_mark_is_a_value_of_its_own() -> None:
     text = laid_out_table(
         "| Chapter | Title |",
@@ -1013,6 +1033,51 @@ def test_a_unit_note_line_keeps_the_row() -> None:
     text = laid_out_table(
         "| Layer | Clearance | Access |",
         "| 0.18 mm<br>(0.0071 in.) | 0.36 mm<br>(0.014 in.) | Open<br>Closed |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_break_inside_inline_code_keeps_the_row() -> None:
+    text = laid_out_table(
+        "| Part | Size | Mass |",
+        "| `KX-10<br>KX-20` | Small<br>Large | 1.2<br>2.4 |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_break_inside_bold_keeps_the_row() -> None:
+    text = laid_out_table(
+        "| Part | Size | Mass |",
+        "| **KX-10<br>KX-20** | Small<br>Large | 1.2<br>2.4 |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_formatted_unit_note_line_keeps_the_row() -> None:
+    text = laid_out_table(
+        "| Layer | Clearance | Access |",
+        "| 0.18 mm<br>**(0.0071 in.)** | 0.36 mm<br>**(0.014 in.)** | Open<br>Closed |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_stack_row_ending_on_an_escaped_pipe_keeps_the_row() -> None:
+    text = (
+        "| Part | Size | Code |\n"
+        "|---|---|---|\n"
+        "| KX-10<br>KX-20 | Small<br>Large | X\\|<br>Y\\|\n"
+    )
+    out = clean_in_place(text)
+    assert "Y\\|" in out
+    assert "<br>" in out
+
+
+def test_a_repeated_stacked_header_in_the_body_is_not_cut() -> None:
+    text = laid_out_table(
+        "| Part<br>Code | Size<br>Class | Mass<br>Kg |",
+        "| KX-10 | Small | 1.2 |",
+        "| Part<br>Code | Size<br>Class | Mass<br>Kg |",
+        "| KX-20 | Large | 2.4 |",
     )
     assert clean_in_place(text) == text
 
