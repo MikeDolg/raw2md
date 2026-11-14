@@ -177,6 +177,16 @@ of the repository holds each change with its diff.
   at the foot of a page does not read as a paragraph cut by the page
   (2026-11-13). Changed file, under src/raw2md_engine/:
   `marker/renderers/markdown.py`.
+- A table cell joins a line that wraps onto the next line with a space,
+  and it keeps each new value on a line of its own. A line wraps when the
+  first word of the next line would not fit into the room that the line
+  leaves in its column, and the next line starts under it, at most 0.3
+  line heights below. The width of a column is its widest line, each line
+  counted at most at the width of its cell. A line that opens with a
+  bullet is a new value. A hyphen at the end of a wrapped line goes
+  before a lowercase letter and stays before a capital or a digit. A cell
+  without line frames keeps its lines (2026-11-14).
+  Changed file, under src/raw2md_engine/: `marker/processors/table.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

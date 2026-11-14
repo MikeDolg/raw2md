@@ -71,6 +71,11 @@ class TableProcessor(BaseProcessor):
     filter_tag_list = ["p", "table", "td", "tr", "th", "tbody"]
     disable_ocr_math: Annotated[bool, "Disable inline math recognition in OCR"] = False
     disable_ocr: Annotated[bool, "Disable OCR entirely."] = False
+    wrap_gap: Annotated[
+        float,
+        "The largest gap between two lines of one cell value, in heights of",
+        "the upper line. Wrapped lines measured 0.0-0.26, merged rows 0.38-0.6.",
+    ] = 0.3
 
     def __init__(
         self,
@@ -145,6 +150,7 @@ class TableProcessor(BaseProcessor):
             for block in page.contained_blocks(document, self.block_types):
                 block.structure = []  # Remove any existing lines, spans, etc.
                 cells: list[SuryaTableCell] = tables[table_idx].cells
+                column_widths = self.column_text_widths(cells)
                 for cell in cells:
                     # Rescale the cell polygon to the page size
                     cell_polygon = PolygonBox(polygon=cell.polygon).rescale(
@@ -158,7 +164,9 @@ class TableProcessor(BaseProcessor):
 
                     cell_block = TableCell(
                         polygon=cell_polygon,
-                        text_lines=self.finalize_cell_text(cell),
+                        text_lines=self.finalize_cell_text(
+                            cell, column_widths.get((cell.col_id, cell.colspan))
+                        ),
                         rowspan=cell.rowspan,
                         colspan=cell.colspan,
                         row_id=cell.row_id,
@@ -187,8 +195,9 @@ class TableProcessor(BaseProcessor):
                     if intersection_pct > 0.95 and child.id in page.structure:
                         page.structure.remove(child.id)
 
-    def finalize_cell_text(self, cell: SuryaTableCell):
+    def finalize_cell_text(self, cell: SuryaTableCell, column_width=None):
         fixed_text = []
+        previous = None
         text_lines = cell.text_lines or []
         for line in text_lines:
             text = line["text"].strip()
@@ -222,8 +231,71 @@ class TableProcessor(BaseProcessor):
             # In case the above steps left no more latex math - We can unwrap
             text = unwrap_math(text)
             text = self.normalize_spaces(fix_text_keep_width(text))
-            fixed_text.append(text)
+            if (
+                previous is not None
+                and text
+                and fixed_text[-1]
+                and self.wraps(previous, line, column_width)
+            ):
+                head = fixed_text[-1]
+                # The text layer marks a hyphen at the end of a line with \x02.
+                if previous["text"].rstrip().endswith("\x02") and head[-1] != "-":
+                    head += "-"
+                fixed_text[-1] = self.join_wrapped(head, text)
+            else:
+                fixed_text.append(text)
+            previous = line
         return fixed_text
+
+    @staticmethod
+    def column_text_widths(cells) -> dict:
+        # The text width of a column is its widest line. A line counts at most
+        # the width of its cell: a row label can run over the next columns. A
+        # cell that spans columns measures against the cells of the same span.
+        widths = {}
+        for cell in cells:
+            for line in cell.text_lines or []:
+                if "bbox" not in line or not line["text"].strip():
+                    continue
+                key = (cell.col_id, cell.colspan)
+                width = min(
+                    line["bbox"][2] - line["bbox"][0], cell.bbox[2] - cell.bbox[0]
+                )
+                widths[key] = max(widths.get(key, 0), width)
+        return widths
+
+    def wraps(self, line: dict, next_line: dict, column_width) -> bool:
+        # A line wraps onto the next one when the first word of the next line,
+        # with its space, would not fit into the room left on the line.
+        if column_width is None or "bbox" not in line or "bbox" not in next_line:
+            return False
+        box, next_box = line["bbox"], next_line["bbox"]
+        # A piece beside the line on the same row is no wrap, and neither is a
+        # line farther below than the leading of a paragraph: the rows that
+        # the table model merges into one cell keep their padding.
+        gap = next_box[1] - box[3]
+        if gap < -(box[3] - box[1]) / 2 or gap > self.wrap_gap * (box[3] - box[1]):
+            return False
+        # A wrapped line stands under the line. A cell that the table model
+        # merged across columns holds the next value in another column.
+        if next_box[0] >= box[2] or next_box[2] <= box[0]:
+            return False
+        next_text = next_line["text"].strip()
+        # A bullet opens an item of its own.
+        if next_text[0] in "•▪◦‣":
+            return False
+        char_width = (next_box[2] - next_box[0]) / len(next_text)
+        word_width = (len(next_text.split()[0]) + 1) * char_width
+        room = column_width - (box[2] - box[0])
+        return word_width > room
+
+    @staticmethod
+    def join_wrapped(text: str, tail: str) -> str:
+        # A hyphen at the end of a word goes before a lowercase letter and
+        # stays, without a space, before a capital or a digit.
+        if len(text) > 1 and text[-1] == "-" and text[-2].isalnum():
+            return text[:-1] + tail if tail[0].islower() else text + tail
+        return f"{text} {tail}"
 
     @staticmethod
     def normalize_spaces(text):
