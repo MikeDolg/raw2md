@@ -958,6 +958,83 @@ def test_a_row_below_a_separator_shaped_row_stays() -> None:
     assert "| KX-10 | Housing for the gear unit |" not in clean_in_place(text)
 
 
+# ---- in-place fix: a row that stacks several rows ----------------------------
+
+
+def test_a_stacked_row_is_cut_into_rows() -> None:
+    text = laid_out_table(
+        "| Part | Size | Mass |",
+        "| KX-10<br>KX-20 | Small<br>Large | 1.2<br>2.4 |",
+    )
+    assert clean_in_place(text) == laid_out_table(
+        "| Part | Size | Mass |",
+        "| KX-10 | Small | 1.2 |",
+        "| KX-20 | Large | 2.4 |",
+    )
+
+
+def test_an_empty_cell_stays_empty_in_each_new_row() -> None:
+    text = laid_out_table(
+        "| Part | Size | Note | Mass |",
+        "| KX-10<br>KX-20 | Small<br>Large |  | 1.2<br>2.4 |",
+    )
+    assert clean_in_place(text) == laid_out_table(
+        "| Part | Size | Note | Mass |",
+        "| KX-10 | Small |  | 1.2 |",
+        "| KX-20 | Large |  | 2.4 |",
+    )
+
+
+def test_cells_with_different_value_counts_keep_the_row() -> None:
+    text = laid_out_table(
+        "| Part | Size | Mass |",
+        "| KX-10<br>KX-20 | Small<br>Large | 1.2 |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_one_stacked_cell_keeps_the_row() -> None:
+    text = laid_out_table(
+        "| Part | Size | Mass |",
+        "| KX-10<br>KX-20 | Small | 1.2 |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_wrapped_word_in_a_stack_keeps_the_row() -> None:
+    text = laid_out_table(
+        "| Part | Size | Mass |",
+        "| KX-10<br>KX-20 | Small<br>to the Large | 1.2<br>2.4 |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_unit_note_line_keeps_the_row() -> None:
+    text = laid_out_table(
+        "| Layer | Clearance | Access |",
+        "| 0.18 mm<br>(0.0071 in.) | 0.36 mm<br>(0.014 in.) | Open<br>Closed |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_a_stacked_header_is_not_cut() -> None:
+    text = laid_out_table(
+        "| Part<br>code | Size<br>class | Mass<br>kg |",
+        "| KX-10 | Small | 1.2 |",
+    )
+    assert clean_in_place(text) == text
+
+
+def test_cutting_a_stack_is_idempotent() -> None:
+    once = clean_in_place(
+        laid_out_table(
+            "| Part | Size | Mass |",
+            "| KX-10<br>KX-20 | Small<br>Large | 1.2<br>2.4 |",
+        )
+    )
+    assert clean_in_place(once) == once
+
+
 # ---- in-place fix: empty table columns ---------------------------------------
 
 
@@ -1505,12 +1582,13 @@ def test_a_cell_stacking_two_values_to_a_line_is_anchored() -> None:
     assert "broken-table collapsed=2 width=4" in _reported(text)
 
 
-def test_a_stacked_row_names_one_run_and_no_more() -> None:
-    assert _reported(_STACKED_ROW_TABLE) == "broken-table collapsed=2 width=4"
-
-
-def test_a_stacked_row_is_not_repaired_in_place() -> None:
-    assert clean_in_place(_STACKED_ROW_TABLE) == _STACKED_ROW_TABLE
+def test_a_stacked_row_is_cut_and_its_crushed_run_spread() -> None:
+    assert clean_in_place(_STACKED_ROW_TABLE) == laid_out_table(
+        "| Code | Bore | Cross | Width |",
+        "| 4-216 | 38.21 | 4.52 | 7.2 |",
+        "| 4-217 | 38.21 | 4.52 | 7.2 |",
+        "| 4-218 | 39.74 | 4.52 | 7.2 |",
+    )
 
 
 def test_a_cell_stacking_one_value_to_a_line_is_not_anchored() -> None:
@@ -1807,13 +1885,19 @@ def test_a_column_of_like_values_outside_a_zone_is_left_alone() -> None:
     assert clean_in_place(text) == text
 
 
-def test_a_cell_stacking_whole_entries_is_left_alone() -> None:
+def test_a_cell_stacking_whole_entries_is_cut_into_entries() -> None:
     text = _contents_zone_body(
         "| 1<br>1.1<br>2 | Introduction<br>Terms<br>Statics | 3<br>4<br>9 |",
         "| 2.1 | Forces | 11 |",
         "| 3 | Kinematics | 19 |",
     )
-    assert clean_in_place(text) == text
+    assert clean_in_place(text) == _contents_zone_body(
+        "| 1 | Introduction | 3 |",
+        "| 1.1 | Terms | 4 |",
+        "| 2 | Statics | 9 |",
+        "| 2.1 | Forces | 11 |",
+        "| 3 | Kinematics | 19 |",
+    )
 
 
 def test_a_cell_stacking_two_pages_is_left_alone() -> None:

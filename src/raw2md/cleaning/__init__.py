@@ -94,6 +94,7 @@ from raw2md.cleaning.tables import (
     recut_swallowed_cells,
     reunite_split_tables,
     split_glued_table_header,
+    split_stacked_rows,
     spread_crushed_runs,
 )
 
@@ -162,6 +163,7 @@ __all__ = [
     "settle_compound_hyphens",
     "split_glued_table_header",
     "split_run_in_headings",
+    "split_stacked_rows",
     "spread_crushed_runs",
     "strip_alt_file_paths",
     "strip_heading_emphasis",

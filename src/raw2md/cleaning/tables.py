@@ -819,6 +819,78 @@ def drop_bodyless_table(seg_list: list[Segment]) -> list[Segment]:
     return out
 
 
+def split_stacked_rows(seg_list: list[Segment]) -> list[Segment]:
+    """Cut a body row that stacks N rows into N rows, one value per cell.
+
+    The first cell and at least two more hold N >= 2 values apart by `<br>`,
+    and every filled cell holds exactly N. An empty cell stays empty in each
+    new row. The header and rows of another width stay; a cell edge inside
+    math refuses the row, and so does a later line that opens mid-value
+    (`_opens_mid_value`).
+    """
+    out: list[Segment] = []
+    count = len(seg_list)
+    idx = 0
+    while idx < count:
+        block = _table_block(seg_list, idx)
+        if block is None:
+            out.append(seg_list[idx])
+            idx += 1
+            continue
+        sep_idx, body_end = block
+        out.extend(seg_list[idx : sep_idx + 1])
+        width = len(table_cells(seg_list[sep_idx][0]))
+        for row in range(sep_idx + 1, body_end):
+            line, protected = seg_list[row]
+            pieces = _stacked_pieces(line, width)
+            if pieces is None:
+                out.append(seg_list[row])
+                continue
+            out.extend(
+                (rebuild_table_row(line, [cell[depth] for cell in pieces]), protected)
+                for depth in range(len(pieces[0]))
+            )
+        idx = body_end
+    return out
+
+
+def _stacked_pieces(line: str, width: int) -> list[list[str]] | None:
+    """Per cell, its N padded values; an empty cell gives N copies of itself.
+
+    None when the row is not a stack of N >= 2 rows.
+    """
+    if is_table_separator(line.strip()) or _cell_edge_inside_math(line):
+        return None
+    cells = table_cells(line)
+    if len(cells) != width or not cells[0].strip():
+        return None
+    split = [
+        [piece.strip() for piece in CELL_BREAK_RE.split(cell)] if cell.strip() else []
+        for cell in cells
+    ]
+    depth = len(split[0])
+    filled = [pieces for pieces in split if pieces]
+    if depth < 2 or len(filled) < 3:
+        return None
+    if any(len(pieces) != depth or not all(pieces) for pieces in filled):
+        return None
+    if any(_opens_mid_value(piece) for pieces in filled for piece in pieces[1:]):
+        return None
+    return [
+        [f" {piece} " for piece in pieces] if pieces else [cell] * depth
+        for pieces, cell in zip(split, cells, strict=True)
+    ]
+
+
+def _opens_mid_value(piece: str) -> bool:
+    """True when a line opens on a lowercase letter or a bracket.
+
+    Such a line finishes the value above it, a wrapped word or a unit
+    note, so the cell is one value on two lines and not a stack.
+    """
+    return piece[:1].islower() or piece[:1] == "("
+
+
 def join_continuation_rows(seg_list: list[Segment]) -> list[Segment]:
     """Join a body row that carries the wrapped lines of the row above into it.
 

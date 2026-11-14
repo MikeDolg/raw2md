@@ -77,6 +77,7 @@ from raw2md.cleaning import (
     settle_compound_hyphens,
     split_glued_table_header,
     split_run_in_headings,
+    split_stacked_rows,
     spread_crushed_runs,
     strip_alt_file_paths,
     strip_heading_emphasis,
@@ -199,6 +200,9 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     # Before the column rules, which read a wrapped line's blanks as cells
     # a value is missing from; after the reunion, so the column forms read
     # the whole table.
+    # Before the continuation join: a stack cut into rows is joined into the
+    # row above only when it still reads as wrapped lines.
+    seg_list = split_stacked_rows(seg_list)
     seg_list = join_continuation_rows(seg_list)
     seg_list = drop_empty_table_columns(seg_list)
     # After the empty-column drop, which rewrites the column indices.
