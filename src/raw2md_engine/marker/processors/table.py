@@ -141,7 +141,11 @@ class TableProcessor(BaseProcessor):
         # Assign OCR lines if needed - we do this at a cell level
         self.assign_ocr_lines(tables, table_data)
 
-        self.split_combined_rows(tables)  # Split up rows that were combined
+        # The rows that the table model flags as headers, by row id.
+        header_rows = [
+            {row.row_id for row in table.rows if row.is_header} for table in tables
+        ]
+        self.split_combined_rows(tables, header_rows)
         self.combine_dollar_column(tables)  # Combine columns that are just dollar signs
 
         # Assign table cells to the table
@@ -172,6 +176,7 @@ class TableProcessor(BaseProcessor):
                         row_id=cell.row_id,
                         col_id=cell.col_id,
                         is_header=bool(cell.is_header),
+                        header_row=cell.row_id in header_rows[table_idx],
                         page_id=page.page_id,
                     )
                     page.add_full_block(cell_block)
@@ -388,8 +393,11 @@ class TableProcessor(BaseProcessor):
                     for cell in col_cells:
                         cell.col_id -= col_offset
 
-    def split_combined_rows(self, tables: list[TableResult]):
-        for table in tables:
+    def split_combined_rows(
+        self, tables: list[TableResult], header_rows: list[set[int]]
+    ):
+        """Split up rows that were combined; `header_rows` follows the new row ids."""
+        for table, headers in zip(tables, header_rows, strict=True):
             if len(table.cells) == 0:
                 # Skip empty tables
                 continue
@@ -452,11 +460,15 @@ class TableProcessor(BaseProcessor):
                 continue
 
             new_cells = []
+            new_headers = set()
             shift_up = 0
             max_cell_id = max([c.cell_id for c in table.cells])
             new_cell_count = 0
             for row, item_info in zip(unique_rows, row_info):
                 max_lines = max(item_info["line_lens"])
+                if row in headers:
+                    # Only the first of the new rows is a header
+                    new_headers.add(row + shift_up)
                 if item_info["should_split"]:
                     for i in range(max_lines):
                         for cell in item_info["row_cells"]:
@@ -502,6 +514,8 @@ class TableProcessor(BaseProcessor):
             # Only update the cells if we added new cells
             if len(new_cells) > len(table.cells):
                 table.cells = new_cells
+                headers.clear()
+                headers.update(new_headers)
 
     def assign_text_to_cells(self, tables: list[TableResult], table_data: list):
         for table_result, table_page_data in zip(tables, table_data):

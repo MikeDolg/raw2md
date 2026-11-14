@@ -187,6 +187,20 @@ of the repository holds each change with its diff.
   before a lowercase letter and stays before a capital or a digit. A cell
   without line frames keeps its lines (2026-11-14).
   Changed file, under src/raw2md_engine/: `marker/processors/table.py`.
+- A new processor joins a table that a page break cuts in two. The table
+  that closes a page takes the rows of the table that opens the next page,
+  when only running headers, footers and hidden blocks stand between them,
+  the column counts are equal or differ by one with each column of the
+  narrower part over a column of the wider part, and the first rows of the
+  second part repeat the first rows of the first part cell for cell or the
+  table model reads its first row as data. The repeated rows go. A table
+  whose first row repeats a run of its own cells, records set side by
+  side, stays apart. A table cell keeps the header flag of its row from
+  the table model
+  (2026-11-14). Added file, under src/raw2md_engine/:
+  `marker/processors/table_merge.py`. Changed files:
+  `marker/converters/pdf.py`, `marker/processors/table.py` and
+  `marker/schema/blocks/tablecell.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

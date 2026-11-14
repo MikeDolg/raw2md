@@ -32,6 +32,7 @@ from raw2md_engine.marker.processors.order import OrderProcessor
 from raw2md_engine.marker.processors.page_header import PageHeaderProcessor
 from raw2md_engine.marker.processors.sectionheader import SectionHeaderProcessor
 from raw2md_engine.marker.processors.table import TableProcessor
+from raw2md_engine.marker.processors.table_merge import TableMergeProcessor
 from raw2md_engine.marker.processors.text import TextProcessor
 from raw2md_engine.marker.providers.pdf import PdfProvider
 from raw2md_engine.marker.renderers.markdown import MarkdownRenderer
@@ -67,6 +68,7 @@ class PdfConverter(BaseConverter):
         PageHeaderProcessor,
         SectionHeaderProcessor,
         TableProcessor,
+        TableMergeProcessor,
         TextProcessor,
         DebugProcessor,
     )

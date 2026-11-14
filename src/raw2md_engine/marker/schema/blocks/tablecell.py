@@ -9,6 +9,9 @@ class TableCell(Block):
     row_id: int
     col_id: int
     is_header: bool
+    # The table model flags the row of the cell as a header row. Unlike
+    # `is_header`, it is false for a first row that the model reads as data.
+    header_row: bool = False
     text_lines: list[str] | None = None
     block_description: str = "A cell in a table."
 
