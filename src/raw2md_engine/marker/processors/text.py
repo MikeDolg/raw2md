@@ -25,6 +25,13 @@ _WORD = regex.compile(r"(?<![\\\p{L}])\p{L}{3,}")
 # A text block on this many pages is a running line or a watermark, not prose.
 _REPEATED_PAGES = 3
 _REPEATED_MIN_WORDS = 3
+# With text evidence, the indent tolerance covers the scatter of scanned line
+# frames at the left edge (up to 1.5 units and 0.0124 of the block width); a
+# paragraph indent starts at 9 units and 0.027 of the width.
+_INDENT_FLOOR = 1.5
+_INDENT_SHARE = 0.02
+# Without text evidence any offset is an indent, beyond float noise.
+_INDENT_NOISE = 0.01
 
 
 class TextProcessor(BaseProcessor):
@@ -163,12 +170,7 @@ class TextProcessor(BaseProcessor):
                 next_block.polygon.x_start < next_page.polygon.width // 2
             ) and (next_block.polygon.y_start < next_page.polygon.height // 2)
 
-        next_lines = next_block.line_polygons(document)
-        next_block_starts_indented = True
-        if next_lines:
-            min_x = math.ceil(min(line.x_start for line in next_lines))
-            next_block_starts_indented = next_lines[0].x_start > min_x
-        if next_block_starts_indented:
+        if self.starts_indented(document, next_block, text_evidence):
             return False
 
         if text_evidence:
@@ -186,6 +188,17 @@ class TextProcessor(BaseProcessor):
         return (last_line_is_full_width or last_line_is_broken) and (
             (next_block_in_first_quadrant and page_break) or column_break
         )
+
+    @staticmethod
+    def starts_indented(document: Document, block: Block, text_evidence: bool) -> bool:
+        lines = block.line_polygons(document)
+        if not lines:
+            return True
+        offset = lines[0].x_start - min(line.x_start for line in lines)
+        tolerance = _INDENT_NOISE
+        if text_evidence:
+            tolerance = max(_INDENT_FLOOR, _INDENT_SHARE * block.polygon.width)
+        return offset > tolerance
 
     @staticmethod
     def move_after(document: Document, block: Block, anchor: Block):

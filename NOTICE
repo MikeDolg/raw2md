@@ -202,7 +202,14 @@ of the repository holds each change with its diff.
   `marker/processors/table_merge.py`. Changed files:
   `marker/converters/pdf.py`, `marker/processors/table.py` and
   `marker/schema/blocks/tablecell.py`.
+- The text processor reads the first line of a second half as indented
+  when it starts right of the leftmost line by more than a tolerance. When
+  the text at the cut shows a continuation, the tolerance is 1.5 units or
+  0.02 of the block width, whichever is larger, so one step of the line
+  frames is no indent wherever the block stands on the page. Without that
+  text, an offset of more than 0.01 units is an indent (2026-11-15).
+  Changed file, under src/raw2md_engine/: `marker/processors/text.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-11-14.
+Last change: 2026-11-15.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
 from PIL import Image
 
 from ._helpers import Loader
@@ -231,6 +232,71 @@ def test_indented_second_half_stays_apart(engine: Loader) -> None:
     )
 
     assert len(_paragraphs(_join(engine, pages))) == 2
+
+
+@pytest.mark.parametrize("shift", [0.0, 0.25, 0.5, 0.75])
+def test_frame_step_with_text_evidence_joins_wherever_the_block_stands(
+    engine: Loader, shift: float
+) -> None:
+    pages = _Pages(engine, 2)
+    pages.text(
+        0,
+        [
+            (
+                "The pump starts when the pressure in the tank falls below the",
+                (112, 700, 550, 718),
+            )
+        ],
+    )
+    pages.text(
+        1,
+        [
+            ("set value, and it stops when the tank", (112.75 + shift, 60, 550, 78)),
+            ("is full.", (112 + shift, 81, 200, 99)),
+        ],
+    )
+
+    assert _join(engine, pages) == (
+        "The pump starts when the pressure in the tank falls below the set value, "
+        "and it stops when the tank is full."
+    )
+
+
+def test_indent_of_a_few_percent_of_the_width_stays_apart(engine: Loader) -> None:
+    pages = _Pages(engine, 2)
+    pages.text(0, [("The valve opens when the pressure in the", (50, 700, 350, 718))])
+    pages.text(
+        1,
+        [
+            ("chamber exceeds the spring force, and", (59, 60, 350, 78)),
+            ("the pump stops.", (50, 81, 200, 99)),
+        ],
+    )
+
+    assert len(_paragraphs(_join(engine, pages))) == 2
+
+
+@pytest.mark.parametrize(("offset", "count"), [(0.0, 1), (0.75, 2)])
+def test_any_offset_without_text_evidence_is_an_indent(
+    engine: Loader, offset: float, count: int
+) -> None:
+    pages = _Pages(engine, 2)
+    pages.text(
+        0,
+        [
+            ("The valve opens when the pressure in the", (50, 680, 550, 698)),
+            ("chamber exceeds the force of the spring", (50, 701, 550, 719)),
+        ],
+    )
+    pages.text(
+        1,
+        [
+            ("Then the pump stops, and the valve", (50.25 + offset, 60, 550, 78)),
+            ("closes again.", (50.25, 81, 200, 99)),
+        ],
+    )
+
+    assert len(_paragraphs(_join(engine, pages))) == count
 
 
 def test_figure_in_one_column_cuts_the_paragraph(engine: Loader) -> None:
