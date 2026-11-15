@@ -3,8 +3,9 @@
 The second part joins when it opens its page right after the first part
 closes the previous page, or opens the next column right after the first part
 ends its column, the columns agree, and its first row repeats the header of
-the first part or holds data. A part with a header of its own stays a table
-of its own.
+the first part or holds data. A first row that the table model flags as a
+header holds data when its cells have the forms of the columns of the first
+part. A part with a header of its own stays a table of its own.
 """
 
 from __future__ import annotations
@@ -340,3 +341,62 @@ def test_column_part_with_a_column_less_joins_with_an_empty_cell(
     pages = [[first, second]]
 
     assert _tables(engine, pages) == [[*_PARTS, ["AB-200", "", "20 g"]]]
+
+
+_FUNDS = [["Fund", "Currency", "Value"], ["Alpha Income", "EUR", "104.20"]]
+_MORE_FUNDS = [["Beta Growth", "EUR", "98.75"], ["Gamma Bond", "EUR", "101.10"]]
+
+
+def test_flagged_first_row_with_the_forms_of_the_columns_is_data(
+    engine: Loader,
+) -> None:
+    pages = [[_table(_FUNDS)], [_table(_MORE_FUNDS)]]
+    document = _document(engine, pages)
+    engine("marker.processors.table_merge").TableMergeProcessor({})(document)
+    blocks = document.contained_blocks([engine("marker.schema").BlockTypes.Table])
+
+    assert _tables(engine, pages) == [_FUNDS + _MORE_FUNDS]
+    assert [
+        cell.row_id for cell in blocks[0].contained_blocks(document) if cell.is_header
+    ] == [0, 0, 0]
+
+
+def test_flagged_row_of_words_over_numbers_stays_a_header(engine: Loader) -> None:
+    rows = [["Bond", "Rate", "Term"], ["Delta Bond", "2.5%", "10"]]
+    first = _table([["Fund", "Rate", "Term"], ["Alpha Bond", "3.1%", "5"]])
+
+    assert _tables(engine, [[first], [_table(rows)]]) == [first.rows, rows]
+
+
+def test_flagged_row_with_an_empty_cell_and_a_number_is_data(engine: Loader) -> None:
+    second = _table([["", "5 cm"], ["Area", "1 m2"]])
+
+    assert _tables(engine, [[_table(_DATA)], [second]]) == [_DATA + second.rows]
+
+
+def test_flagged_row_over_text_columns_only_stays_a_header(engine: Loader) -> None:
+    first = _table([["Name", "City"], ["Alpha", "Lyon"], ["Beta", "Graz"]])
+    second = _table([["Gamma", "Porto"], ["Delta", "Turin"]])
+
+    assert _tables(engine, [[first], [second]]) == [first.rows, second.rows]
+
+
+def test_flagged_row_with_the_same_code_is_data(engine: Loader) -> None:
+    first = _table([["Item", "Code"], ["Pin", "RT-4"], ["Bolt", "RT-4"]])
+    second = _table([["Nut", "RT-4"], ["Washer", "RT-4"]])
+
+    assert _tables(engine, [[first], [second]]) == [first.rows + second.rows]
+
+
+def test_flagged_row_with_another_code_stays_a_header(engine: Loader) -> None:
+    first = _table([["Item", "Code"], ["Pin", "RT-4"], ["Bolt", "RT-4"]])
+    second = _table([["Nut", "RT-5"], ["Washer", "RT-5"]])
+
+    assert _tables(engine, [[first], [second]]) == [first.rows, second.rows]
+
+
+def test_flagged_first_row_at_a_column_break_is_data(engine: Loader) -> None:
+    first = _table(_PARTS, edges=_LEFT)
+    second = _table(_NEXT, edges=_RIGHT_COLUMN)
+
+    assert _tables(engine, [[first, second]]) == [_PARTS + _NEXT]

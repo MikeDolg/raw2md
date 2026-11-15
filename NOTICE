@@ -226,6 +226,14 @@ of the repository holds each change with its diff.
   other part, with the edges measured as a share of the width of their
   own table (2026-11-15). Changed file, under src/raw2md_engine/:
   `marker/processors/table_merge.py`.
+- The table merge processor reads a first row of the second part that
+  the table model flags as a header as a data row, at a page break and at
+  a column break, when each filled cell of the row has the form of its
+  column in the data rows of the first part: a number under numbers, or
+  the code that every row of the column repeats. One cell at least falls
+  under such a column, so a row of words over columns of numbers stays a
+  header (2026-11-15). Changed file, under src/raw2md_engine/:
+  `marker/processors/table_merge.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

@@ -1,4 +1,5 @@
 import math
+import re
 from typing import Annotated
 
 from raw2md_engine.marker.processors import BaseProcessor
@@ -19,6 +20,13 @@ FURNITURE_TYPES = (BlockTypes.PageHeader, BlockTypes.PageFooter)
 
 Span = tuple[float, float]
 Row = list[TableCell]
+
+# A number: an optional sign or currency, digits with their separators, and an
+# optional percent sign or short unit, as in "-1,250.50", "12 g" or "40 mm".
+NUMBER = re.compile(
+    r"[-+\u2212\u00b1~<>]?\s?[$\u00a3\u00a5\u20ac]?\s?\d[\d\s.,'\u2009\u202f]*"
+    r"(?:\s?(?:%|[A-Za-z\u00b0\u00b5]{1,3}\d?(?:/[A-Za-z]{1,3}\d?)?))?"
+)
 
 
 class TableMergeProcessor(BaseProcessor):
@@ -41,6 +49,11 @@ class TableMergeProcessor(BaseProcessor):
     the other part that it joins, both measured as a share of the width of
     their own table: two tables side by side with other column widths stay
     apart.
+    A first row of the second part that the table model flags as a header
+    reads as data when each of its filled cells has the form of its column
+    in the data rows of the first part, and one of those columns at least
+    holds numbers or one code in every row: a row of words over columns of
+    numbers stays a header.
     """
 
     block_types = (BlockTypes.Table,)
@@ -175,13 +188,26 @@ class TableMergeProcessor(BaseProcessor):
             repeated += 1
         if repeated == len(part_rows):
             return False
+        first_row = part_rows[repeated]
+        flagged = any(cell.header_row for cell in first_row)
+        head_data = [
+            row for row in head_rows if not any(cell.header_row for cell in row)
+        ]
+        as_data = (
+            flagged
+            and not repeated
+            and self.reads_as_data(first_row, part_map, head_data, head_map)
+        )
         # A header row that did not repeat belongs to a table of its own.
         # A cell that spans over the cut cannot move with the rows after it.
-        first_kept = part_rows[repeated][0].row_id
-        if any(cell.header_row for cell in part_rows[repeated]) or any(
+        first_kept = first_row[0].row_id
+        if (flagged and not as_data) or any(
             cell.row_id < first_kept < cell.row_id + cell.rowspan for cell in part_cells
         ):
             return False
+        if as_data:
+            for cell in first_row:
+                cell.header_row = cell.is_header = False
         kept = [cell for cell in part_cells if cell.row_id >= first_kept]
         offset = max(cell.row_id + cell.rowspan for cell in head_cells) - first_kept
         for cell in kept:
@@ -396,6 +422,39 @@ class TableMergeProcessor(BaseProcessor):
             if all(names[col] == names[col % size] for col in range(size, width)):
                 return True
         return False
+
+    def reads_as_data(
+        self, row: Row, row_map: list[int], data: list[Row], data_map: list[int]
+    ) -> bool:
+        """Each filled cell of `row` has the form of its column in `data`.
+
+        A column holds numbers, one code in every row, or text; text takes any
+        cell. True only when one filled cell at least falls under a column of
+        numbers or of a code. The maps give the columns on the wider layout.
+        """
+        columns: dict[int, list[str]] = {}
+        for data_row in data:
+            for cell in data_row:
+                text = self.cell_text(cell)
+                if text and cell.colspan == 1:
+                    columns.setdefault(data_map[cell.col_id], []).append(text)
+        typed = False
+        for cell in row:
+            text = self.cell_text(cell)
+            if not text:
+                continue
+            values = columns.get(row_map[cell.col_id]) if cell.colspan == 1 else None
+            if not values:
+                return False
+            if all(NUMBER.fullmatch(value) for value in values):
+                if not NUMBER.fullmatch(text):
+                    return False
+                typed = True
+            elif len(values) > 1 and len(set(values)) == 1:
+                if text != values[0]:
+                    return False
+                typed = True
+        return typed
 
     def row_key(self, row: Row, column_map: list[int]) -> list[tuple[int, int, str]]:
         """The cells of the row as (column, span, text) on the wider layout."""
