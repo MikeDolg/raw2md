@@ -182,14 +182,22 @@ cannot tell it from a new value.
 On the `raw2md-engine` route, the engine repairs two of these defects before
 cleaning, because it knows the position of each line on the page:
 
-- **A table cut by a page break.** The engine joins the table that ends a page
-  with the table that starts the next page. Only running heads, footers, and
-  hidden blocks can stand between the parts. The column counts must be
-  equal, or differ by one when the narrower part lines up with the columns of
-  the wider part. The second part must repeat the header row of the first part
-  cell for cell, or start with a data row. The repeated rows go. A second part
-  that starts with a header row of its own stays a separate table. A header
-  row that changes at the repeat counts as a header row of its own.
+- **A table cut by a page break or a column.** The engine joins the table
+  that ends a page with the table that starts the next page. It also joins
+  the table that ends a column with the table that starts the next column of
+  the same page, when each column of one part lines up with its column of
+  the other part. Only running heads, footers, and hidden blocks can stand
+  between the parts. The column counts must be equal, or differ by one when
+  the narrower part lines up with the columns of the wider part. The second
+  part must repeat the header row of the first part cell for cell, or start
+  with a data row. The repeated rows go. A second part that starts with a
+  header row of its own stays a separate table. A header row that changes at
+  the repeat counts as a header row of its own. The recognition can mark a
+  data row as a header row. Therefore the engine reads the first row of the
+  second part as a data row when each filled cell has the form of its column
+  in the first part: a number under numbers, or the same code that each row
+  of the column holds. A row of words over columns of numbers stays a header
+  row.
 - **The lines of a cell.** The engine joins two lines of a cell with a space
   when the second line starts right under the first, and its first word does
   not fit in the free width of the first line in the column. Otherwise the

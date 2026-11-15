@@ -213,7 +213,7 @@ of the repository holds each change with its diff.
   right under the other with no block between them, when the text at the
   cut shows a continuation and the second block does not start indented.
   The gap between the blocks is less than half the median line height of
-  the first block and more than minus half of it. The blocks overlap
+  the first block and not less than minus half of it. The blocks overlap
   along the horizontal axis by at least half the width of the narrower
   block (2026-11-15). Changed file, under src/raw2md_engine/:
   `marker/processors/text.py`.
@@ -230,9 +230,9 @@ of the repository holds each change with its diff.
   the table model flags as a header as a data row, at a page break and at
   a column break, when each filled cell of the row has the form of its
   column in the data rows of the first part: a number under numbers, or
-  the code that every row of the column repeats. One cell at least falls
-  under such a column, so a row of words over columns of numbers stays a
-  header (2026-11-15). Changed file, under src/raw2md_engine/:
+  the code that two data rows or more of the column all hold. One cell at
+  least falls under such a column, so a row of words over columns of
+  numbers stays a header (2026-11-15). Changed file, under src/raw2md_engine/:
   `marker/processors/table_merge.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
