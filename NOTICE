@@ -209,6 +209,14 @@ of the repository holds each change with its diff.
   frames is no indent wherever the block stands on the page. Without that
   text, an offset of more than 0.01 units is an indent (2026-11-15).
   Changed file, under src/raw2md_engine/: `marker/processors/text.py`.
+- The text processor joins two text blocks of one page that stand one
+  right under the other with no block between them, when the text at the
+  cut shows a continuation and the second block does not start indented.
+  The gap between the blocks is less than half the median line height of
+  the first block and more than minus half of it. The blocks overlap
+  along the horizontal axis by at least half the width of the narrower
+  block (2026-11-15). Changed file, under src/raw2md_engine/:
+  `marker/processors/text.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

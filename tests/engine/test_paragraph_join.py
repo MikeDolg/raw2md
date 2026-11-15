@@ -299,6 +299,111 @@ def test_any_offset_without_text_evidence_is_an_indent(
     assert len(_paragraphs(_join(engine, pages))) == count
 
 
+_STACK_FIRST: list[tuple[str, Box]] = [
+    ("The valve opens when the signal reaches the", (50, 100, 550, 118)),
+    ("controller, and it closes after", (50, 121, 300, 139)),
+]
+_STACK_SECOND = "a delay that the user sets in the menu."
+
+
+def test_two_stacked_blocks_of_one_paragraph_read_as_one(engine: Loader) -> None:
+    pages = _Pages(engine, 1)
+    pages.text(0, _STACK_FIRST)
+    pages.text(0, [(_STACK_SECOND, (50, 142, 400, 160))])
+
+    assert _join(engine, pages) == (
+        "The valve opens when the signal reaches the controller, and it closes "
+        "after a delay that the user sets in the menu."
+    )
+
+
+def test_stacked_blocks_with_a_gap_of_a_line_stay_apart(engine: Loader) -> None:
+    pages = _Pages(engine, 1)
+    pages.text(0, _STACK_FIRST)
+    pages.text(0, [(_STACK_SECOND, (50, 150, 400, 168))])
+
+    assert len(_paragraphs(_join(engine, pages))) == 2
+
+
+def test_stacked_blocks_without_text_evidence_stay_apart(engine: Loader) -> None:
+    pages = _Pages(engine, 1)
+    pages.text(
+        0,
+        [
+            ("The valve opens when the signal reaches the", (50, 100, 550, 118)),
+            ("controller, and it closes after a delay.", (50, 121, 550, 139)),
+        ],
+    )
+    pages.text(0, [("The user sets the delay in the menu.", (50, 142, 400, 160))])
+
+    assert len(_paragraphs(_join(engine, pages))) == 2
+
+
+def test_indented_stacked_block_stays_apart(engine: Loader) -> None:
+    pages = _Pages(engine, 1)
+    pages.text(0, _STACK_FIRST)
+    pages.text(
+        0,
+        [
+            ("a delay that the user sets in the menu, and", (80, 142, 550, 160)),
+            ("the pump stops.", (50, 163, 200, 181)),
+        ],
+    )
+
+    assert len(_paragraphs(_join(engine, pages))) == 2
+
+
+def test_stacked_blocks_with_a_small_overlap_stay_apart(engine: Loader) -> None:
+    pages = _Pages(engine, 1)
+    pages.text(
+        0,
+        [
+            ("The valve opens when the signal", (50, 100, 300, 118)),
+            ("reaches the controller, and it", (50, 121, 300, 139)),
+        ],
+    )
+    pages.text(0, [("closes after a delay that the user sets.", (200, 142, 500, 160))])
+
+    assert len(_paragraphs(_join(engine, pages))) == 2
+
+
+def test_block_between_stacked_blocks_keeps_them_apart(engine: Loader) -> None:
+    pages = _Pages(engine, 1)
+    pages.text(0, _STACK_FIRST)
+    ignored = pages.text(0, [("Running note without a stop", (560, 121, 590, 139))])
+    ignored.ignore_for_output = True
+    pages.text(0, [(_STACK_SECOND, (50, 142, 400, 160))])
+
+    assert len(_paragraphs(_join(engine, pages))) == 2
+
+
+@pytest.mark.parametrize(
+    "item",
+    [
+        "2. valve according to claim 1, wherein the spring is steel.",
+        "b) the pump stops when the tank is full.",
+    ],
+)
+def test_stacked_block_that_opens_an_item_stays_apart(
+    engine: Loader, item: str
+) -> None:
+    pages = _Pages(engine, 1)
+    pages.text(
+        0,
+        [
+            ("1. Valve with a spring and a seat, wherein the", (50, 100, 550, 118)),
+            ("spring presses the seat against the", (50, 121, 300, 139)),
+        ],
+    )
+    pages.text(0, [("housing", (50, 142, 120, 160))])
+    pages.text(0, [(item, (50, 163, 500, 181))])
+
+    paragraphs = _paragraphs(_join(engine, pages))
+
+    assert paragraphs[-1] == item
+    assert len(paragraphs) == 2
+
+
 def test_figure_in_one_column_cuts_the_paragraph(engine: Loader) -> None:
     pages = _Pages(engine, 1)
     pages.text(0, [("The valve opens when the pressure in the", (50, 100, 300, 118))])

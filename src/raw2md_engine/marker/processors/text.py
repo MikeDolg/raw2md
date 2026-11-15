@@ -1,4 +1,5 @@
 import math
+import statistics
 from typing import Annotated
 
 import regex
@@ -32,6 +33,12 @@ _INDENT_FLOOR = 1.5
 _INDENT_SHARE = 0.02
 # Without text evidence any offset is an indent, beyond float noise.
 _INDENT_NOISE = 0.01
+# Two blocks of one paragraph stand closer than half a line height and share
+# most of their width; a caption, a pull quote, or a new paragraph stands
+# farther off. A gap below minus half a line is an overlay, not a stack.
+_STACK_GAP_MIN = -0.5
+_STACK_GAP_MAX = 0.5
+_STACK_OVERLAP = 0.5
 
 
 class TextProcessor(BaseProcessor):
@@ -156,13 +163,14 @@ class TextProcessor(BaseProcessor):
         )
 
         column_gap = block.polygon.width * self.column_gap_ratio
-        column_break, page_break, figure_cut = False, False, False
+        column_break, page_break, figure_cut, stacked = False, False, False, False
         next_block_in_first_quadrant = False
         if next_block.page_id == block.page_id:
             column_break = math.floor(next_block.polygon.y_start) <= math.ceil(
                 block.polygon.y_start
             ) and next_block.polygon.x_start > (block.polygon.x_end + column_gap)
             figure_cut = any(self.renders(b) for b in between)
+            stacked = not between and self.stacked(document, block, next_block)
         else:
             page_break = True
             next_page = document.get_page(next_block.page_id)
@@ -174,7 +182,7 @@ class TextProcessor(BaseProcessor):
             return False
 
         if text_evidence:
-            return page_break or column_break or figure_cut
+            return page_break or column_break or figure_cut or stacked
 
         all_lines = block.line_polygons(document)
         if len(all_lines) < 2:
@@ -199,6 +207,21 @@ class TextProcessor(BaseProcessor):
         if text_evidence:
             tolerance = max(_INDENT_FLOOR, _INDENT_SHARE * block.polygon.width)
         return offset > tolerance
+
+    @staticmethod
+    def stacked(document: Document, block: Block, next_block: Block) -> bool:
+        heights = [line.height for line in block.line_polygons(document)]
+        heights = [height for height in heights if height > 0]
+        if not heights:
+            return False
+        line_height = statistics.median(heights)
+        gap = next_block.polygon.y_start - block.polygon.y_end
+        if not _STACK_GAP_MIN * line_height <= gap < _STACK_GAP_MAX * line_height:
+            return False
+        first, second = block.polygon, next_block.polygon
+        overlap = min(first.x_end, second.x_end) - max(first.x_start, second.x_start)
+        narrow = min(first.width, second.width)
+        return narrow > 0 and overlap >= _STACK_OVERLAP * narrow
 
     @staticmethod
     def move_after(document: Document, block: Block, anchor: Block):
