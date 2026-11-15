@@ -217,6 +217,15 @@ of the repository holds each change with its diff.
   along the horizontal axis by at least half the width of the narrower
   block (2026-11-15). Changed file, under src/raw2md_engine/:
   `marker/processors/text.py`.
+- The table merge processor also joins a table that a column break cuts
+  on one page. The table that ends a column takes the rows of the table
+  that opens the next column, when the second part starts no lower than
+  the first and right of its right edge, only running headers, footers
+  and hidden blocks stand between them, and the conditions of a page
+  break hold. Each column of one part also overlaps its column of the
+  other part, with the edges measured as a share of the width of their
+  own table (2026-11-15). Changed file, under src/raw2md_engine/:
+  `marker/processors/table_merge.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

@@ -1,9 +1,10 @@
-"""A table that a page break cuts in two joins into one table.
+"""A table that a page break or a column break cuts in two joins into one table.
 
 The second part joins when it opens its page right after the first part
-closes the previous page, the columns agree, and its first row repeats the
-header of the first part or holds data. A part with a header of its own stays
-a table of its own.
+closes the previous page, or opens the next column right after the first part
+ends its column, the columns agree, and its first row repeats the header of
+the first part or holds data. A part with a header of its own stays a table
+of its own.
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any
 
+import pytest
 from PIL import Image
 
 from ._helpers import Loader
@@ -30,15 +32,24 @@ def _table(
     header: bool | int = True,
     columns: list[int] | None = None,
     spans: dict[tuple[int, int], int] | None = None,
+    edges: list[float] | None = None,
+    top: float = 100.0,
 ) -> Any:
     """A table part.
 
     `header` is the number of header rows, `columns` picks the columns of
-    `_COLUMNS` that it holds, and `spans` gives the rowspan of a cell. A cell
-    that a span covers is `None` in `rows`.
+    `edges` that it holds, and `spans` gives the rowspan of a cell. A cell
+    that a span covers is `None` in `rows`. `edges` are the left edges of the
+    columns and the right edge of the table, `top` is its top.
     """
     return SimpleNamespace(
-        kind="table", rows=rows, header=int(header), columns=columns, spans=spans or {}
+        kind="table",
+        rows=rows,
+        header=int(header),
+        columns=columns,
+        spans=spans or {},
+        edges=edges or [*_COLUMNS, _RIGHT],
+        top=top,
     )
 
 
@@ -59,14 +70,12 @@ def _add(page: Any, block: Any) -> Any:
 
 def _add_table(engine: Loader, page: Any, spec: Any) -> None:
     blocks = engine("marker.schema.blocks")
-    table = _add(
-        page,
-        blocks.Table(polygon=_box(engine, [50, 100, 550, 600]), page_id=page.page_id),
-    )
-    edges = [*_COLUMNS, _RIGHT]
+    edges = spec.edges
+    box = [edges[0], spec.top, edges[-1], spec.top + 500]
+    table = _add(page, blocks.Table(polygon=_box(engine, box), page_id=page.page_id))
     picked = spec.columns or list(range(len(spec.rows[0])))
     for row_id, row in enumerate(spec.rows):
-        top = 100 + row_id * _ROW
+        top = spec.top + row_id * _ROW
         for col_id, text in enumerate(row):
             if text is None:
                 continue
@@ -259,3 +268,75 @@ def test_span_across_the_cut_keeps_the_parts_apart(engine: Loader) -> None:
         _DATA,
         [["", ""], ["?", "42"]],
     ]
+
+
+# Two columns of a page, each with the left edges of three table columns and
+# the right edge of the table.
+_LEFT = [30.0, 110.0, 190.0, 270.0]
+_RIGHT_COLUMN = [330.0, 410.0, 490.0, 570.0]
+_PARTS = [["Part", "Size", "Weight"], ["AB-100", "M4", "12 g"]]
+_NEXT = [["AB-200", "M6", "20 g"], ["AB-300", "M8", "31 g"]]
+
+
+def test_table_cut_by_a_column_joins(engine: Loader) -> None:
+    first = _table(_PARTS, edges=_LEFT)
+    second = _table(_NEXT, header=False, edges=_RIGHT_COLUMN)
+
+    assert _tables(engine, [[first, second]]) == [_PARTS + _NEXT]
+
+
+@pytest.mark.parametrize(
+    ("edges", "top"),
+    [(_RIGHT_COLUMN, 300.0), (_LEFT, 400.0)],
+    ids=["lower-in-the-next-column", "under-the-first"],
+)
+def test_tables_without_a_column_break_stay_apart(
+    engine: Loader, edges: list[float], top: float
+) -> None:
+    first = _table(_PARTS, edges=_LEFT)
+    second = _table(_NEXT, header=False, edges=edges, top=top)
+
+    assert _tables(engine, [[first, second]]) == [_PARTS, _NEXT]
+
+
+def test_column_parts_with_other_column_widths_stay_apart(engine: Loader) -> None:
+    first = _table(_PARTS, edges=[30.0, 70.0, 110.0, 270.0])
+    second = _table(_NEXT, header=False, edges=[330.0, 490.0, 530.0, 570.0])
+
+    assert _tables(engine, [[first, second]]) == [_PARTS, _NEXT]
+
+
+def test_column_part_with_a_header_of_its_own_stays_apart(engine: Loader) -> None:
+    first = _table(_PARTS, edges=_LEFT)
+    rows = [["Item", "Code", "Mass"], ["CD-1", "X", "5 g"]]
+    second = _table(rows, edges=_RIGHT_COLUMN)
+
+    assert _tables(engine, [[first, second]]) == [_PARTS, rows]
+
+
+def test_text_between_column_parts_keeps_them_apart(engine: Loader) -> None:
+    first = _table(_PARTS, edges=_LEFT)
+    second = _table(_NEXT, header=False, edges=_RIGHT_COLUMN)
+
+    assert _tables(engine, [[first, _block("text"), second]]) == [_PARTS, _NEXT]
+
+
+def test_table_over_three_columns_joins_as_a_chain(engine: Loader) -> None:
+    narrow = [[20.0, 60.0, 100.0, 140.0], [220.0, 260.0, 300.0, 340.0]]
+    first = _table(_PARTS, edges=narrow[0])
+    second = _table(_NEXT[:1], header=False, edges=narrow[1])
+    third = _table(_NEXT[1:], header=False, edges=[420.0, 460.0, 500.0, 540.0])
+
+    assert _tables(engine, [[first, second, third]]) == [_PARTS + _NEXT]
+
+
+def test_column_part_with_a_column_less_joins_with_an_empty_cell(
+    engine: Loader,
+) -> None:
+    first = _table(_PARTS, edges=_LEFT)
+    second = _table(
+        [["AB-200", "20 g"]], header=False, columns=[0, 2], edges=_RIGHT_COLUMN
+    )
+    pages = [[first, second]]
+
+    assert _tables(engine, pages) == [[*_PARTS, ["AB-200", "", "20 g"]]]

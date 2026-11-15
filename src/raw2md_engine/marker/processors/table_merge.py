@@ -1,3 +1,6 @@
+import math
+from typing import Annotated
+
 from raw2md_engine.marker.processors import BaseProcessor
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block, BlockId
@@ -20,9 +23,11 @@ Row = list[TableCell]
 
 class TableMergeProcessor(BaseProcessor):
     """
-    Joins a table that a page break cuts in two. The table that closes a page
-    takes the rows of the table that opens the next page, when only running
-    headers, footers and hidden blocks stand between them and:
+    Joins a table that a page break or a column break cuts in two. The table
+    that closes a page takes the rows of the table that opens the next page,
+    and the table that ends a column takes the rows of the table that opens
+    the next column of the page, when only running headers, footers and
+    hidden blocks stand between them and:
     - the column counts are equal, or differ by one and each column of the
       narrower part overlaps one column of the wider part along x;
     - the first rows of the second part repeat the first rows of the first
@@ -31,31 +36,73 @@ class TableMergeProcessor(BaseProcessor):
     cell spans over the cut. The repeated rows go. A second part that opens with a header of its own
     stays a table of its own, and so does a table whose first row repeats a
     run of its own cells: records set side by side. The cells keep their page; a table that runs
-    over three pages or more joins as a chain.
+    over three pages or columns or more joins as a chain.
+    At a column break, each column of one part also overlaps the column of
+    the other part that it joins, both measured as a share of the width of
+    their own table: two tables side by side with other column widths stay
+    apart.
     """
 
     block_types = (BlockTypes.Table,)
+    column_gap_ratio: Annotated[
+        float,
+        "The share of the table width that the gap before the next column must pass.",
+    ] = 0.02
+
+    def __init__(self, config=None):
+        super().__init__(config)
+        self.frames: dict[BlockId, Span] = {}
 
     def __call__(self, document: Document):
         pages = document.pages
         # The edges come before any join: a part that joins still closes its page.
         edges = [self.content_blocks(document, page) for page in pages]
+        # A joined cell keeps the x span of the table that it came from.
+        self.frames = {
+            cell.id: (block.polygon.x_start, block.polygon.x_end)
+            for blocks in edges
+            for block, _ in blocks
+            if block.block_type in self.block_types
+            for cell in block.contained_blocks(document, (BlockTypes.TableCell,))
+        }
         heads: dict[BlockId, Block] = {}
-        for index in range(len(pages) - 1):
-            if pages[index + 1].page_id != pages[index].page_id + 1:
+        for index, page in enumerate(pages):
+            for (last, _), (first, parent) in zip(
+                edges[index], edges[index][1:], strict=False
+            ):
+                if self.opens_next_column(last, first):
+                    self.merge(document, heads, last, first, parent, column_cut=True)
+            if index + 1 == len(pages) or pages[index + 1].page_id != page.page_id + 1:
                 continue
             if not edges[index] or not edges[index + 1]:
                 continue
             last, _ = edges[index][-1]
             first, parent = edges[index + 1][0]
-            if last.block_type not in self.block_types:
-                continue
-            if first.block_type not in self.block_types:
-                continue
-            head = heads.get(last.id, last)
-            if self.join(document, head, first):
-                parent.remove_structure_items([first.id])
-                heads[first.id] = head
+            self.merge(document, heads, last, first, parent, column_cut=False)
+
+    def opens_next_column(self, block: Block, next_block: Block) -> bool:
+        gap = block.polygon.width * self.column_gap_ratio
+        return math.floor(next_block.polygon.y_start) <= math.ceil(
+            block.polygon.y_start
+        ) and next_block.polygon.x_start > (block.polygon.x_end + gap)
+
+    def merge(
+        self,
+        document: Document,
+        heads: dict[BlockId, Block],
+        last: Block,
+        first: Block,
+        parent: Block,
+        column_cut: bool,
+    ) -> None:
+        if last.block_type not in self.block_types:
+            return
+        if first.block_type not in self.block_types:
+            return
+        head = heads.get(last.id, last)
+        if self.join(document, head, first, column_cut):
+            parent.remove_structure_items([first.id])
+            heads[first.id] = head
 
     @staticmethod
     def is_content(block: Block) -> bool:
@@ -83,8 +130,13 @@ class TableMergeProcessor(BaseProcessor):
                 blocks.append((block, page))
         return blocks
 
-    def join(self, document: Document, head: Block, part: Block) -> bool:
-        """Move the rows of `part` into `head`; False leaves both as they are."""
+    def join(
+        self, document: Document, head: Block, part: Block, column_cut: bool
+    ) -> bool:
+        """Move the rows of `part` into `head`; False leaves both as they are.
+
+        At a column break the columns compare as shares of their table width.
+        """
         if head.html or part.html:
             return False
         head_cells = head.contained_blocks(document, (BlockTypes.TableCell,))
@@ -92,23 +144,13 @@ class TableMergeProcessor(BaseProcessor):
         if not head_cells or not part_cells:
             return False
 
+        frames = self.frames if column_cut else None
+        maps = self.column_maps(head_cells, part_cells, frames)
+        if maps is None:
+            return False
+        head_map, part_map = maps
         head_width = self.column_count(head_cells)
         part_width = self.column_count(part_cells)
-        head_map = list(range(head_width))
-        part_map = list(range(part_width))
-        if abs(head_width - part_width) == 1:
-            if head_width < part_width:
-                found = self.column_map(head_cells, part_cells, head_width, part_width)
-                if found is None:
-                    return False
-                head_map = found
-            else:
-                found = self.column_map(part_cells, head_cells, part_width, head_width)
-                if found is None:
-                    return False
-                part_map = found
-        elif head_width != part_width:
-            return False
 
         head_rows = [row for row in self.rows(head_cells) if self.has_text(row)]
         part_rows = [row for row in self.rows(part_cells) if self.has_text(row)]
@@ -159,25 +201,63 @@ class TableMergeProcessor(BaseProcessor):
 
         if narrow is not None:
             width = max(head_width, part_width)
-            spans = self.column_spans(wide, width)
+            spans = self.column_spans(wide, width, frames)
             missing = next(col for col in range(width) if col not in column_map)
-            for filler in self.fillers(narrow, missing, spans[missing]):
+            for filler, frame in self.fillers(narrow, missing, spans[missing], frames):
                 document.get_page(filler.page_id).add_full_block(filler)
                 head.add_structure(filler)
+                self.frames[filler.id] = frame
         return True
 
     @staticmethod
     def column_count(cells: list[TableCell]) -> int:
         return max(cell.col_id + cell.colspan for cell in cells)
 
+    def column_maps(
+        self,
+        head: list[TableCell],
+        part: list[TableCell],
+        frames: dict[BlockId, Span] | None,
+    ) -> tuple[list[int], list[int]] | None:
+        """The column of the joined table for each column of each part.
+
+        None when the columns of the parts do not agree.
+        """
+        head_width = self.column_count(head)
+        part_width = self.column_count(part)
+        head_map = list(range(head_width))
+        part_map = list(range(part_width))
+        if head_width == part_width:
+            if frames is not None and not self.columns_align(
+                head, part, head_width, frames
+            ):
+                return None
+            return head_map, part_map
+        if abs(head_width - part_width) != 1:
+            return None
+        if head_width < part_width:
+            found = self.column_map(head, part, head_width, part_width, frames)
+            return None if found is None else (found, part_map)
+        found = self.column_map(part, head, part_width, head_width, frames)
+        return None if found is None else (head_map, found)
+
     @staticmethod
-    def column_spans(cells: list[TableCell], width: int) -> dict[int, Span] | None:
-        """The x span of each column, from the cells of one column only."""
+    def column_spans(
+        cells: list[TableCell], width: int, frames: dict[BlockId, Span] | None = None
+    ) -> dict[int, Span] | None:
+        """The x span of each column, from the cells of one column only.
+
+        With `frames`, each edge is a share of the width of the cell's table.
+        """
         spans: dict[int, Span] = {}
         for cell in cells:
             if cell.colspan != 1:
                 continue
             x0, _, x1, _ = cell.polygon.bbox
+            if frames is not None:
+                left, right = frames[cell.id]
+                size = (right - left) or 1.0
+                x0, x1 = (x0 - left) / size, (x1 - left) / size
             if cell.col_id in spans:
                 left, right = spans[cell.col_id]
                 x0, x1 = min(x0, left), max(x1, right)
@@ -192,13 +272,14 @@ class TableMergeProcessor(BaseProcessor):
         wide: list[TableCell],
         narrow_width: int,
         wide_width: int,
+        frames: dict[BlockId, Span] | None,
     ) -> list[int] | None:
         """The column of the wider part that each narrower column overlaps most.
 
         None when a column overlaps none, or two columns land on one.
         """
-        narrow_spans = self.column_spans(narrow, narrow_width)
-        wide_spans = self.column_spans(wide, wide_width)
+        narrow_spans = self.column_spans(narrow, narrow_width, frames)
+        wide_spans = self.column_spans(wide, wide_width, frames)
         if narrow_spans is None or wide_spans is None:
             return None
         found: list[int] = []
@@ -214,6 +295,24 @@ class TableMergeProcessor(BaseProcessor):
             found.append(best)
         return found
 
+    def columns_align(
+        self,
+        head: list[TableCell],
+        part: list[TableCell],
+        width: int,
+        frames: dict[BlockId, Span],
+    ) -> bool:
+        """Each column of one part overlaps the same column of the other."""
+        head_spans = self.column_spans(head, width, frames)
+        part_spans = self.column_spans(part, width, frames)
+        if head_spans is None or part_spans is None:
+            return False
+        return all(
+            min(head_spans[col][1], part_spans[col][1])
+            > max(head_spans[col][0], part_spans[col][0])
+            for col in range(width)
+        )
+
     @staticmethod
     def remap_columns(cells: list[TableCell], column_map: list[int]) -> None:
         for cell in cells:
@@ -222,9 +321,18 @@ class TableMergeProcessor(BaseProcessor):
             cell.colspan = column_map[last] - start + 1
             cell.col_id = start
 
-    @staticmethod
-    def fillers(cells: list[TableCell], col: int, span: Span) -> list[TableCell]:
-        """An empty cell for each row of `cells` that no cell covers at `col`."""
+    def fillers(
+        self,
+        cells: list[TableCell],
+        col: int,
+        span: Span,
+        frames: dict[BlockId, Span] | None,
+    ) -> list[tuple[TableCell, Span]]:
+        """An empty cell for each row of `cells` that no cell covers at `col`.
+
+        Each filler comes with the x span of the table of its row. With
+        `frames`, `span` is a share of that width.
+        """
         first = min(cell.row_id for cell in cells)
         end = max(cell.row_id + cell.rowspan for cell in cells)
         fillers = []
@@ -242,19 +350,23 @@ class TableMergeProcessor(BaseProcessor):
             boxes = [cell.polygon.bbox for cell in own]
             top = min(box[1] for box in boxes)
             bottom = max(box[3] for box in boxes)
-            fillers.append(
-                TableCell(
-                    polygon=PolygonBox.from_bbox([span[0], top, span[1], bottom]),
-                    text_lines=[],
-                    rowspan=1,
-                    colspan=1,
-                    row_id=row_id,
-                    col_id=col,
-                    is_header=any(cell.is_header for cell in own),
-                    header_row=any(cell.header_row for cell in own),
-                    page_id=own[0].page_id,
-                )
+            frame = self.frames[own[0].id]
+            left, right = span
+            if frames is not None:
+                size = frame[1] - frame[0]
+                left, right = frame[0] + left * size, frame[0] + right * size
+            filler = TableCell(
+                polygon=PolygonBox.from_bbox([left, top, right, bottom]),
+                text_lines=[],
+                rowspan=1,
+                colspan=1,
+                row_id=row_id,
+                col_id=col,
+                is_header=any(cell.is_header for cell in own),
+                header_row=any(cell.header_row for cell in own),
+                page_id=own[0].page_id,
             )
+            fillers.append((filler, frame))
         return fillers
 
     @staticmethod
