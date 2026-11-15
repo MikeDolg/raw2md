@@ -47,7 +47,7 @@ The guide to each stage is in `docs/`.
 
 ## Setup
 
-The project supports Python 3.11 to 3.14 on Linux and Windows.
+The project supports Python 3.11.5 to 3.14 on Linux and Windows.
 
 The fast layer and the checks below do not need `torch`. For them, install a
 light environment:

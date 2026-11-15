@@ -12,7 +12,7 @@
 </p>
 
 ```bash
-uv tool install --python ">=3.11,<3.15" raw2md --torch-backend cu130
+uv tool install --python ">=3.11.5,<3.15" raw2md --torch-backend cu130
 ```
 
 **raw2md** is an open-source Python command-line tool that converts PDF, DjVu, and DOCX documents into clean Markdown for retrieval-augmented generation (RAG) and other large language model (LLM) pipelines. It recognizes PDF and DjVu with its own engine `raw2md-engine`, which is based on `marker` 1.10.2 by Datalab. It converts DOCX with `pandoc`. Deterministic rules then repair the defects in headings, tables, formulas, lists, and text. Markdown from another converter goes through the same cleaning. The rules use no LLM, so the same input always gives the same cleaned text.
@@ -88,12 +88,12 @@ Most of the testing used English and Russian sources, with a few German, French,
 
 ## Installation
 
-raw2md needs Python 3.11 to 3.14. For `raw2md-engine`, you need an NVIDIA GPU of the Turing generation or newer (GTX 16xx, RTX 20xx, and later cards) with 4 GB of VRAM or more and driver 580 or newer. Without such a card, or with `--cuda off`, the engine runs on the CPU. This mode works, but it is much slower.
+raw2md needs Python 3.11.5 to 3.14. For `raw2md-engine`, you need an NVIDIA GPU of the Turing generation or newer (GTX 16xx, RTX 20xx, and later cards) with 4 GB of VRAM or more and driver 580 or newer. Without such a card, or with `--cuda off`, the engine runs on the CPU. This mode works, but it is much slower.
 
 Install the tool with [uv](https://docs.astral.sh/uv/getting-started/installation/):
 
 ```bash
-uv tool install --python ">=3.11,<3.15" raw2md --torch-backend cu130
+uv tool install --python ">=3.11.5,<3.15" raw2md --torch-backend cu130
 ```
 
 Or with `pip`:
@@ -105,7 +105,7 @@ pip install raw2md --extra-index-url https://download.pytorch.org/whl/cu130
 Or straight from GitHub:
 
 ```bash
-uv tool install --python ">=3.11,<3.15" git+https://github.com/MikeDolg/raw2md.git
+uv tool install --python ">=3.11.5,<3.15" git+https://github.com/MikeDolg/raw2md.git
 ```
 
 Do not skip `--python` in the `uv` commands. Without it, `uv` takes the default Python. If that Python is newer than 3.14, the install fails or picks an old raw2md release, because `uv` ignores the upper bound of `requires-python`.

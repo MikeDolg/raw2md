@@ -45,9 +45,10 @@ classifiers = [
     "Topic :: Utilities",
 ]
 # quickjs-rs sets the floor at 3.11, one step above the engine copy's own
-# 3.10. The ceiling waits for pyyaml: no release ships cp315 wheels, and its
-# sdist needs a C compiler on Windows.
-requires-python = ">=3.11,<3.15"
+# 3.10; the patch level 3.11.5 is the floor of every soupsieve release free
+# of its known ReDoS and recursion advisories. The ceiling waits for pyyaml:
+# no release ships cp315 wheels, and its sdist needs a C compiler on Windows.
+requires-python = ">=3.11.5,<3.15"
 # Upper bounds guard `uv tool install`, which never reads uv.lock and could
 # pick an incompatible future release. tzdata, wasmtime, certifi, and regex
 # carry none; the reasons are next to them.
