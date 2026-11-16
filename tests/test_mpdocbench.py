@@ -109,6 +109,7 @@ def test_read_annotation_takes_one_language_and_sorts_by_name(tmp_path: Path) ->
     english = read_annotation(path, "english")
     assert [d.name for d in english] == ["a_eng", "b_eng"]
     assert english[0].pages == ("page_2.jpg", "page_1.jpg")
+    assert [d.name for d in read_annotation(path, "chinese")] == ["a_chn"]
 
 
 def test_read_annotation_refuses_a_document_named_twice(tmp_path: Path) -> None:
@@ -630,6 +631,22 @@ def test_score_narrows_a_whole_set_run_to_a_language(tmp_path: Path) -> None:
     )
     assert config["end2end_eval"]["dataset"]["filter"] == {"language": "english"}
     assert (run.scoring / "english" / "predictions" / "run-english").is_dir()
+
+
+def test_score_narrows_a_whole_set_run_to_the_chinese_half(tmp_path: Path) -> None:
+    pins, data, run = _whole_set_run(tmp_path)
+    (run.outputs / "other.md").write_text(_HEADER + "result\n", encoding="utf-8")
+    _write_blocks(run.outputs, "other", [])
+    result = scoring.score(pins, data, run, Path(sys.executable), language="chinese")
+    assert result["language"] == "chinese"
+    assert result["documents"]["annotated"] == 1
+    assert run.results_for("chinese") == run.root / "results-chinese.yaml"
+    saved = yaml.safe_load(run.results_for("chinese").read_text(encoding="utf-8"))
+    assert saved == result
+    config = yaml.safe_load(
+        (run.scoring / "chinese" / "config.yaml").read_text(encoding="utf-8")
+    )
+    assert config["end2end_eval"]["dataset"]["filter"] == {"language": "chinese"}
 
 
 def test_score_keeps_the_whole_set_apart_from_its_subset(tmp_path: Path) -> None:

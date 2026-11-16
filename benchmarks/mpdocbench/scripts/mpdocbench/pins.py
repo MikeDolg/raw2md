@@ -13,10 +13,9 @@ import yaml
 
 PINS_PATH = Path(__file__).resolve().parent.parent / "pins.yaml"
 
-# The two sets a run can take. The benchmark itself is bilingual, and the
-# cleaning rules of raw2md were never checked against Chinese text, so the
-# English half is the set worth scoring on its own.
-LANGUAGES = ("all", "english")
+# The sets a run can take. The benchmark is bilingual, and the two halves
+# fail in different ways, so each half is also a set of its own.
+LANGUAGES = ("all", "english", "chinese")
 
 
 class BenchmarkError(Exception):

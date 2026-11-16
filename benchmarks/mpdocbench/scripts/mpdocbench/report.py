@@ -8,7 +8,7 @@ from typing import Any
 from mpdocbench.pins import Pins
 from mpdocbench.scoring import NOT_AVAILABLE
 
-_SET_NAMES = {"all": "Whole set", "english": "English"}
+_SET_NAMES = {"all": "Whole set", "english": "English", "chinese": "Chinese"}
 
 
 def _cell(value: Any) -> str:

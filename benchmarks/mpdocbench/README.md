@@ -22,6 +22,7 @@ bash raw2md/benchmarks/mpdocbench/run.sh [options]
 | Option | What it does |
 |---|---|
 | `--language english` | Only the English documents (193 of 420). Default: `all`. |
+| `--language chinese` | Only the Chinese documents (227 of 420). |
 | `--llm MODEL` | Also run the LLM stages with this model key of `settings.json`. |
 | `--documents NAME ...` | Only these documents, for a trial run. |
 | `--skip-metric METRIC` | Do not compute this metric; the result shows it as `n/a`. If Overall uses the metric, Overall is `n/a` too. |
