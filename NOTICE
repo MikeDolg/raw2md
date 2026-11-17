@@ -243,6 +243,12 @@ of the repository holds each change with its diff.
   more besides spaces and ends in a letter or a comma, and a second half
   that opens with a letter without case and no item number (2026-11-17). Changed file, under
   src/raw2md_engine/: `marker/processors/text.py`.
+- The lines of one block join without a space where Han, kana, or
+  fullwidth punctuation meet at the line end, by the same test as the
+  join of a paragraph cut by a page. Hangul and Latin keep the space
+  (2026-11-17). Changed files, under src/raw2md_engine/:
+  `marker/util.py`, `marker/schema/text/line.py`, and
+  `marker/renderers/markdown.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

@@ -6,8 +6,12 @@ import regex
 
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block, BlockOutput
+from raw2md_engine.marker.util import joins_without_space
 
 HYPHENS = r"-¬"
+# The space that a span writes for its line break, before the closing tags of
+# its formats.
+LINE_END_SPACE = re.compile(r" (?=(?:</[^>]+>)*$)")
 
 
 def remove_tags(text):
@@ -93,6 +97,8 @@ class Line(Block):
             next_line = document.get_block(next_block_id)
             next_line_raw_text = next_line.raw_text(document)
             template = strip_trailing_hyphens(raw_text, next_line_raw_text, template)
+            if joins_without_space(raw_text, next_line_raw_text):
+                template = LINE_END_SPACE.sub("", template)
         else:
             template = template.strip(
                 " "

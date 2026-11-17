@@ -12,6 +12,7 @@ from raw2md_engine.marker.logger import get_logger
 from raw2md_engine.marker.renderers.html import HTMLRenderer
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.util import joins_without_space
 
 logger = get_logger()
 
@@ -54,11 +55,6 @@ def get_formatted_table_text(element):
             full_text += t
     return full_text
 
-
-# Fullwidth Latin letters and digits are words and keep their spaces.
-_UNSPACED = regex.compile(
-    r"[\p{Han}\p{Hiragana}\p{Katakana}　-〿]|(?![\p{L}\p{N}])[＀-￯]"
-)
 
 HEADING_TAGS = frozenset(("h1", "h2", "h3", "h4", "h5", "h6"))
 
@@ -126,16 +122,10 @@ class Markdownify(MarkdownConverter):
 
     @staticmethod
     def _joins_without_space(el, text):
-        # Han, kana, and fullwidth punctuation are written without spaces;
-        # Hangul and Latin words are not.
         following = el.find_next("p")
         if following is None:
             return False
-        first = text.rstrip()[-1:]
-        second = following.get_text().lstrip()[:1]
-        return bool(
-            first and second and _UNSPACED.match(first) and _UNSPACED.match(second)
-        )
+        return joins_without_space(text, following.get_text())
 
     def convert_b(self, el, text, parent_tags):
         # A heading is already emphasized; italic stays, as it can mark a variable.
