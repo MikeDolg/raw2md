@@ -439,13 +439,18 @@ def test_paragraph_over_three_pages_keeps_its_figures_after_it(
     assert len(paragraphs) == 3
 
 
+# A first half that ends in a digit gives no text evidence, so the line
+# frames decide.
+_HAN_DIGIT_END = _HAN * 9 + "12"
+
+
 def _cjk_pages(engine: Loader, last_line_end: float) -> _Pages:
     pages = _Pages(engine, 2)
     pages.text(
         0,
         [
             (_HAN * 10, (50, 680, 550, 698)),
-            (_HAN * 10, (50, 701, last_line_end, 719)),
+            (_HAN_DIGIT_END, (50, 701, last_line_end, 719)),
         ],
     )
     pages.text(1, [(_HAN_TAIL * 5, (50, 60, 300, 78))])
@@ -458,21 +463,21 @@ def test_cjk_paragraph_joins_by_geometry(engine: Loader) -> None:
     paragraphs = _paragraphs(_join(engine, pages))
 
     assert len(paragraphs) == 1
-    assert paragraphs[0].endswith(_HAN * 10 + _HAN_TAIL * 5)
+    assert paragraphs[0].endswith(f"{_HAN_DIGIT_END} {_HAN_TAIL * 5}")
 
 
 def test_cjk_block_read_as_a_whole_joins_by_its_detector_lines(
     engine: Loader,
 ) -> None:
     pages = _Pages(engine, 2)
-    pages.text(0, [(_HAN * 20, (50, 680, 550, 719))])
+    pages.text(0, [(_HAN * 10 + _HAN_DIGIT_END, (50, 680, 550, 719))])
     pages.pages[0].children[0].detected_line_polygons = [
         pages.box((50, 680, 550, 698)),
         pages.box((50, 701, 550, 719)),
     ]
     pages.text(1, [(_HAN_TAIL * 5, (50, 60, 300, 78))])
 
-    assert _join(engine, pages) == _HAN * 20 + _HAN_TAIL * 5
+    assert _join(engine, pages) == f"{_HAN * 10}{_HAN_DIGIT_END} {_HAN_TAIL * 5}"
 
 
 def test_cjk_paragraph_with_a_short_last_line_stays_apart(engine: Loader) -> None:
@@ -594,3 +599,122 @@ def test_german_closing_quote_ends_the_sentence(engine: Loader) -> None:
     pages.text(1, [("ebay is a name.", (50, 600, 400, 618))])
 
     assert len(_paragraphs(_join(engine, pages))) == 2
+
+
+_FULLWIDTH_COMMA = chr(0xFF0C)
+_IDEOGRAPHIC_COMMA = chr(0x3001)
+_PUMP_FIRST = f"每台水泵都有一个阀门。该泵在水箱压力低于设定值时启动{_FULLWIDTH_COMMA}"
+_PUMP_SECOND = f"并在水箱满时停止{_FULLWIDTH_COMMA}然后等待下一个信号。"
+
+
+def _caseless_pair(engine: Loader, first: str, second: str) -> _Pages:
+    pages = _Pages(engine, 2)
+    pages.text(0, [(first, (50, 700, 550, 718))])
+    pages.text(1, [(second, (50, 60, 400, 78))])
+    return pages
+
+
+def test_caseless_paragraph_cut_by_a_page_reads_as_one(engine: Loader) -> None:
+    pages = _caseless_pair(engine, _PUMP_FIRST, _PUMP_SECOND)
+
+    assert _join(engine, pages) == _PUMP_FIRST + _PUMP_SECOND
+
+
+def test_caseless_paragraph_cut_by_a_column_reads_as_one(engine: Loader) -> None:
+    pages = _Pages(engine, 1)
+    pages.text(0, [(_PUMP_FIRST, (50, 700, 290, 718))])
+    pages.text(0, [(_PUMP_SECOND, (310, 60, 550, 78))])
+
+    assert _join(engine, pages) == _PUMP_FIRST + _PUMP_SECOND
+
+
+@pytest.mark.parametrize(
+    ("first", "count"),
+    [
+        (_PUMP_FIRST[:-1] + chr(0x3002), 2),
+        (_PUMP_FIRST[:-1] + chr(0xFF1A), 2),
+        (_PUMP_FIRST[:-1] + "3", 2),
+        (_PUMP_FIRST[:-1], 1),
+        (_PUMP_FIRST[:-1] + _IDEOGRAPHIC_COMMA, 1),
+        (_PUMP_FIRST[:-1] + ",", 1),
+        ("水" * 18 + _FULLWIDTH_COMMA, 2),
+        ("水" * 19 + _FULLWIDTH_COMMA, 1),
+        ("水" * 10 + " " * 10 + "水" * 8 + _FULLWIDTH_COMMA, 2),
+    ],
+)
+def test_caseless_first_half_needs_twenty_characters_and_an_open_end(
+    engine: Loader, first: str, count: int
+) -> None:
+    pages = _caseless_pair(engine, first, _PUMP_SECOND)
+
+    assert len(_paragraphs(_join(engine, pages))) == count
+
+
+@pytest.mark.parametrize(
+    ("second", "count"),
+    [
+        (f"二{_IDEOGRAPHIC_COMMA}水箱满时停止。", 2),
+        (f"十{chr(0xFF09)}水箱满时停止。", 2),
+        ("二号阀门在水箱满时关闭。", 1),
+    ],
+)
+def test_caseless_second_half_that_opens_an_item_stays_apart(
+    engine: Loader, second: str, count: int
+) -> None:
+    pages = _caseless_pair(engine, _PUMP_FIRST, second)
+
+    assert len(_paragraphs(_join(engine, pages))) == count
+
+
+def test_caseless_stacked_blocks_stay_apart(engine: Loader) -> None:
+    pages = _Pages(engine, 1)
+    pages.text(0, [(_PUMP_FIRST, (50, 100, 550, 118))])
+    pages.text(0, [(_PUMP_SECOND, (50, 121, 400, 139))])
+
+    assert len(_paragraphs(_join(engine, pages))) == 2
+
+
+def test_caseless_paragraph_cut_by_a_figure_stays_apart(engine: Loader) -> None:
+    pages = _Pages(engine, 1)
+    pages.text(0, [(_PUMP_FIRST, (50, 100, 550, 118))])
+    pages.block(0, "Picture", (50, 130, 550, 300))
+    pages.text(0, [(_PUMP_SECOND, (50, 320, 400, 338))])
+
+    paragraphs = _paragraphs(_join(engine, pages))
+
+    assert _PUMP_FIRST in paragraphs
+    assert _PUMP_SECOND in paragraphs
+
+
+@pytest.mark.parametrize(("offset", "count"), [(1.0, 1), (20.0, 2)])
+def test_caseless_second_half_keeps_the_indent_tolerance(
+    engine: Loader, offset: float, count: int
+) -> None:
+    pages = _Pages(engine, 2)
+    pages.text(0, [(_PUMP_FIRST, (50, 700, 550, 718))])
+    pages.text(
+        1,
+        [
+            ("并在水箱满时停止" + _FULLWIDTH_COMMA, (50 + offset, 60, 550, 78)),
+            ("然后等待下一个信号。", (50, 81, 300, 99)),
+        ],
+    )
+
+    assert len(_paragraphs(_join(engine, pages))) == count
+
+
+def test_caseless_running_line_between_the_halves_is_no_half(
+    engine: Loader,
+) -> None:
+    running = "水泵维护手册第三版内部资料仅供培训人员使用"
+    pages = _Pages(engine, 3)
+    pages.text(0, [(_PUMP_FIRST, (50, 600, 550, 618))])
+    pages.text(0, [(running, (50, 760, 400, 778))])
+    pages.text(1, [(running, (50, 20, 400, 38))])
+    pages.text(1, [(_PUMP_SECOND, (50, 60, 400, 78))])
+    pages.text(2, [(running, (50, 20, 400, 38))])
+
+    paragraphs = _paragraphs(_join(engine, pages))
+
+    assert paragraphs[0] == _PUMP_FIRST + _PUMP_SECOND
+    assert paragraphs[1:] == [running] * 3

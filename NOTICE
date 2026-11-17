@@ -238,6 +238,11 @@ of the repository holds each change with its diff.
   words split by spaces or eleven letters, so a running line in a script
   without spaces between words counts as well (2026-11-17). Changed file,
   under src/raw2md_engine/: `marker/processors/text.py`.
+- The text processor reads text evidence in a script without letter case:
+  at a page or column break, a first half that holds 20 characters or
+  more besides spaces and ends in a letter or a comma, and a second half
+  that opens with a letter without case and no item number (2026-11-17). Changed file, under
+  src/raw2md_engine/: `marker/processors/text.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

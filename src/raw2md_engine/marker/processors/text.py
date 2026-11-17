@@ -1,5 +1,6 @@
 import math
 import statistics
+import unicodedata
 from typing import Annotated
 
 import regex
@@ -19,6 +20,16 @@ _LINE_BREAK_MARK = regex.compile(r"[\p{Ll}\d][-—¬]$")
 _LOWERCASE_START = regex.compile(r"^\p{Ll}")
 # A lowercase letter that opens an item, as in `a)` or `b. `, starts no word.
 _ITEM_LETTER = regex.compile(r"^\p{Ll}(\)|\.\s)")
+# A script without letter case gives no lowercase start. Its evidence is a
+# first half that ends in a letter or a comma and a second half that opens
+# with a letter without case. A label, a table value, or a piece of a formula
+# read as text holds 1 to 19 characters without spaces; a cut half holds more.
+_CASELESS_START = regex.compile(r"^\p{Lo}")
+_CASELESS_MIN_CHARS = 20
+_VISIBLE = regex.compile(r"\S")
+# A numeral of any script before an item separator opens an item; a Han
+# numeral carries a numeric value as well.
+_ITEM_NUMBER = regex.compile(r"^[\p{N}\p{Numeric_Type=Numeric}]+[、.)）]")
 # A label and a number that open a caption, as in `Fig. 14` or `Probl. 2.43`.
 _LABEL_NUMBER = regex.compile(r"^\p{Lu}\p{L}{0,11}\.?\s*\d+(?:\.\d+)*")
 # A TeX command such as `\theta` is no word.
@@ -186,6 +197,11 @@ class TextProcessor(BaseProcessor):
                 next_block.polygon.x_start < next_page.polygon.width // 2
             ) and (next_block.polygon.y_start < next_page.polygon.height // 2)
 
+        # On a stack or a cut by a figure, the text alone does not separate a
+        # cut paragraph in a script without case from two paragraphs.
+        if not text_evidence and (page_break or column_break):
+            text_evidence = self.continues_without_case(first_text, second_text)
+
         if self.starts_indented(document, next_block, text_evidence):
             return False
 
@@ -203,6 +219,23 @@ class TextProcessor(BaseProcessor):
         last_line_is_broken = bool(_LINE_BREAK_MARK.search(first_text))
         return (last_line_is_full_width or last_line_is_broken) and (
             (next_block_in_first_quadrant and page_break) or column_break
+        )
+
+    @staticmethod
+    def continues_without_case(first_text: str, second_text: str) -> bool:
+        if _SENTENCE_END.search(first_text):
+            return False
+        if len(_VISIBLE.findall(first_text)) < _CASELESS_MIN_CHARS:
+            return False
+        # A comma of any width or script is a sign that Unicode names a comma.
+        last = first_text[-1]
+        is_comma = unicodedata.category(last) == "Po" and "COMMA" in (
+            unicodedata.name(last, "")
+        )
+        if not (_LETTER.match(last) or is_comma):
+            return False
+        return bool(
+            _CASELESS_START.match(second_text) and not _ITEM_NUMBER.match(second_text)
         )
 
     @staticmethod
