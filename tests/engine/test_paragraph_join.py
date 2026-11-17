@@ -542,6 +542,50 @@ def test_repeated_footer_is_stepped_over(engine: Loader) -> None:
     assert paragraphs.count(footer) == 3
 
 
+_HAN_RUNNING = (_HAN_TAIL + _HAN) * 3
+
+
+def test_running_line_without_spaces_is_stepped_over(engine: Loader) -> None:
+    pages = _Pages(engine, 3)
+    pages.text(
+        0,
+        [
+            (_HAN * 10, (50, 680, 550, 698)),
+            (_HAN * 10, (50, 701, 550, 719)),
+        ],
+    )
+    for page_id in (1, 2):
+        pages.text(page_id, [(_HAN_RUNNING, (50, 20, 300, 38))])
+    pages.text(0, [(_HAN_RUNNING, (50, 760, 300, 778))])
+    pages.text(1, [(_HAN_TAIL * 5, (50, 60, 300, 78))])
+
+    paragraphs = _paragraphs(_join(engine, pages))
+
+    assert paragraphs[0].endswith(_HAN * 10 + _HAN_TAIL * 5)
+    assert paragraphs[1:] == [_HAN_RUNNING] * 3
+
+
+@pytest.mark.parametrize(
+    ("text", "page_count", "repeats"),
+    [
+        (_HAN_RUNNING[:11], 3, True),
+        (_HAN_RUNNING[:10], 3, False),
+        ("Part 3 notes", 3, True),
+        ("Pump data:", 3, False),
+        (_HAN_RUNNING, 2, False),
+    ],
+)
+def test_repeated_text_needs_three_words_or_eleven_letters_on_three_pages(
+    engine: Loader, text: str, page_count: int, repeats: bool
+) -> None:
+    pages = _Pages(engine, page_count)
+    for page_id in range(page_count):
+        pages.text(page_id, [(text, (50, 760, 300, 778))])
+    processor = engine("marker.processors.text").TextProcessor({})
+
+    assert (text in processor.find_repeated_texts(pages.document())) is repeats
+
+
 def test_german_closing_quote_ends_the_sentence(engine: Loader) -> None:
     opening = chr(0x201E)
     closing = chr(0x201C)

@@ -25,7 +25,12 @@ _LABEL_NUMBER = regex.compile(r"^\p{Lu}\p{L}{0,11}\.?\s*\d+(?:\.\d+)*")
 _WORD = regex.compile(r"(?<![\\\p{L}])\p{L}{3,}")
 # A text block on this many pages is a running line or a watermark, not prose.
 _REPEATED_PAGES = 3
+# A text repeats when it holds 3 words split by spaces or 11 letters, so a
+# running line counts in a script without spaces as well. A short connective
+# or label between formulas holds up to 10 letters and stays content.
 _REPEATED_MIN_WORDS = 3
+_REPEATED_MIN_LETTERS = 11
+_LETTER = regex.compile(r"\p{L}")
 # With text evidence, the indent tolerance covers the scatter of scanned line
 # frames at the left edge (up to 1.5 units and 0.0124 of the block width); a
 # paragraph indent starts at 9 units and 0.027 of the width.
@@ -118,7 +123,10 @@ class TextProcessor(BaseProcessor):
         for page in document.pages:
             for block in page.contained_blocks(document, self.block_types):
                 text = self.normalized_text(document, block)
-                if len(text.split()) >= _REPEATED_MIN_WORDS:
+                if (
+                    len(text.split()) >= _REPEATED_MIN_WORDS
+                    or len(_LETTER.findall(text)) >= _REPEATED_MIN_LETTERS
+                ):
                     pages_of.setdefault(text, set()).add(page.page_id)
         return {
             text for text, pages in pages_of.items() if len(pages) >= _REPEATED_PAGES

@@ -234,7 +234,11 @@ of the repository holds each change with its diff.
   least falls under such a column, so a row of words over columns of
   numbers stays a header (2026-11-15). Changed file, under src/raw2md_engine/:
   `marker/processors/table_merge.py`.
+- The text processor counts a text block as repeated when it holds three
+  words split by spaces or eleven letters, so a running line in a script
+  without spaces between words counts as well (2026-11-17). Changed file,
+  under src/raw2md_engine/: `marker/processors/text.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-11-15.
+Last change: 2026-11-17.
