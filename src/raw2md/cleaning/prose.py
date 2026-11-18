@@ -147,6 +147,31 @@ _SPLIT_ENTRY_NUMBER_RE = re.compile(
     r"^ {0,3}(?:\*\*)?\d{1,9}\. (\d{1,9}\.)(?!\s*\d{1,9}\.)(?=\*\*| |$)"
 )
 
+# `36. 90` for `36.90`. A fraction that a dot or a digit follows is an
+# enumeration (`5. 18. Next`), and one that a comma and a digit follow runs on
+# into a list of page numbers.
+_SPLIT_DECIMAL_RE = re.compile(r"(?<![\d.])(\d+)\. (\d+)(?![\d.])(?!, ?\d)")
+
+# `3, 690, 874.26` for `3,690,874.26`: three-digit groups with a gap after a
+# comma, closed by a fraction. Without the fraction, `15, 227` reads as a list.
+_SPLIT_GROUPS_RE = re.compile(
+    r"(?<![\d.,])\d{1,3}(?:, ?\d{3})*, \d{3}(?:, ?\d{3})*\. ?\d+(?![\d.])(?!, ?\d)"
+)
+
+# The integer part closes a run of three-digit groups: `874` in `3, 690, 874`.
+_GROUPED_TAIL_RE = re.compile(r"(?<![\d.,])\d{1,3}(?:, ?\d{3})+\Z")
+
+# A table cell, or one line of it, that holds the number and nothing else.
+_CELL_NUMBER_RE = re.compile(
+    rf"[-+{chr(0x2212)}(]? ?(?:\d{{1,3}}(?:, ?\d{{3}})+|\d+)\. \d+%?\)?"
+)
+
+# What may stand before a list marker's number at the head of a line or cell.
+_LINE_HEAD_RE = re.compile(r"[\s>#*_+-]*\Z")
+
+# A pipe between two cells, or a line break inside one.
+_CELL_BORDER_RE = re.compile(r"\||<br\s*/?>")
+
 # The engine's empty page anchor, dropped whole: it has no visible content.
 _SPAN_ANCHOR_RE = re.compile(r'<span id="[^"]*">\s*</span>')
 
@@ -270,6 +295,7 @@ def _fix_plain_line(line: str, prev_line: str, escape_hash: bool) -> str | None:
     stripped = _strip_glued_emphasis(stripped)
     stripped = _join_spaced_roman(stripped)
     stripped = _join_split_entry_number(stripped)
+    stripped = _join_split_decimals(stripped)
     if escape_hash:
         return _HEADING_GLUED_RE.sub(r"\1\\\2", stripped)
     return _HEADING_SPACE_RE.sub(r"\1 ", stripped)
@@ -334,6 +360,87 @@ def _join_split_entry_number(line: str) -> str:
         return line
     gap = match.start(1) - 1
     return line[:gap] + line[gap + 1 :]
+
+
+def _join_split_decimals(line: str) -> str:
+    """Close the stray space after a decimal point: `36. 90` -> `36.90`.
+
+    `2. 4 bolts` is a list item and `1969. 744 pages` a year and a count, so
+    the number needs a witness: it fills a table cell alone, its integer part
+    closes three-digit groups, a `%` follows it, or a caseless letter or a
+    wide character stands next to it. The gaps inside the groups of a number
+    with a fraction close as well. Code, math, and addresses are masked.
+    """
+    if ", " not in line and ". " not in line:
+        return line
+    masked = mask_math(mask_addresses(line))
+    gaps = [
+        match.start(2) - 1
+        for match in _SPLIT_DECIMAL_RE.finditer(masked)
+        if _decimal_is_attested(masked, match)
+    ]
+    for match in _SPLIT_GROUPS_RE.finditer(masked):
+        if not _is_cased_letter(masked[match.start() - 1 : match.start()]):
+            gaps.extend(
+                match.start() + idx + 1
+                for idx in range(match.end() - match.start() - 1)
+                if masked[match.start() + idx : match.start() + idx + 2] == ", "
+            )
+    for gap in sorted(set(gaps), reverse=True):
+        line = line[:gap] + line[gap + 1 :]
+    return line
+
+
+def _decimal_is_attested(masked: str, match: re.Match[str]) -> bool:
+    start, end = match.span()
+    lo, hi, in_table = _cell_bounds(masked, start, end)
+    if in_table and _CELL_NUMBER_RE.fullmatch(masked[lo:hi].strip()):
+        return True
+    if _LINE_HEAD_RE.match(masked[lo:start]):
+        return False
+    before = masked[:start]
+    if _is_cased_letter(before[-1:]):
+        return False
+    if _GROUPED_TAIL_RE.search(masked[: match.end(1)]):
+        return True
+    after = masked[end:]
+    if after.startswith("%"):
+        return True
+    return _is_caseless_or_wide(_neighbour(before[-2:][::-1])) or (
+        _is_caseless_or_wide(_neighbour(after))
+    )
+
+
+def _cell_bounds(masked: str, start: int, end: int) -> tuple[int, int, bool]:
+    """The cell line around `[start, end)`, or the whole line outside a table."""
+    in_table = masked.lstrip().startswith("|")
+    lo, hi = 0, len(masked)
+    for border in _CELL_BORDER_RE.finditer(masked):
+        if border.group() == "|" and not in_table:
+            continue
+        if border.end() <= start:
+            lo = border.end()
+        elif border.start() >= end:
+            hi = border.start()
+            break
+    return lo, hi, in_table
+
+
+def _neighbour(text: str) -> str:
+    """The first character of `text` past at most one space."""
+    return text[1:2] if text.startswith(" ") else text[:1]
+
+
+def _is_cased_letter(char: str) -> bool:
+    return bool(char) and unicodedata.category(char) in {"Lu", "Ll", "Lt"}
+
+
+def _is_caseless_or_wide(char: str) -> bool:
+    if not char:
+        return False
+    if unicodedata.category(char) == "Lo":
+        return True
+    return unicodedata.east_asian_width(char) in {"F", "W"}
 
 
 def _is_junk_line(line: str, prev_line: str) -> bool:

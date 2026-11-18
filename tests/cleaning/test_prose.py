@@ -889,3 +889,98 @@ def test_a_clause_opening_on_a_count_is_still_closed() -> None:
 def test_entry_number_join_is_idempotent() -> None:
     once = clean_in_place("14. 2. General notes on mounting the supports.\n")
     assert clean_in_place(once) == once
+
+
+# ---- space after a decimal point ----------------------------------------------
+
+
+def test_a_decimal_beside_a_caseless_letter_is_closed() -> None:
+    assert (
+        clean_in_place("该泵的流量为 36. 90 立方米\n") == "该泵的流量为 36.90 立方米\n"
+    )
+
+
+def test_a_decimal_before_a_percent_sign_is_closed() -> None:
+    assert clean_in_place("Output grew by 22. 03% over the year.\n") == (
+        "Output grew by 22.03% over the year.\n"
+    )
+
+
+def test_a_decimal_alone_in_a_table_cell_is_closed() -> None:
+    text = "| Item | Value |\n|---|---|\n| Pump | 163. 74 |\n| Valve | (5. 20) |\n"
+    assert clean_in_place(text).split("\n")[2:4] == [
+        "| Pump  | 163.74 |",
+        "| Valve | (5.20) |",
+    ]
+
+
+def test_a_decimal_on_one_line_of_a_cell_is_closed() -> None:
+    text = "| Item | Value |\n|---|---|\n| Pump | 0. 057<br>3 |\n"
+    assert clean_in_place(text).split("\n")[2] == "| Pump | 0.057<br>3 |"
+
+
+def test_a_decimal_that_closes_digit_groups_is_closed_with_its_groups() -> None:
+    assert clean_in_place("The total came to 3, 690, 874. 26 in the end.\n") == (
+        "The total came to 3,690,874.26 in the end.\n"
+    )
+
+
+def test_a_list_item_at_the_head_of_a_line_is_left_alone() -> None:
+    for text in ("2. 4 bolts hold the cover.\n", "- 2. 4 bolts hold the cover.\n"):
+        assert clean_in_place(text) == text
+
+
+def test_a_list_item_at_the_head_of_a_cell_is_left_alone() -> None:
+    text = "| Step | Note |\n|---|---|\n| 2. 4 bolts | 5% |\n"
+    assert clean_in_place(text).split("\n")[2].startswith("| 2. 4 bolts |")
+
+
+def test_a_list_item_beside_a_caseless_letter_is_left_alone() -> None:
+    text = "2. 4 个螺栓\n"
+    assert clean_in_place(text) == text
+
+
+def test_a_year_before_a_count_is_left_alone() -> None:
+    text = "Harbour Press, 1969. 744 pages.\n"
+    assert clean_in_place(text) == text
+
+
+def test_an_enumeration_beside_a_caseless_letter_is_left_alone() -> None:
+    text = "等于 5. 18. 若\n"
+    assert clean_in_place(text) == text
+
+
+def test_a_page_list_after_digit_groups_is_left_alone() -> None:
+    text = "Harlow 12, 238, 246, 307. 491, 497\n"
+    assert clean_in_place(text) == text
+
+
+def test_a_designation_glued_to_a_letter_is_left_alone() -> None:
+    text = "PCS7. 5 种语言\n"
+    assert clean_in_place(text) == text
+
+
+def test_a_decimal_in_code_math_or_an_address_is_left_alone() -> None:
+    text = "In `36. 90 立方米`, $36. 90 立方米$, [link](http://a.b/36. 90 x).\n"
+    assert clean_in_place(text) == text
+
+
+def test_a_list_of_small_numbers_is_left_alone() -> None:
+    text = "Holes 3, 4 and 7 take the long bolts.\n"
+    assert clean_in_place(text) == text
+
+
+def test_digit_groups_without_a_fraction_are_left_alone() -> None:
+    text = "See pages 15, 227 and 304 for the drawings.\n"
+    assert clean_in_place(text) == text
+
+
+def test_digit_groups_with_a_fraction_are_closed() -> None:
+    assert clean_in_place("A load of 1, 250.75 tons was shipped.\n") == (
+        "A load of 1,250.75 tons was shipped.\n"
+    )
+
+
+def test_decimal_join_is_idempotent() -> None:
+    once = clean_in_place("该泵 3, 690, 874. 26 元, 增长 22. 03%\n")
+    assert clean_in_place(once) == once
