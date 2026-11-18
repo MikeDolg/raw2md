@@ -935,6 +935,12 @@ def test_a_list_item_at_the_head_of_a_cell_is_left_alone() -> None:
     assert clean_in_place(text).split("\n")[2].startswith("| 2. 4 bolts |")
 
 
+def test_a_list_item_before_code_or_math_in_a_cell_is_left_alone() -> None:
+    for tail in ("`bolts`", "$x$"):
+        text = f"| Step | Note |\n|---|---|\n| 2. 4 {tail} | ok |\n"
+        assert clean_in_place(text).split("\n")[2].startswith(f"| 2. 4 {tail} |")
+
+
 def test_a_list_item_beside_a_caseless_letter_is_left_alone() -> None:
     text = "2. 4 个螺栓\n"
     assert clean_in_place(text) == text

@@ -377,7 +377,7 @@ def _join_split_decimals(line: str) -> str:
     gaps = [
         match.start(2) - 1
         for match in _SPLIT_DECIMAL_RE.finditer(masked)
-        if _decimal_is_attested(masked, match)
+        if _decimal_is_attested(line, masked, match)
     ]
     for match in _SPLIT_GROUPS_RE.finditer(masked):
         if not _is_cased_letter(masked[match.start() - 1 : match.start()]):
@@ -391,10 +391,10 @@ def _join_split_decimals(line: str) -> str:
     return line
 
 
-def _decimal_is_attested(masked: str, match: re.Match[str]) -> bool:
+def _decimal_is_attested(line: str, masked: str, match: re.Match[str]) -> bool:
     start, end = match.span()
     lo, hi, in_table = _cell_bounds(masked, start, end)
-    if in_table and _CELL_NUMBER_RE.fullmatch(masked[lo:hi].strip()):
+    if in_table and _CELL_NUMBER_RE.fullmatch(line[lo:hi].strip()):
         return True
     if _LINE_HEAD_RE.match(masked[lo:start]):
         return False
