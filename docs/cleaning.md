@@ -196,8 +196,13 @@ cleaning, because it knows the position of each line on the page:
   data row as a header row. Therefore the engine reads the first row of the
   second part as a data row when each filled cell has the form of its column
   in the first part: a number under numbers, or the same code that each row
-  of the column holds. A row of words over columns of numbers stays a header
-  row.
+  of the column holds. A mark for a missing value (`-`, `/`, `*`, or `_`)
+  counts as a number. A column of 3 values or more holds numbers when 80% of
+  its values or more are numbers. A cell over several columns takes any
+  form. A row that fills only the first column, such as a section label with
+  empty values, reads as a data row when the next row that fills another
+  column reads as a data row. A row of words over columns of numbers stays a
+  header row.
 - **The lines of a cell.** The engine joins two lines of a cell with a space
   when the second line starts right under the first, and its first word does
   not fit in the free width of the first line in the column. Otherwise the
@@ -228,6 +233,7 @@ the other routes and the parts that the engine keeps apart.
 | A letter of another alphabet in a word; a word whose letters all exist in both alphabets does not change | `Cоntrol` (a Cyrillic `о`) | `Control` |
 | A space inside a Roman numeral | `Fig. V II.11` | `Fig. VII.11` |
 | A space inside a clause number; the sequence `1. 2. 3.` stays | `82. 1. Scope` | `82.1. Scope` |
+| A space after the decimal point or between the digit groups of a number; the conditions are below the table | `22. 03%`, `3, 690, 874. 26` | `22.03%`, `3,690,874.26` |
 | No space after the `#` signs of a heading, when the text does not come from `raw2md-engine` | `##Text` | `## Text` |
 | A `#` sign joined to a word when `raw2md-engine` converts the file; the engine writes each heading with a space, so the sign is text, such as a hashtag | `#Summer` | `\#Summer` |
 | A running head: a title and a page number repeat 4 times or more, one page apart | `Hydraulic Pump Manual`, `Page 14` | deleted |
@@ -256,6 +262,46 @@ The rule does not join three cases:
   sentence continues;
 - the `raw2md-engine` and `docx` routes: the engine joins such a paragraph by
   the page layout, and a `docx` has no pages.
+
+On the `raw2md-engine` route, the engine reads the page layout and the text at
+the cut. In a script without letter case, such as Chinese or Japanese, the
+text shows a continuation when all of these conditions are true:
+
+- the cut is a page break or a column break;
+- the first half ends without a sentence mark, on a letter or a comma of any
+  width (`,`, `，`, `、`);
+- the first half holds 20 characters or more, spaces not counted;
+- the second half starts with a letter without case, and not with an item
+  number (`1、`, `三.`).
+
+The engine does not join two blocks of one page by this text alone, because
+the text cannot tell a cut paragraph from two paragraphs there. A text block
+on 3 pages or more is a running head or a watermark, and the engine joins it
+to nothing. Such a block holds 3 words or more, or 11 letters or more, so a
+running head without spaces between the words also counts. The engine also
+joins the lines of one paragraph without a space where Han characters, kana,
+or fullwidth punctuation meet at the end of a line. Hangul, Latin, and
+fullwidth letters and digits keep the space.
+
+The repair of a split number needs a witness, because a space after `.` alone
+proves nothing: `2. 4 bolts` is a list item, and `1969. 744 pages` is a year
+and a page count. The space goes when one of these witnesses is present:
+
+- the number stands alone in a table cell, or alone on one `<br>` line of a
+  cell, with a sign, brackets, or `%` at most;
+- the part before the point ends a run of three-digit groups
+  (`3, 690, 874. 26`);
+- a `%` follows the number;
+- a letter without case, such as a Han character, or a fullwidth character
+  stands next to the number, with one space at most between them.
+
+The space stays at the start of a line or a cell, where the number opens a
+list item, unless the number fills the cell alone. It also stays when a letter
+with case touches the number (`PCS7. 5`), and when a `.`, a digit, or a `,` and
+a digit follow the fraction (`5. 18. Next`, `307. 491, 497`). The space after the
+comma between three-digit groups goes only in a number with a fraction,
+because `15, 227` can be two page numbers. Code, formulas, and addresses do not
+change.
 
 | Threshold | Constant | Module |
 |---|---|---|
