@@ -5,7 +5,8 @@ closes the previous page, or opens the next column right after the first part
 ends its column, the columns agree, and its first row repeats the header of
 the first part or holds data. A first row that the table model flags as a
 header holds data when its cells have the forms of the columns of the first
-part. A part with a header of its own stays a table of its own.
+part, or when it holds only a label and the next row that fills another column
+holds data. A part with a header of its own stays a table of its own.
 """
 
 from __future__ import annotations
@@ -35,13 +36,13 @@ def _table(
     spans: dict[tuple[int, int], int] | None = None,
     edges: list[float] | None = None,
     top: float = 100.0,
+    colspans: dict[tuple[int, int], int] | None = None,
 ) -> Any:
     """A table part.
 
-    `header` is the number of header rows, `columns` picks the columns of
-    `edges` that it holds, and `spans` gives the rowspan of a cell. A cell
-    that a span covers is `None` in `rows`. `edges` are the left edges of the
-    columns and the right edge of the table, `top` is its top.
+    `header` counts the header rows, `columns` picks the columns of `edges`,
+    `spans` and `colspans` give the spans of a cell, and a covered cell is
+    `None`. `edges` are the left column edges and the right table edge.
     """
     return SimpleNamespace(
         kind="table",
@@ -49,6 +50,7 @@ def _table(
         header=int(header),
         columns=columns,
         spans=spans or {},
+        colspans=colspans or {},
         edges=edges or [*_COLUMNS, _RIGHT],
         top=top,
     )
@@ -81,11 +83,13 @@ def _add_table(engine: Loader, page: Any, spec: Any) -> None:
             if text is None:
                 continue
             column = picked[col_id]
+            colspan = spec.colspans.get((row_id, col_id), 1)
+            right = edges[column + colspan]
             cell = blocks.TableCell(
-                polygon=_box(engine, [edges[column], top, edges[column + 1], top + 18]),
+                polygon=_box(engine, [edges[column], top, right, top + 18]),
                 text_lines=[text] if text else [],
                 rowspan=spec.spans.get((row_id, col_id), 1),
-                colspan=1,
+                colspan=colspan,
                 row_id=row_id,
                 col_id=col_id,
                 is_header=row_id == 0,
@@ -400,3 +404,105 @@ def test_flagged_first_row_at_a_column_break_is_data(engine: Loader) -> None:
     second = _table(_NEXT, edges=_RIGHT_COLUMN)
 
     assert _tables(engine, [[first, second]]) == [_PARTS + _NEXT]
+
+
+_ASSETS = [["Item", "2023", "2022"], ["Cash", "1 200.5", "1 150.0"]]
+_CURRENT = [
+    ["Current assets", "", ""],
+    ["Receivables", "830.2", "-"],
+    ["Inventory", "412.0", "398.7"],
+]
+
+
+def test_flagged_label_row_over_a_data_row_is_data(engine: Loader) -> None:
+    second = _table(_CURRENT, header=2)
+    pages = [[_table(_ASSETS)], [second]]
+    document = _document(engine, pages)
+    engine("marker.processors.table_merge").TableMergeProcessor({})(document)
+    blocks = document.contained_blocks([engine("marker.schema").BlockTypes.Table])
+
+    assert _tables(engine, pages) == [_ASSETS + _CURRENT]
+    assert [
+        cell.row_id for cell in blocks[0].contained_blocks(document) if cell.header_row
+    ] == [0, 0, 0]
+
+
+def test_flagged_label_row_over_a_row_of_words_stays_a_header(engine: Loader) -> None:
+    rows = [["Current assets", "", ""], ["Account", "Year", "Prior"], *_CURRENT[1:]]
+
+    assert _tables(engine, [[_table(_ASSETS)], [_table(rows)]]) == [_ASSETS, rows]
+
+
+def test_flagged_label_row_alone_stays_a_header(engine: Loader) -> None:
+    rows = [["Current assets", "", ""]]
+
+    assert _tables(engine, [[_table(_ASSETS)], [_table(rows)]]) == [_ASSETS, rows]
+
+
+def test_flagged_row_of_words_over_placeholders_stays_a_header(engine: Loader) -> None:
+    first = _table([*_ASSETS, ["Loans", "-", "310.4"]])
+    rows = [["Account", "Year", "Prior"], ["Bonds", "92.1", "-"]]
+
+    assert _tables(engine, [[first], [_table(rows)]]) == [first.rows, rows]
+
+
+def test_flagged_row_with_a_cell_over_columns_is_data(engine: Loader) -> None:
+    first = _table(
+        [["Item", "Unit", "Count"], ["Pin", "pcs", "4"], ["Bolt", "pcs", "6"]]
+    )
+    rows: SpanRows = [["Total of all parts", None, "10"], ["Nut", "pcs", "8"]]
+    second = _table(rows, colspans={(0, 0): 2})
+
+    assert _tables(engine, [[first], [second]]) == [
+        [*first.rows, ["Total of all parts", "?", "10"], ["Nut", "pcs", "8"]]
+    ]
+
+
+@pytest.mark.parametrize(
+    ("values", "cell"),
+    [(["4", "-", "7"], "5"), (["4", "6", "7"], "-"), (["4", "/", "7"], "*")],
+    ids=["in-the-column", "in-the-row", "both"],
+)
+def test_flagged_row_with_a_placeholder_is_data(
+    engine: Loader, values: list[str], cell: str
+) -> None:
+    first = _table(
+        [
+            ["Item", "Count"],
+            *[[f"Part {index}", value] for index, value in enumerate(values)],
+        ]
+    )
+    second = _table([["Nut", cell], ["Washer", "9"]])
+
+    assert _tables(engine, [[first], [second]]) == [first.rows + second.rows]
+
+
+def test_column_of_placeholders_alone_holds_no_numbers(engine: Loader) -> None:
+    first = _table([["Item", "Note"], ["Pin", "-"], ["Bolt", "_"]])
+    second = _table([["Nut", "5"], ["Washer", "9"]])
+
+    assert _tables(engine, [[first], [second]]) == [first.rows, second.rows]
+
+
+@pytest.mark.parametrize(
+    ("values", "joined"),
+    [
+        (["12", "15", "17", "19", "see note"], True),
+        (["12", "15", "17", "see note", "none"], False),
+        (["12", "see note"], False),
+    ],
+    ids=["four-of-five", "three-of-five", "one-of-two"],
+)
+def test_column_with_most_values_numbers_holds_numbers(
+    engine: Loader, values: list[str], joined: bool
+) -> None:
+    first = _table(
+        [
+            ["Item", "Count"],
+            *[[f"Part {index}", value] for index, value in enumerate(values)],
+        ]
+    )
+    second = _table([["Nut", "20"], ["Washer", "22"]])
+    tables = [first.rows + second.rows] if joined else [first.rows, second.rows]
+
+    assert _tables(engine, [[first], [second]]) == tables

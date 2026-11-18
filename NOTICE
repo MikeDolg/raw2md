@@ -249,7 +249,14 @@ of the repository holds each change with its diff.
   (2026-11-17). Changed files, under src/raw2md_engine/:
   `marker/util.py`, `marker/schema/text/line.py`, and
   `marker/renderers/markdown.py`.
+- The table merge processor relaxes the test of a flagged first row. A
+  placeholder `-`, `/`, `*` or `_` counts as a number, a column of three
+  values or more holds numbers when 80 % of its values or more are
+  numbers, and a cell over several columns takes any form. A row that
+  fills only the first column reads as data when the first later row
+  that fills another column reads as data (2026-11-18). Changed file,
+  under src/raw2md_engine/: `marker/processors/table_merge.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-11-17.
+Last change: 2026-11-18.

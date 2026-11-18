@@ -27,6 +27,10 @@ NUMBER = re.compile(
     r"[-+\u2212\u00b1~<>]?\s?[$\u00a3\u00a5\u20ac]?\s?\d[\d\s.,'\u2009\u202f]*"
     r"(?:\s?(?:%|[A-Za-z\u00b0\u00b5]{1,3}\d?(?:/[A-Za-z]{1,3}\d?)?))?"
 )
+# A cell that stands for a missing number.
+PLACEHOLDERS = frozenset("-/*_")
+# The fewest values of a column that holds numbers among other values.
+MAJORITY_MIN_VALUES = 3
 
 
 class TableMergeProcessor(BaseProcessor):
@@ -53,7 +57,11 @@ class TableMergeProcessor(BaseProcessor):
     reads as data when each of its filled cells has the form of its column
     in the data rows of the first part, and one of those columns at least
     holds numbers or one code in every row: a row of words over columns of
-    numbers stays a header.
+    numbers stays a header. A placeholder `-`, `/`, `*` or `_` counts as a
+    number, a column of three values or more holds numbers when most of its
+    values are numbers, and a cell over several columns takes any form. A
+    row that fills only the first column, a label, reads as data when the
+    first later row that fills another column reads as data.
     """
 
     block_types = (BlockTypes.Table,)
@@ -61,6 +69,10 @@ class TableMergeProcessor(BaseProcessor):
         float,
         "The share of the table width that the gap before the next column must pass.",
     ] = 0.02
+    number_share: Annotated[
+        float,
+        "The share of numbers in a column of three values or more that holds numbers.",
+    ] = 0.8
 
     def __init__(self, config=None):
         super().__init__(config)
@@ -194,9 +206,9 @@ class TableMergeProcessor(BaseProcessor):
             row for row in head_rows if not any(cell.header_row for cell in row)
         ]
         as_data = (
-            flagged
-            and not repeated
-            and self.reads_as_data(first_row, part_map, head_data, head_map)
+            self.data_rows(part_rows, part_map, head_data, head_map)
+            if flagged and not repeated
+            else 0
         )
         # A header row that did not repeat belongs to a table of its own.
         # A cell that spans over the cut cannot move with the rows after it.
@@ -205,8 +217,8 @@ class TableMergeProcessor(BaseProcessor):
             cell.row_id < first_kept < cell.row_id + cell.rowspan for cell in part_cells
         ):
             return False
-        if as_data:
-            for cell in first_row:
+        for row in part_rows[:as_data]:
+            for cell in row:
                 cell.header_row = cell.is_header = False
         kept = [cell for cell in part_cells if cell.row_id >= first_kept]
         offset = max(cell.row_id + cell.rowspan for cell in head_cells) - first_kept
@@ -423,14 +435,14 @@ class TableMergeProcessor(BaseProcessor):
                 return True
         return False
 
-    def reads_as_data(
-        self, row: Row, row_map: list[int], data: list[Row], data_map: list[int]
-    ) -> bool:
-        """Each filled cell of `row` has the form of its column in `data`.
+    def data_rows(
+        self, rows: list[Row], row_map: list[int], data: list[Row], data_map: list[int]
+    ) -> int:
+        """How many of the first `rows` read as data; 0 when the first does not.
 
-        A column holds numbers, one code in every row, or text; text takes any
-        cell. True only when one filled cell at least falls under a column of
-        numbers or of a code. The maps give the columns on the wider layout.
+        A row that fills only the first column, a label, reads as data with
+        the first later row that fills another column. The maps give the
+        columns on the wider layout.
         """
         columns: dict[int, list[str]] = {}
         for data_row in data:
@@ -438,23 +450,57 @@ class TableMergeProcessor(BaseProcessor):
                 text = self.cell_text(cell)
                 if text and cell.colspan == 1:
                     columns.setdefault(data_map[cell.col_id], []).append(text)
+        for count, row in enumerate(rows, 1):
+            form = self.reads_as_data(row, row_map, columns)
+            if form:
+                return count
+            label = all(
+                not row_map[cell.col_id] for cell in row if self.cell_text(cell)
+            )
+            if form is None or not label:
+                return 0
+        return 0
+
+    def reads_as_data(
+        self, row: Row, row_map: list[int], columns: dict[int, list[str]]
+    ) -> bool | None:
+        """Whether each filled cell of `row` has the form of its column.
+
+        A column holds numbers, one code in every row, or text; text and a
+        cell over several columns take any form. None when a cell breaks the
+        form of its column, False when no filled cell falls under a column
+        of numbers or of a code.
+        """
         typed = False
         for cell in row:
             text = self.cell_text(cell)
-            if not text:
+            if not text or cell.colspan != 1:
                 continue
-            values = columns.get(row_map[cell.col_id]) if cell.colspan == 1 else None
+            values = columns.get(row_map[cell.col_id])
             if not values:
-                return False
-            if all(NUMBER.fullmatch(value) for value in values):
-                if not NUMBER.fullmatch(text):
-                    return False
+                return None
+            if self.holds_numbers(values):
+                if not self.is_number(text):
+                    return None
                 typed = True
             elif len(values) > 1 and len(set(values)) == 1:
                 if text != values[0]:
-                    return False
+                    return None
                 typed = True
         return typed
+
+    @staticmethod
+    def is_number(text: str) -> bool:
+        return text in PLACEHOLDERS or NUMBER.fullmatch(text) is not None
+
+    def holds_numbers(self, values: list[str]) -> bool:
+        """A column of placeholders alone holds no numbers."""
+        if not any(NUMBER.fullmatch(value) for value in values):
+            return False
+        numbers = sum(self.is_number(value) for value in values)
+        if len(values) < MAJORITY_MIN_VALUES:
+            return numbers == len(values)
+        return numbers >= self.number_share * len(values)
 
     def row_key(self, row: Row, column_map: list[int]) -> list[tuple[int, int, str]]:
         """The cells of the row as (column, span, text) on the wider layout."""
