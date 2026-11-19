@@ -8,6 +8,7 @@ from raw2md.mdtext.seams import (
     closes_sentence,
     continues_without_case,
     first_half_runs_on,
+    joins_without_space,
     second_half_runs_on,
 )
 
@@ -161,3 +162,25 @@ def test_caseless_second_half_opens_with_a_caseless_letter_and_no_item(
     head: str, continues: bool
 ) -> None:
     assert continues_without_case(_PUMP_FIRST, head) is continues
+
+
+@pytest.mark.parametrize(
+    ("text", "following", "joins"),
+    [
+        (_HAN, _HAN, True),
+        ("ポンプ", "は動く", True),
+        (_HAN + _FULLWIDTH_COMMA, _HAN, True),
+        (_HAN + "  ", "  " + _HAN, True),
+        ("펌프는", "작동한다", False),
+        ("pump", _HAN, False),
+        (_HAN, "pump", False),
+        ("pump", "valve", False),
+        (_HAN, chr(0xFF21), False),
+        ("", _HAN, False),
+        (_HAN, "  ", False),
+    ],
+)
+def test_lines_join_without_a_space_only_between_unspaced_scripts(
+    text: str, following: str, joins: bool
+) -> None:
+    assert joins_without_space(text, following) is joins

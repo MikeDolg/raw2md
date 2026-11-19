@@ -62,6 +62,7 @@ from raw2md.mdtext.pages import page_mark_number
 from raw2md.mdtext.seams import (
     continues_without_case,
     first_half_runs_on,
+    joins_without_space,
     second_half_runs_on,
 )
 from raw2md.mdtext.zones import Segment, html_table_lines, mask_inline_code, segments
@@ -1383,7 +1384,9 @@ def _apply_cut_seams(
         if second is not None:
             start, end = second
             last, _ = out.pop()
-            out.append((f"{last.rstrip()} {seg_list[start][0].lstrip()}", False))
+            head = seg_list[start][0].lstrip()
+            glue = "" if joins_without_space(last, head) else " "
+            out.append((f"{last.rstrip()}{glue}{head}", False))
             out.extend(seg_list[k] for k in range(start + 1, end))
             moved, marks = _split_cut_gap([seg_list[k][0] for k in range(idx, start)])
             if moved:

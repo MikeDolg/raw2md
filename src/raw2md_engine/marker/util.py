@@ -4,7 +4,6 @@ from importlib import import_module
 from typing import Annotated
 
 import numpy as np
-import regex
 from ftfy import TextFixerConfig, fix_text
 from pydantic import BaseModel
 
@@ -236,20 +235,3 @@ def fix_text_keep_width(text: str, math: bool = False) -> str:
         last = match.end()
     parts.append(fix_text(text[last:], config=TEXT_FIXER_CONFIG))
     return "".join(parts)
-
-
-# Fullwidth Latin letters and digits are words and keep their spaces.
-_UNSPACED = regex.compile(
-    r"[\p{Han}\p{Hiragana}\p{Katakana}　-〿]|(?![\p{L}\p{N}])[＀-￯]"
-)
-
-
-def joins_without_space(text: str, following: str) -> bool:
-    """Whether `text` and the `following` text meet without a space.
-
-    Han, kana, and fullwidth punctuation are written without spaces; Hangul
-    and Latin words are not.
-    """
-    last = text.rstrip()[-1:]
-    first = following.lstrip()[:1]
-    return bool(last and first and _UNSPACED.match(last) and _UNSPACED.match(first))

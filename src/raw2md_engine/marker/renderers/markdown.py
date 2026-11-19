@@ -8,11 +8,11 @@ from bs4 import NavigableString
 from markdownify import MarkdownConverter, re_whitespace
 from pydantic import BaseModel
 
+from raw2md.mdtext.seams import joins_without_space
 from raw2md_engine.marker.logger import get_logger
 from raw2md_engine.marker.renderers.html import HTMLRenderer
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.document import Document
-from raw2md_engine.marker.util import joins_without_space
 
 logger = get_logger()
 

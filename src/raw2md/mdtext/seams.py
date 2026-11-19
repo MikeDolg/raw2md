@@ -91,3 +91,20 @@ def continues_without_case(tail: str, head: str) -> bool:
     if not (_LETTER.match(last) or is_comma):
         return False
     return bool(_CASELESS_START.match(head) and not _ITEM_NUMBER.match(head))
+
+
+# Fullwidth Latin letters and digits are words and keep their spaces.
+_UNSPACED = regex.compile(
+    r"[\p{Han}\p{Hiragana}\p{Katakana}　-〿]|(?![\p{L}\p{N}])[＀-￯]"
+)
+
+
+def joins_without_space(text: str, following: str) -> bool:
+    """Whether `text` and the `following` text meet without a space.
+
+    Han, kana, and fullwidth punctuation are written without spaces; Hangul
+    and Latin words are not.
+    """
+    last = text.rstrip()[-1:]
+    first = following.lstrip()[:1]
+    return bool(last and first and _UNSPACED.match(last) and _UNSPACED.match(first))

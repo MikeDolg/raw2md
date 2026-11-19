@@ -4,9 +4,9 @@ from typing import Literal
 
 import regex
 
+from raw2md.mdtext.seams import joins_without_space
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block, BlockOutput
-from raw2md_engine.marker.util import joins_without_space
 
 HYPHENS = r"-¬"
 # The space that a span writes for its line break, before the closing tags of

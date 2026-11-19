@@ -264,6 +264,11 @@ of the repository holds each change with its diff.
   one sentence, in a script with letter case and in one without
   (2026-11-19). Changed file, under src/raw2md_engine/:
   `marker/processors/text.py`.
+- The test that two lines meet without a space, at Han, kana, and
+  fullwidth text, moves from `marker/util.py` to the same module
+  `raw2md.mdtext.seams` unchanged (2026-11-19). Changed files, under
+  src/raw2md_engine/: `marker/util.py`, `marker/schema/text/line.py`,
+  and `marker/renderers/markdown.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

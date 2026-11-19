@@ -323,6 +323,11 @@ def test_caseless_paragraph_cut_by_a_page_mark_joins() -> None:
     assert clean_in_place(once, OCR) == once
 
 
+def test_caseless_halves_join_without_a_space() -> None:
+    text = _ocr_pages(_PUMP_FIRST, f"{_PUMP_SECOND}\n\n{_PUMP_NEXT}")
+    assert _PUMP_FIRST + _PUMP_SECOND in clean_in_place(text, OCR).split("\n")
+
+
 def test_caseless_halves_without_a_page_mark_stay_apart() -> None:
     text = f"{_PUMP_FIRST}\n\n{_PUMP_SECOND}\n"
     assert clean_in_place(text, MD) == text
