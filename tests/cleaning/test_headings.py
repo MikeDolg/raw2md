@@ -15,7 +15,8 @@ import pytest
 from raw2md.cleaner import CleanOptions, clean, clean_in_place
 from raw2md.cleaning import printed_outline
 from raw2md.cleaning.headings import _fold_heading_title
-from raw2md.keywords import default_keywords, word_pattern
+from raw2md.keywords import default_keywords
+from raw2md.mdtext.words import word_pattern
 from raw2md.mdtext.zones import segments
 from raw2md.source_text import tokenize
 

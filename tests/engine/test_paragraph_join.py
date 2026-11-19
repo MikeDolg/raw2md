@@ -85,9 +85,15 @@ class _Pages:
         )
 
 
-def _join(engine: Loader, pages: _Pages, *, paginate: bool = False) -> str:
+def _join(
+    engine: Loader,
+    pages: _Pages,
+    *,
+    paginate: bool = False,
+    config: dict[str, Any] | None = None,
+) -> str:
     document = pages.document()
-    engine("marker.processors.text").TextProcessor({})(document)
+    engine("marker.processors.text").TextProcessor(config or {})(document)
     renderer = engine("marker.renderers.markdown").MarkdownRenderer(
         {"paginate_output": paginate, "page_separator": "-" * 8}
     )
@@ -498,6 +504,25 @@ def test_label_read_as_text_is_no_half(engine: Loader) -> None:
     pages.text(1, [("chamber exceeds the spring force.", (50, 60, 400, 78))])
 
     assert "Fig. 14" in _paragraphs(_join(engine, pages))
+
+
+def _lowercase_label(engine: Loader) -> _Pages:
+    pages = _Pages(engine, 2)
+    pages.text(0, [("The valve opens when the pressure in the", (50, 600, 300, 618))])
+    pages.text(0, [("fig. 14", (50, 700, 120, 718))])
+    pages.text(1, [("chamber exceeds the spring force.", (50, 60, 400, 78))])
+    return pages
+
+
+def test_label_of_the_caption_words_is_no_half(engine: Loader) -> None:
+    # A lowercase label is a caption only by the words the config names.
+    unlabelled = _join(engine, _lowercase_label(engine))
+    labelled = _join(
+        engine, _lowercase_label(engine), config={"caption_labels": ("fig.",)}
+    )
+
+    assert "fig. 14" not in _paragraphs(unlabelled)
+    assert "fig. 14" in _paragraphs(labelled)
 
 
 def test_label_with_a_formula_is_no_half(engine: Loader) -> None:

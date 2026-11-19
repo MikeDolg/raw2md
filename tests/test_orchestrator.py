@@ -1447,6 +1447,7 @@ def test_cuda_off_reaches_registry_builder(
         log_stream: object,
         *,
         recognition_batch_size: int | None = None,
+        caption_labels: tuple[str, ...] | None = None,
     ) -> EngineRegistry:
         captured["cuda"] = config.cuda
         captured["recognition_batch_size"] = recognition_batch_size
@@ -1510,6 +1511,7 @@ def test_engine_batch_size_from_settings_reaches_registry_builder(
         log_stream: object,
         *,
         recognition_batch_size: int | None = None,
+        caption_labels: tuple[str, ...] | None = None,
     ) -> EngineRegistry:
         captured["recognition_batch_size"] = recognition_batch_size
         return registry_for(StubEngine())
@@ -1615,6 +1617,34 @@ def test_keywords_from_file_reaches_the_run_context(
     assert code == int(ExitCode.SUCCESS)
     assert captured.get("keywords") == load_keywords(keywords_file())
     assert captured.get("keywords") != default_keywords()
+
+
+def test_caption_labels_from_file_reach_the_engine(
+    home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    src = home / "a.pdf"
+    src.write_bytes(b"x")
+    raw2md = home / ".raw2md"
+    raw2md.mkdir(exist_ok=True)
+    (raw2md / "keywords.yaml").write_text(_MINIMAL_KEYWORDS, encoding="utf-8")
+    captured: dict[str, object] = {}
+
+    def fake_build(
+        config: RunConfig,
+        temp_root: Path,
+        log_stream: object,
+        *,
+        recognition_batch_size: int | None = None,
+        caption_labels: tuple[str, ...] | None = None,
+    ) -> EngineRegistry:
+        captured["caption_labels"] = caption_labels
+        return registry_for(StubEngine())
+
+    monkeypatch.setattr("raw2md.orchestrator.build_default_registry", fake_build)
+    monkeypatch.setattr("raw2md.orchestrator.select_temp_root", lambda: home)
+    code = run(make_run_config(src))
+    assert code == int(ExitCode.SUCCESS)
+    assert captured.get("caption_labels") == ("fig.",)
 
 
 def test_no_keywords_file_leaves_the_shipped_dictionary(

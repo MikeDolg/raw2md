@@ -43,7 +43,7 @@ from raw2md.cleaning.segments import (
     skip_hyphen_gap,
 )
 from raw2md.header import ConversionMethod
-from raw2md.keywords import Keywords, word_pattern
+from raw2md.keywords import Keywords
 from raw2md.mdtext.lines import (
     ATX_HEADING_RE,
     is_html_media_wrapper_line,
@@ -60,11 +60,13 @@ from raw2md.mdtext.math_spans import (
 )
 from raw2md.mdtext.pages import page_mark_number
 from raw2md.mdtext.seams import (
+    caption_label_end,
     continues_without_case,
     first_half_runs_on,
     joins_without_space,
     second_half_runs_on,
 )
+from raw2md.mdtext.words import word_pattern
 from raw2md.mdtext.zones import Segment, html_table_lines, mask_inline_code, segments
 from raw2md.source_text import BROKEN_WORD_RE, SourceText, hyphen_forms, tokenize
 
@@ -1079,9 +1081,6 @@ _STRUCTURE_OPENERS = ("$$", "\\[", "\\begin", "<", ">", "[")
 # Indentation that turns a line after a blank into indented code.
 _INDENTED_CODE_PREFIXES = ("    ", "\t")
 
-# A caption number: arabic, or a roman chapter number (`Fig. IV.2`).
-_CAPTION_START_TAIL = r"\.?[ \t]*(?:\d|[IVXL]+\b)"
-
 # A key and a dash open a figure legend entry (`4 - spindle`), whose block is
 # a list without its markers.
 _LEGEND_ENTRY_RE = re.compile(rf"^(?:\d{{1,3}}|\w)\s*[-{chr(0x2013)}{chr(0x2014)}]\s")
@@ -1141,7 +1140,7 @@ def _cut_paragraph_seams(
         not protected and page_mark_number(line) is not None
         for line, protected in seg_list
     )
-    captions = _caption_start(keywords.caption_labels)
+    captions = keywords.caption_labels
     seams: dict[int, tuple[int, int]] = {}
     # What the paragraph joined so far carries into the next seam, so the
     # joined body reads the same on a second pass: its words, and a crossed
@@ -1209,7 +1208,7 @@ def _second_half(
     seg_list: list[Segment],
     blocks: list[tuple[int, int]],
     idx: int,
-    captions: re.Pattern[str],
+    captions: tuple[str, ...],
     *,
     need_mark: bool,
 ) -> tuple[int, bool] | None:
@@ -1240,13 +1239,13 @@ def _second_half(
 
 
 def _is_stepped_block(
-    seg_list: list[Segment], start: int, end: int, captions: re.Pattern[str]
+    seg_list: list[Segment], start: int, end: int, captions: tuple[str, ...]
 ) -> bool:
     """True for a block of images, or a caption, that may stand inside a paragraph."""
     lines = [seg_list[k][0] for k in range(start, end)]
     if all(is_image_only_line(line) for line in lines):
         return True
-    if captions.match(lines[0].lstrip().lstrip("*_")) is None:
+    if not _opens_caption(lines[0], captions):
         return False
     return not any(
         _is_structure_line(seg_list, k, start)
@@ -1273,7 +1272,7 @@ def _is_structure_line(seg_list: list[Segment], k: int, start: int) -> bool:
 
 
 def _is_cut_prose(
-    seg_list: list[Segment], start: int, end: int, captions: re.Pattern[str]
+    seg_list: list[Segment], start: int, end: int, captions: tuple[str, ...]
 ) -> bool:
     """True when the block ``[start, end)`` is plain paragraph text.
 
@@ -1284,7 +1283,7 @@ def _is_cut_prose(
     first = seg_list[start][0]
     if first.startswith(_INDENTED_CODE_PREFIXES):
         return False
-    if captions.match(first.lstrip().lstrip("*_")) is not None:
+    if _opens_caption(first, captions):
         return False
     return not any(_is_structure_line(seg_list, k, start) for k in range(start, end))
 
@@ -1359,10 +1358,12 @@ def _opens_with_roman_folio(head: str) -> bool:
     )
 
 
-@lru_cache(maxsize=8)
-def _caption_start(records: tuple[str, ...]) -> re.Pattern[str]:
+def _opens_caption(line: str, captions: tuple[str, ...]) -> bool:
     # A caption opens with its label and number; the label alone opens prose.
-    return re.compile(word_pattern(records).pattern + _CAPTION_START_TAIL)
+    # Any capitalized word before a number would take in a paragraph that
+    # opens with a year or a code, such as `In 1971` or `ISSN 1234`.
+    line = line.lstrip().lstrip("*_")
+    return caption_label_end(line, captions, capitalized=False) is not None
 
 
 def _apply_cut_seams(

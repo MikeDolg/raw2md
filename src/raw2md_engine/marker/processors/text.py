@@ -5,6 +5,7 @@ from typing import Annotated
 import regex
 
 from raw2md.mdtext.seams import (
+    caption_label_end,
     continues_without_case,
     first_half_runs_on,
     second_half_runs_on,
@@ -16,8 +17,6 @@ from raw2md_engine.marker.schema.document import Document
 
 _WORD_HYPHEN = regex.compile(r"\p{L}[-¬]$")
 _LINE_BREAK_MARK = regex.compile(r"[\p{Ll}\d][-—¬]$")
-# A label and a number that open a caption, as in `Fig. 14` or `Probl. 2.43`.
-_LABEL_NUMBER = regex.compile(r"^\p{Lu}\p{L}{0,11}\.?\s*\d+(?:\.\d+)*")
 # A TeX command such as `\theta` is no word.
 _WORD = regex.compile(r"(?<![\\\p{L}])\p{L}{3,}")
 # A text block on this many pages is a running line or a watermark, not prose.
@@ -64,6 +63,10 @@ class TextProcessor(BaseProcessor):
         float,
         "The minimum ratio of the page width to the column gap to consider a column break.",
     ] = 0.02
+    caption_labels: Annotated[
+        tuple[str, ...],
+        "The words that open a caption, besides any capitalized word.",
+    ] = ()
 
     def __init__(self, config):
         super().__init__(config)
@@ -138,13 +141,12 @@ class TextProcessor(BaseProcessor):
             return False
         return self.normalized_text(document, block) in self.repeated_texts
 
-    @staticmethod
-    def is_label(document: Document, block: Block) -> bool:
+    def is_label(self, document: Document, block: Block) -> bool:
         # A label with a number and no word after it is a caption that the
         # layout read as text; a sentence that opens with a label has words.
         text = block.raw_text(document).strip()
-        found = _LABEL_NUMBER.match(text)
-        return found is not None and not _WORD.search(text[found.end() :])
+        end = caption_label_end(text, tuple(self.caption_labels))
+        return end is not None and not _WORD.search(text[end:])
 
     def renders(self, block: Block) -> bool:
         return block.block_type in self.stepped_block_types and not (

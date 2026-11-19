@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from raw2md.mdtext.seams import (
+    caption_label_end,
     closes_sentence,
     continues_without_case,
     first_half_runs_on,
@@ -184,3 +185,35 @@ def test_lines_join_without_a_space_only_between_unspaced_scripts(
     text: str, following: str, joins: bool
 ) -> None:
     assert joins_without_space(text, following) is joins
+
+
+_LABELS = ("table", "fig.", "figure no.")
+
+
+@pytest.mark.parametrize(
+    ("text", "end"),
+    [
+        ("Table 3", 7),
+        ("table 3 lists the pumps", 7),
+        ("fig. 14", 7),
+        ("Figure no. 2", 12),
+        ("Fig. 2.4.1 Pump circuit", 10),
+        ("Fig. IV.2", 7),
+        ("Probl. 2.43 the cable", 11),
+        ("Scheme 5", 8),
+        ("Table", None),
+        ("Table A", None),
+        ("probl. 2", None),
+        ("CIVIL WORKS", None),
+        ("Thermodynamics 3", None),
+        ("Tableau3", 8),
+    ],
+)
+def test_caption_label_ends_after_its_number(text: str, end: int | None) -> None:
+    assert caption_label_end(text, _LABELS) == end
+
+
+def test_caption_label_of_the_vocabulary_alone() -> None:
+    assert caption_label_end("Probl. 2.43", _LABELS, capitalized=False) is None
+    assert caption_label_end("fig. 3", _LABELS, capitalized=False) == 6
+    assert caption_label_end("Fig. 3", (), capitalized=False) is None

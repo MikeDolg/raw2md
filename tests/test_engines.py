@@ -54,6 +54,7 @@ from raw2md.engines.djvu import djvu_to_pdf, page_texts
 from raw2md.engines.pandoc import _parse_pandoc_version
 from raw2md.engines.pandoc_tables import flatten_table_cells
 from raw2md.header import ConversionMethod
+from raw2md.keywords import default_keywords
 from raw2md.mdtext.pages import page_mark, split_page_marks
 
 # PNG file signature; render output must start with it.
@@ -1514,7 +1515,27 @@ def test_bundled_engine_converter_config(
             source, tmp_path / "doc", options
         )
 
-    assert fake.pdf_converter.call_args.kwargs["config"] == expected
+    assert fake.pdf_converter.call_args.kwargs["config"] == {
+        **expected,
+        "caption_labels": default_keywords().caption_labels,
+    }
+
+
+def test_bundled_engine_hands_the_caption_labels_to_the_engine(
+    tmp_path: Path,
+) -> None:
+    # The engine copy reads no keywords.yaml; the run's section reaches it.
+    source = tmp_path / "doc.pdf"
+    _write_pdf_bytes(source)
+    fake = _make_fake_engine()
+
+    with _install_fake_engine(fake):
+        BundledEngine(tmp_path, caption_labels=("plate",)).convert(
+            source, tmp_path / "doc", ConvertOptions()
+        )
+
+    config = fake.pdf_converter.call_args.kwargs["config"]
+    assert config["caption_labels"] == ("plate",)
 
 
 def test_bundled_engine_redirects_output_to_log(

@@ -1,8 +1,9 @@
 """keywords.yaml: the structural vocabulary, its loader, and the subcommand.
 
 Six rules recognize a part of a document by the word a page prints for it;
-`word_pattern` turns a section's records into one pattern. The words belong
-to the documents, not to the tool, so they live in the shipped keywords.yaml.
+`raw2md.mdtext.words.word_pattern` turns a section's records into one
+pattern. The words belong to the documents, not to the tool, so they live in
+the shipped keywords.yaml.
 `raw2md init` copies it to ~/.raw2md, and that copy replaces the shipped list
 whole.
 
@@ -10,7 +11,6 @@ The file is read without the YAML 1.1 bool rule: `on` in the minor words
 would otherwise load as True and be lost.
 """
 
-import re
 import sys
 from dataclasses import dataclass
 from functools import lru_cache
@@ -20,6 +20,7 @@ from typing import Any
 import yaml
 
 from raw2md.exit_codes import ExitCode
+from raw2md.mdtext.words import PREFIX_MARKER
 from raw2md.paths import keywords_file
 from raw2md.service import edit_file, parse_file_action, show_file
 
@@ -32,15 +33,6 @@ SECTIONS = (
     "caption_labels",
     "image_placeholders",
 )
-
-# Ends a stem record (`table*`). An abbreviation (`fig.`) needs no marker.
-PREFIX_MARKER = "*"
-
-# The rest of a stem's word: letters only, no digit or underscore.
-_WORD_TAIL = r"[^\W\d_]*"
-
-# An empty section matches nothing.
-_MATCHES_NOTHING = r"(?!)"
 
 _BUNDLED = Path(__file__).with_name("keywords.yaml")
 
@@ -106,44 +98,6 @@ def load_keywords(path: Path) -> Keywords:
     except OSError as error:
         raise KeywordsError(f"cannot read {path}: {error}") from error
     return _parse_keywords(_load_yaml(raw, path))
-
-
-# --- The pattern a section matches with ------------------------------------
-
-
-@lru_cache(maxsize=32)
-def word_pattern(records: tuple[str, ...], *, stem_guard: str = "") -> re.Pattern[str]:
-    """One alternation matching any record of a section, whatever its case.
-
-    A word is bounded at both ends. A stem (`table*`) is bounded at its head
-    and runs through the rest of its word. A boundary goes only beside a word
-    character, so an abbreviation (`fig.`) ends at its dot. Spaces match any
-    whitespace run; the rest is literal. `stem_guard` is a lookaround the rule
-    adds after a stem. Case blindness covers the records only, not the guard,
-    which may mean the case it writes.
-    """
-    sources = [_record_source(record, stem_guard) for record in records]
-    if not sources:
-        return re.compile(_MATCHES_NOTHING)
-    return re.compile(f"(?:{'|'.join(sources)})")
-
-
-def _record_source(record: str, stem_guard: str) -> str:
-    """The regex source of one record, in whichever of the three forms it takes."""
-    if record.endswith(PREFIX_MARKER):
-        stem = record[:-1]
-        return rf"(?i:{_boundary(stem[:1])}{_literal(stem)}{_WORD_TAIL}){stem_guard}"
-    return f"(?i:{_boundary(record[:1])}{_literal(record)}{_boundary(record[-1:])})"
-
-
-def _boundary(edge: str) -> str:
-    """`\\b` beside a word character, nothing beside punctuation."""
-    return r"\b" if edge.isalnum() or edge == "_" else ""
-
-
-def _literal(text: str) -> str:
-    """`text` escaped, with each space in it matching a run of whitespace."""
-    return r"\s+".join(re.escape(part) for part in text.split())
 
 
 # --- Loading and schema validation -----------------------------------------

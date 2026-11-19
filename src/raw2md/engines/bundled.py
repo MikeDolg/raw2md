@@ -37,6 +37,7 @@ from raw2md.engines.base import (
     media_path,
 )
 from raw2md.header import DEFAULT_ENGINE, ConversionMethod
+from raw2md.keywords import default_keywords
 from raw2md.mdtext.pages import page_mark
 from raw2md.progress import capture_engine_output
 
@@ -61,6 +62,7 @@ class BundledEngine(Engine):
     `temp_root` is used only for a non-ASCII source path. `cuda` False forces
     CPU. `log_stream` receives the engine output; without it the output is
     discarded. `recognition_batch_size` None leaves the engine's device default.
+    `caption_labels` None takes the section of the shipped keywords.yaml.
     """
 
     def __init__(
@@ -70,11 +72,17 @@ class BundledEngine(Engine):
         cuda: bool = True,
         log_stream: TextIO | None = None,
         recognition_batch_size: int | None = None,
+        caption_labels: tuple[str, ...] | None = None,
     ) -> None:
         self._temp_root = temp_root
         self._cuda = cuda
         self._log_stream = log_stream
         self._recognition_batch_size = recognition_batch_size
+        self._caption_labels = (
+            default_keywords().caption_labels
+            if caption_labels is None
+            else caption_labels
+        )
         self._models: dict[str, Any] | None = None
 
     @property
@@ -199,7 +207,11 @@ class BundledEngine(Engine):
         from raw2md_engine.marker.output import text_from_rendered
 
         config = _converter_config(
-            extract_media, mark_pages, self._recognition_batch_size, blocks_dir
+            extract_media,
+            mark_pages,
+            self._recognition_batch_size,
+            blocks_dir,
+            self._caption_labels,
         )
         converter = PdfConverter(config=config, artifact_dict=models)
         converter.phase_callback = on_phase
@@ -247,13 +259,18 @@ def _converter_config(
     mark_pages: bool,
     recognition_batch_size: int | None,
     blocks_dir: Path | None,
+    caption_labels: tuple[str, ...],
 ) -> dict[str, Any]:
     """The engine config of one conversion, as marker's command line builds it.
 
     The engine hands each key to every class that has an attribute of that name.
-    An unset option stays out of the dict, so the class default holds.
+    An unset option stays out of the dict, so the class default holds. The
+    copy reads no keywords.yaml, so the caption words come in the config.
     """
-    config: dict[str, Any] = {"output_format": "markdown"}
+    config: dict[str, Any] = {
+        "output_format": "markdown",
+        "caption_labels": caption_labels,
+    }
     if not extract_media:
         config["extract_images"] = False
     if mark_pages:

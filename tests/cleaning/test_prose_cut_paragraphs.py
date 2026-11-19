@@ -189,6 +189,15 @@ def test_caption_label_without_a_number_is_prose() -> None:
     assert clean_in_place(text, MD) == text
 
 
+@pytest.mark.parametrize("opening", ["In 1971 the plant opened.", "ISSN 1234 5678"])
+def test_capitalized_word_and_number_outside_the_caption_words_is_prose(
+    opening: str,
+) -> None:
+    # Only a word of `caption_labels` opens a caption that the join steps over.
+    text = f"The pump feeds the tank while the\n\n{opening}\n\nvalve stays closed.\n"
+    assert clean_in_place(text, MD) == text
+
+
 def test_caption_with_a_roman_chapter_number_is_stepped() -> None:
     text = (
         "The pump feeds the tank while the\n"

@@ -9,10 +9,13 @@ code.
 from __future__ import annotations
 
 import unicodedata
+from functools import lru_cache
 
 # The Unicode classes come from `regex`, as in the engine: the tables of
 # `unicodedata` follow the Python version and miss the numeric value of Han.
 import regex  # type: ignore[import-untyped]  # regex ships no type stubs
+
+from raw2md.mdtext.words import word_pattern
 
 # A mark that closes a sentence: ASCII, the ellipsis, and the CJK and
 # fullwidth forms of `.`, `!`, `?`, `:`, `;`.
@@ -108,3 +111,32 @@ def joins_without_space(text: str, following: str) -> bool:
     last = text.rstrip()[-1:]
     first = following.lstrip()[:1]
     return bool(last and first and _UNSPACED.match(last) and _UNSPACED.match(first))
+
+
+# A label outside the vocabulary: a capitalized word of up to 12 letters, as
+# in `Probl. 2.43`.
+_CAPITALIZED_LABEL = r"\p{Lu}\p{L}{0,11}(?!\p{L})"
+# The number after a label: arabic with its sections, or a roman chapter
+# number, as in `Fig. IV.2`.
+_CAPTION_NUMBER = r"\.?\s*(?:\d+(?:\.\d+)*|[IVXL]+\b)"
+
+
+def caption_label_end(
+    text: str, labels: tuple[str, ...], *, capitalized: bool = True
+) -> int | None:
+    """The end of the label and number that open `text`, or None.
+
+    A label is a word of `labels`, the `caption_labels` section of
+    keywords.yaml, or, when `capitalized`, a capitalized word of up to 12
+    letters. What may follow the number is the caller's test.
+    """
+    found = _caption_label(labels, capitalized).match(text)
+    return None if found is None else int(found.end())
+
+
+@lru_cache(maxsize=8)
+def _caption_label(labels: tuple[str, ...], capitalized: bool) -> regex.Pattern:
+    label = word_pattern(labels).pattern
+    if capitalized:
+        label = f"{label}|{_CAPITALIZED_LABEL}"
+    return regex.compile(f"(?:{label}){_CAPTION_NUMBER}")

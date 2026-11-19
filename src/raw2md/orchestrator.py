@@ -444,6 +444,7 @@ def _start_context(
                 temp_root,
                 log_stream,
                 recognition_batch_size=settings.engine_recognition_batch_size,
+                caption_labels=run_settings.keywords.caption_labels,
             )
     except (TempPathError, _LlmUnavailableError) as exc:
         _logger.error("%s", exc)  # noqa: TRY400 -- expected error; no traceback wanted here
@@ -478,6 +479,7 @@ def build_default_registry(
     log_stream: TextIO | None,
     *,
     recognition_batch_size: int | None = None,
+    caption_labels: tuple[str, ...] | None = None,
 ) -> EngineRegistry:
     """Build the pdf/docx/djvu registry sharing one engine model."""
     bundled = BundledEngine(
@@ -485,6 +487,7 @@ def build_default_registry(
         cuda=config.cuda,
         log_stream=log_stream,
         recognition_batch_size=recognition_batch_size,
+        caption_labels=caption_labels,
     )
     pandoc = PandocEngine()
     djvu = DjvuEngine(bundled, temp_root)

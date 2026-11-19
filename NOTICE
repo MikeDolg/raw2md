@@ -269,6 +269,12 @@ of the repository holds each change with its diff.
   `raw2md.mdtext.seams` unchanged (2026-11-19). Changed files, under
   src/raw2md_engine/: `marker/util.py`, `marker/schema/text/line.py`,
   and `marker/renderers/markdown.py`.
+- The text processor reads the label and the number that open a caption
+  from the same module `raw2md.mdtext.seams`. A label is a capitalized
+  word of up to 12 letters or a word of the config option
+  `caption_labels`, which raw2md fills from its own word list. The number
+  is arabic, with its sections, or roman (2026-11-19). Changed file,
+  under src/raw2md_engine/: `marker/processors/text.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

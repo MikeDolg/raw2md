@@ -33,9 +33,10 @@ from raw2md.cleaning.segments import (
     prose_reading,
 )
 from raw2md.header import ConversionMethod
-from raw2md.keywords import Keywords, word_pattern
+from raw2md.keywords import Keywords
 from raw2md.mdtext.lines import ATX_HEADING_RE, is_setext_underline, is_table_separator
 from raw2md.mdtext.tables import CELL_BREAK_RE, CELL_SEPARATOR_RE, table_cells
+from raw2md.mdtext.words import word_pattern
 from raw2md.mdtext.zones import Segment
 from raw2md.source_outline import SourceOutline
 from raw2md.source_text import tokenize

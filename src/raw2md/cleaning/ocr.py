@@ -16,9 +16,10 @@ from collections import Counter
 from collections.abc import Iterator
 
 from raw2md.cleaning.segments import WORD_RUN_RE, body_word_counts, prose_reading
-from raw2md.keywords import Keywords, word_pattern
+from raw2md.keywords import Keywords
 from raw2md.mdtext.links import IMAGE_RE
 from raw2md.mdtext.pages import is_lost_page_marker
+from raw2md.mdtext.words import word_pattern
 from raw2md.mdtext.zones import Segment, html_table_lines, segments
 
 _logger = logging.getLogger("raw2md")
