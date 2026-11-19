@@ -5,16 +5,12 @@ from typing import Annotated
 
 import regex
 
+from raw2md.mdtext.seams import closes_sentence
 from raw2md_engine.marker.processors import BaseProcessor
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block
 from raw2md_engine.marker.schema.document import Document
 
-# A sentence mark, optionally followed by closing quotes and brackets.
-_SENTENCE_END = regex.compile(
-    r"[.!?…:;。．｡！？：；]"
-    r"[\p{Pe}\p{Pf}\p{Pi}\"'＂＇]*$"
-)
 _WORD_HYPHEN = regex.compile(r"\p{L}[-¬]$")
 _LINE_BREAK_MARK = regex.compile(r"[\p{Ll}\d][-—¬]$")
 _LOWERCASE_START = regex.compile(r"^\p{Ll}")
@@ -176,7 +172,7 @@ class TextProcessor(BaseProcessor):
         second_text = next_block.raw_text(document).lstrip()
         text_evidence = bool(_WORD_HYPHEN.search(first_text)) or bool(
             first_text
-            and not _SENTENCE_END.search(first_text)
+            and not closes_sentence(first_text)
             and _LOWERCASE_START.match(second_text)
             and not _ITEM_LETTER.match(second_text)
         )
@@ -223,7 +219,7 @@ class TextProcessor(BaseProcessor):
 
     @staticmethod
     def continues_without_case(first_text: str, second_text: str) -> bool:
-        if _SENTENCE_END.search(first_text):
+        if closes_sentence(first_text):
             return False
         if len(_VISIBLE.findall(first_text)) < _CASELESS_MIN_CHARS:
             return False

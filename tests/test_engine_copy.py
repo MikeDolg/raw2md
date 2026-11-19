@@ -1,13 +1,24 @@
 """Checks on the bundled engine copy `src/raw2md_engine`."""
 
 import ast
-from collections.abc import Callable
+import sys
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any, TypeGuard
 
 import pytest
 
-_COPY = Path(__file__).resolve().parent.parent / "src" / "raw2md_engine"
+_SRC = Path(__file__).resolve().parent.parent / "src"
+_COPY = _SRC / "raw2md_engine"
+
+# The modules of raw2md that the copy may import: text tests over a string,
+# which the cleaning reads too, so that both stages share one definition.
+_TEXT_TEST_MODULES = frozenset({"raw2md.mdtext.seams"})
+
+# A text test module reaches, directly or through another module, only the
+# standard library, these packages, and the text primitives of raw2md.
+_TEXT_TEST_PACKAGES = frozenset({"regex"})
+_TEXT_PRIMITIVES = "raw2md.mdtext"
 
 _UPSTREAM_NAMES = frozenset({"marker", "surya", "pdftext"})
 
@@ -86,6 +97,85 @@ def _touches_environment(
     return False
 
 
+def _module_file(name: str) -> Path | None:
+    """Return the source file of module `name` under `src/`, if there is one."""
+    base = _SRC.joinpath(*name.split("."))
+    for path in (base.with_suffix(".py"), base / "__init__.py"):
+        if path.is_file():
+            return path
+    return None
+
+
+def _package_of(path: Path) -> str:
+    # The package of `pkg/__init__.py` and of `pkg/mod.py` is `pkg` alike.
+    return ".".join(path.relative_to(_SRC).parts[:-1])
+
+
+def _imported_modules(tree: ast.Module, package: str) -> list[tuple[int, str]]:
+    """Return the line and the full name of each module that `tree` imports.
+
+    `from M import x` names `M.x` when that is a module under `src/`, else `M`.
+    A relative import resolves against `package`.
+    """
+    found: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            found.extend((node.lineno, a.name) for a in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            base = node.module or ""
+            if node.level:
+                parts = package.split(".")
+                parent = parts[: len(parts) - node.level + 1]
+                base = ".".join([*parent, base] if base else parent)
+            for alias in node.names:
+                sub = f"{base}.{alias.name}"
+                found.append((node.lineno, sub if _module_file(sub) else base))
+    return found
+
+
+def _is_raw2md(name: str) -> bool:
+    return name == "raw2md" or name.startswith("raw2md.")
+
+
+def _text_test_may_import(name: str) -> bool:
+    top = name.split(".", maxsplit=1)[0]
+    return (
+        top in sys.stdlib_module_names
+        or top in _TEXT_TEST_PACKAGES
+        or name in {"raw2md", _TEXT_PRIMITIVES}
+        or name.startswith(_TEXT_PRIMITIVES + ".")
+    )
+
+
+def _with_parents(name: str) -> list[str]:
+    """Return `name` and each package that importing it imports first."""
+    parts = name.split(".")
+    return [".".join(parts[: n + 1]) for n in range(len(parts))]
+
+
+def _text_test_offenders(start: Iterable[str]) -> list[str]:
+    """Return each import outside the allowed set that `start` reaches in raw2md."""
+    offenders: list[str] = []
+    queue = [parent for name in start for parent in _with_parents(name)]
+    seen: set[str] = set()
+    while queue:
+        module = queue.pop()
+        if module in seen:
+            continue
+        seen.add(module)
+        path = _module_file(module)
+        if path is None:
+            offenders.append(f"{module}: no source file")
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for line, name in _imported_modules(tree, _package_of(path)):
+            if not _text_test_may_import(name):
+                offenders.append(f"{module}:{line} {name}")
+            elif _is_raw2md(name):
+                queue.extend(_with_parents(name))
+    return sorted(offenders)
+
+
 def test_copy_has_python_files() -> None:
     assert any(_COPY.rglob("*.py"))
 
@@ -108,6 +198,51 @@ def test_copy_imports_no_network_client() -> None:
             if top in _NETWORK_CLIENTS:
                 offenders.append(f"{path.relative_to(_COPY)}:{line}")
     assert not offenders, offenders
+
+
+def test_copy_imports_only_text_tests_of_raw2md() -> None:
+    offenders = []
+    for path in sorted(_COPY.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for line, name in _imported_modules(tree, _package_of(path)):
+            if _is_raw2md(name) and name not in _TEXT_TEST_MODULES:
+                offenders.append(f"{path.relative_to(_COPY)}:{line} {name}")
+    assert not offenders, offenders
+
+
+def test_text_tests_reach_no_engine_or_model() -> None:
+    assert _text_test_offenders(_TEXT_TEST_MODULES) == []
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ("import re", []),
+        ("import regex", []),
+        ("from __future__ import annotations", []),
+        ("from raw2md.mdtext.zones import blank_match", []),
+        ("from raw2md.mdtext import zones", []),
+        ("import torch", ["torch"]),
+        ("import surya", ["surya"]),
+        ("from transformers import AutoModel", ["transformers"]),
+        ("from raw2md_engine.marker.util import x", ["raw2md_engine.marker.util"]),
+        ("from raw2md import keywords", ["raw2md.keywords"]),
+        ("import yaml", ["yaml"]),
+    ],
+)
+def test_text_test_import_rule_names_each_offender(
+    source: str, expected: list[str]
+) -> None:
+    names = [n for _, n in _imported_modules(ast.parse(source), "raw2md.mdtext")]
+    assert [n for n in names if not _text_test_may_import(n)] == expected
+
+
+def test_relative_import_resolves_against_the_package() -> None:
+    tree = ast.parse("from . import zones\nfrom ..cleaning import prose")
+    assert _imported_modules(tree, "raw2md.mdtext") == [
+        (1, "raw2md.mdtext.zones"),
+        (2, "raw2md.cleaning.prose"),
+    ]
 
 
 def test_copy_reads_no_environment() -> None:

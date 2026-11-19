@@ -59,6 +59,7 @@ from raw2md.mdtext.math_spans import (
     math_spans,
 )
 from raw2md.mdtext.pages import page_mark_number
+from raw2md.mdtext.seams import closes_sentence
 from raw2md.mdtext.zones import Segment, html_table_lines, mask_inline_code, segments
 from raw2md.source_text import BROKEN_WORD_RE, SourceText, hyphen_forms, tokenize
 
@@ -1066,21 +1067,6 @@ _CUT_PARAGRAPH_METHODS = frozenset(
     {ConversionMethod.LLM_OCR, ConversionMethod.DJVU_LLM_OCR, ConversionMethod.CLEAN}
 )
 
-# A mark that closes a sentence: ASCII, the ellipsis, and the CJK and
-# fullwidth forms of `.`, `!`, `?`, `:`, `;`.
-_SENTENCE_END_CHARS = frozenset(
-    ".!?:;"
-    + "".join(
-        chr(code)
-        for code in (0x2026, 0x3002, 0xFF0E, 0xFF61, 0xFF01, 0xFF1F, 0xFF1A, 0xFF1B)
-    )
-)
-
-# Read past after a sentence mark, beside closing quotes and brackets: the
-# straight and fullwidth quotes.
-_SENTENCE_TAIL_EXTRA = frozenset("\"'" + chr(0xFF02) + chr(0xFF07))
-_SENTENCE_TAIL_CATEGORIES = frozenset({"Pe", "Pf", "Pi"})
-
 # A line that opens a structure, not a paragraph. Display math, an HTML line,
 # a quote, a footnote definition, and a bracketed note such as a lost page.
 _STRUCTURE_OPENERS = ("$$", "\\[", "\\begin", "<", ">", "[")
@@ -1319,7 +1305,7 @@ def _tail_runs_on(tail: str) -> bool:
     """
     if not tail or not any(ch.islower() for ch in tail):
         return False
-    if tail.endswith(("-", chr(0x00AC))) or _closes_sentence(tail):
+    if tail.endswith(("-", chr(0x00AC))) or closes_sentence(tail):
         return False
     return _LINK_TAIL_RE.search(tail) is None and not _is_address(
         tail.rsplit(maxsplit=1)[-1]
@@ -1361,17 +1347,6 @@ def _opens_with_roman_folio(head: str) -> bool:
         and set(words[0]) <= _ROMAN_FOLIO_LETTERS
         and words[1][0].isupper()
     )
-
-
-def _closes_sentence(tail: str) -> bool:
-    """True when `tail` ends on a sentence mark, past closing quotes and brackets."""
-    end = len(tail)
-    while end and (
-        tail[end - 1] in _SENTENCE_TAIL_EXTRA
-        or unicodedata.category(tail[end - 1]) in _SENTENCE_TAIL_CATEGORIES
-    ):
-        end -= 1
-    return end > 0 and tail[end - 1] in _SENTENCE_END_CHARS
 
 
 @lru_cache(maxsize=8)

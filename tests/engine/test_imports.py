@@ -53,6 +53,12 @@ def test_torch_is_hidden(engine: Loader) -> None:
         _ = settings.TORCH_DEVICE_MODEL
 
 
+def test_copy_reads_the_text_tests_of_raw2md(engine: Loader) -> None:
+    seams = importlib.import_module("raw2md.mdtext.seams")
+    text = engine("marker.processors.text")
+    assert text.closes_sentence is seams.closes_sentence
+
+
 def test_block_restores_the_modules_and_finders() -> None:
     modules = dict(sys.modules)
     finders = list(sys.meta_path)

@@ -256,7 +256,12 @@ of the repository holds each change with its diff.
   fills only the first column reads as data when the first later row
   that fills another column reads as data (2026-11-18). Changed file,
   under src/raw2md_engine/: `marker/processors/table_merge.py`.
+- The copy imports the text tests that raw2md shares with its cleaning
+  from the module `raw2md.mdtext.seams`, which imports no code of the
+  copy. The text processor reads the end of a sentence there: a sentence
+  mark, past closing quotes and brackets (2026-11-19). Changed file, under
+  src/raw2md_engine/: `marker/processors/text.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-11-18.
+Last change: 2026-11-19.
