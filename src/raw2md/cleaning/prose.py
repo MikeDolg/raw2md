@@ -59,7 +59,11 @@ from raw2md.mdtext.math_spans import (
     math_spans,
 )
 from raw2md.mdtext.pages import page_mark_number
-from raw2md.mdtext.seams import closes_sentence
+from raw2md.mdtext.seams import (
+    continues_without_case,
+    first_half_runs_on,
+    second_half_runs_on,
+)
 from raw2md.mdtext.zones import Segment, html_table_lines, mask_inline_code, segments
 from raw2md.source_text import BROKEN_WORD_RE, SourceText, hyphen_forms, tokenize
 
@@ -1110,11 +1114,13 @@ def join_cut_paragraphs(
 
     Only on a route with no layout of its own: LLM-OCR and a md input. The text
     at the cut is the evidence: the first half ends with no sentence mark and
-    the second opens with a lowercase letter that starts no item. A body with
-    page marks joins across a page mark only; a body without them at any
-    paragraph break. The search steps over blank lines, page marks, images,
-    and captions, which move after the joined paragraph. A hyphen at the cut
-    is left to `rejoin_hyphenation`, which needs an attested spelling.
+    the second opens with a lowercase letter that starts no item; in a script
+    without letter case, the halves pass `continues_without_case` across a
+    page mark. A body with page marks joins across a page mark only; a body
+    without them at any paragraph break. The search steps over blank lines,
+    page marks, images, and captions, which move after the joined paragraph.
+    A hyphen at the cut is left to `rejoin_hyphenation`, which needs an
+    attested spelling.
     """
     if method not in _CUT_PARAGRAPH_METHODS:
         return seg_list
@@ -1154,12 +1160,18 @@ def _cut_paragraph_seams(
         ):
             idx += 1
             continue
-        nxt = _second_half(seg_list, blocks, idx, captions, need_mark=need_mark)
-        if nxt is None:
+        found = _second_half(seg_list, blocks, idx, captions, need_mark=need_mark)
+        if found is None:
             idx += 1
             continue
+        nxt, crossed = found
         second = blocks[nxt]
-        if not _cut_text_evidence(seg_list[end - 1][0], seg_list[second[0]][0]):
+        # A crossed mark that a join moved down lands at this seam on a
+        # second pass, so the seam counts as a page break on the first.
+        across_page = crossed or (marked and not need_mark)
+        if not _cut_text_evidence(
+            seg_list[end - 1][0], seg_list[second[0]][0], across_page=across_page
+        ):
             idx += 1
             continue
         seams[end] = second
@@ -1199,11 +1211,11 @@ def _second_half(
     captions: re.Pattern[str],
     *,
     need_mark: bool,
-) -> int | None:
+) -> tuple[int, bool] | None:
     """Index into `blocks` of the paragraph that may carry on block `idx`.
 
     The gap may hold blank lines, page marks, images, and captions only.
-    Under `need_mark` it must hold a page mark.
+    Under `need_mark` it must hold a page mark. The flag tells whether it does.
     """
     end = blocks[idx][1]
     crossed_mark = False
@@ -1222,7 +1234,7 @@ def _second_half(
             return None
         if not _is_cut_prose(seg_list, start, stop, captions):
             return None
-        return nxt
+        return nxt, crossed_mark
     return None
 
 
@@ -1276,7 +1288,7 @@ def _is_cut_prose(
     return not any(_is_structure_line(seg_list, k, start) for k in range(start, end))
 
 
-def _cut_text_evidence(tail_line: str, head_line: str) -> bool:
+def _cut_text_evidence(tail_line: str, head_line: str, *, across_page: bool) -> bool:
     """True when the text at the cut shows one sentence running on.
 
     A word on both sides of the seam is a catchword, and a head that restates
@@ -1284,7 +1296,10 @@ def _cut_text_evidence(tail_line: str, head_line: str) -> bool:
     """
     tail = demark_seam_end(tail_line)
     head = head_line.lstrip()
-    if not _tail_runs_on(tail) or not _head_runs_on(head):
+    if not _tail_runs_on(tail) or _opens_apart(head):
+        return False
+    cased = any(ch.islower() for ch in tail) and second_half_runs_on(head)
+    if not cased and not (across_page and continues_without_case(tail, head)):
         return False
     tail_words = [word.casefold() for word in _SEAM_WORD_RE.findall(tail)]
     head_words = [word.casefold() for word in _SEAM_WORD_RE.findall(head)]
@@ -1301,30 +1316,24 @@ def _cut_text_evidence(tail_line: str, head_line: str) -> bool:
 def _tail_runs_on(tail: str) -> bool:
     """True when `tail` breaks off a sentence: no sentence mark, link, or address.
 
-    It carries a lowercase letter; a hyphen at its end is the rejoin's.
+    A hyphen at its end is the rejoin's.
     """
-    if not tail or not any(ch.islower() for ch in tail):
-        return False
-    if tail.endswith(("-", chr(0x00AC))) or closes_sentence(tail):
+    if not first_half_runs_on(tail) or tail.endswith(("-", chr(0x00AC))):
         return False
     return _LINK_TAIL_RE.search(tail) is None and not _is_address(
         tail.rsplit(maxsplit=1)[-1]
     )
 
 
-def _head_runs_on(head: str) -> bool:
-    """True when `head` opens in lowercase and starts no item, legend, or margin.
+def _opens_apart(head: str) -> bool:
+    """True when `head` opens a legend like `k =`, or a margin line.
 
-    An item opens like `b)` or `b. `, a legend like `k =`, a running title
-    after a roman folio, and a colophon line with a bare address.
+    A margin line is a running title after a roman folio, or a colophon line
+    with a bare address.
     """
-    if not head or not head[0].islower():
-        return False
-    if head[1:2] == ")" or (head[1:2] == "." and head[2:3].isspace()):
-        return False
-    if declares_a_symbol(head) or _opens_with_roman_folio(head):
-        return False
-    return not _is_address(head.split(maxsplit=1)[0])
+    if not head or declares_a_symbol(head) or _opens_with_roman_folio(head):
+        return True
+    return _is_address(head.split(maxsplit=1)[0])
 
 
 def _is_address(word: str) -> bool:

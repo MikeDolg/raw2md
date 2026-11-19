@@ -297,3 +297,48 @@ def test_caption_after_two_joins_follows_its_page_mark() -> None:
     )
     out = clean_in_place(text, OCR)
     assert out.index(page_mark(2)) < out.index("Figure 2.")
+
+
+_FULLWIDTH_COMMA = chr(0xFF0C)
+_PUMP_FIRST = (
+    f"水泵站有三台水泵{_FULLWIDTH_COMMA}每台都有一个阀门{_FULLWIDTH_COMMA}"
+    f"阀门由控制器操作{_FULLWIDTH_COMMA}该泵在水箱压力低于设定值时启动{_FULLWIDTH_COMMA}"
+)
+_PUMP_SECOND = f"并在水箱满时停止{_FULLWIDTH_COMMA}然后等待下一个信号。"
+_PUMP_NEXT = "下一段从这里开始。"
+
+
+def _joined_caseless(cleaned: str) -> bool:
+    return any(
+        line.startswith(_PUMP_FIRST) and line.endswith(_PUMP_SECOND)
+        for line in cleaned.split("\n")
+    )
+
+
+def test_caseless_paragraph_cut_by_a_page_mark_joins() -> None:
+    text = _ocr_pages(_PUMP_FIRST, f"{_PUMP_SECOND}\n\n{_PUMP_NEXT}")
+    once = clean_in_place(text, OCR)
+    assert _joined_caseless(once)
+    assert f"{page_mark(2)}\n{_PUMP_NEXT}" in once
+    assert clean_in_place(once, OCR) == once
+
+
+def test_caseless_halves_without_a_page_mark_stay_apart() -> None:
+    text = f"{_PUMP_FIRST}\n\n{_PUMP_SECOND}\n"
+    assert clean_in_place(text, MD) == text
+
+
+def test_caseless_halves_on_one_page_stay_apart() -> None:
+    text = _ocr_pages(f"{_PUMP_FIRST}\n\n{_PUMP_SECOND}", _PUMP_NEXT)
+    assert not _joined_caseless(clean_in_place(text, OCR))
+
+
+def test_caseless_seam_after_a_join_counts_as_a_page_break() -> None:
+    middle = (
+        f"水箱满时停止{_FULLWIDTH_COMMA}阀门关闭{_FULLWIDTH_COMMA}"
+        f"控制器记录时间{_FULLWIDTH_COMMA}然后等待下一个信号{_FULLWIDTH_COMMA}"
+    )
+    text = _ocr_pages(_PUMP_FIRST, f"{middle}\n\n{_PUMP_SECOND}")
+    once = clean_in_place(text, OCR)
+    assert _joined_caseless(once)
+    assert clean_in_place(once, OCR) == once

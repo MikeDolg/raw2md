@@ -56,7 +56,8 @@ def test_torch_is_hidden(engine: Loader) -> None:
 def test_copy_reads_the_text_tests_of_raw2md(engine: Loader) -> None:
     seams = importlib.import_module("raw2md.mdtext.seams")
     text = engine("marker.processors.text")
-    assert text.closes_sentence is seams.closes_sentence
+    for name in ("first_half_runs_on", "second_half_runs_on", "continues_without_case"):
+        assert getattr(text, name) is getattr(seams, name)
 
 
 def test_block_restores_the_modules_and_finders() -> None:

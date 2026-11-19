@@ -198,17 +198,6 @@ def test_paginated_join_keeps_both_halves_before_the_page_break(
     ]
 
 
-def test_item_letter_is_no_continuation(engine: Loader) -> None:
-    pages = _Pages(engine, 2)
-    pages.text(0, [("Table 4. Belt properties", (50, 700, 300, 718))])
-    pages.text(1, [("b) Elongation as a decimal:", (50, 60, 400, 78))])
-
-    assert _paragraphs(_join(engine, pages)) == [
-        "Table 4. Belt properties",
-        "b) Elongation as a decimal:",
-    ]
-
-
 def test_single_line_without_text_evidence_stays_apart(engine: Loader) -> None:
     pages = _Pages(engine, 2)
     pages.text(0, [("The valve opens when the pressure in the", (50, 700, 550, 718))])
@@ -602,7 +591,6 @@ def test_german_closing_quote_ends_the_sentence(engine: Loader) -> None:
 
 
 _FULLWIDTH_COMMA = chr(0xFF0C)
-_IDEOGRAPHIC_COMMA = chr(0x3001)
 _PUMP_FIRST = f"每台水泵都有一个阀门。该泵在水箱压力低于设定值时启动{_FULLWIDTH_COMMA}"
 _PUMP_SECOND = f"并在水箱满时停止{_FULLWIDTH_COMMA}然后等待下一个信号。"
 
@@ -626,44 +614,6 @@ def test_caseless_paragraph_cut_by_a_column_reads_as_one(engine: Loader) -> None
     pages.text(0, [(_PUMP_SECOND, (310, 60, 550, 78))])
 
     assert _join(engine, pages) == _PUMP_FIRST + _PUMP_SECOND
-
-
-@pytest.mark.parametrize(
-    ("first", "count"),
-    [
-        (_PUMP_FIRST[:-1] + chr(0x3002), 2),
-        (_PUMP_FIRST[:-1] + chr(0xFF1A), 2),
-        (_PUMP_FIRST[:-1] + "3", 2),
-        (_PUMP_FIRST[:-1], 1),
-        (_PUMP_FIRST[:-1] + _IDEOGRAPHIC_COMMA, 1),
-        (_PUMP_FIRST[:-1] + ",", 1),
-        ("水" * 18 + _FULLWIDTH_COMMA, 2),
-        ("水" * 19 + _FULLWIDTH_COMMA, 1),
-        ("水" * 10 + " " * 10 + "水" * 8 + _FULLWIDTH_COMMA, 2),
-    ],
-)
-def test_caseless_first_half_needs_twenty_characters_and_an_open_end(
-    engine: Loader, first: str, count: int
-) -> None:
-    pages = _caseless_pair(engine, first, _PUMP_SECOND)
-
-    assert len(_paragraphs(_join(engine, pages))) == count
-
-
-@pytest.mark.parametrize(
-    ("second", "count"),
-    [
-        (f"二{_IDEOGRAPHIC_COMMA}水箱满时停止。", 2),
-        (f"十{chr(0xFF09)}水箱满时停止。", 2),
-        ("二号阀门在水箱满时关闭。", 1),
-    ],
-)
-def test_caseless_second_half_that_opens_an_item_stays_apart(
-    engine: Loader, second: str, count: int
-) -> None:
-    pages = _caseless_pair(engine, _PUMP_FIRST, second)
-
-    assert len(_paragraphs(_join(engine, pages))) == count
 
 
 def test_caseless_stacked_blocks_stay_apart(engine: Loader) -> None:

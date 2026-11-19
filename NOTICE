@@ -259,8 +259,11 @@ of the repository holds each change with its diff.
 - The copy imports the text tests that raw2md shares with its cleaning
   from the module `raw2md.mdtext.seams`, which imports no code of the
   copy. The text processor reads the end of a sentence there: a sentence
-  mark, past closing quotes and brackets (2026-11-19). Changed file, under
-  src/raw2md_engine/: `marker/processors/text.py`.
+  mark, past closing quotes and brackets (2026-11-19). It reads there as
+  well the text evidence that the two halves of a cut paragraph carry on
+  one sentence, in a script with letter case and in one without
+  (2026-11-19). Changed file, under src/raw2md_engine/:
+  `marker/processors/text.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
