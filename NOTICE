@@ -275,6 +275,11 @@ of the repository holds each change with its diff.
   `caption_labels`, which raw2md fills from its own word list. The number
   is arabic, with its sections, or roman (2026-11-19). Changed file,
   under src/raw2md_engine/: `marker/processors/text.py`.
+- The table merge processor reads the form of a number from the module
+  `raw2md.mdtext.tables`, which the cleaning reads too. A number may open
+  on a point, as in `.690`, and parentheses may enclose it, as in
+  `(12.4)` (2026-11-19). Changed file, under src/raw2md_engine/:
+  `marker/processors/table_merge.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

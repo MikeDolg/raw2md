@@ -63,6 +63,9 @@ def test_copy_reads_the_text_tests_of_raw2md(engine: Loader) -> None:
         "caption_label_end",
     ):
         assert getattr(text, name) is getattr(seams, name)
+    tables = importlib.import_module("raw2md.mdtext.tables")
+    merge = engine("marker.processors.table_merge")
+    assert merge.is_number_value is tables.is_number_value
 
 
 def test_block_restores_the_modules_and_finders() -> None:

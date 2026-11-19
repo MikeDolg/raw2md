@@ -28,13 +28,16 @@ from raw2md.mdtext.pages import page_mark_number
 from raw2md.mdtext.tables import (
     CELL_BREAK_RE,
     ColumnForms,
+    ColumnValues,
     cell_values,
     crushed_run_placements,
     has_cell_separator,
+    is_number_value,
     reads_as_a_grouped_number,
     rebuild_table_row,
     table_cells,
     table_column_forms,
+    table_column_values,
     value_signature,
 )
 from raw2md.mdtext.zones import Segment, html_table_lines
@@ -970,7 +973,7 @@ def _continuation_rows(
         and len(table_cells(seg_list[row][0])) == width
     ]
     numeric = _numeric_columns(
-        table_column_forms((seg_list[row][0] for row in rows), width, header_line)
+        table_column_values((seg_list[row][0] for row in rows), width, header_line)
     )
     columns = _column_line_lengths([table_cells(seg_list[row][0]) for row in rows])
     kept = set(rows)
@@ -1000,15 +1003,14 @@ def _continuation_rows(
     return joined
 
 
-def _numeric_columns(forms: ColumnForms) -> list[bool]:
-    """Per column: whether every form the table shows in it is a number.
+def _numeric_columns(values: ColumnValues) -> list[bool]:
+    """Per column: whether every value the table shows in it is a number.
 
-    A number holds a digit run and no letter run; a column no full row
-    showed is not numeric.
+    A column no full row showed is not numeric.
     """
     return [
-        bool(column) and all("9" in form and "A" not in form for form in column)
-        for column in forms
+        bool(column) and all(is_number_value(value) for value in column)
+        for column in values
     ]
 
 

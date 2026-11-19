@@ -282,6 +282,38 @@ _SIGNATURE_RUN_RE = re.compile(r"\d+|[^\W\d_]+")
 
 # Per column; an empty set is a column no row showed.
 ColumnForms = tuple[frozenset[str], ...]
+ColumnValues = tuple[frozenset[str], ...]
+
+# The minus sign and the thin and narrow no-break group spaces go by code point.
+_MINUS = chr(0x2212)
+_GROUP_SPACES = chr(0x2009) + chr(0x202F)
+
+# An optional sign or currency, digits with their separators, and an optional
+# percent sign or short unit, as in `-1,250.50`, `.690`, `12 g` or `40 mm`.
+_NUMBER = (
+    rf"[-+{_MINUS}\u00b1~<>]?\s?[$\u00a3\u00a5\u20ac]?\s?\.?\d[\d\s.,'{_GROUP_SPACES}]*"
+    r"(?:\s?(?:%|[A-Za-z\u00b0\u00b5]{1,3}\d?(?:/[A-Za-z]{1,3}\d?)?))?"
+)
+# Parentheses mark a negative number: `(12.4)`.
+_NUMBER_RE = re.compile(rf"{_NUMBER}|\({_NUMBER}\)")
+
+# A cell that stands for a missing number.
+NUMBER_PLACEHOLDERS = frozenset("-/*_")
+
+
+def is_number_value(text: str, *, placeholder: bool = False) -> bool:
+    """True when `text` is one number with its sign, currency, or unit.
+
+    With `placeholder`, a cell that stands for a missing number counts too.
+    """
+    if placeholder and text in NUMBER_PLACEHOLDERS:
+        return True
+    return _NUMBER_RE.fullmatch(text) is not None
+
+
+def flat_value(value: str) -> str:
+    """One cell value with its in-cell breaks and padding flattened to spaces."""
+    return " ".join(CELL_BREAK_RE.sub(" ", value).split())
 
 
 def value_signature(value: str) -> str:
@@ -289,23 +321,22 @@ def value_signature(value: str) -> str:
 
     A column's values differ; what its rows agree on is their spelling.
     """
-    flat = " ".join(CELL_BREAK_RE.sub(" ", value).split())
     return _SIGNATURE_RUN_RE.sub(
-        lambda run: "9" if run.group().isdigit() else "A", flat
+        lambda run: "9" if run.group().isdigit() else "A", flat_value(value)
     )
 
 
-def table_column_forms(
+def table_column_values(
     rows: Iterable[str], width: int, header: str | None = None
-) -> ColumnForms:
-    """The forms each column of a table carries, read off the rows that show it.
+) -> ColumnValues:
+    """The flat values each column of a table holds, read off the rows that show it.
 
     Only full-width rows with no empty cell witness. The caller leaves the
     header out; its repeats on later pages are dropped here, or a crushed
     copy would fit the title forms. All-empty means the columns are unknown.
     """
     header_key = _header_row_key(header, width) if header is not None else None
-    forms: list[set[str]] = [set() for _ in range(width)]
+    values: list[set[str]] = [set() for _ in range(width)]
     for row in rows:
         cells = table_cells(row)
         if len(cells) != width or not all(cell.strip() for cell in cells):
@@ -313,8 +344,18 @@ def table_column_forms(
         if header_key is not None and _header_row_key(row, width) == header_key:
             continue
         for index, cell in enumerate(cells):
-            forms[index].add(value_signature(cell))
-    return tuple(frozenset(column) for column in forms)
+            values[index].add(flat_value(cell))
+    return tuple(frozenset(column) for column in values)
+
+
+def table_column_forms(
+    rows: Iterable[str], width: int, header: str | None = None
+) -> ColumnForms:
+    """The forms each column carries: `value_signature` of `table_column_values`."""
+    return tuple(
+        frozenset(value_signature(value) for value in column)
+        for column in table_column_values(rows, width, header)
+    )
 
 
 def _header_row_key(row: str, width: int) -> tuple[str, ...] | None:

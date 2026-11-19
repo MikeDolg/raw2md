@@ -13,7 +13,7 @@ _COPY = _SRC / "raw2md_engine"
 
 # The modules of raw2md that the copy may import: text tests over a string,
 # which the cleaning reads too, so that both stages share one definition.
-_TEXT_TEST_MODULES = frozenset({"raw2md.mdtext.seams"})
+_TEXT_TEST_MODULES = frozenset({"raw2md.mdtext.seams", "raw2md.mdtext.tables"})
 
 # A text test module reaches, directly or through another module, only the
 # standard library, these packages, and the text primitives of raw2md.

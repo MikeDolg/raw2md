@@ -1,7 +1,7 @@
 import math
-import re
 from typing import Annotated
 
+from raw2md.mdtext.tables import is_number_value
 from raw2md_engine.marker.processors import BaseProcessor
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block, BlockId
@@ -21,14 +21,6 @@ FURNITURE_TYPES = (BlockTypes.PageHeader, BlockTypes.PageFooter)
 Span = tuple[float, float]
 Row = list[TableCell]
 
-# A number: an optional sign or currency, digits with their separators, and an
-# optional percent sign or short unit, as in "-1,250.50", "12 g" or "40 mm".
-NUMBER = re.compile(
-    r"[-+\u2212\u00b1~<>]?\s?[$\u00a3\u00a5\u20ac]?\s?\d[\d\s.,'\u2009\u202f]*"
-    r"(?:\s?(?:%|[A-Za-z\u00b0\u00b5]{1,3}\d?(?:/[A-Za-z]{1,3}\d?)?))?"
-)
-# A cell that stands for a missing number.
-PLACEHOLDERS = frozenset("-/*_")
 # The fewest values of a column that holds numbers among other values.
 MAJORITY_MIN_VALUES = 3
 
@@ -480,7 +472,7 @@ class TableMergeProcessor(BaseProcessor):
             if not values:
                 return None
             if self.holds_numbers(values):
-                if not self.is_number(text):
+                if not is_number_value(text, placeholder=True):
                     return None
                 typed = True
             elif len(values) > 1 and len(set(values)) == 1:
@@ -489,15 +481,11 @@ class TableMergeProcessor(BaseProcessor):
                 typed = True
         return typed
 
-    @staticmethod
-    def is_number(text: str) -> bool:
-        return text in PLACEHOLDERS or NUMBER.fullmatch(text) is not None
-
     def holds_numbers(self, values: list[str]) -> bool:
         """A column of placeholders alone holds no numbers."""
-        if not any(NUMBER.fullmatch(value) for value in values):
+        if not any(is_number_value(value) for value in values):
             return False
-        numbers = sum(self.is_number(value) for value in values)
+        numbers = sum(is_number_value(value, placeholder=True) for value in values)
         if len(values) < MAJORITY_MIN_VALUES:
             return numbers == len(values)
         return numbers >= self.number_share * len(values)

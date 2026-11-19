@@ -901,6 +901,16 @@ def test_a_word_in_a_column_of_numbers_keeps_its_row() -> None:
     assert clean_in_place(text) == text
 
 
+def test_a_word_under_a_column_of_numbers_with_units_keeps_its_row() -> None:
+    text = laid_out_table(
+        "| Part | Description | Mass |",
+        "| KX-10 | Housing for the small | 1200.5 kg |",
+        "|  | gear unit | net weight |",
+        "| KX-20 | Cover | 0.4 kg |",
+    )
+    assert clean_in_place(text) == text
+
+
 def test_a_cell_under_an_empty_cell_stays() -> None:
     text = laid_out_table(
         "| Part | Description | Note | Mass |",

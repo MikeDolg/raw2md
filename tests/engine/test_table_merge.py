@@ -477,6 +477,20 @@ def test_flagged_row_with_a_placeholder_is_data(
     assert _tables(engine, [[first], [second]]) == [first.rows + second.rows]
 
 
+@pytest.mark.parametrize(
+    "values",
+    [[".690", ".512", ".705"], ["(12.4)", "3.1", "(0.8)"]],
+    ids=["leading-point", "negative-in-parentheses"],
+)
+def test_flagged_row_with_a_number_of_another_form_is_data(
+    engine: Loader, values: list[str]
+) -> None:
+    first = _table([["Item", "Change"], ["Pin", values[0]], ["Bolt", values[1]]])
+    second = _table([["Nut", values[2]], ["Washer", "9"]])
+
+    assert _tables(engine, [[first], [second]]) == [first.rows + second.rows]
+
+
 def test_column_of_placeholders_alone_holds_no_numbers(engine: Loader) -> None:
     first = _table([["Item", "Note"], ["Pin", "-"], ["Bolt", "_"]])
     second = _table([["Nut", "5"], ["Washer", "9"]])
