@@ -35,10 +35,11 @@ from raw2md.cleaning.segments import (
 from raw2md.header import ConversionMethod
 from raw2md.keywords import Keywords
 from raw2md.mdtext.lines import ATX_HEADING_RE, is_setext_underline, is_table_separator
-from raw2md.mdtext.math_spans import math_span_ranges
+from raw2md.mdtext.links import mask_addresses
+from raw2md.mdtext.math_spans import mask_math
 from raw2md.mdtext.tables import CELL_BREAK_RE, CELL_SEPARATOR_RE, table_cells
 from raw2md.mdtext.words import word_pattern
-from raw2md.mdtext.zones import Segment, inline_code_ranges
+from raw2md.mdtext.zones import Segment
 from raw2md.source_outline import SourceOutline
 from raw2md.source_text import tokenize
 
@@ -106,11 +107,15 @@ _HEADING_EMPHASIS_RE = re.compile(r"^( {0,3}#{1,6}\s+)(\*\*|__|\*|_)(.+)\2$")
 _HEADING_TITLE_RE = re.compile(r"^( {0,3}#{1,6}[ \t]+)(.+)$")
 
 # A bold run by the CommonMark flanking rules: no space inside either marker,
-# and `__` not inside a word, so `snake__case__name` stays.
+# no escaped marker, and `__` not inside a word, so `snake__case__name` stays.
 _BOLD_RUN_RE = re.compile(
-    r"(?<!\\)\*\*(?=\S)(.+?)(?<=\S)\*\*"
-    r"|(?<![\\\w])__(?=\S)(.+?)(?<=\S)__(?!\w)"
+    r"(?<!\\)\*\*(?=\S).+?(?<=[^\s\\])\*\*"
+    r"|(?<![\\\w])__(?=\S).+?(?<=[^\s\\])__(?!\w)"
 )
+
+# Stands in for code, math, and addresses while the bold runs are found: it is
+# neither a space nor a word character, so the flanking tests read it as text.
+_KEPT_SPAN_MASK = "\x00"
 
 # A glyph run between a heading's marker and its number (`## • 1.2 Foo`).
 # `_is_heading_ornament` decides whether the run is an ornament.
@@ -370,15 +375,20 @@ def _strip_heading_bold(line: str) -> str:
     # The oversize-heading demotion reads a bold lead as a crushed form's caption.
     if len(title.strip()) > _HEADING_MAX_LENGTH:
         return line
-    kept = inline_code_ranges(title) + math_span_ranges(title)
-
-    def unwrap(run: re.Match[str]) -> str:
+    blanked = mask_math(mask_addresses(title))
+    masked = "".join(
+        char if char == kept else _KEPT_SPAN_MASK
+        for char, kept in zip(title, blanked, strict=True)
+    )
+    pieces: list[str] = []
+    last = 0
+    for run in _BOLD_RUN_RE.finditer(masked):
         start, end = run.span()
-        if any(start < high and low < end for low, high in kept):
-            return run.group(0)
-        return run.group(1) if run.group(1) is not None else run.group(2)
-
-    return m.group(1) + _BOLD_RUN_RE.sub(unwrap, title)
+        pieces.append(title[last:start])
+        pieces.append(title[start + 2 : end - 2])
+        last = end
+    pieces.append(title[last:])
+    return m.group(1) + "".join(pieces)
 
 
 def _strip_whole_heading_emphasis(line: str) -> str:

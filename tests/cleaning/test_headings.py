@@ -72,6 +72,9 @@ def test_strips_emphasis_from_word_heading_without_number() -> None:
         ("## Foo __bar__ baz\n", "## Foo bar baz\n"),
         ("### **1.2** *x*\n", "### 1.2 *x*\n"),
         ("## **A****B**\n", "## AB\n"),
+        ("## **1.2 `x`** rest\n", "## 1.2 `x` rest\n"),
+        ("## **Rate $a**b$** law\n", "## Rate $a**b$ law\n"),
+        ("## **Code `f(**kw)` here**\n", "## Code `f(**kw)` here\n"),
     ],
 )
 def test_strips_partial_bold_inside_heading(text: str, expected: str) -> None:
@@ -98,6 +101,8 @@ def test_partial_bold_strip_lets_a_bold_number_join_the_ladder() -> None:
         "## The snake__case__name key\n",
         "## Spaced ** marks ** stay\n",
         "## Foo *bar* and **baz\n",
+        "## Literal **foo\\** bar\n",
+        "## Literal __foo\\__ bar\n",
     ],
 )
 def test_heading_text_that_is_not_a_bold_run_is_untouched(text: str) -> None:

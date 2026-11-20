@@ -183,6 +183,11 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     seg_list = normalize_lists(seg_list)
     seg_list = separate_bold_list_marker(seg_list)
     seg_list = drop_stray_bullet_glyph(seg_list)
+    # Before every table rule: the line fix drops a header row of symbols only,
+    # such as a lone leader, and a table that opens on its separator reads as
+    # no table to them. A lone row below stays for the postcondition, since
+    # the bodyless collapse would claim it.
+    seg_list = keep_table_delimiter_under_header(seg_list, with_body=True)
     seg_list = split_glued_table_header(seg_list)
     # Before the cycle fold: a dollar column or an empty one breaks the period
     # of a repeated column cycle and counts as a column of its own.

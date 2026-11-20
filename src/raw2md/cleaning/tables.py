@@ -23,7 +23,8 @@ from raw2md.cleaning.math import unescape_math_pipes
 from raw2md.cleaning.segments import LIST_MARKER_RE
 from raw2md.keywords import Keywords
 from raw2md.mdtext.lines import ATX_HEADING_RE, is_table_separator
-from raw2md.mdtext.math_spans import math_span_ranges
+from raw2md.mdtext.links import mask_addresses
+from raw2md.mdtext.math_spans import mask_math, math_span_ranges
 from raw2md.mdtext.pages import page_mark_number
 from raw2md.mdtext.tables import (
     CELL_BREAK_RE,
@@ -342,7 +343,7 @@ def _table_block(seg_list: list[Segment], idx: int) -> tuple[int, int] | None:
 # before a space and a non-digit. After a digit and a space it goes when it
 # spans four marks or holds three spaced marks. It stays between digits
 # (`1...10`), at the start of a value (`-.25`, `6--8`), and in a mixed run
-# (`dis. ...`, `Brig.-Gen.`).
+# (`Brig.-Gen.`), unless the cell line holds only marks, three or more.
 _LEADER_MARKS = (r"\.", r"(?:-|\\-)", r"(?:_|\\_)")
 _LEADER_RUN = (
     "|".join(
@@ -360,6 +361,7 @@ _CELL_LEADER_RE = re.compile(
     rf"|(?:{_LEADER_RUN})(?=\s*$|\s+[^\d\s.\-_…\\])"
     rf"|(?<=\d)(?:{_SPACED_RUN})(?=\s)"
     rf"|^(?:{_START_RUN})(?=\s)"
+    rf"|^(?:\s?(?:{'|'.join(_LEADER_MARKS)})){{3,}}+$"
 )
 
 
@@ -396,11 +398,22 @@ def _without_leaders(cell: str) -> str:
     kept: list[str] = []
     for piece in pieces:
         core = piece.strip()
-        cleaned = _CELL_LEADER_RE.sub("", core).strip() if core else core
+        cleaned = _strip_leaders(core) if core else core
         if core and not cleaned:
             continue
         kept.append(piece.replace(core, cleaned, 1) if core else piece)
     return (breaks[0] if breaks else "").join(kept)
+
+
+def _strip_leaders(core: str) -> str:
+    """`core` without its leaders; code, math, and addresses keep their marks."""
+    masked = mask_math(mask_addresses(core))
+
+    def drop(run: re.Match[str]) -> str:
+        start, end = run.span()
+        return run.group(0) if masked[start:end] != core[start:end] else ""
+
+    return _CELL_LEADER_RE.sub(drop, core).strip()
 
 
 _DOLLAR_MARKS = frozenset({"$", r"\$"})
@@ -1503,19 +1516,22 @@ def _spread_crushed_row(line: str, width: int, forms: ColumnForms) -> str | None
     return rebuilt if cell_values(rebuilt) == cell_values(line) else None
 
 
-def keep_table_delimiter_under_header(seg_list: list[Segment]) -> list[Segment]:
+def keep_table_delimiter_under_header(
+    seg_list: list[Segment], *, with_body: bool = False
+) -> list[Segment]:
     """Sink a table separator a dropped header row left as a block's first line.
 
     A postcondition, since several passes drop a junk header row. The first
     row below of the separator's width becomes the header; page marks ride
     above it. Guards: the separator has a pipe of its own, unlike a setext
-    underline, and a row of its width exists below it.
+    underline, and a row of its width exists below it. With `with_body`, a
+    row must follow the new header too, so no table is left bodyless.
     """
     out: list[Segment] = []
     count = len(seg_list)
     idx = 0
     while idx < count:
-        sunk = _sunk_leading_separator(seg_list, idx)
+        sunk = _sunk_leading_separator(seg_list, idx, with_body=with_body)
         if sunk is None:
             out.append(seg_list[idx])
             idx += 1
@@ -1527,7 +1543,7 @@ def keep_table_delimiter_under_header(seg_list: list[Segment]) -> list[Segment]:
 
 
 def _sunk_leading_separator(
-    seg_list: list[Segment], idx: int
+    seg_list: list[Segment], idx: int, *, with_body: bool
 ) -> tuple[list[Segment], int] | None:
     """The lines the block at `idx` becomes once its separator sinks, and its end."""
     line, protected = seg_list[idx]
@@ -1537,7 +1553,7 @@ def _sunk_leading_separator(
     if not _separator_opens_block(seg_list, idx):
         return None
     row_idx = _first_row_below(seg_list, idx + 1, len(table_cells(line)))
-    if row_idx is None:
+    if row_idx is None or (with_body and not _is_body_row(seg_list, row_idx + 1)):
         return None
     laid_out = list(seg_list[idx + 1 : row_idx + 1])
     laid_out.append(seg_list[idx])
@@ -1554,6 +1570,14 @@ def _separator_opens_block(seg_list: list[Segment], idx: int) -> bool:
             continue
         return protected or "|" not in line or not line.strip()
     return True
+
+
+def _is_body_row(seg_list: list[Segment], idx: int) -> bool:
+    if idx >= len(seg_list):
+        return False
+    line, protected = seg_list[idx]
+    core = line.strip()
+    return not protected and "|" in line and not is_table_separator(core)
 
 
 def _first_row_below(seg_list: list[Segment], start: int, width: int) -> int | None:
