@@ -301,6 +301,10 @@ of the repository holds each change with its diff.
   cleaning of raw2md removes each bold run from a heading on every route
   (2026-11-20). Changed file, under src/raw2md_engine/:
   `marker/renderers/markdown.py`.
+- The table processor joins the wrapped lines of each cell before it
+  splits the rows that the table model merged, so a value that wraps to a
+  second line keeps its row (2026-11-20). Changed file, under
+  src/raw2md_engine/: `marker/processors/table.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 

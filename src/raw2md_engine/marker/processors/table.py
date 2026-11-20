@@ -146,6 +146,7 @@ class TableProcessor(BaseProcessor):
         header_rows = [
             {row.row_id for row in table.rows if row.is_header} for table in tables
         ]
+        self.finalize_table_text(tables)
         self.split_combined_rows(tables, header_rows)
 
         # Assign table cells to the table
@@ -154,7 +155,6 @@ class TableProcessor(BaseProcessor):
             for block in page.contained_blocks(document, self.block_types):
                 block.structure = []  # Remove any existing lines, spans, etc.
                 cells: list[SuryaTableCell] = tables[table_idx].cells
-                column_widths = self.column_text_widths(cells)
                 for cell in cells:
                     # Rescale the cell polygon to the page size
                     cell_polygon = PolygonBox(polygon=cell.polygon).rescale(
@@ -168,9 +168,7 @@ class TableProcessor(BaseProcessor):
 
                     cell_block = TableCell(
                         polygon=cell_polygon,
-                        text_lines=self.finalize_cell_text(
-                            cell, column_widths.get((cell.col_id, cell.colspan))
-                        ),
+                        text_lines=[line["text"] for line in cell.text_lines or []],
                         rowspan=cell.rowspan,
                         colspan=cell.colspan,
                         row_id=cell.row_id,
@@ -199,6 +197,17 @@ class TableProcessor(BaseProcessor):
                     intersection_pct = intersection / max(child.polygon.area, 1)
                     if intersection_pct > 0.95 and child.id in page.structure:
                         page.structure.remove(child.id)
+
+    def finalize_table_text(self, tables: list[TableResult]):
+        # The wrapped lines of a cell join while the lines keep their frames,
+        # before the row split, so that the split counts values, not lines.
+        for table in tables:
+            widths = self.column_text_widths(table.cells)
+            for cell in table.cells:
+                width = widths.get((cell.col_id, cell.colspan))
+                cell.text_lines = [
+                    {"text": text} for text in self.finalize_cell_text(cell, width)
+                ]
 
     def finalize_cell_text(self, cell: SuryaTableCell, column_width=None):
         fixed_text = []

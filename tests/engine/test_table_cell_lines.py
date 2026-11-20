@@ -3,7 +3,8 @@
 A line wraps onto the next one when the first word of the next line would
 not fit into the space left on it, and the next line follows at the leading
 of a paragraph. The text width of a column is its widest line, so the rule
-holds for any alignment.
+holds for any alignment. The rows that the table model merges into one row
+split after the lines join, so a wrapped value keeps its row.
 """
 
 from __future__ import annotations
@@ -145,3 +146,52 @@ def test_pieces_of_one_line_stay_apart(engine: Loader) -> None:
 def test_cell_without_line_boxes_stays_as_it_is(engine: Loader) -> None:
     cell = _cell([{"text": "Nitrile rubber for low"}, {"text": "temperatures"}])
     assert _texts(engine, [cell])[0] == ["Nitrile rubber for low", "temperatures"]
+
+
+def _rows(engine: Loader, rows: list[list[list[dict[str, Any]]]]) -> list[list[str]]:
+    """The cell texts by row after the lines join and the merged rows split."""
+    schema = engine("surya.table_rec.schema")
+    processor = engine("marker.processors.table").TableProcessor
+    instance = object.__new__(processor)
+    cells = [
+        schema.TableCell(
+            polygon=[[0, 0], [400, 0], [400, 100], [0, 100]],
+            row_id=row_id,
+            col_id=col_id,
+            colspan=1,
+            rowspan=1,
+            within_row_id=col_id,
+            cell_id=row_id * len(row) + col_id,
+            is_header=False,
+            text_lines=lines,
+        )
+        for row_id, row in enumerate(rows)
+        for col_id, lines in enumerate(row)
+    ]
+    table = SimpleNamespace(cells=cells)
+    instance.finalize_table_text([table])
+    instance.split_combined_rows([table], [set()])
+    out: dict[int, list[tuple[int, str]]] = {}
+    for cell in table.cells:
+        text = " / ".join(line["text"] for line in cell.text_lines or [])
+        out.setdefault(cell.row_id, []).append((cell.col_id, text))
+    return [[text for _, text in sorted(out[row])] for row in sorted(out)]
+
+
+def test_wrapped_values_keep_their_row(engine: Loader) -> None:
+    header = [_line("Compound description", 0)]
+    wrapped = [_line("Nitrile rubber for low", 1), _line("temperatures", 2)]
+    assert _rows(engine, [[header, header], [wrapped, wrapped]]) == [
+        ["Compound description", "Compound description"],
+        ["Nitrile rubber for low temperatures"] * 2,
+    ]
+
+
+def test_merged_rows_split_into_rows(engine: Loader) -> None:
+    header = [_line("Order", 0, gap=5.0)]
+    sizes = [_line("2-327", 1, gap=5.0), _line("2-328", 2, gap=5.0)]
+    assert _rows(engine, [[header, header], [sizes, sizes]]) == [
+        ["Order", "Order"],
+        ["2-327", "2-327"],
+        ["2-328", "2-328"],
+    ]
