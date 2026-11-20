@@ -500,6 +500,48 @@ def test_every_soft_hyphen_of_a_word_with_several_goes() -> None:
     )
 
 
+def test_a_capital_after_the_hyphen_does_not_witness_a_lowercase_half() -> None:
+    capitalized = "The Print-Engine runs.\n" * 3
+    text = (
+        capitalized + "The Printengine runs.\n" * 2 + f"\nA Print{SOFT_HYPHEN}engine.\n"
+    )
+    assert decide_soft_hyphens(text, SourceText.empty()).endswith("A Printengine.\n")
+
+
+def test_a_capital_after_the_hyphen_does_not_block_a_rejoin() -> None:
+    text = (
+        "The Print-Engine runs.\n" * 3
+        + "The Printengine runs.\n" * 2
+        + "\nA Print-\nengine works.\n"
+    )
+    assert clean_in_place(text).endswith("A Printengine works.\n")
+
+
+def test_a_capital_first_half_still_witnesses_a_hyphen() -> None:
+    text = "Co-operation of teams helps.\n" + "\n" + _MARKED
+    assert decide_soft_hyphens(text, SourceText.empty()).endswith(
+        "Their co-operation grew.\n"
+    )
+
+
+def test_formulas_code_and_addresses_witness_no_hyphen() -> None:
+    text = (
+        "Consider $co-operation$ and `co-operation` here.\n"
+        "See [the guide](https://example.com/co-operation).\n"
+        "\n" + _MARKED
+    )
+    assert decide_soft_hyphens(text, SourceText.empty()).endswith(
+        "Their cooperation grew.\n"
+    )
+
+
+def test_html_tag_markup_witnesses_no_hyphen() -> None:
+    text = '<table><tr><td class="co-operation">x</td></tr></table>\n\n' + _MARKED
+    assert decide_soft_hyphens(text, SourceText.empty()).endswith(
+        "Their cooperation grew.\n"
+    )
+
+
 def test_a_decided_hyphen_survives_the_whole_cleaning() -> None:
     text = _HYPHENATED_COPY + "\n" + _MARKED
     once = clean_in_place(text)

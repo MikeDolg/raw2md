@@ -67,7 +67,13 @@ from raw2md.mdtext.seams import (
     second_half_runs_on,
 )
 from raw2md.mdtext.words import word_pattern
-from raw2md.mdtext.zones import Segment, html_table_lines, mask_inline_code, segments
+from raw2md.mdtext.zones import (
+    Segment,
+    blank_match,
+    html_table_lines,
+    mask_inline_code,
+    segments,
+)
 from raw2md.source_text import BROKEN_WORD_RE, SourceText, hyphen_forms, tokenize
 
 _logger = logging.getLogger("raw2md")
@@ -777,12 +783,9 @@ def rejoin_hyphenation(
     line; a page mark moves to the next line that opens content. An
     unconfirmed pair stays for the findings report.
     """
-    body_tokens = Counter(
-        token
-        for line, protected in seg_list
-        if not protected
-        for token in tokenize(line)
-    )
+    plain = [line for line, protected in seg_list if not protected]
+    body_tokens = Counter(token for line in plain for token in tokenize(line))
+    spellings = _hyphenated_spellings(plain)
     out: list[Segment] = []
     carried_marks: list[str] = []
     idx = 0
@@ -792,7 +795,7 @@ def rejoin_hyphenation(
         rejoined = (
             None
             if protected
-            else _rejoin_at(seg_list, idx, line, body_tokens, source_text)
+            else _rejoin_at(seg_list, idx, line, body_tokens, spellings, source_text)
         )
         if rejoined is None:
             if protected or line.strip():
@@ -859,6 +862,7 @@ def _rejoin_at(
     idx: int,
     line: str,
     body_tokens: Counter[str],
+    spellings: Counter[_SpellingKey],
     source_text: SourceText,
 ) -> tuple[str, int, int] | None:
     """The rejoin for the hyphen candidate at `idx`, adjacent first, then gapped.
@@ -870,7 +874,7 @@ def _rejoin_at(
     if idx + 1 < count:
         next_line, next_protected = seg_list[idx + 1]
         if not next_protected:
-            merged = _try_rejoin(line, next_line, seg_list, body_tokens, source_text)
+            merged = _try_rejoin(line, next_line, body_tokens, spellings, source_text)
             if merged is not None:
                 return merged, idx + 1, idx + 2
     if not _TRAILING_WORD_RE.search(demark_seam_end(line)):
@@ -881,7 +885,7 @@ def _rejoin_at(
     cont_line, cont_protected = seg_list[gap_idx]
     if cont_protected:
         return None
-    merged = _try_rejoin(line, cont_line, seg_list, body_tokens, source_text)
+    merged = _try_rejoin(line, cont_line, body_tokens, spellings, source_text)
     if merged is None:
         return None
     return merged, gap_idx, block_end(seg_list, gap_idx)
@@ -890,8 +894,8 @@ def _rejoin_at(
 def _try_rejoin(
     line: str,
     next_line: str,
-    seg_list: list[Segment],
     body_tokens: Counter[str],
+    spellings: Counter[_SpellingKey],
     source_text: SourceText,
 ) -> str | None:
     """The joined line, when the split between `line` and `next_line` is attested.
@@ -918,10 +922,7 @@ def _try_rejoin(
     tokens = tokenize(merged_word)
     if len(tokens) != 1:
         return None
-    if (
-        _hyphenated_spelling_count(seg_list, frag1, frag2)
-        >= _HYPHEN_FORM_BLOCK_THRESHOLD
-    ):
+    if spellings[_spelling_key(frag1, frag2)] >= _HYPHEN_FORM_BLOCK_THRESHOLD:
         return None
     confirmed = source_text.has_token(merged_word) or (
         body_tokens[tokens[0]] >= _MERGED_FORM_MIN_COUNT
@@ -945,12 +946,35 @@ def _seam_markers_reopen(line: str, head: str, next_line: str, tail: str) -> boo
     return closing[::-1] == opening
 
 
-def _hyphenated_spelling_count(seg_list: list[Segment], frag1: str, frag2: str) -> int:
-    """Count of `frag1-frag2` spelled out literally, same-line, in the plain body."""
-    pattern = re.compile(rf"\b{re.escape(frag1)}-{re.escape(frag2)}\b", re.IGNORECASE)
-    return sum(
-        len(pattern.findall(line)) for line, protected in seg_list if not protected
-    )
+# Word runs joined by single hyphens; each adjacent pair is one spelling.
+_HYPHEN_CHAIN_RE = re.compile(r"\w+(?:-\w+)+")
+
+_SpellingKey = tuple[str, str, str]
+
+
+def _spelling_key(frag1: str, frag2: str) -> _SpellingKey:
+    """Case-blind, except the second half's first letter.
+
+    `Print-Maschine` does not attest a line-end break of `Print-` + `maschine`.
+    """
+    return frag1.lower(), frag2[:1], frag2[1:].lower()
+
+
+def _hyphenated_spellings(lines: list[str]) -> Counter[_SpellingKey]:
+    """Count of each `frag1-frag2` spelled out on one line, by `_spelling_key`."""
+    counts: Counter[_SpellingKey] = Counter()
+    for line in lines:
+        for chain in _HYPHEN_CHAIN_RE.finditer(line):
+            last = None
+            for frag1, frag2 in pairwise(chain.group().split("-")):
+                key = _spelling_key(frag1, frag2)
+                # A run that ends one spelling does not open the same spelling.
+                if key == last:
+                    last = None
+                    continue
+                counts[key] += 1
+                last = key
+    return counts
 
 
 # ---- soft hyphen decision ---------------------------------------------------
@@ -962,6 +986,8 @@ _SOFT_HYPHENATED_WORD_RE = re.compile(rf"\w+(?:{_SOFT_HYPHEN}\w+)+")
 
 _LETTER_SOFT_HYPHEN_RE = re.compile(rf"(?<=[^\W\d_]){_SOFT_HYPHEN}(?=[^\W\d_])")
 
+_HTML_TAG_RE = re.compile(r"<[^<>]*>")
+
 
 def decide_soft_hyphens(text: str, source_text: SourceText) -> str:
     """Settle each soft hyphen between two letters: drop it, or write `-`.
@@ -971,27 +997,36 @@ def decide_soft_hyphens(text: str, source_text: SourceText) -> str:
     joined form attested as `rejoin_hyphenation` attests it drops the mark;
     then any hyphenated form, in the body or the source, writes `-`. Without
     a witness, and in a word with several marks, the mark goes. Reads HTML
-    table cells; front matter and fenced code stay verbatim.
+    table cells; front matter and fenced code stay verbatim. Formulas, code,
+    addresses, and tag markup witness no spelling.
     """
     if _SOFT_HYPHEN not in text:
         return text
     seg_list = segments(text)
+    table_lines = html_table_lines(text)
     readable = [
         not protected or table_line
-        for (_, protected), table_line in zip(
-            seg_list, html_table_lines(text), strict=True
+        for (_, protected), table_line in zip(seg_list, table_lines, strict=True)
+    ]
+    readings = [
+        mask_math(mask_addresses(_HTML_TAG_RE.sub(blank_match, line)))
+        if table_line
+        else reading
+        for (line, _), table_line, reading in zip(
+            seg_list, table_lines, prose_reading(seg_list), strict=True
         )
     ]
     # A marked word witnesses neither of its own spellings.
-    witness = "\n".join(
-        line.replace(_SOFT_HYPHEN, " ")
-        for (line, _), keep in zip(seg_list, readable, strict=True)
-        if keep
-    )
-    body_tokens = Counter(tokenize(witness))
+    witness = [
+        reading.replace(_SOFT_HYPHEN, " ")
+        for reading in readings
+        if reading is not None
+    ]
+    body_tokens = Counter(token for line in witness for token in tokenize(line))
+    spellings = _hyphenated_spellings(witness)
 
     def settle(match: re.Match[str]) -> str:
-        return _settle_soft_hyphens(match.group(), witness, body_tokens, source_text)
+        return _settle_soft_hyphens(match.group(), spellings, body_tokens, source_text)
 
     out = [
         _SOFT_HYPHENATED_WORD_RE.sub(settle, line) if keep else line
@@ -1002,7 +1037,10 @@ def decide_soft_hyphens(text: str, source_text: SourceText) -> str:
 
 
 def _settle_soft_hyphens(
-    word: str, witness: str, body_tokens: Counter[str], source_text: SourceText
+    word: str,
+    spellings: Counter[_SpellingKey],
+    body_tokens: Counter[str],
+    source_text: SourceText,
 ) -> str:
     """`word` with each of its soft hyphens between two letters decided."""
     halves = word.split(_SOFT_HYPHEN)
@@ -1011,7 +1049,7 @@ def _settle_soft_hyphens(
     if _LETTER_SOFT_HYPHEN_RE.search(word) is None:
         return word
     frag1, frag2 = halves
-    hyphens = _hyphenated_spelling_count([(witness, False)], frag1, frag2)
+    hyphens = spellings[_spelling_key(frag1, frag2)]
     if hyphens >= _HYPHEN_FORM_BLOCK_THRESHOLD:
         return f"{frag1}-{frag2}"
     merged = frag1 + frag2
