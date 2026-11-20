@@ -57,9 +57,6 @@ def get_formatted_table_text(element):
     return full_text
 
 
-HEADING_TAGS = frozenset(("h1", "h2", "h3", "h4", "h5", "h6"))
-
-
 class Markdownify(MarkdownConverter):
     def __init__(
         self,
@@ -128,17 +125,6 @@ class Markdownify(MarkdownConverter):
         if following is None:
             return False
         return joins_without_space(text, following.get_text())
-
-    def convert_b(self, el, text, parent_tags):
-        # A heading is already emphasized; italic stays, as it can mark a variable.
-        if parent_tags & HEADING_TAGS:
-            return text
-        return super().convert_b(el, text, parent_tags)
-
-    def convert_strong(self, el, text, parent_tags):
-        if parent_tags & HEADING_TAGS:
-            return text
-        return super().convert_strong(el, text, parent_tags)
 
     def convert_math(self, el, text, parent_tags):
         block = el.has_attr("display") and el["display"] == "block"

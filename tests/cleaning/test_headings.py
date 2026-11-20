@@ -63,18 +63,49 @@ def test_strips_emphasis_from_word_heading_without_number() -> None:
     assert clean_in_place("## **Chapter 6**\n") == "## Chapter 6\n"
 
 
-def test_partial_emphasis_inside_heading_is_untouched() -> None:
-    text = "## Foo **bar** baz\n"
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("## Foo **bar** baz\n", "## Foo bar baz\n"),
+        ("## **Foo** rest\n", "## Foo rest\n"),
+        ("## **A** and **B**\n", "## A and B\n"),
+        ("## Foo __bar__ baz\n", "## Foo bar baz\n"),
+        ("### **1.2** *x*\n", "### 1.2 *x*\n"),
+        ("## **A****B**\n", "## AB\n"),
+    ],
+)
+def test_strips_partial_bold_inside_heading(text: str, expected: str) -> None:
+    assert clean_in_place(text) == expected
+
+
+def test_bold_italic_heading_loses_both_wraps_in_one_pass() -> None:
+    text = "## ***Name***\n"
+    assert clean_in_place(text) == "## Name\n"
+    assert clean_in_place(clean_in_place(text)) == "## Name\n"
+
+
+def test_partial_bold_strip_lets_a_bold_number_join_the_ladder() -> None:
+    text = "## **1.2** A\n### 1.3 B\n"
+    assert clean_in_place(text) == "## 1.2 A\n## 1.3 B\n"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "## Calling `f(**kwargs)` and `g(**opts)`\n",
+        "## Power $a**b$ and $c**d$\n",
+        "## The \\*\\*name\\*\\* form\n",
+        "## The snake__case__name key\n",
+        "## Spaced ** marks ** stay\n",
+        "## Foo *bar* and **baz\n",
+    ],
+)
+def test_heading_text_that_is_not_a_bold_run_is_untouched(text: str) -> None:
     assert clean_in_place(text) == text
 
 
-def test_emphasis_run_at_start_only_is_untouched() -> None:
-    text = "## **Foo** rest\n"
-    assert clean_in_place(text) == text
-
-
-def test_two_separate_emphasis_runs_in_heading_are_untouched() -> None:
-    text = "## **A** and **B**\n"
+def test_bold_outside_a_heading_is_untouched() -> None:
+    text = "Text **bold** here\n"
     assert clean_in_place(text) == text
 
 
@@ -285,6 +316,13 @@ def test_a_crushed_form_split_is_idempotent() -> None:
     text = f"# **A specimen certificate** {_OVERSIZE_TITLE}\n"
     once = clean_in_place(text)
     assert clean_in_place(once) == once
+
+
+def test_a_crushed_form_keeps_bold_runs_past_its_caption() -> None:
+    text = f"# **A specimen certificate** {_OVERSIZE_TITLE} **Signed**\n"
+    assert clean_in_place(text) == (
+        f"**A specimen certificate**\n\n{_OVERSIZE_TITLE} **Signed**\n"
+    )
 
 
 def test_a_full_line_wrap_on_an_oversize_heading_is_not_split() -> None:

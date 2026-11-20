@@ -35,9 +35,10 @@ from raw2md.cleaning.segments import (
 from raw2md.header import ConversionMethod
 from raw2md.keywords import Keywords
 from raw2md.mdtext.lines import ATX_HEADING_RE, is_setext_underline, is_table_separator
+from raw2md.mdtext.math_spans import math_span_ranges
 from raw2md.mdtext.tables import CELL_BREAK_RE, CELL_SEPARATOR_RE, table_cells
 from raw2md.mdtext.words import word_pattern
-from raw2md.mdtext.zones import Segment
+from raw2md.mdtext.zones import Segment, inline_code_ranges
 from raw2md.source_outline import SourceOutline
 from raw2md.source_text import tokenize
 
@@ -100,6 +101,16 @@ _RUN_IN_HEADING_LOOSE_RE = re.compile(
 # partial run does not match, and two separate runs leave the marker inside the
 # capture, which the caller rejects.
 _HEADING_EMPHASIS_RE = re.compile(r"^( {0,3}#{1,6}\s+)(\*\*|__|\*|_)(.+)\2$")
+
+# An ATX heading's marker and title, for the bold-run strip.
+_HEADING_TITLE_RE = re.compile(r"^( {0,3}#{1,6}[ \t]+)(.+)$")
+
+# A bold run by the CommonMark flanking rules: no space inside either marker,
+# and `__` not inside a word, so `snake__case__name` stays.
+_BOLD_RUN_RE = re.compile(
+    r"(?<!\\)\*\*(?=\S)(.+?)(?<=\S)\*\*"
+    r"|(?<![\\\w])__(?=\S)(.+?)(?<=\S)__(?!\w)"
+)
 
 # A glyph run between a heading's marker and its number (`## • 1.2 Foo`).
 # `_is_heading_ornament` decides whether the run is an ornament.
@@ -332,18 +343,42 @@ _NUMBER_FORM_MIN_NUMBERS = 2
 
 
 def strip_heading_emphasis(seg_list: list[Segment]) -> list[Segment]:
-    """Strip emphasis that wraps an ATX heading's whole text, outside protected zones.
+    """Strip bold from an ATX heading, and emphasis that wraps its whole text.
 
-    The wrap hides a numbered heading's digits from `_HEADING_NUM_RE`, so this
-    runs before numbering. A partial or double run keeps its markup.
+    A heading is already strong, so each bold run is typography on every
+    route. A partial italic run stays: it can mark a variable or a title. An
+    oversize heading keeps its bold runs for the demotion that follows.
+    Bold goes first, so `***Name***` loses both wraps in one pass. A wrap
+    hides a numbered heading's digits from `_HEADING_NUM_RE`, so this runs
+    before numbering. Inline code and math keep their asterisks.
     """
     out: list[Segment] = []
     for line, protected in seg_list:
         if protected:
             out.append((line, True))
             continue
-        out.append((_strip_whole_heading_emphasis(line), False))
+        unbolded = _strip_heading_bold(line)
+        out.append((_strip_whole_heading_emphasis(unbolded), False))
     return out
+
+
+def _strip_heading_bold(line: str) -> str:
+    m = _HEADING_TITLE_RE.match(line)
+    if m is None:
+        return line
+    title = m.group(2)
+    # The oversize-heading demotion reads a bold lead as a crushed form's caption.
+    if len(title.strip()) > _HEADING_MAX_LENGTH:
+        return line
+    kept = inline_code_ranges(title) + math_span_ranges(title)
+
+    def unwrap(run: re.Match[str]) -> str:
+        start, end = run.span()
+        if any(start < high and low < end for low, high in kept):
+            return run.group(0)
+        return run.group(1) if run.group(1) is not None else run.group(2)
+
+    return m.group(1) + _BOLD_RUN_RE.sub(unwrap, title)
 
 
 def _strip_whole_heading_emphasis(line: str) -> str:
