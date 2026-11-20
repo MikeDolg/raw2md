@@ -1,14 +1,17 @@
-"""A paragraph cut by a page keeps a dash and joins CJK text without a space."""
+"""A paragraph cut by a page marks a hyphen, keeps a dash, and joins CJK text."""
 
 from __future__ import annotations
 
 import pytest
+
+from raw2md.cleaner import clean
 
 from ._helpers import Loader
 
 _HAN = chr(0x516C) + chr(0x53F8)
 _HAN_TAIL = chr(0x6D4B) + chr(0x8BD5)
 _FULL_COMMA = chr(0xFF0C)
+_SOFT = chr(0x00AD)
 _HANGUL = chr(0xD55C) + chr(0xAE00)
 _HANGUL_TAIL = chr(0xB2E4) + chr(0xC74C)
 _FULL_WORD = "".join(chr(0xFF41 + i) for i in range(3))
@@ -34,9 +37,9 @@ def _render(engine: Loader, first: str, second: str) -> str:
 @pytest.mark.parametrize(
     ("first", "second", "expected"),
     [
-        ("the ro-", "d and the plate", "the rod and the plate"),
-        ("the ro¬", "d and the plate", "the rod and the plate"),
-        ("Mc¬", "Donald", "McDonald"),
+        ("the ro-", "d and the plate", f"the ro{_SOFT}d and the plate"),
+        ("the ro¬", "d and the plate", f"the ro{_SOFT}d and the plate"),
+        ("Mc¬", "Donald", f"Mc{_SOFT}Donald"),
         (_FULL_WORD, _FULL_WORD_TAIL, f"{_FULL_WORD} {_FULL_WORD_TAIL}"),
         ("the Anglo-", "Saxon plate", "the Anglo-Saxon plate"),
         ("from 25-", "100 mm", "from 25-100 mm"),
@@ -52,3 +55,16 @@ def test_join_of_a_paragraph_cut_by_a_page(
     engine: Loader, first: str, second: str, expected: str
 ) -> None:
     assert _render(engine, first, second).strip() == expected
+
+
+@pytest.mark.parametrize(
+    ("first", "second", "expected"),
+    [
+        ("the ro-", "d and the plate", "the rod and the plate"),
+        ("Mc¬", "Donald", "McDonald"),
+    ],
+)
+def test_cleaning_drops_a_soft_hyphen_without_a_witness(
+    engine: Loader, first: str, second: str, expected: str
+) -> None:
+    assert clean(_render(engine, first, second)).strip() == expected

@@ -4,7 +4,7 @@ from typing import Literal
 
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block
-from raw2md_engine.marker.util import unwrap_math
+from raw2md_engine.marker.util import SOFT_HYPHEN, unwrap_math
 
 
 def cleanup_text(full_text):
@@ -102,8 +102,8 @@ class Span(Block):
             text += " "
 
         text = text.replace(
-            "-\n", ""
-        )  # Remove hyphenated line breaks from the middle of the span
+            "-\n", SOFT_HYPHEN
+        )  # A hyphenated line break in the middle of the span
         text = html.escape(text)
         text = cleanup_text(text)
 

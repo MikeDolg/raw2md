@@ -12,6 +12,7 @@ from ._helpers import Loader
 _PAGE = (600.0, 800.0)
 _HAN = chr(0x516C) + chr(0x53F8)
 _HAN_TAIL = chr(0x6D4B) + chr(0x8BD5)
+_SOFT = chr(0x00AD)
 
 Box = tuple[float, float, float, float]
 
@@ -177,14 +178,14 @@ def test_single_line_with_text_evidence_joins_across_a_page(engine: Loader) -> N
     )
 
 
-def test_hyphenated_word_joins_across_a_page(engine: Loader) -> None:
+def test_hyphenated_word_joins_across_a_page_with_a_soft_hyphen(engine: Loader) -> None:
     pages = _Pages(engine, 2)
     pages.text(0, [("The valve opens when the pres-", (50, 700, 300, 718))])
     pages.text(1, [("sure in the chamber rises.", (50, 60, 400, 78))])
 
     assert (
         _join(engine, pages)
-        == "The valve opens when the pressure in the chamber rises."
+        == f"The valve opens when the pres{_SOFT}sure in the chamber rises."
     )
 
 
@@ -198,7 +199,7 @@ def test_paginated_join_keeps_both_halves_before_the_page_break(
 
     assert _paragraphs(_join(engine, pages, paginate=True)) == [
         "{0}--------",
-        "The valve opens when the pressure in the chamber rises.",
+        f"The valve opens when the pres{_SOFT}sure in the chamber rises.",
         "{1}--------",
         "The spring closes it again.",
     ]

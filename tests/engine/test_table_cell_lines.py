@@ -15,6 +15,7 @@ from ._helpers import Loader
 
 _CHAR = 5.0
 _HEIGHT = 10.0
+_SOFT = chr(0x00AD)
 
 
 def _line(
@@ -63,10 +64,10 @@ def test_short_values_stay_apart(engine: Loader) -> None:
     assert _texts(engine, [header, sizes])[1] == ["2-327", "2-328"]
 
 
-def test_hyphen_before_lowercase_goes(engine: Loader) -> None:
+def test_hyphen_before_lowercase_is_marked(engine: Loader) -> None:
     header = _cell([_line("Material", 0)])
     name = _cell([_line("Fluoro-", 1), _line("carbon", 2)], row_id=1)
-    assert _texts(engine, [header, name])[1] == ["Fluorocarbon"]
+    assert _texts(engine, [header, name])[1] == [f"Fluoro{_SOFT}carbon"]
 
 
 def test_hyphen_before_digit_stays(engine: Loader) -> None:
@@ -75,10 +76,10 @@ def test_hyphen_before_digit_stays(engine: Loader) -> None:
     assert _texts(engine, [header, name])[1] == ["Standard ISO-3601 sizes"]
 
 
-def test_hyphen_mark_of_the_text_layer_joins_the_word(engine: Loader) -> None:
+def test_hyphen_mark_of_the_text_layer_is_marked(engine: Loader) -> None:
     header = _cell([_line("Material", 0)])
     name = _cell([_line("Fluoro\x02", 1), _line("carbon", 2)], row_id=1)
-    assert _texts(engine, [header, name])[1] == ["Fluorocarbon"]
+    assert _texts(engine, [header, name])[1] == [f"Fluoro{_SOFT}carbon"]
 
 
 def test_rows_merged_into_one_cell_stay_apart(engine: Loader) -> None:

@@ -7,6 +7,7 @@ import regex
 from raw2md.mdtext.seams import joins_without_space
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.blocks import Block, BlockOutput
+from raw2md_engine.marker.util import SOFT_HYPHEN
 
 HYPHENS = r"-¬"
 # The space that a span writes for its line break, before the closing tags of
@@ -35,7 +36,10 @@ def strip_trailing_hyphens(line_text, next_line_text, line_html) -> str:
     )
 
     if hyphen_regex.match(line_text) and next_line_starts_lowercase:
-        line_html = replace_last(line_html, rf"[{HYPHENS}]", "")
+        # A hyphen after a space is a dash and leaves no word to decide.
+        in_word = regex.search(rf"\p{{L}}[{HYPHENS}]\s?$", line_text)
+        mark = SOFT_HYPHEN if in_word else ""
+        line_html = replace_last(line_html, rf"[{HYPHENS}]", mark)
 
     return line_html
 

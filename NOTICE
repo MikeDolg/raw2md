@@ -280,7 +280,16 @@ of the repository holds each change with its diff.
   on a point, as in `.690`, and parentheses may enclose it, as in
   `(12.4)` (2026-11-19). Changed file, under src/raw2md_engine/:
   `marker/processors/table_merge.py`.
+- A line-end hyphen that the copy used to delete becomes a soft hyphen
+  (U+00AD): at the end of a line of a block, at a hyphenated break inside
+  a span, at the cut of a paragraph that continues, and at a wrapped line
+  of a table cell. The cleaning of raw2md keeps or drops the hyphen by the
+  spellings of the text. A hyphen that the copy keeps before a capital or
+  a digit stays (2026-11-20). Changed files, under src/raw2md_engine/:
+  `marker/util.py`, `marker/schema/text/line.py`,
+  `marker/schema/text/span.py`, `marker/renderers/markdown.py`, and
+  `marker/processors/table.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-11-19.
+Last change: 2026-11-20.

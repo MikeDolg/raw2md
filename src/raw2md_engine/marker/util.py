@@ -9,6 +9,9 @@ from pydantic import BaseModel
 
 from raw2md_engine.marker.schema.polygon import PolygonBox
 
+# The mark that the engine writes for a line-end hyphen that it does not judge:
+# raw2md decides from the whole text whether the word keeps the hyphen.
+SOFT_HYPHEN = chr(0x00AD)
 OPENING_TAG_REGEX = re.compile(r"<((?:math|i|b))(?:\s+[^>]*)?>")
 CLOSING_TAG_REGEX = re.compile(r"</((?:math|i|b))>")
 TAG_MAPPING = {

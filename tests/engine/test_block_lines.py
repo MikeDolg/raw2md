@@ -12,6 +12,7 @@ _PAGE = (0.0, 0.0, 600.0, 800.0)
 _PUMP = "该泵在水箱压力低于设定值时"
 _START = "启动" + chr(0xFF0C)
 _STOP = "并在水箱满时停止。"
+_SOFT = chr(0x00AD)
 
 
 def _render(engine: Loader, lines: list[tuple[str, list[str]]]) -> str:
@@ -67,7 +68,7 @@ def _render(engine: Loader, lines: list[tuple[str, list[str]]]) -> str:
         ),
         ("该泵的型号是", "AB-200 pump.", "该泵的型号是 AB-200 pump."),
         ("The pump type is AB-200", "型水泵。", "The pump type is AB-200 型水泵。"),
-        ("the ro-", "d and the plate", "the rod and the plate"),
+        ("the ro-", "d and the plate", f"the ro{_SOFT}d and the plate"),
         ("the Anglo-", "Saxon plate", "the Anglo-Saxon plate"),
     ],
 )

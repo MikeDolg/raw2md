@@ -13,6 +13,7 @@ from raw2md_engine.marker.schema.document import Document
 from raw2md_engine.marker.schema.polygon import PolygonBox
 from raw2md_engine.marker.settings import settings
 from raw2md_engine.marker.util import (
+    SOFT_HYPHEN,
     fix_text_keep_width,
     matrix_intersection_area,
     unwrap_math,
@@ -296,10 +297,13 @@ class TableProcessor(BaseProcessor):
 
     @staticmethod
     def join_wrapped(text: str, tail: str) -> str:
-        # A hyphen at the end of a word goes before a lowercase letter and
-        # stays, without a space, before a capital or a digit.
+        # A hyphen at the end of a word becomes a soft hyphen before a
+        # lowercase letter and stays, without a space, before a capital or a
+        # digit.
         if len(text) > 1 and text[-1] == "-" and text[-2].isalnum():
-            return text[:-1] + tail if tail[0].islower() else text + tail
+            if tail[0].islower():
+                return text[:-1] + SOFT_HYPHEN + tail
+            return text + tail
         return f"{text} {tail}"
 
     @staticmethod

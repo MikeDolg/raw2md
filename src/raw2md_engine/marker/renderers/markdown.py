@@ -13,6 +13,7 @@ from raw2md_engine.marker.logger import get_logger
 from raw2md_engine.marker.renderers.html import HTMLRenderer
 from raw2md_engine.marker.schema import BlockTypes
 from raw2md_engine.marker.schema.document import Document
+from raw2md_engine.marker.util import SOFT_HYPHEN
 
 logger = get_logger()
 
@@ -96,12 +97,13 @@ class Markdownify(MarkdownConverter):
                     rf".*[\p{{Ll}}|\d][{hyphens}]\s?$", regex.DOTALL
                 ).match(text):  # handle hypenation across pages
                     # Before a capital or a digit a literal hyphen belongs to
-                    # the word; a soft hyphen never does.
+                    # the word. Any other hyphen, and every `¬`, becomes a
+                    # soft hyphen for raw2md to decide.
                     if text.rstrip().endswith("-") and not (
                         self._next_starts_lowercase(el)
                     ):
                         return text.rstrip()
-                    return regex.split(rf"[{hyphens}]\s?$", text)[0]
+                    return regex.split(rf"[{hyphens}]\s?$", text)[0] + SOFT_HYPHEN
                 if self._joins_without_space(el, text):
                     return text
                 return f"{text} "
