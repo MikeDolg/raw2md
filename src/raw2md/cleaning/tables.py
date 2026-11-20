@@ -1009,9 +1009,16 @@ def _numeric_columns(values: ColumnValues) -> list[bool]:
     A column no full row showed is not numeric.
     """
     return [
-        bool(column) and all(is_number_value(value) for value in column)
+        bool(column) and all(_reads_as_a_number(value) for value in column)
         for column in values
     ]
+
+
+def _reads_as_a_number(value: str) -> bool:
+    # Digits with marks and no letter, such as a range `1200-1500`, a
+    # fraction, or a bold figure, also bar a wrapped line from the column.
+    form = value_signature(value)
+    return is_number_value(value) or ("9" in form and "A" not in form)
 
 
 def _column_line_lengths(rows: list[list[str]]) -> list[int]:

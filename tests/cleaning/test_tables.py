@@ -911,6 +911,16 @@ def test_a_word_under_a_column_of_numbers_with_units_keeps_its_row() -> None:
     assert clean_in_place(text) == text
 
 
+def test_a_word_under_a_column_of_ranges_keeps_its_row() -> None:
+    text = laid_out_table(
+        "| Part | Description | Range |",
+        "| KX-10 | Housing for the small | 1200-1500 |",
+        "|  | gear unit | see note |",
+        "| KX-20 | Cover | 2000-2500 |",
+    )
+    assert clean_in_place(text) == text
+
+
 def test_a_cell_under_an_empty_cell_stays() -> None:
     text = laid_out_table(
         "| Part | Description | Note | Mass |",
