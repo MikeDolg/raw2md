@@ -9,6 +9,7 @@ from __future__ import annotations
 import pytest
 
 from raw2md.cleaner import CleanOptions, clean, clean_in_place
+from raw2md.cleaning.prose import decide_soft_hyphens
 from raw2md.mdtext.pages import page_mark, split_page_marks
 from raw2md.source_text import SourceText
 
@@ -404,6 +405,106 @@ def test_a_seam_reopened_under_another_marker_is_not_rejoined() -> None:
     split = "\n".join(["**Третий коэффи-**", "*циент отличается заметно.*", ""])
     text = _MARKER_SEAM_WITNESS + split
     assert clean_in_place(text) == text
+
+
+# ---- in-place fix: soft hyphen decision --------------------------------------
+
+# A converter writes it where it met a line-end hyphen it did not judge.
+SOFT_HYPHEN = chr(0x00AD)
+_MARKED = f"Their co{SOFT_HYPHEN}operation grew.\n"
+_JOINED_COPY = "The cooperation of teams helps.\n"
+_HYPHENATED_COPY = "The co-operation of teams helps.\n"
+
+
+def test_a_soft_hyphen_goes_when_the_body_repeats_the_joined_form() -> None:
+    text = _JOINED_COPY * 2 + "\n" + _MARKED
+    assert decide_soft_hyphens(text, SourceText.empty()) == (
+        _JOINED_COPY * 2 + "\nTheir cooperation grew.\n"
+    )
+
+
+def test_a_soft_hyphen_goes_when_the_source_text_holds_the_joined_form() -> None:
+    source = SourceText(["The cooperation of teams."])
+    assert decide_soft_hyphens(_MARKED, source) == "Their cooperation grew.\n"
+
+
+def test_a_soft_hyphen_becomes_a_hyphen_the_body_spells() -> None:
+    text = _HYPHENATED_COPY + "\n" + _MARKED
+    assert decide_soft_hyphens(text, SourceText.empty()) == (
+        _HYPHENATED_COPY + "\nTheir co-operation grew.\n"
+    )
+
+
+def test_a_soft_hyphen_becomes_a_hyphen_the_source_text_spells() -> None:
+    source = SourceText(["The co-operation of teams."])
+    assert decide_soft_hyphens(_MARKED, source) == "Their co-operation grew.\n"
+
+
+def test_a_soft_hyphen_without_a_witness_goes() -> None:
+    assert decide_soft_hyphens(_MARKED, SourceText.empty()) == (
+        "Their cooperation grew.\n"
+    )
+
+
+def test_the_joined_form_beats_a_single_hyphenated_copy() -> None:
+    text = _JOINED_COPY * 2 + _HYPHENATED_COPY + "\n" + _MARKED
+    assert decide_soft_hyphens(text, SourceText.empty()).endswith(
+        "Their cooperation grew.\n"
+    )
+
+
+def test_a_hyphenated_convention_beats_the_joined_form() -> None:
+    # Three copies make the hyphen the document's own spelling.
+    text = _JOINED_COPY * 2 + _HYPHENATED_COPY * 3 + "\n" + _MARKED
+    assert decide_soft_hyphens(text, SourceText.empty()).endswith(
+        "Their co-operation grew.\n"
+    )
+
+
+def test_a_marked_word_does_not_witness_its_own_joined_form() -> None:
+    text = _HYPHENATED_COPY + "\n" + _MARKED * 2
+    assert decide_soft_hyphens(text, SourceText.empty()) == (
+        _HYPHENATED_COPY + "\n" + "Their co-operation grew.\n" * 2
+    )
+
+
+def test_a_soft_hyphen_in_an_html_table_cell_is_decided() -> None:
+    text = (
+        f"<table><tr><td>co{SOFT_HYPHEN}operation</td>"
+        f"<td>pre{SOFT_HYPHEN}view</td></tr></table>\n"
+        "\n" + _HYPHENATED_COPY
+    )
+    assert decide_soft_hyphens(text, SourceText.empty()) == (
+        "<table><tr><td>co-operation</td><td>preview</td></tr></table>\n"
+        "\n" + _HYPHENATED_COPY
+    )
+
+
+def test_a_soft_hyphen_in_fenced_code_or_front_matter_stays() -> None:
+    text = (
+        f"---\ntitle: co{SOFT_HYPHEN}operation\n---\n"
+        f"```\nco{SOFT_HYPHEN}operation\n```\n"
+    )
+    assert decide_soft_hyphens(text, SourceText.empty()) == text
+
+
+def test_a_soft_hyphen_beside_a_digit_is_left_to_the_invisible_strip() -> None:
+    text = f"Module M5{SOFT_HYPHEN}200 runs.\n"
+    assert decide_soft_hyphens(text, SourceText.empty()) == text
+
+
+def test_every_soft_hyphen_of_a_word_with_several_goes() -> None:
+    text = _HYPHENATED_COPY + f"\nTheir co{SOFT_HYPHEN}oper{SOFT_HYPHEN}ation.\n"
+    assert decide_soft_hyphens(text, SourceText.empty()).endswith(
+        "Their cooperation.\n"
+    )
+
+
+def test_a_decided_hyphen_survives_the_whole_cleaning() -> None:
+    text = _HYPHENATED_COPY + "\n" + _MARKED
+    once = clean_in_place(text)
+    assert once == _HYPHENATED_COPY + "\nTheir co-operation grew.\n"
+    assert clean_in_place(once) == once
 
 
 # ---- in-place fix: compound hyphen by majority -------------------------------

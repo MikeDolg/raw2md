@@ -1,12 +1,12 @@
 """Rules that fix a converter's plain prose text, not its structure.
 
-Early passes read a line at a time: alt-text paths, invisible characters,
-junk lines, homoglyphs, glued emphasis, split numbers, heading spaces, page
-anchors, and the page band. After the structural passes come the rules the
-body's own spelling decides: hyphen rejoin, crushed paragraphs, paragraphs cut
-by a page or a figure, letter-spaced runs, whole-paragraph emphasis, and
-compound hyphens. `collapse_blanks` closes
-every cleaning run.
+Early passes read a line at a time: alt-text paths, soft hyphens (judged by
+the whole body), invisible characters, junk lines, homoglyphs, glued emphasis,
+split numbers, heading spaces, page anchors, and the page band. After the
+structural passes come the rules the body's own spelling decides: hyphen
+rejoin, crushed paragraphs, paragraphs cut by a page or a figure,
+letter-spaced runs, whole-paragraph emphasis, and compound hyphens.
+`collapse_blanks` closes every cleaning run.
 
 `letter_spaced_runs` and `spacing_witness` export the spacing reading for the
 findings report; `is_caption_label` exports the caption vocabulary.
@@ -951,6 +951,78 @@ def _hyphenated_spelling_count(seg_list: list[Segment], frag1: str, frag2: str) 
     return sum(
         len(pattern.findall(line)) for line, protected in seg_list if not protected
     )
+
+
+# ---- soft hyphen decision ---------------------------------------------------
+
+_SOFT_HYPHEN = chr(0x00AD)
+
+# A word that carries at least one soft hyphen between its runs.
+_SOFT_HYPHENATED_WORD_RE = re.compile(rf"\w+(?:{_SOFT_HYPHEN}\w+)+")
+
+_LETTER_SOFT_HYPHEN_RE = re.compile(rf"(?<=[^\W\d_]){_SOFT_HYPHEN}(?=[^\W\d_])")
+
+
+def decide_soft_hyphens(text: str, source_text: SourceText) -> str:
+    """Settle each soft hyphen between two letters: drop it, or write `-`.
+
+    A soft hyphen stands where a converter met a line-end hyphen it did not
+    judge. A hyphenated form the body spells as a convention wins; then a
+    joined form attested as `rejoin_hyphenation` attests it drops the mark;
+    then any hyphenated form, in the body or the source, writes `-`. Without
+    a witness, and in a word with several marks, the mark goes. Reads HTML
+    table cells; front matter and fenced code stay verbatim.
+    """
+    if _SOFT_HYPHEN not in text:
+        return text
+    seg_list = segments(text)
+    readable = [
+        not protected or table_line
+        for (_, protected), table_line in zip(
+            seg_list, html_table_lines(text), strict=True
+        )
+    ]
+    # A marked word witnesses neither of its own spellings.
+    witness = "\n".join(
+        line.replace(_SOFT_HYPHEN, " ")
+        for (line, _), keep in zip(seg_list, readable, strict=True)
+        if keep
+    )
+    body_tokens = Counter(tokenize(witness))
+
+    def settle(match: re.Match[str]) -> str:
+        return _settle_soft_hyphens(match.group(), witness, body_tokens, source_text)
+
+    out = [
+        _SOFT_HYPHENATED_WORD_RE.sub(settle, line) if keep else line
+        for (line, _), keep in zip(seg_list, readable, strict=True)
+    ]
+    body = "\n".join(out)
+    return f"{body}\n" if text.endswith("\n") else body
+
+
+def _settle_soft_hyphens(
+    word: str, witness: str, body_tokens: Counter[str], source_text: SourceText
+) -> str:
+    """`word` with each of its soft hyphens between two letters decided."""
+    halves = word.split(_SOFT_HYPHEN)
+    if len(halves) != 2:
+        return _LETTER_SOFT_HYPHEN_RE.sub("", word)
+    if _LETTER_SOFT_HYPHEN_RE.search(word) is None:
+        return word
+    frag1, frag2 = halves
+    hyphens = _hyphenated_spelling_count([(witness, False)], frag1, frag2)
+    if hyphens >= _HYPHEN_FORM_BLOCK_THRESHOLD:
+        return f"{frag1}-{frag2}"
+    merged = frag1 + frag2
+    tokens = tokenize(merged)
+    if source_text.has_token(merged) or (
+        len(tokens) == 1 and body_tokens[tokens[0]] >= _MERGED_FORM_MIN_COUNT
+    ):
+        return merged
+    if hyphens or source_text.has_hyphen_form(f"{frag1}-{frag2}"):
+        return f"{frag1}-{frag2}"
+    return merged
 
 
 def demark_seam_end(line: str) -> str:

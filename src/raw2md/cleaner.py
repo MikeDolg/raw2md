@@ -6,8 +6,9 @@ body (`cleaning.findings`). `clean_with_report` returns both; `clean` returns
 the body alone.
 
 Protected zones pass through verbatim: front matter, fenced code, and HTML
-tables. Three rules reach into an HTML table's cells but never its markup:
-the alt-path strip, the LLM-OCR fabrication strip, and the math cell opening.
+tables. Four rules reach into an HTML table's cells but never its markup:
+the alt-path strip, the LLM-OCR fabrication strip, the soft hyphen decision,
+and the math cell opening.
 
 This module owns the order of the passes, the one thing about cleaning that
 must be read as a whole. The rules live in the `cleaning` package.
@@ -27,6 +28,7 @@ from raw2md.cleaning import (
     close_unpaired_delimiters,
     collapse_blanks,
     collapse_unused_heading_levels,
+    decide_soft_hyphens,
     decompose_contents_table,
     defuse_false_math,
     drop_bodyless_table,
@@ -124,10 +126,7 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     """
     if options is None:
         options = CleanOptions()
-    text = strip_alt_file_paths(text)
-    if options.llm_ocr:
-        text = strip_ocr_fabrications(text, options.keywords)
-    seg_list = classify_and_fix(text, options.method)
+    seg_list = classify_and_fix(_fix_raw_text(text, options), options.method)
     seg_list = strip_html_anchors(seg_list)
     seg_list = strip_heading_emphasis(seg_list)
     # Before every rule that reads a heading's number: a stray leading glyph
@@ -246,6 +245,16 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     # Last of all: it writes blank lines inside a protected zone, which every
     # rule above reads as one line per table row.
     return open_math_html_cells(collapse_blanks(seg_list))
+
+
+def _fix_raw_text(text: str, options: CleanOptions) -> str:
+    """The passes that read the raw text, HTML table cells included."""
+    text = strip_alt_file_paths(text)
+    if options.llm_ocr:
+        text = strip_ocr_fabrications(text, options.keywords)
+    # Before `classify_and_fix`, whose invisible-character strip drops every
+    # soft hyphen: a mark that stands for a line-end hyphen is decided first.
+    return decide_soft_hyphens(text, options.source_text)
 
 
 def _settle_heading_structure(

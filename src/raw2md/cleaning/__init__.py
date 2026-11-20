@@ -67,6 +67,7 @@ from raw2md.cleaning.options import CleanOptions
 from raw2md.cleaning.prose import (
     classify_and_fix,
     collapse_blanks,
+    decide_soft_hyphens,
     drop_page_furniture,
     drop_paragraph_emphasis,
     join_cut_paragraphs,
@@ -110,6 +111,7 @@ __all__ = [
     "close_unpaired_delimiters",
     "collapse_blanks",
     "collapse_unused_heading_levels",
+    "decide_soft_hyphens",
     "decompose_contents_table",
     "defuse_false_math",
     "detect_oversize_headings",

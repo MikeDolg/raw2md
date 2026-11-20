@@ -112,7 +112,8 @@ def test_invisible_format_char_in_code_fence_is_untouched() -> None:
 
 
 def test_invisible_format_char_in_html_table_is_untouched() -> None:
-    text = "<table><tr><td>a" + SOFT_HYPHEN + "b</td></tr></table>\n"
+    # A soft hyphen between two letters is decided even here.
+    text = "<table><tr><td>a" + ZWSP + "b</td></tr></table>\n"
     assert clean_in_place(text) == text
 
 
