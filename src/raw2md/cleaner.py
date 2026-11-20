@@ -32,6 +32,7 @@ from raw2md.cleaning import (
     decompose_contents_table,
     defuse_false_math,
     drop_bodyless_table,
+    drop_cell_leaders,
     drop_content_free_math_spans,
     drop_contents_continuation_headings,
     drop_empty_table_columns,
@@ -190,6 +191,8 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     seg_list = reunite_split_tables(seg_list)
     # Before the bodyless collapse, which would claim the same table.
     seg_list = decompose_contents_table(seg_list)
+    # After the contents table, which reads a leader as the gap before a page.
+    seg_list = drop_cell_leaders(seg_list)
     # Before the bodyless collapse: a body stacked in one header cell leaves no
     # data row, and the collapse would join it into prose.
     seg_list = recut_periodic_stack(seg_list)

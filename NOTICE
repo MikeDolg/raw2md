@@ -86,7 +86,7 @@ of the repository holds each change with its diff.
   - Tables: `pdftext/tables.py` measures the gap between characters along
     the line and keeps the character boxes of a table run.
     `marker/processors/table.py` splits a run of numbers at the cell
-    boundaries and removes dot leaders only outside the values.
+    boundaries.
     `marker/renderers/markdown.py` escapes a vertical bar in a cell and
     writes one separator line for a table of one row.
   - Formats and math: `marker/schema/text/span.py` applies every format of
@@ -288,6 +288,10 @@ of the repository holds each change with its diff.
   a digit stays (2026-11-20). Changed files, under src/raw2md_engine/:
   `marker/util.py`, `marker/schema/text/line.py`,
   `marker/schema/text/span.py`, `marker/renderers/markdown.py`, and
+  `marker/processors/table.py`.
+- The table processor no longer removes the dot leaders from a cell line.
+  The cleaning of raw2md removes them from each line of a pipe-table cell
+  (2026-11-20). Changed file, under src/raw2md_engine/:
   `marker/processors/table.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.

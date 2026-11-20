@@ -82,6 +82,7 @@ from raw2md.cleaning.prose import (
 from raw2md.cleaning.tables import (
     decompose_contents_table,
     drop_bodyless_table,
+    drop_cell_leaders,
     drop_empty_table_columns,
     fold_repeated_column_cycle,
     join_contents_entry_breaks,
@@ -117,6 +118,7 @@ __all__ = [
     "detect_oversize_headings",
     "detect_run_in_headings",
     "drop_bodyless_table",
+    "drop_cell_leaders",
     "drop_content_free_math_spans",
     "drop_contents_continuation_headings",
     "drop_empty_table_columns",

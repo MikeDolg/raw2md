@@ -334,6 +334,75 @@ def _table_block(seg_list: list[Segment], idx: int) -> tuple[int, int] | None:
     return sep_idx, body_end
 
 
+# A leader is a run of one kind of mark, with spaces allowed between the marks;
+# a converter escapes `_` and `-`. A contiguous run needs four marks, and a
+# run of two or three marks needs a space between them: `Gen..`, `etc...`,
+# and `0 ... 90` are text, except `__` after a space. A leader goes after a
+# non-digit when no letter follows it, or before the end of the line or
+# before a space and a non-digit. After a digit and a space it goes when it
+# spans four marks or holds three spaced marks. It stays between digits
+# (`1...10`), at the start of a value (`-.25`, `6--8`), and in a mixed run
+# (`dis. ...`, `Brig.-Gen.`).
+_LEADER_MARKS = (r"\.", r"(?:-|\\-)", r"(?:_|\\_)")
+_LEADER_RUN = (
+    "|".join(
+        rf"(?:\s?{mark}){{4,}}+|\s{mark}(?:\s{mark}){{1,2}}+|^{mark}(?:\s?{mark}){{1,2}}+(?=\s*$)"
+        for mark in _LEADER_MARKS
+    )
+    + r"|(?:\s?…){2,}+|\s(?:_|\\_){2,3}+"
+)
+_START_RUN = "|".join(rf"{mark}(?:\s{mark}){{1,2}}+" for mark in _LEADER_MARKS)
+_SPACED_RUN = "|".join(
+    rf"(?:\s{mark}){{3,}}+|\s{mark}{{4,}}+" for mark in _LEADER_MARKS
+)
+_CELL_LEADER_RE = re.compile(
+    rf"(?:(?<=[^\d.\-_…\\\s])|(?<=[^\d\s]\s))(?:{_LEADER_RUN})(?![^\W\d_]|>)"
+    rf"|(?:{_LEADER_RUN})(?=\s*$|\s+[^\d\s.\-_…\\])"
+    rf"|(?<=\d)(?:{_SPACED_RUN})(?=\s)"
+    rf"|^(?:{_START_RUN})(?=\s)"
+)
+
+
+def drop_cell_leaders(seg_list: list[Segment]) -> list[Segment]:
+    """Remove the dot leaders from each line of a pipe-table cell.
+
+    A line is a piece between `<br>` breaks, so a leader never reaches across
+    the break. A piece that holds only a leader leaves with its break. An HTML
+    table is a protected zone and stays.
+    """
+    result = list(seg_list)
+    idx = 0
+    while idx < len(result):
+        block = _table_block(result, idx)
+        if block is None:
+            idx += 1
+            continue
+        body_end = block[1]
+        for row in range(idx, body_end):
+            line, protected = result[row]
+            if is_table_separator(line.strip()):
+                continue
+            cells = [_without_leaders(cell) for cell in table_cells(line)]
+            result[row] = (rebuild_table_row(line, cells), protected)
+        idx = body_end
+    return result
+
+
+def _without_leaders(cell: str) -> str:
+    pieces = CELL_BREAK_RE.split(cell)
+    if not any(_CELL_LEADER_RE.search(piece.strip()) for piece in pieces):
+        return cell
+    breaks = CELL_BREAK_RE.findall(cell)
+    kept: list[str] = []
+    for piece in pieces:
+        core = piece.strip()
+        cleaned = _CELL_LEADER_RE.sub("", core).strip() if core else core
+        if core and not cleaned:
+            continue
+        kept.append(piece.replace(core, cleaned, 1) if core else piece)
+    return (breaks[0] if breaks else "").join(kept)
+
+
 def _width_confirmed(
     seg_list: list[Segment], header: int, sep_idx: int, body_end: int, width: int
 ) -> bool:

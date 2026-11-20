@@ -209,14 +209,6 @@ class TableProcessor(BaseProcessor):
             text = line["text"].strip()
             if not text or text == ".":
                 continue
-            # Leader runs: ". . .", "---", "___", "……". A run goes when whitespace
-            # or the end follows, or a non-digit precedes it ("Item.....7").
-            # A run between digits or at the start stays: "1...10", "-.25", "6--8".
-            text = re.sub(
-                r"(?:(?<=[^\d.\-_…])(?:\s?[.\-_…]){2,}|(?:\s?[.\-_…]){2,}(?=\s|$))",
-                "",
-                text,
-            )
             # Remove mathbf formatting if there is only digits with decimals/commas/currency symbols inside
             text = re.sub(r"\\mathbf\{([0-9.,$€£]+)\}", r"<b>\1</b>", text)
             # Drop empty tags like \overline{}
