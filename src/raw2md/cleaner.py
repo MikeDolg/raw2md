@@ -49,6 +49,7 @@ from raw2md.cleaning import (
     join_contents_entry_breaks,
     join_continuation_rows,
     join_cut_paragraphs,
+    join_dollar_columns,
     join_flattened_paragraphs,
     join_letter_spaced_headings,
     join_letter_spaced_runs,
@@ -183,6 +184,9 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     seg_list = separate_bold_list_marker(seg_list)
     seg_list = drop_stray_bullet_glyph(seg_list)
     seg_list = split_glued_table_header(seg_list)
+    # Before the cycle fold: a dollar column or an empty one breaks the period
+    # of a repeated column cycle and counts as a column of its own.
+    seg_list = join_dollar_columns(seg_list)
     # Before every grid rule: until folded, one column index names several
     # fields. After the header split, which leaves the title row to read.
     seg_list = fold_repeated_column_cycle(seg_list)

@@ -403,6 +403,80 @@ def _without_leaders(cell: str) -> str:
     return (breaks[0] if breaks else "").join(kept)
 
 
+_DOLLAR_MARKS = frozenset({"$", r"\$"})
+
+
+def join_dollar_columns(seg_list: list[Segment]) -> list[Segment]:
+    """Move the `$` of a column that holds only dollar signs into its neighbour.
+
+    The column qualifies when its cells are `$` or empty in every row, the
+    table has more than one row, the column is not the last, and the cell
+    beside each `$` holds a value. The sign is written flush before that
+    value, and the column leaves the table. A column with no sign at all leaves
+    too: the row rules read it as a gap that splits the table. A table whose
+    rows miss the header width is left alone: off it, a column index means
+    nothing. An HTML table is a protected zone and stays.
+    """
+    result = list(seg_list)
+    idx = 0
+    while idx < len(result):
+        block = _table_block(result, idx)
+        if block is None:
+            idx += 1
+            continue
+        sep_idx, body_end = block
+        rows = [idx, *range(sep_idx + 1, body_end)]
+        grid = [table_cells(result[row][0]) for row in rows]
+        width = len(grid[0])
+        if len(table_cells(result[sep_idx][0])) == width and all(
+            len(cells) == width for cells in grid
+        ):
+            columns = _dollar_columns(grid)
+            if columns:
+                _move_dollars(result, rows, sep_idx, grid, columns)
+        idx = body_end
+    return result
+
+
+def _dollar_columns(grid: list[list[str]]) -> list[int]:
+    if len(grid) < 2:
+        return []
+    columns: list[int] = []
+    for col in range(len(grid[0]) - 1):
+        marks = [row[col].strip() for row in grid]
+        if not all(not mark or mark in _DOLLAR_MARKS for mark in marks):
+            continue
+        beside = [row[col + 1].strip() for row in grid if row[col].strip()]
+        if all(value and value not in _DOLLAR_MARKS for value in beside):
+            columns.append(col)
+    return columns
+
+
+def _move_dollars(
+    result: list[Segment],
+    rows: list[int],
+    sep_idx: int,
+    grid: list[list[str]],
+    columns: list[int],
+) -> None:
+    for row, cells in zip(rows, grid, strict=True):
+        for col in columns:
+            mark = cells[col].strip()
+            if mark:
+                beside = cells[col + 1]
+                lead = beside[: len(beside) - len(beside.lstrip())]
+                trail = beside[len(beside.rstrip()) :]
+                cells[col + 1] = f"{lead}{mark}{beside.strip()}{trail}"
+        line, protected = result[row]
+        kept = [cell for col, cell in enumerate(cells) if col not in columns]
+        result[row] = (rebuild_table_row(line, kept), protected)
+    line, protected = result[sep_idx]
+    sep_cells = [
+        cell for col, cell in enumerate(table_cells(line)) if col not in columns
+    ]
+    result[sep_idx] = (rebuild_table_row(line, sep_cells), protected)
+
+
 def _width_confirmed(
     seg_list: list[Segment], header: int, sep_idx: int, body_end: int, width: int
 ) -> bool:

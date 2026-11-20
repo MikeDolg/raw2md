@@ -293,6 +293,10 @@ of the repository holds each change with its diff.
   The cleaning of raw2md removes them from each line of a pipe-table cell
   (2026-11-20). Changed file, under src/raw2md_engine/:
   `marker/processors/table.py`.
+- The table processor no longer joins a column of dollar signs with its
+  neighbour. The cleaning of raw2md does it on the pipe table
+  (2026-11-20). Changed file, under src/raw2md_engine/:
+  `marker/processors/table.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
