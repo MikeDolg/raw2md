@@ -263,7 +263,7 @@ def _fix_raw_text(text: str, options: CleanOptions) -> str:
     """The passes that read the raw text, HTML table cells included."""
     text = strip_alt_file_paths(text)
     if options.llm_ocr:
-        text = strip_ocr_fabrications(text, options.keywords)
+        text = strip_ocr_fabrications(text, options.keywords, options.base_dir)
     # Before `classify_and_fix`, whose invisible-character strip drops every
     # soft hyphen: a mark that stands for a line-end hyphen is decided first.
     return decide_soft_hyphens(text, options.source_text)

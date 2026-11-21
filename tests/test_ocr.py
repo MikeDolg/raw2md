@@ -295,3 +295,159 @@ def test_trace_records_each_page(tmp_path: Path) -> None:
     text = (tmp_path / "llm" / "ocr.txt").read_text(encoding="utf-8")
     assert "### page 1  attempt 1" in text
     assert "### page 2  attempt 1" in text
+
+
+# ---- figure marks ------------------------------------------------------------
+
+
+def _figure_page() -> bytes:
+    """A 100 x 140 page raster: an inked line on top, a picture below it."""
+    img = Image.new("RGB", (100, 140), color=(255, 255, 255))
+    img.paste((0, 0, 0), (10, 5, 90, 10))
+    img.paste((200, 30, 30), (20, 14, 60, 70))
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def test_default_prompt_asks_for_figure_marks() -> None:
+    assert "![](fig:ymin,xmin,ymax,xmax)" in default_prompts().ocr.default
+
+
+def test_recognize_crops_a_marked_figure_into_the_media_folder(
+    tmp_path: Path,
+) -> None:
+    provider = RecordingProvider(
+        ["Text above.\n\n![](fig:100,200,500,600)\n\nFig. 1. A gear pair."]
+    )
+    media_dir = tmp_path / "media"
+
+    result = recognize([_figure_page()], _op(provider), media_dir=media_dir)
+
+    assert result.body == (
+        "Text above.\n\n![](_page_0_Figure_0.png)\n\nFig. 1. A gear pair.\n"
+    )
+    assert result.media == ("_page_0_Figure_0.png",)
+    with Image.open(media_dir / "_page_0_Figure_0.png") as crop:
+        # Thousandths of 100 x 140: x 20..60, y 14..70.
+        assert crop.size == (40, 56)
+        assert crop.convert("RGB").getpixel((0, 0)) == (200, 30, 30)
+
+
+def test_recognize_numbers_figures_in_page_order(tmp_path: Path) -> None:
+    provider = RecordingProvider(
+        [
+            "![](fig:0,0,500,500)\n\n![](fig:500,500,1000,1000)",
+            "![](fig:0,0,1000,1000)",
+        ]
+    )
+
+    result = recognize(
+        [_figure_page(), _figure_page()], _op(provider), media_dir=tmp_path
+    )
+
+    assert result.media == (
+        "_page_0_Figure_0.png",
+        "_page_0_Figure_1.png",
+        "_page_1_Figure_0.png",
+    )
+    assert result.body == (
+        "![](_page_0_Figure_0.png)\n\n![](_page_0_Figure_1.png)\n\n"
+        "![](_page_1_Figure_0.png)\n"
+    )
+    assert all((tmp_path / name).is_file() for name in result.media)
+
+
+def test_recognize_drops_the_alt_text_of_a_mark(tmp_path: Path) -> None:
+    provider = RecordingProvider(["![A red square](fig: 100, 200, 500, 600)"])
+
+    result = recognize([_figure_page()], _op(provider), media_dir=tmp_path)
+
+    assert result.body == "![](_page_0_Figure_0.png)\n"
+
+
+def test_recognize_accepts_decimal_box_coordinates(tmp_path: Path) -> None:
+    provider = RecordingProvider(["![](fig:100.5,200,500,600.25)"])
+
+    result = recognize([_figure_page()], _op(provider), media_dir=tmp_path)
+
+    assert result.media == ("_page_0_Figure_0.png",)
+
+
+@pytest.mark.parametrize(
+    "box",
+    [
+        "500,200,100,600",  # ymin above ymax
+        "100,600,500,200",  # xmin above xmax
+        "100,200,100,600",  # no height
+        "0,0,1001,500",  # off the page
+        "100,200,500",  # three numbers
+        "a,b,c,d",
+        "-10,200,500,600",
+        "0,0,1,1",  # under one pixel
+    ],
+)
+def test_recognize_drops_a_mark_with_an_invalid_box(
+    box: str, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    provider = RecordingProvider([f"Text above.\n\n![](fig:{box})\n\nCaption."])
+    media_dir = tmp_path / "media"
+
+    with caplog.at_level(logging.WARNING, logger="raw2md"):
+        result = recognize([_figure_page()], _op(provider), media_dir=media_dir)
+
+    assert result.body == "Text above.\n\n\n\nCaption.\n"
+    assert result.media == ()
+    assert not media_dir.exists()
+    assert "invalid box" in caplog.text
+
+
+def test_recognize_keeps_a_valid_mark_beside_an_invalid_one(tmp_path: Path) -> None:
+    provider = RecordingProvider(["![](fig:9,9,1,1)\n\n![](fig:0,0,500,500)"])
+
+    result = recognize([_figure_page()], _op(provider), media_dir=tmp_path)
+
+    # The ordinal counts crops, so a dropped mark leaves no gap.
+    assert result.media == ("_page_0_Figure_0.png",)
+    assert result.body == "![](_page_0_Figure_0.png)\n"
+
+
+def test_recognize_drops_marks_when_image_extraction_is_off(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    provider = RecordingProvider(["Text.\n\n![](fig:100,200,500,600)\n\nCaption."])
+
+    with caplog.at_level(logging.INFO, logger="raw2md"):
+        result = recognize([_figure_page()], _op(provider))
+
+    assert result.body == "Text.\n\n\n\nCaption.\n"
+    assert result.media == ()
+    assert "image extraction is off" in caplog.text
+
+
+def test_recognize_drops_marks_over_an_unreadable_raster(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    provider = RecordingProvider(["Text.\n\n![](fig:100,200,500,600)"])
+
+    with caplog.at_level(logging.WARNING, logger="raw2md"):
+        result = recognize([b"not-a-png"], _op(provider), media_dir=tmp_path)
+
+    assert result.body == "Text.\n"
+    assert result.media == ()
+    assert list(tmp_path.iterdir()) == []
+    assert "raster unreadable" in caplog.text
+
+
+def test_recognize_under_a_prompt_without_marks_extracts_nothing(
+    tmp_path: Path,
+) -> None:
+    # A prompts.yaml written before the marks gives replies with none.
+    provider = RecordingProvider(["Fig. 1. A gear pair."])
+    media_dir = tmp_path / "media"
+
+    result = recognize([_figure_page()], _op(provider), media_dir=media_dir)
+
+    assert result.body == "Fig. 1. A gear pair.\n"
+    assert result.media == ()
+    assert not media_dir.exists()

@@ -13,6 +13,7 @@ from typing import TextIO
 import pytest
 from conftest import make_run_config
 from pdf_fixtures import Page, image_pages, text_pages, write_pdf
+from PIL import Image
 
 from raw2md.cleaner import CleanOptions, CleanResult, clean_with_report
 from raw2md.config import RunConfig
@@ -2178,7 +2179,7 @@ def test_ocr_pdf_without_pdf_header_stops_before_rendering(
 def test_ocr_result_drops_fabricated_image_links_and_placeholders(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # OCR extracts no media, so a fabricated image link must not survive.
+    # The model marks a figure, never links one, so its own link is false.
     monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _fake_render_pages)
     src = tmp_path / "a.pdf"
     src.write_bytes(b"%PDF-1.4 stub")
@@ -2196,6 +2197,53 @@ def test_ocr_result_drops_fabricated_image_links_and_placeholders(
     assert "img_p1.png" not in text
     assert "Image of a belt conveyor" not in text
     assert "recognized text" in text
+
+
+def _figure_render_pages(source: Path, **_: object) -> Iterator[bytes]:
+    """Stand in for pdfium.render_pages: two real rasters, so a crop can cut."""
+    for _page in OCR_PAGES:
+        buffer = io.BytesIO()
+        Image.new("RGB", (200, 280), color=(255, 255, 255)).save(buffer, "PNG")
+        yield buffer.getvalue()
+
+
+def test_ocr_crops_a_marked_figure_into_the_media_folder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _figure_render_pages)
+    src = tmp_path / "a.pdf"
+    src.write_bytes(b"%PDF-1.4 stub")
+    marked_reply = f"{OCR_REPLIES[0]}\n\n![](fig:100,100,600,900)\n\nFig. 1. A gear."
+    provider = FakeProvider([marked_reply, OCR_REPLIES[1]])
+
+    result = run_with_ocr(src, EngineRegistry([]), provider)
+
+    assert result.outcome is Outcome.OK
+    media_dir = resolve_output_target(src).media_dir
+    assert (media_dir / "_page_0_Figure_0.png").is_file()
+    text = (tmp_path / "a.md").read_text(encoding="utf-8")
+    assert "![](a/_page_0_Figure_0.png)" in text
+    assert "Fig. 1. A gear." in text
+    assert "fig:" not in text
+
+
+def test_ocr_drops_figure_marks_under_disable_image_extraction(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _figure_render_pages)
+    src = tmp_path / "a.pdf"
+    src.write_bytes(b"%PDF-1.4 stub")
+    marked_reply = f"{OCR_REPLIES[0]}\n\n![](fig:100,100,600,900)\n\nFig. 1. A gear."
+    provider = FakeProvider([marked_reply, OCR_REPLIES[1]])
+
+    result = run_with_ocr(src, EngineRegistry([]), provider, extract_images=False)
+
+    assert result.outcome is Outcome.OK
+    assert not resolve_output_target(src).media_dir.exists()
+    text = (tmp_path / "a.md").read_text(encoding="utf-8")
+    assert "fig:" not in text
+    assert "![" not in text
+    assert "Fig. 1. A gear." in text
 
 
 def test_ocr_rate_limit_is_llm_error_without_result(

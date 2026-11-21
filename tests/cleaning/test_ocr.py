@@ -1,13 +1,15 @@
 """Tests for the two families `cleaning.ocr` holds.
 
-The LLM-OCR route extracts no media, so any image link, hyperlink, or bracketed
-placeholder in its output is invented and stripped. Recognition damage is
-repaired only where the body itself attests the right spelling.
+The LLM-OCR route extracts only its own figure crops, so any other image link,
+a hyperlink, or a bracketed placeholder in its output is invented and stripped.
+Recognition damage is repaired only where the body itself attests the right
+spelling.
 """
 
 from __future__ import annotations
 
 from dataclasses import replace
+from pathlib import Path
 
 from raw2md.cleaner import CleanOptions, clean, clean_in_place
 from raw2md.cleaning import DEFAULT_WITNESS_MIN
@@ -20,7 +22,7 @@ _OCR_OPTIONS = CleanOptions(llm_ocr=True)
 
 
 def test_ocr_image_link_is_removed() -> None:
-    # LLM-OCR extracts no media, so every image link is false.
+    # Without a folder to check against, no link can be a crop.
     text = "before\n\n![](img_p22.png)\n\nafter\n"
     assert clean(text, _OCR_OPTIONS) == "before\n\nafter\n"
 
@@ -148,6 +150,30 @@ def test_ocr_reference_style_removal_is_idempotent() -> None:
     )
     once = clean(text, _OCR_OPTIONS)
     assert clean(once, _OCR_OPTIONS) == once
+
+
+def test_ocr_link_to_an_extracted_crop_survives(tmp_path: Path) -> None:
+    media = tmp_path / "a"
+    media.mkdir()
+    (media / "_page_0_Figure_0.png").write_bytes(b"png")
+    options = replace(_OCR_OPTIONS, base_dir=tmp_path)
+    text = "before\n\n![](a/_page_0_Figure_0.png)\n\nafter\n"
+    assert clean(text, options) == text
+
+
+def test_ocr_link_to_a_missing_file_is_removed_under_a_base_dir(
+    tmp_path: Path,
+) -> None:
+    options = replace(_OCR_OPTIONS, base_dir=tmp_path)
+    text = "before\n\n![](a/_page_0_Figure_0.png)\n\nafter\n"
+    assert clean(text, options) == "before\n\nafter\n"
+
+
+def test_ocr_link_to_a_folder_is_removed(tmp_path: Path) -> None:
+    (tmp_path / "a").mkdir()
+    options = replace(_OCR_OPTIONS, base_dir=tmp_path)
+    text = "before\n\n![](a)\n\nafter\n"
+    assert clean(text, options) == "before\n\nafter\n"
 
 
 def test_engine_route_image_links_are_not_touched() -> None:

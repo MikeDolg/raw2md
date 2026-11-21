@@ -17,10 +17,16 @@ ocr:
     For text you cannot read, insert the marker [unreadable]; for a single
     uncertain character or word, append [?] right after it. Do not guess or invent
     text that is not on the page.
-    When the page shows a figure, chart, or photograph, transcribe only its
-    printed caption as ordinary page text. Do not describe the picture, and do not
-    create a link or placeholder for it: no image is extracted from this page, so
-    any such link or placeholder would be false.
+    When the page shows a figure, chart, diagram, or photograph, write the mark
+    ![](fig:ymin,xmin,ymax,xmax) on a line of its own where the picture stands.
+    The four numbers are the picture's bounding box, each a whole number from 0 to
+    1000: ymin and ymax measure from the top edge of the page to the bottom edge,
+    xmin and xmax from the left edge to the right edge. The box encloses the
+    picture alone, not its caption. The picture is cut from the page at that box,
+    so give one mark for each separate picture. Transcribe the printed caption as
+    ordinary page text. Do not describe the picture, and write no other link or
+    placeholder for it. A table, a formula, or a block of text is not a picture:
+    transcribe it as Markdown.
     Output only the Markdown content of the page, with no commentary and no
     surrounding code fence.
 inspection:

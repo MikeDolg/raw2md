@@ -3,9 +3,9 @@
 `repair_attested_tokens` repairs what the body itself decides: a lower-cased
 code and a one-letter misspelling, each against a frequent attested form.
 
-`strip_ocr_fabrications` removes what the LLM-OCR route invents: it extracts
-no media, so its image links, external links, and placeholder notes have no
-source to salvage.
+`strip_ocr_fabrications` removes what the LLM-OCR route invents: the only
+media it extracts are its own figure crops, so any other image link, an
+external link, and a placeholder note have no source to salvage.
 """
 
 from __future__ import annotations
@@ -14,10 +14,11 @@ import logging
 import re
 from collections import Counter
 from collections.abc import Iterator
+from pathlib import Path
 
 from raw2md.cleaning.segments import WORD_RUN_RE, body_word_counts, prose_reading
 from raw2md.keywords import Keywords
-from raw2md.mdtext.links import IMAGE_RE
+from raw2md.mdtext.links import IMAGE_RE, local_image_path
 from raw2md.mdtext.pages import is_lost_page_marker
 from raw2md.mdtext.words import word_pattern
 from raw2md.mdtext.zones import Segment, html_table_lines, segments
@@ -54,16 +55,20 @@ _BRACKET_LINE_RE = re.compile(r"^\[([^\]]+)\]$")
 _OCR_PLACEHOLDER_EXEMPT = frozenset({"unreadable", "?"})
 
 
-def strip_ocr_fabrications(text: str, keywords: Keywords) -> str:
+def strip_ocr_fabrications(
+    text: str, keywords: Keywords, base_dir: Path | None = None
+) -> str:
     """Remove image links, external links, and image placeholders LLM-OCR invents.
 
-    Image links go with their alt text; an external link keeps its visible
-    text. Inline and reference-style forms are covered, and a definition that
-    no usage spends any more goes too. A bracket-only line with a word of
-    `keywords.yaml` section `image_placeholders` is a placeholder note: it is
-    removed, or unwrapped when its text repeats a caption in the body. Other
-    bracketed lines stay: a missed placeholder is cheaper than a wrong
-    deletion. HTML table cells are read; other protected zones are not.
+    Image links go with their alt text, except an inline link to a file that
+    exists under `base_dir`: the route's own figure crop. An external link
+    keeps its visible text. Inline and reference-style forms are covered, and
+    a definition that no usage spends any more goes too. A bracket-only line
+    with a word of `keywords.yaml` section `image_placeholders` is a
+    placeholder note: it is removed, or unwrapped when its text repeats a
+    caption in the body. Other bracketed lines stay: a missed placeholder is
+    cheaper than a wrong deletion. HTML table cells are read; other protected
+    zones are not.
     """
     placeholders = word_pattern(keywords.image_placeholders)
     seg_list = segments(text)
@@ -76,6 +81,12 @@ def strip_ocr_fabrications(text: str, keywords: Keywords) -> str:
     ref_targets = _collect_reference_targets(reachable)
     captions = {line.strip() for line in reachable if line.strip()}
 
+    def drop_fabricated_image(match: re.Match[str]) -> str:
+        if base_dir is None:
+            return ""
+        path = local_image_path(base_dir, match.group(2))
+        return match.group(0) if path is not None and path.is_file() else ""
+
     processed: list[str] = []
     consumed_labels: set[str] = set()
     for (line, protected), table_line in zip(seg_list, in_table, strict=True):
@@ -86,7 +97,7 @@ def strip_ocr_fabrications(text: str, keywords: Keywords) -> str:
             continue
         fixed, used = _strip_reference_links(line, ref_targets)
         consumed_labels |= used
-        fixed = _HTML_IMG_TAG_RE.sub("", IMAGE_RE.sub("", fixed))
+        fixed = _HTML_IMG_TAG_RE.sub("", IMAGE_RE.sub(drop_fabricated_image, fixed))
         fixed = _EXTERNAL_LINK_RE.sub(r"\1", fixed)
         processed.append(_resolve_ocr_placeholder(fixed, captions, placeholders))
 

@@ -412,11 +412,7 @@ def _process_engine(
             return FileResult(Outcome.NO_RESULT, None)
         _logger.info("converted %s", source.name)
 
-        body, media = drop_furniture_images(target.media_dir, result.media, result.body)
-        body, media = dedupe_repeated_images(source, target.media_dir, media, body)
-        media = flatten_pandoc_media(target.media_dir, media)
-        body, media = convert_emf_media(target.media_dir, media, body)
-        body = rewrite_media_links(body, target, media)
+        body = _settle_media(source, target, result.body, result.media)
         conversion = _Conversion(
             body=body,
             method=engine.method,
@@ -430,6 +426,17 @@ def _process_engine(
             outline=SourceOutline.from_source(source),
         )
         return _finish(item, target, ctx, bar, conversion)
+
+
+def _settle_media(
+    source: Path, target: OutputTarget, body: str, media: tuple[str, ...]
+) -> str:
+    """Run the `raw2md.media` steps in their order; return the linked body."""
+    body, media = drop_furniture_images(target.media_dir, media, body)
+    body, media = dedupe_repeated_images(source, target.media_dir, media, body)
+    media = flatten_pandoc_media(target.media_dir, media)
+    body, media = convert_emf_media(target.media_dir, media, body)
+    return rewrite_media_links(body, target, media)
 
 
 @contextmanager
@@ -504,9 +511,10 @@ def _process_ocr(
 ) -> FileResult:
     """Recognize a pdf/djvu source via the LLM, replacing the native engine.
 
-    No media is extracted. There is no fallback, so any failure leaves no
-    result: a provider error is an LLM error (exit 5), an oversize page or a
-    failed djvu assembly a conversion error (exit 4).
+    The media are the figure crops the model marked. There is no fallback, so
+    any failure leaves no result: a provider error is an LLM error (exit 5);
+    an oversize page, a failed djvu assembly, or an unwritable crop a
+    conversion error (exit 4).
     """
     source = item.source
     op = ctx.ocr
@@ -527,12 +535,6 @@ def _process_ocr(
     if refusal is not None:
         return refusal
 
-    if not ctx.config.extract_images:
-        _logger.info(
-            "OCR ignores --disable-image-extraction for %s (no media extracted)",
-            source.name,
-        )
-
     write_in_progress_stub(
         target,
         source_name=source.name,
@@ -544,8 +546,9 @@ def _process_ocr(
     # Opened here: a failed recognition never reaches `_finish`, and its paid
     # replies are the only record of the run.
     ocr_trace = _open_ocr_trace(ctx, target)
+    media_dir = target.media_dir if ctx.config.extract_images else None
     try:
-        ocr_result = _recognize(source, ctx, op, ocr_trace)
+        ocr_result = _recognize(source, ctx, op, media_dir, ocr_trace)
     except DocumentTooLargeError as exc:
         _logger.error("failed %s: OCR page too large: %s", source.name, exc)  # noqa: TRY400 -- expected error, no traceback
         _discard_result(target)
@@ -554,13 +557,13 @@ def _process_ocr(
         _logger.error("OCR failed for %s: %s", source.name, exc)  # noqa: TRY400 -- expected error, no traceback
         _discard_result(target)
         return FileResult(Outcome.LLM_ERROR, None)
-    except ConversionError as exc:
+    except (ConversionError, OSError) as exc:
         _logger.error("failed %s: %s", source.name, exc)  # noqa: TRY400 -- expected error, no traceback
         _discard_result(target)
         return FileResult(Outcome.NO_RESULT, None)
 
     conversion = _Conversion(
-        body=ocr_result.body,
+        body=_settle_media(source, target, ocr_result.body, ocr_result.media),
         method=method,
         ocr_model=op.model_key,
         source_hash=source_hash,
@@ -568,7 +571,7 @@ def _process_ocr(
         # The rendering pdf is gone; inspection assembles its own.
         source_pdf=None,
         image_base=target.md_path.parent,
-        disable_image_extraction=False,
+        disable_image_extraction=not ctx.config.extract_images,
         # A born-digital pdf may be recognized too; its text still witnesses.
         source_text=SourceText.from_source(source),
         outline=SourceOutline.from_source(source),
@@ -588,18 +591,32 @@ def _open_ocr_trace(ctx: RunContext, target: OutputTarget) -> LlmTrace | None:
 
 
 def _recognize(
-    source: Path, ctx: RunContext, op: OcrOperation, trace: LlmTrace | None = None
+    source: Path,
+    ctx: RunContext,
+    op: OcrOperation,
+    media_dir: Path | None,
+    trace: LlmTrace | None = None,
 ) -> OcrResult:
     """Render the source's pages and transcribe them through the LLM.
 
-    The result's `pages` is the density denominator of this route. A render
-    or djvu assembly failure surfaces as `ConversionError`.
+    The result's `pages` is the density denominator of this route. Figure
+    crops go to `media_dir`; None drops the marks. A render or djvu assembly
+    failure surfaces as `ConversionError`.
     """
     with _render_ocr_pages(source, ctx) as pages:
         result = recognize(
-            pages, op, mark_pages=ctx.inspection is not None, trace=trace
+            pages,
+            op,
+            mark_pages=ctx.inspection is not None,
+            media_dir=media_dir,
+            trace=trace,
         )
-    _logger.info("OCR %s: %d pages recognized", source.name, result.pages)
+    _logger.info(
+        "OCR %s: %d pages recognized, %d figures cropped",
+        source.name,
+        result.pages,
+        len(result.media),
+    )
     if result.empty_replies:
         # Only a lost page is a hole in the result.
         log = _logger.warning if result.lost_pages else _logger.info
