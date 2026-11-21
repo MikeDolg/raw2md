@@ -473,6 +473,49 @@ def test_usage_limit_is_a_rate_limit(monkeypatch: pytest.MonkeyPatch) -> None:
     assert len(fake.calls) == 3
 
 
+def test_exhausted_quota_is_a_rate_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    failed = {
+        "type": "turn.failed",
+        "error": {"message": "Quota exceeded. Check your plan and billing details."},
+    }
+    fake = _FakeCodex(stdout=_jsonl(failed), returncode=1)
+    _install(monkeypatch, fake)
+    with pytest.raises(RateLimitError):
+        CodexCliProvider(codex_model()).generate("p")
+
+
+def test_expired_refresh_token_is_an_auth_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    failed = {
+        "type": "turn.failed",
+        "error": {
+            "message": "Your access token could not be refreshed. "
+            "Please log out and sign in again."
+        },
+    }
+    fake = _FakeCodex(stdout=_jsonl(failed), returncode=1)
+    _install(monkeypatch, fake)
+    provider = CodexCliProvider(codex_model())
+    with pytest.raises(AuthError):
+        provider.generate("p")
+    with pytest.raises(AuthError):
+        provider.generate("p")
+    assert len(fake.calls) == 1
+
+
+def test_image_over_the_pixel_ceiling_is_a_provider_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = _FakeCodex()
+    _install(monkeypatch, fake)
+    monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 100)
+    part = MediaPart(_png(300, 300), "image/png")
+    with pytest.raises(ProviderError, match="cannot read the image"):
+        CodexCliProvider(codex_model()).generate("prompt", [part])
+    assert fake.calls == []
+
+
 def test_unauthorized_is_an_auth_error(monkeypatch: pytest.MonkeyPatch) -> None:
     failed = {
         "type": "turn.failed",

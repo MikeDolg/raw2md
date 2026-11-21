@@ -115,8 +115,17 @@ _CODE_MODE_OFF_MARKER = "code-mode host is disabled"
 
 # Taken from the CLI's own wording; the usage-limit text has a typographic
 # apostrophe, so the marker skips it.
-_RATE_LIMIT_MARKERS = ("usage limit", "rate limit", "429 too many requests")
-_AUTH_ERROR_MARKERS = ("401 unauthorized", "not logged in")
+_RATE_LIMIT_MARKERS = (
+    "usage limit",
+    "rate limit",
+    "429 too many requests",
+    "quota exceeded",
+)
+_AUTH_ERROR_MARKERS = (
+    "401 unauthorized",
+    "not logged in",
+    "log out and sign in again",
+)
 
 # The request carries about 3000 tokens of overhead before the document; 2
 # minutes covers an ordinary request, and `cli_timeout_s` overrides it.
@@ -273,7 +282,7 @@ def _shrink(part: MediaPart, long_side: int) -> MediaPart:
             size = (max(1, round(width * scale)), max(1, round(height * scale)))
             buffer = BytesIO()
             image.resize(size, Image.Resampling.LANCZOS).save(buffer, format="PNG")
-    except OSError as exc:
+    except (OSError, Image.DecompressionBombError) as exc:
         raise ProviderError(f"cannot read the image: {exc}") from exc
     return MediaPart(buffer.getvalue(), _PNG_MIME)
 
