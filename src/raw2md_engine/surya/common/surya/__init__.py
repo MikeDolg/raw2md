@@ -6,7 +6,6 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from transformers.cache_utils import Cache
-from transformers.modeling_attn_mask_utils import AttentionMaskConverter
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
 from raw2md_engine.surya.common.pretrained import SuryaPreTrainedModel
@@ -553,8 +552,8 @@ class SuryaModel(S3DownloaderMixin, SuryaPreTrainedModel):
             # Attend to all tokens in fully masked rows in the causal_mask, for example the relevant first rows when
             # using left padding. This is required by F.scaled_dot_product_attention memory-efficient attention path.
             # Details: https://github.com/pytorch/pytorch/issues/110213
-            causal_mask = AttentionMaskConverter._unmask_unattended(
-                causal_mask, min_dtype
+            causal_mask = causal_mask.mul(
+                ~torch.all(causal_mask == min_dtype, dim=-1, keepdim=True)
             )
 
         return causal_mask

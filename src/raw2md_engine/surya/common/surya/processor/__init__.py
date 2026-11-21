@@ -6,9 +6,9 @@ import numpy as np
 import torch
 from PIL import Image
 from torch.nn.utils.rnn import pad_sequence
+from transformers import PreTrainedTokenizer
 from transformers.feature_extraction_utils import BatchFeature
 from transformers.processing_utils import ProcessorMixin
-from transformers.tokenization_utils import PreTrainedTokenizer
 
 from raw2md_engine.surya.common.s3 import S3DownloaderMixin
 from raw2md_engine.surya.common.surya.processor.schema import (

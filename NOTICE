@@ -307,7 +307,13 @@ of the repository holds each change with its diff.
   splits the rows that the table model merged, so a value that wraps to a
   second line keeps its row (2026-11-20). Changed file, under
   src/raw2md_engine/: `marker/processors/table.py`.
+- The copy imports no transformers module that a release of transformers 5
+  removed: the mask of fully masked rows is computed in the copy itself,
+  and the tokenizer base class comes from the top level of transformers
+  (2026-11-21). Changed files, under src/raw2md_engine/surya/:
+  `common/adetr/decoder.py`, `common/surya/__init__.py`, and
+  `common/surya/processor/__init__.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-11-20.
+Last change: 2026-11-21.
