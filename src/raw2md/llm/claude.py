@@ -7,13 +7,9 @@ stdin, which avoids the command-line length limit on a large zone.
 from __future__ import annotations
 
 import json
-import os
 import shutil
-import signal
 import subprocess
-import sys
 from collections.abc import Sequence
-from contextlib import suppress
 
 from raw2md.llm.base import (
     AuthError,
@@ -25,6 +21,7 @@ from raw2md.llm.base import (
     RateLimitError,
     TextPart,
 )
+from raw2md.llm.process import resolve_command, run_with_timeout
 
 # Substrings that mark a quota or rate-limit failure in the CLI's output.
 _RATE_LIMIT_MARKERS = ("rate limit", "rate_limit", "overloaded", "429", "quota")
@@ -53,75 +50,6 @@ DEFAULT_CLAUDE_TIMEOUT_S: int = 120
 _AUTH_STATUS_TIMEOUT_S: float = 10.0
 
 
-def _spawn(argv: list[str], /) -> subprocess.Popen[str]:
-    """Start `argv` in its own process group so a timeout kills its whole tree.
-
-    On Windows the command is often `cmd.exe /c <script>.cmd`, and killing only
-    `cmd.exe` would leave the wrapped node process running.
-    """
-    if sys.platform == "win32":
-        return subprocess.Popen(
-            argv,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-        )
-    return subprocess.Popen(
-        argv,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        start_new_session=True,
-    )
-
-
-def _kill_tree(pid: int) -> None:
-    if sys.platform == "win32":
-        subprocess.run(
-            ["taskkill", "/F", "/T", "/PID", str(pid)],
-            capture_output=True,
-            check=False,
-        )
-        return
-    with suppress(ProcessLookupError):
-        os.killpg(pid, signal.SIGKILL)
-
-
-def _run_with_timeout(
-    argv: list[str], input_text: str, timeout: float
-) -> subprocess.CompletedProcess[str]:
-    """Run `argv`; `subprocess.run(timeout=...)` would kill the child only."""
-    process = _spawn(argv)
-    try:
-        stdout, stderr = process.communicate(input=input_text, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        _kill_tree(process.pid)
-        process.wait()
-        raise
-    return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
-
-
-def _resolve_command(command: str) -> list[str]:
-    """Return the argv prefix to invoke `command`.
-
-    On Windows, CreateProcess cannot start a `.cmd`, `.bat`, or `.ps1` script,
-    so the script gets its interpreter.
-    """
-    resolved = shutil.which(command) or command
-    if sys.platform == "win32":
-        lowered = resolved.lower()
-        if lowered.endswith(".ps1"):
-            return ["powershell", "-File", resolved]
-        if lowered.endswith((".cmd", ".bat")):
-            return ["cmd.exe", "/c", resolved]
-    return [resolved]
-
-
 class ClaudeCliProvider(Provider):
     """Text generation through a `claude`-compatible CLI in print mode."""
 
@@ -139,9 +67,9 @@ class ClaudeCliProvider(Provider):
         leaves the decision to the run's own requests, the same policy, so an
         unexpected CLI output does not fail a stage that may not need it.
         """
-        argv = [*_resolve_command(command), "auth", "status"]
+        argv = [*resolve_command(command), "auth", "status"]
         try:
-            completed = _run_with_timeout(argv, "", _AUTH_STATUS_TIMEOUT_S)
+            completed = run_with_timeout(argv, "", _AUTH_STATUS_TIMEOUT_S)
             status = json.loads(completed.stdout)
         except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
             return Availability(True)
@@ -161,7 +89,7 @@ class ClaudeCliProvider(Provider):
     def _request(self, command: str, prompt: str, parts: Sequence[Part]) -> str:
         full = _compose(prompt, parts)
         argv = [
-            *_resolve_command(command),
+            *resolve_command(command),
             "-p",
             "--model",
             self._model.model,
@@ -170,7 +98,7 @@ class ClaudeCliProvider(Provider):
         self._reserve_rpd()
         timeout = self._model.cli_timeout_s or DEFAULT_CLAUDE_TIMEOUT_S
         try:
-            completed = _run_with_timeout(argv, full, timeout)
+            completed = run_with_timeout(argv, full, timeout)
         except subprocess.TimeoutExpired as exc:
             raise ProviderError(f"'{command}' timed out after {timeout}s") from exc
         except OSError as exc:

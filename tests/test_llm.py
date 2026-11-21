@@ -1241,7 +1241,7 @@ def _fake_auth_status(stdout: str) -> Any:
 def test_claude_available_with_command(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: "/usr/bin/claude")
     monkeypatch.setattr(
-        "raw2md.llm.claude._run_with_timeout",
+        "raw2md.llm.claude.run_with_timeout",
         _fake_auth_status(json.dumps({"loggedIn": True})),
     )
     assert build_provider(cli_model()).available().ok is True
@@ -1260,7 +1260,7 @@ def test_claude_auth_probe_has_no_isolation_flags(
         return _fake_completed(0, stdout=json.dumps({"loggedIn": True}))
 
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
-    monkeypatch.setattr("raw2md.llm.claude._run_with_timeout", fake)
+    monkeypatch.setattr("raw2md.llm.claude.run_with_timeout", fake)
     assert build_provider(cli_model()).available().ok is True
     assert captured == [["claude", "auth", "status"]]
 
@@ -1277,7 +1277,7 @@ def test_claude_unavailable_when_not_logged_in(monkeypatch: pytest.MonkeyPatch) 
     # before conversion starts.
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: "/usr/bin/claude")
     monkeypatch.setattr(
-        "raw2md.llm.claude._run_with_timeout",
+        "raw2md.llm.claude.run_with_timeout",
         _fake_auth_status(json.dumps({"loggedIn": False})),
     )
     availability = build_provider(cli_model()).available()
@@ -1296,7 +1296,7 @@ def test_claude_available_despite_a_probe_timeout(
         raise subprocess.TimeoutExpired(argv, timeout)
 
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: "/usr/bin/claude")
-    monkeypatch.setattr("raw2md.llm.claude._run_with_timeout", fake)
+    monkeypatch.setattr("raw2md.llm.claude.run_with_timeout", fake)
     assert build_provider(cli_model()).available().ok is True
 
 
@@ -1305,7 +1305,7 @@ def test_claude_available_despite_unparsable_probe_output(
 ) -> None:
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: "/usr/bin/claude")
     monkeypatch.setattr(
-        "raw2md.llm.claude._run_with_timeout", _fake_auth_status("not json")
+        "raw2md.llm.claude.run_with_timeout", _fake_auth_status("not json")
     )
     assert build_provider(cli_model()).available().ok is True
 
@@ -1333,7 +1333,7 @@ def test_claude_generate_returns_stdout(monkeypatch: pytest.MonkeyPatch) -> None
 
     # The bare name has no .cmd extension, so no cmd.exe wrapping.
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
-    monkeypatch.setattr("raw2md.llm.claude._run_with_timeout", fake_run_with_timeout)
+    monkeypatch.setattr("raw2md.llm.claude.run_with_timeout", fake_run_with_timeout)
     provider = ClaudeCliProvider(cli_model())
     result = provider.generate("instructions", [TextPart("zone")])
     assert result == "fixed text"
@@ -1363,7 +1363,7 @@ def test_claude_generate_rate_limit(monkeypatch: pytest.MonkeyPatch) -> None:
         calls.append(argv)
         return _fake_completed(1, stderr="rate limit exceeded")
 
-    monkeypatch.setattr("raw2md.llm.claude._run_with_timeout", fake_run_with_timeout)
+    monkeypatch.setattr("raw2md.llm.claude.run_with_timeout", fake_run_with_timeout)
     with pytest.raises(RateLimitError):
         ClaudeCliProvider(cli_model()).generate("prompt")
     assert len(calls) == 3
@@ -1376,7 +1376,7 @@ def test_claude_generate_auth_error_uses_stdout_when_stderr_is_empty(
     # failure this provider maps.
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
     monkeypatch.setattr(
-        "raw2md.llm.claude._run_with_timeout",
+        "raw2md.llm.claude.run_with_timeout",
         lambda argv, input_text, timeout: _fake_completed(
             1, stdout="Not logged in · Please run /login"
         ),
@@ -1390,7 +1390,7 @@ def test_claude_generate_auth_error_in_stdout_despite_a_stderr_warning(
 ) -> None:
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
     monkeypatch.setattr(
-        "raw2md.llm.claude._run_with_timeout",
+        "raw2md.llm.claude.run_with_timeout",
         lambda argv, input_text, timeout: _fake_completed(
             1,
             stdout="Not logged in · Please run /login",
@@ -1406,7 +1406,7 @@ def test_claude_generate_auth_error_from_stderr(
 ) -> None:
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
     monkeypatch.setattr(
-        "raw2md.llm.claude._run_with_timeout",
+        "raw2md.llm.claude.run_with_timeout",
         lambda argv, input_text, timeout: _fake_completed(
             1, stderr="please run /login to continue"
         ),
@@ -1421,7 +1421,7 @@ def test_claude_not_throttled_without_rpm(monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setattr("raw2md.llm.base._sleep", sleeps.append)
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
     monkeypatch.setattr(
-        "raw2md.llm.claude._run_with_timeout",
+        "raw2md.llm.claude.run_with_timeout",
         lambda argv, input_text, timeout: _fake_completed(0, stdout="ok"),
     )
     provider = ClaudeCliProvider(cli_model())
@@ -1435,7 +1435,7 @@ def test_claude_generate_error_is_provider_error(
 ) -> None:
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
     monkeypatch.setattr(
-        "raw2md.llm.claude._run_with_timeout",
+        "raw2md.llm.claude.run_with_timeout",
         lambda argv, input_text, timeout: _fake_completed(2, stderr="boom"),
     )
     with pytest.raises(ProviderError) as exc_info:
@@ -1456,7 +1456,7 @@ def test_claude_generate_missing_binary(monkeypatch: pytest.MonkeyPatch) -> None
 
     # Without a match _resolve_command keeps the bare name.
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: None)
-    monkeypatch.setattr("raw2md.llm.claude._run_with_timeout", fake_run_with_timeout)
+    monkeypatch.setattr("raw2md.llm.claude.run_with_timeout", fake_run_with_timeout)
     with pytest.raises(ProviderError):
         ClaudeCliProvider(cli_model()).generate("prompt")
 
@@ -1470,7 +1470,7 @@ def test_claude_generate_timeout_is_provider_error(
         raise subprocess.TimeoutExpired(argv, timeout)
 
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
-    monkeypatch.setattr("raw2md.llm.claude._run_with_timeout", fake_run_with_timeout)
+    monkeypatch.setattr("raw2md.llm.claude.run_with_timeout", fake_run_with_timeout)
     with pytest.raises(ProviderError, match="timed out") as exc_info:
         ClaudeCliProvider(cli_model()).generate("prompt")
     assert not isinstance(exc_info.value, RateLimitError)
@@ -1489,7 +1489,7 @@ def test_claude_uses_default_timeout_when_unconfigured(
         return _fake_completed(0, stdout="ok")
 
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
-    monkeypatch.setattr("raw2md.llm.claude._run_with_timeout", fake_run_with_timeout)
+    monkeypatch.setattr("raw2md.llm.claude.run_with_timeout", fake_run_with_timeout)
     ClaudeCliProvider(cli_model()).generate("prompt")
     assert captured["timeout"] == DEFAULT_CLAUDE_TIMEOUT_S
 
@@ -1504,7 +1504,7 @@ def test_claude_uses_configured_timeout(monkeypatch: pytest.MonkeyPatch) -> None
         return _fake_completed(0, stdout="ok")
 
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
-    monkeypatch.setattr("raw2md.llm.claude._run_with_timeout", fake_run_with_timeout)
+    monkeypatch.setattr("raw2md.llm.claude.run_with_timeout", fake_run_with_timeout)
     ClaudeCliProvider(cli_model(cli_timeout_s=600)).generate("prompt")
     assert captured["timeout"] == 600
 
@@ -1518,68 +1518,68 @@ def test_claude_timeout_message_names_the_configured_value(
         raise subprocess.TimeoutExpired(argv, timeout)
 
     monkeypatch.setattr("raw2md.llm.claude.shutil.which", lambda cmd: cmd)
-    monkeypatch.setattr("raw2md.llm.claude._run_with_timeout", fake_run_with_timeout)
+    monkeypatch.setattr("raw2md.llm.claude.run_with_timeout", fake_run_with_timeout)
     with pytest.raises(ProviderError, match="timed out after 600s"):
         ClaudeCliProvider(cli_model(cli_timeout_s=600)).generate("prompt")
 
 
-# --- _resolve_command -------------------------------------------------------
+# --- resolve_command -------------------------------------------------------
 
 
-def test_resolve_command_wraps_ps1_with_powershell(
+def testresolve_command_wraps_ps1_with_powershell(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from raw2md.llm.claude import _resolve_command
+    from raw2md.llm.process import resolve_command
 
-    monkeypatch.setattr("raw2md.llm.claude.sys.platform", "win32")
+    monkeypatch.setattr("raw2md.llm.process.sys.platform", "win32")
     monkeypatch.setattr(
-        "raw2md.llm.claude.shutil.which", lambda cmd: r"C:\tools\claude.ps1"
+        "raw2md.llm.process.shutil.which", lambda cmd: r"C:\tools\claude.ps1"
     )
 
-    assert _resolve_command("claude") == [
+    assert resolve_command("claude") == [
         "powershell",
         "-File",
         r"C:\tools\claude.ps1",
     ]
 
 
-def test_resolve_command_wraps_cmd_with_cmd_exe(
+def testresolve_command_wraps_cmd_with_cmd_exe(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # .cmd/.bat get the cmd.exe wrapper.
-    from raw2md.llm.claude import _resolve_command
+    from raw2md.llm.process import resolve_command
 
-    monkeypatch.setattr("raw2md.llm.claude.sys.platform", "win32")
+    monkeypatch.setattr("raw2md.llm.process.sys.platform", "win32")
     monkeypatch.setattr(
-        "raw2md.llm.claude.shutil.which", lambda cmd: r"C:\tools\claude.cmd"
+        "raw2md.llm.process.shutil.which", lambda cmd: r"C:\tools\claude.cmd"
     )
 
-    assert _resolve_command("claude") == ["cmd.exe", "/c", r"C:\tools\claude.cmd"]
+    assert resolve_command("claude") == ["cmd.exe", "/c", r"C:\tools\claude.cmd"]
 
 
-def test_resolve_command_ps1_unwrapped_off_windows(
+def testresolve_command_ps1_unwrapped_off_windows(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # The wrapper is a Windows-only CreateProcess workaround.
-    from raw2md.llm.claude import _resolve_command
+    from raw2md.llm.process import resolve_command
 
-    monkeypatch.setattr("raw2md.llm.claude.sys.platform", "linux")
+    monkeypatch.setattr("raw2md.llm.process.sys.platform", "linux")
     monkeypatch.setattr(
-        "raw2md.llm.claude.shutil.which", lambda cmd: "/opt/tools/claude.ps1"
+        "raw2md.llm.process.shutil.which", lambda cmd: "/opt/tools/claude.ps1"
     )
 
-    assert _resolve_command("claude") == ["/opt/tools/claude.ps1"]
+    assert resolve_command("claude") == ["/opt/tools/claude.ps1"]
 
 
 # --- Claude process-tree kill on timeout -----------------------------------
 
 
-def test_run_with_timeout_kills_tree_when_process_hangs(
+def testrun_with_timeout_kills_tree_when_process_hangs(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # A timeout kills only the immediate process, not a cmd.exe wrapper's
     # tree.
-    from raw2md.llm.claude import _run_with_timeout
+    from raw2md.llm.process import run_with_timeout
 
     class _FakeProcess:
         pid = 4321
@@ -1596,26 +1596,26 @@ def test_run_with_timeout_kills_tree_when_process_hangs(
             pass
 
     killed: list[int] = []
-    monkeypatch.setattr("raw2md.llm.claude._spawn", lambda argv: _FakeProcess())
-    monkeypatch.setattr("raw2md.llm.claude._kill_tree", killed.append)
+    monkeypatch.setattr("raw2md.llm.process.spawn", lambda argv: _FakeProcess())
+    monkeypatch.setattr("raw2md.llm.process.kill_tree", killed.append)
 
     with pytest.raises(subprocess.TimeoutExpired):
-        _run_with_timeout(["claude"], "input", 5)
+        run_with_timeout(["claude"], "input", 5)
 
     assert killed == [4321]
 
 
-def test_kill_tree_uses_taskkill_on_windows(monkeypatch: pytest.MonkeyPatch) -> None:
-    from raw2md.llm.claude import _kill_tree
+def testkill_tree_uses_taskkill_on_windows(monkeypatch: pytest.MonkeyPatch) -> None:
+    from raw2md.llm.process import kill_tree
 
     calls: list[list[str]] = []
-    monkeypatch.setattr("raw2md.llm.claude.sys.platform", "win32")
+    monkeypatch.setattr("raw2md.llm.process.sys.platform", "win32")
     monkeypatch.setattr(
-        "raw2md.llm.claude.subprocess.run",
+        "raw2md.llm.process.subprocess.run",
         lambda cmd, **kwargs: calls.append(cmd),
     )
 
-    _kill_tree(4321)
+    kill_tree(4321)
 
     assert calls == [["taskkill", "/F", "/T", "/PID", "4321"]]
 
@@ -1624,20 +1624,20 @@ def test_kill_tree_uses_taskkill_on_windows(monkeypatch: pytest.MonkeyPatch) -> 
     sys.platform == "win32",
     reason="os.killpg and signal.SIGKILL are POSIX-only",
 )
-def test_kill_tree_uses_killpg_on_posix(monkeypatch: pytest.MonkeyPatch) -> None:
+def testkill_tree_uses_killpg_on_posix(monkeypatch: pytest.MonkeyPatch) -> None:
     # Mirrors the skip marker, so mypy on Windows treats SIGKILL as unreachable.
     if sys.platform == "win32":
         return
     import signal
 
-    from raw2md.llm.claude import _kill_tree
+    from raw2md.llm.process import kill_tree
 
     calls: list[tuple[int, int]] = []
     monkeypatch.setattr(
-        "raw2md.llm.claude.os.killpg", lambda pid, sig: calls.append((pid, sig))
+        "raw2md.llm.process.os.killpg", lambda pid, sig: calls.append((pid, sig))
     )
 
-    _kill_tree(4321)
+    kill_tree(4321)
 
     assert calls == [(4321, signal.SIGKILL)]
 
