@@ -47,6 +47,34 @@ def test_default_settings_ships_the_codex_model() -> None:
     assert model.command == "codex"
     assert model.model == "gpt-6.1-terra"
     assert model.cli_timeout_s == 120
+    assert model.image_long_side == 2048
+
+
+def _codex_data(**extra: object) -> dict[str, object]:
+    model = {"access": "codex_cli", "command": "c", "model": "x", **extra}
+    return {"models": {"m": model}, "operations": {"post": {"allowed": ["m"]}}}
+
+
+def test_codex_model_accepts_the_image_long_side() -> None:
+    parsed = parse_settings(_codex_data(image_long_side=1400))
+    assert parsed.models["m"].image_long_side == 1400
+
+
+def test_image_long_side_defaults_to_none() -> None:
+    assert parse_settings(_codex_data()).models["m"].image_long_side is None
+
+
+@pytest.mark.parametrize("value", [0, -5, 1.5, "big", True])
+def test_image_long_side_must_be_a_positive_integer(value: object) -> None:
+    with pytest.raises(SettingsError, match="image_long_side"):
+        parse_settings(_codex_data(image_long_side=value))
+
+
+def test_image_long_side_rejected_for_other_access() -> None:
+    with pytest.raises(SettingsError, match="codex_cli access only"):
+        parse_settings(_api_model_data(image_long_side=1400))
+    with pytest.raises(SettingsError, match="codex_cli access only"):
+        parse_settings(_cli_post_model_data(image_long_side=1400))
 
 
 def test_default_settings_states_the_request_window() -> None:

@@ -47,7 +47,8 @@ _RENAMED_ACCESS = {"api": "gemini_api", "cli": "claude_cli"}
 # Both the file template and the in-memory fallback derive from this mapping.
 # Values restate the code fallbacks so the template shows them:
 # `pages_per_request` (llm.chunking), `max_request_bytes` (llm.base),
-# `witness_min` (cleaning.ocr), `cli_timeout_s` (the CLI providers). No temperature:
+# `witness_min` (cleaning.ocr), `cli_timeout_s` (the CLI providers),
+# `image_long_side` (llm.codex). No temperature:
 # the provider default holds.
 DEFAULT_SETTINGS: dict[str, Any] = {
     "models": {
@@ -73,6 +74,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
             "command": "codex",
             "model": "gpt-6.1-terra",
             "cli_timeout_s": 120,
+            "image_long_side": 2048,
         },
     },
     "operations": {
@@ -110,8 +112,9 @@ class ModelConfig:
     """One entry of the `models` block.
 
     `key_env` and `temperature` are for `gemini_api` access; `command` and
-    `cli_timeout_s` for the CLI access types. Optional fields left as None fall
-    back to the defaults of the code that applies them: `rpd_reset_zone` (the
+    `cli_timeout_s` for the CLI access types; `image_long_side` (the longest
+    side of a page image, in pixels) for `codex_cli` only. Optional fields left as None
+    fall back to the defaults of the code that applies them: `rpd_reset_zone` (the
     IANA zone of the daily quota boundary) to the provider's zone,
     `pages_per_request` and `max_request_bytes` (the request window) to
     built-in limits, `cli_timeout_s` to a default timeout. An absent
@@ -130,6 +133,7 @@ class ModelConfig:
     max_request_bytes: int | None = None
     temperature: float | None = None
     cli_timeout_s: int | None = None
+    image_long_side: int | None = None
 
 
 @dataclass(frozen=True)
@@ -265,6 +269,7 @@ def _parse_model(name: str, spec: Any) -> ModelConfig:
         max_request_bytes=_optional_positive_int(name, spec, "max_request_bytes"),
         temperature=_optional_temperature(name, spec, access),
         cli_timeout_s=_optional_cli_timeout(name, spec, access),
+        image_long_side=_optional_image_long_side(name, spec, access),
     )
 
 
@@ -362,6 +367,19 @@ def _optional_cli_timeout(
             f"model '{model_name}': 'cli_timeout_s' applies to CLI access only"
         )
     return _optional_positive_int(model_name, spec, "cli_timeout_s")
+
+
+def _optional_image_long_side(
+    model_name: str, spec: dict[str, Any], access: str
+) -> int | None:
+    """An optional page-image size in pixels, accepted for `codex_cli` only."""
+    if spec.get("image_long_side") is None:
+        return None
+    if access != "codex_cli":
+        raise SettingsError(
+            f"model '{model_name}': 'image_long_side' applies to codex_cli access only"
+        )
+    return _optional_positive_int(model_name, spec, "image_long_side")
 
 
 def _parse_operations(raw: Any) -> dict[str, frozenset[str]]:

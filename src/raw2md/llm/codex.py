@@ -1,7 +1,8 @@
 """Codex CLI provider: vision and text through `codex exec`.
 
 The prompt goes on stdin, each image as an `-i` file, and the reply comes from
-the `-o` file. Every request gets its own temporary folder, deleted after the
+the `-o` file. A PDF part is drawn into one PNG per page, none longer than
+`image_long_side` pixels. Every request gets its own temporary folder, deleted after the
 reply: an empty working folder for `-C`, the instructions file, the reply
 schema, and the images. The `--json` event stream proves that no tool ran.
 """
@@ -15,8 +16,11 @@ import subprocess
 import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 from typing import Any
+
+from PIL import Image
 
 from raw2md.llm.base import (
     AuthError,
@@ -34,7 +38,7 @@ from raw2md.llm.process import resolve_command, run_with_timeout
 
 _logger = logging.getLogger("raw2md")
 
-# `codex exec --image` reads these formats only; a PDF is refused.
+# `codex exec --image` reads these formats only.
 _IMAGE_SUFFIXES: Mapping[str, str] = {
     "image/png": ".png",
     "image/jpeg": ".jpg",
@@ -118,6 +122,12 @@ _AUTH_ERROR_MARKERS = ("401 unauthorized", "not logged in")
 # minutes covers an ordinary request, and `cli_timeout_s` overrides it.
 DEFAULT_CODEX_TIMEOUT_S: int = 120
 
+# The CLI itself scales an image to this side before it reaches the model.
+DEFAULT_IMAGE_LONG_SIDE: int = 2048
+
+_PDF_MIME = "application/pdf"
+_PNG_MIME = "image/png"
+
 # `login status` reads the local credentials; a few seconds is generous
 # headroom, not a measured ceiling.
 _LOGIN_STATUS_TIMEOUT_S: float = 10.0
@@ -174,16 +184,13 @@ class CodexCliProvider(Provider):
         command = self._model.command
         if not command:
             raise ProviderError("no cli command configured")
-        # Refused before throttling, so a request the CLI cannot read spends
-        # no rpm slot.
-        for part in parts:
-            if isinstance(part, MediaPart) and part.mime_type not in _IMAGE_SUFFIXES:
-                raise ProviderError(
-                    f"codex cli reads PNG, JPEG, GIF, and WebP images, "
-                    f"not {part.mime_type}"
-                )
+        # Drawn and refused before throttling, so a request the CLI cannot
+        # read spends no rpm slot and a retry does not draw the pages again.
+        images = fit_images(
+            parts, self._model.image_long_side or DEFAULT_IMAGE_LONG_SIDE
+        )
         return self._send(
-            lambda: self._request(command, prompt, parts, response_schema)
+            lambda: self._request(command, prompt, images, response_schema)
         )
 
     def _request(
@@ -210,6 +217,7 @@ class CodexCliProvider(Provider):
             if completed.returncode != 0:
                 raise _failure(command, completed, events)
             _log_errors(events)
+            _log_usage(self._model.model, events)
             return self._read_reply(files.reply)
         finally:
             _remove_folder(folder)
@@ -220,6 +228,54 @@ class CodexCliProvider(Provider):
             return Reply(text)
         _logger.warning("llm: %s returned an empty reply", self._model.model)
         return Reply("", EmptyReason.NO_TEXT)
+
+
+def fit_images(parts: Sequence[Part], long_side: int) -> list[Part]:
+    """Turn `parts` into text and images the CLI reads, none above `long_side`.
+
+    A PDF becomes its pages in order, an image above the limit shrinks to it,
+    and any other media type is refused.
+    """
+    fitted: list[Part] = []
+    for part in parts:
+        if not isinstance(part, MediaPart):
+            fitted.append(part)
+        elif part.mime_type == _PDF_MIME:
+            fitted.extend(_draw_pdf(part.data, long_side))
+        elif part.mime_type in _IMAGE_SUFFIXES:
+            fitted.append(_shrink(part, long_side))
+        else:
+            raise ProviderError(
+                f"codex cli reads PDF, PNG, JPEG, GIF, and WebP, not {part.mime_type}"
+            )
+    return fitted
+
+
+def _draw_pdf(data: bytes, long_side: int) -> list[MediaPart]:
+    # Lazy: a text-only request never loads pdfium.
+    from raw2md.engines import pdfium
+
+    try:
+        pages = pdfium.render_pdf_pages(data, long_side)
+    except (RuntimeError, ValueError, OSError) as exc:
+        raise ProviderError(f"cannot draw the pdf pages: {exc}") from exc
+    return [MediaPart(page, _PNG_MIME) for page in pages]
+
+
+def _shrink(part: MediaPart, long_side: int) -> MediaPart:
+    """Return `part`, re-encoded as PNG when its longer side exceeds the limit."""
+    try:
+        with Image.open(BytesIO(part.data)) as image:
+            width, height = image.size
+            if max(width, height) <= long_side:
+                return part
+            scale = long_side / max(width, height)
+            size = (max(1, round(width * scale)), max(1, round(height * scale)))
+            buffer = BytesIO()
+            image.resize(size, Image.Resampling.LANCZOS).save(buffer, format="PNG")
+    except OSError as exc:
+        raise ProviderError(f"cannot read the image: {exc}") from exc
+    return MediaPart(buffer.getvalue(), _PNG_MIME)
 
 
 def write_request_files(
@@ -361,6 +417,21 @@ def _log_errors(events: Sequence[Mapping[str, Any]]) -> None:
     for message in _error_messages(events):
         if _CODE_MODE_OFF_MARKER not in message:
             _logger.warning("llm: codex cli reported an error and replied: %s", message)
+
+
+def _log_usage(model: str, events: Sequence[Mapping[str, Any]]) -> None:
+    """Log the token use of the request from its `turn.completed` event."""
+    for event in events:
+        usage = event.get("usage")
+        if event.get("type") != "turn.completed" or not isinstance(usage, Mapping):
+            continue
+        _logger.info(
+            "llm: %s used %s input tokens (%s cached), %s output tokens",
+            model,
+            usage.get("input_tokens", 0),
+            usage.get("cached_input_tokens", 0),
+            usage.get("output_tokens", 0),
+        )
 
 
 def _failure(

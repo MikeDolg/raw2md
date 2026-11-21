@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import logging
 import subprocess
@@ -11,6 +12,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pdf_fixtures import pdf_bytes, text_pages
+from PIL import Image
 
 from raw2md.llm import (
     AuthError,
@@ -22,7 +25,11 @@ from raw2md.llm import (
     build_provider,
 )
 from raw2md.llm.base import EmptyReason
-from raw2md.llm.codex import DEFAULT_CODEX_TIMEOUT_S, strict_schema
+from raw2md.llm.codex import (
+    DEFAULT_CODEX_TIMEOUT_S,
+    DEFAULT_IMAGE_LONG_SIDE,
+    strict_schema,
+)
 from raw2md.settings import ModelConfig
 
 _CODE_MODE_ITEM = {
@@ -48,6 +55,18 @@ def codex_model(
         rpd=None,
         cli_timeout_s=cli_timeout_s,
     )
+
+
+def _png(width: int, height: int) -> bytes:
+    buffer = io.BytesIO()
+    Image.new("RGB", (width, height), "white").save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def _size(data: bytes) -> tuple[int, int]:
+    with Image.open(io.BytesIO(data)) as image:
+        width, height = image.size
+    return width, height
 
 
 def _jsonl(*events: dict[str, Any]) -> str:
@@ -187,25 +206,125 @@ def test_prompt_and_text_parts_go_on_stdin(monkeypatch: pytest.MonkeyPatch) -> N
 def test_images_go_as_files_in_order(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = _FakeCodex()
     _install(monkeypatch, fake)
-    parts = [MediaPart(b"first", "image/png"), MediaPart(b"second", "image/jpeg")]
+    first, second = _png(10, 10), _png(20, 10)
+    parts = [MediaPart(first, "image/png"), MediaPart(second, "image/png")]
     CodexCliProvider(codex_model()).generate("prompt", parts)
     argv = fake.calls[0]
     images = [Path(argv[i + 1]) for i, arg in enumerate(argv) if arg == "--image"]
-    assert [p.name for p in images] == ["image-001.png", "image-002.jpg"]
-    assert fake.files["image-001.png"] == b"first"
-    assert fake.files["image-002.jpg"] == b"second"
+    assert [p.name for p in images] == ["image-001.png", "image-002.png"]
+    assert fake.files["image-001.png"] == first
+    assert fake.files["image-002.png"] == second
 
 
-def test_pdf_part_is_refused_before_the_cli_runs(
+def _sent_images(fake: _FakeCodex) -> list[tuple[int, int]]:
+    argv = fake.calls[0]
+    return [
+        _size(fake.files[Path(argv[i + 1]).name])
+        for i, arg in enumerate(argv)
+        if arg == "--image"
+    ]
+
+
+def test_pdf_pages_go_as_png_files_in_page_order(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     fake = _FakeCodex()
     _install(monkeypatch, fake)
-    with pytest.raises(ProviderError, match="application/pdf"):
+    pdf = MediaPart(pdf_bytes(text_pages(["a", "b", "c"])), "application/pdf")
+    CodexCliProvider(codex_model()).generate("prompt", [pdf])
+    argv = fake.calls[0]
+    names = [Path(argv[i + 1]).name for i, arg in enumerate(argv) if arg == "--image"]
+    assert names == ["image-001.png", "image-002.png", "image-003.png"]
+
+
+def test_pdf_pages_are_drawn_to_the_long_side_setting(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = _FakeCodex()
+    _install(monkeypatch, fake)
+    pdf = MediaPart(pdf_bytes(text_pages(["a", "b"])), "application/pdf")
+    model = ModelConfig(
+        access="codex_cli",
+        model="m",
+        key_env=None,
+        command="codex",
+        rpm=None,
+        tpm=None,
+        rpd=None,
+        image_long_side=600,
+    )
+    CodexCliProvider(model).generate("prompt", [pdf])
+    sizes = _sent_images(fake)
+    assert len(sizes) == 2
+    assert all(max(size) == 600 for size in sizes)
+
+
+def test_pdf_pages_default_to_the_cli_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = _FakeCodex()
+    _install(monkeypatch, fake)
+    pdf = MediaPart(pdf_bytes(text_pages(["a"])), "application/pdf")
+    CodexCliProvider(codex_model()).generate("prompt", [pdf])
+    assert [max(size) for size in _sent_images(fake)] == [DEFAULT_IMAGE_LONG_SIDE]
+
+
+def test_oversized_image_shrinks_and_keeps_its_ratio(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = _FakeCodex()
+    _install(monkeypatch, fake)
+    part = MediaPart(_png(3000, 1500), "image/png")
+    CodexCliProvider(codex_model()).generate("prompt", [part])
+    assert _sent_images(fake) == [(2048, 1024)]
+
+
+def test_small_image_goes_unchanged(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = _FakeCodex()
+    _install(monkeypatch, fake)
+    small = _png(300, 200)
+    CodexCliProvider(codex_model()).generate("prompt", [MediaPart(small, "image/png")])
+    assert fake.files["image-001.png"] == small
+
+
+def test_unreadable_pdf_is_a_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = _FakeCodex()
+    _install(monkeypatch, fake)
+    with pytest.raises(ProviderError, match="cannot draw"):
         CodexCliProvider(codex_model()).generate(
-            "prompt", [MediaPart(b"%PDF", "application/pdf")]
+            "prompt", [MediaPart(b"not a pdf", "application/pdf")]
         )
     assert fake.calls == []
+
+
+def test_other_media_is_refused_before_the_cli_runs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = _FakeCodex()
+    _install(monkeypatch, fake)
+    with pytest.raises(ProviderError, match="audio/wav"):
+        CodexCliProvider(codex_model()).generate(
+            "prompt", [MediaPart(b"RIFF", "audio/wav")]
+        )
+    assert fake.calls == []
+
+
+def test_token_use_is_logged(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    done = {
+        "type": "turn.completed",
+        "usage": {
+            "input_tokens": 6224,
+            "cached_input_tokens": 2432,
+            "output_tokens": 15,
+        },
+    }
+    fake = _FakeCodex(stdout=_jsonl(_CODE_MODE_ITEM, done))
+    _install(monkeypatch, fake)
+    with caplog.at_level(logging.INFO, logger="raw2md"):
+        CodexCliProvider(codex_model()).generate("p")
+    assert [r.getMessage() for r in caplog.records] == [
+        "llm: test-model used 6224 input tokens (2432 cached), 15 output tokens"
+    ]
 
 
 def test_request_folder_is_deleted_after_the_reply(
@@ -213,7 +332,7 @@ def test_request_folder_is_deleted_after_the_reply(
 ) -> None:
     fake = _FakeCodex()
     _install(monkeypatch, fake)
-    CodexCliProvider(codex_model()).generate("p", [MediaPart(b"x", "image/png")])
+    CodexCliProvider(codex_model()).generate("p", [MediaPart(_png(5, 5), "image/png")])
     assert not fake.folder.exists()
 
 

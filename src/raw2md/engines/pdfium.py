@@ -266,3 +266,19 @@ def render_pages(
             bitmap.close()
             page.close()
             yield buffer.getvalue()
+
+
+def render_pdf_pages(data: bytes, long_side: int) -> list[bytes]:
+    """Render each page of a PDF to PNG with its longer side at `long_side` pixels."""
+    pages: list[bytes] = []
+    with _open(data) as doc:
+        doc.init_forms()
+        for page in doc:
+            width, height = page.get_size()
+            bitmap = page.render(scale=long_side / max(width, height))
+            buffer = io.BytesIO()
+            bitmap.to_pil().save(buffer, format="PNG")
+            bitmap.close()
+            page.close()
+            pages.append(buffer.getvalue())
+    return pages
