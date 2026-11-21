@@ -1112,7 +1112,7 @@ def test_route_stages_post_processing_applies_to_any_source(tmp_path: Path) -> N
 # --- LLM post-processing integration -----------------------------------------
 
 _FAKE_MODEL = ModelConfig(
-    access="cli",
+    access="claude_cli",
     model="fake",
     key_env=None,
     command="fake",

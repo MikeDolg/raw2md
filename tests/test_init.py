@@ -112,10 +112,16 @@ def test_filters_models_and_operations(home: Path) -> None:
     assert written["operations"]["inspection"]["allowed"] == []
 
 
+def test_init_accepts_the_codex_key(home: Path) -> None:
+    assert run_init_command(["codex_cli"]) == 0
+    written = json.loads(settings_file().read_text(encoding="utf-8"))
+    assert set(written["models"]) == {"codex_cli"}
+
+
 def test_no_arguments_keeps_every_shipped_model(home: Path) -> None:
     run_init_command([])
     written = json.loads(settings_file().read_text(encoding="utf-8"))
-    assert set(written["models"]) == {"gemini_api", "claude_cli"}
+    assert set(written["models"]) == {"gemini_api", "claude_cli", "codex_cli"}
 
 
 def test_rejects_an_unknown_model_key(home: Path) -> None:

@@ -13,8 +13,8 @@ from raw2md.settings import load_settings
 def test_offline_fixture_loads(raw2md_home: Path) -> None:
     settings = load_settings(settings_file())
     assert set(settings.models) == {"test_api", "test_cli"}
-    assert settings.models["test_api"].access == "api"
-    assert settings.models["test_cli"].access == "cli"
+    assert settings.models["test_api"].access == "gemini_api"
+    assert settings.models["test_cli"].access == "claude_cli"
     assert settings.operations["ocr"] == frozenset({"test_api"})
     assert settings.engine_recognition_batch_size == 8
 

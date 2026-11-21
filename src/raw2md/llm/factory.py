@@ -17,9 +17,9 @@ def build_provider(model: ModelConfig) -> Provider:
 
     Never by model name, so a new model is added through settings, not code.
     """
-    if model.access == "api":
+    if model.access == "gemini_api":
         return GeminiApiProvider(model)
-    if model.access == "cli":
+    if model.access == "claude_cli":
         return ClaudeCliProvider(model)
     # Guards an access type added to settings without a provider.
     raise ValueError(f"unknown access type '{model.access}'")

@@ -842,7 +842,7 @@ def test_each_file_gets_its_place_in_the_batch(
 # --- LLM post-processing startup gate and end-to-end -------------------------
 
 _FAKE_MODEL = ModelConfig(
-    access="cli",
+    access="claude_cli",
     model="fake",
     key_env=None,
     command="fake",
@@ -1064,7 +1064,7 @@ def _write_inspection_settings(home: Path, **window: int) -> None:
     data = {
         "models": {
             "gemini_api": {
-                "access": "api",
+                "access": "gemini_api",
                 "key_env": "FAKE_KEY",
                 "model": "fake",
                 **window,
@@ -1392,7 +1392,7 @@ def test_settings_log_file_false_disables_it_without_the_flag(home: Path) -> Non
             {
                 "models": {
                     "gemini_api": {
-                        "access": "api",
+                        "access": "gemini_api",
                         "key_env": "FAKE_KEY",
                         "model": "fake",
                     }
@@ -1492,7 +1492,7 @@ def test_engine_batch_size_from_settings_reaches_registry_builder(
             {
                 "models": {
                     "gemini_api": {
-                        "access": "api",
+                        "access": "gemini_api",
                         "key_env": "FAKE_KEY",
                         "model": "fake",
                     }
@@ -1535,7 +1535,7 @@ def test_cleaning_witness_bar_from_settings_reaches_the_run_context(
             {
                 "models": {
                     "gemini_api": {
-                        "access": "api",
+                        "access": "gemini_api",
                         "key_env": "FAKE_KEY",
                         "model": "fake",
                     }
@@ -2094,7 +2094,7 @@ def test_inspection_plus_post_combined(
     src.write_bytes(b"%PDF-1.4 stub")
 
     def _dispatch(model: ModelConfig) -> FakeProvider:
-        if model.access == "api":
+        if model.access == "gemini_api":
             return FakeProvider(available=True, vision=True, reply=_COMBO_INSPECT_REPLY)
         return FakeProvider(available=True, reply=_COMBO_POST_REPLY)
 

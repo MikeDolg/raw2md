@@ -1,7 +1,7 @@
 {
   "models": {
     "gemini_api": {
-      "access": "api",
+      "access": "gemini_api",
       "key_env": "GOOGLE_API_KEY",
       "model": "gemini-3.5-flash-lite",
       "rpm": 15,
@@ -9,7 +9,7 @@
       "rpd": 500
     },
     "claude_cli": {
-      "access": "cli",
+      "access": "claude_cli",
       "command": "claude",
       "model": "claude-sonnet-5-5"
     }

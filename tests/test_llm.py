@@ -51,7 +51,7 @@ def api_model(
     temperature: float | None = None,
 ) -> ModelConfig:
     return ModelConfig(
-        access="api",
+        access="gemini_api",
         model="gemini-2.5-flash",
         key_env=key_env,
         command=None,
@@ -68,7 +68,7 @@ def cli_model(
     command: str | None = "claude", cli_timeout_s: int | None = None
 ) -> ModelConfig:
     return ModelConfig(
-        access="cli",
+        access="claude_cli",
         model="claude-sonnet-4-6",
         key_env=None,
         command=command,
@@ -163,7 +163,7 @@ def test_auth_error_is_raised_again_without_a_request(
     # The refusal outlives the call: the next one neither sends nor spends rpd.
     monkeypatch.setattr("raw2md.llm.base._sleep", lambda seconds: None)
     model = ModelConfig(
-        access="cli",
+        access="claude_cli",
         model="claude-sonnet-4-6",
         key_env=None,
         command="claude",
@@ -952,7 +952,7 @@ def test_gemini_daily_quota_does_not_leak_between_models(
         exhausted.generate("prompt")
 
     other = ModelConfig(
-        access="api",
+        access="gemini_api",
         model="gemini-other",
         key_env="GOOGLE_API_KEY",
         command=None,

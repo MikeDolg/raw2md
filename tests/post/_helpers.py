@@ -21,7 +21,7 @@ from raw2md.llm.post.common import MAX_REPLY_CHARS, PostOperation
 from raw2md.settings import ModelConfig
 
 _MODEL = ModelConfig(
-    access="cli",
+    access="claude_cli",
     model="fake",
     key_env=None,
     command="fake",

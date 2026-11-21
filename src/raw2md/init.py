@@ -126,7 +126,7 @@ def _settings_template(model_keys: tuple[str, ...]) -> dict[str, Any]:
 def _warn_vision_gap(settings_template: dict[str, Any]) -> None:
     """Warn when the chosen models leave a vision operation with none allowed.
 
-    A model without vision (the CLI access type) cannot serve OCR or
+    A `claude_cli` model has no vision, so it cannot serve OCR or
     inspection.
     """
     empty = [

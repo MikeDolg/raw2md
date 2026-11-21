@@ -29,13 +29,21 @@ from raw2md.settings import (
 
 def test_default_settings_parses() -> None:
     settings = default_settings()
-    assert settings.models["gemini_api"].access == "api"
+    assert settings.models["gemini_api"].access == "gemini_api"
     assert settings.models["gemini_api"].key_env == "GOOGLE_API_KEY"
-    assert settings.models["claude_cli"].access == "cli"
+    assert settings.models["claude_cli"].access == "claude_cli"
     assert settings.models["claude_cli"].command == "claude"
     assert settings.models["claude_cli"].model == "claude-sonnet-5-5"
     assert settings.operations["post"] == frozenset({"claude_cli", "gemini_api"})
     assert settings.log_file is True
+
+
+def test_default_settings_ships_the_codex_model() -> None:
+    model = default_settings().models["codex_cli"]
+    assert model.access == "codex_cli"
+    assert model.command == "codex"
+    assert model.model == "gpt-6.1-terra"
+    assert model.cli_timeout_s == 120
 
 
 def test_default_settings_states_the_request_window() -> None:
@@ -117,20 +125,48 @@ def test_unknown_access_rejected() -> None:
         parse_settings(data)
 
 
+@pytest.mark.parametrize(("old", "new"), [("api", "gemini_api"), ("cli", "claude_cli")])
+def test_retired_access_names_the_replacement(old: str, new: str) -> None:
+    data = {"models": {"m": {"access": old, "model": "x"}}}
+    with pytest.raises(SettingsError, match=f"'{old}' is renamed to '{new}'"):
+        parse_settings(data)
+
+
+def test_codex_model_requires_command() -> None:
+    data = {"models": {"m": {"access": "codex_cli", "model": "x"}}}
+    with pytest.raises(SettingsError, match="'command'"):
+        parse_settings(data)
+
+
+def test_codex_model_accepts_the_cli_timeout() -> None:
+    data = {
+        "models": {
+            "m": {
+                "access": "codex_cli",
+                "command": "c",
+                "model": "x",
+                "cli_timeout_s": 7,
+            }
+        },
+        "operations": {"post": {"allowed": ["m"]}},
+    }
+    assert parse_settings(data).models["m"].cli_timeout_s == 7
+
+
 def test_api_model_requires_key_env() -> None:
-    data = {"models": {"m": {"access": "api", "model": "x"}}}
+    data = {"models": {"m": {"access": "gemini_api", "model": "x"}}}
     with pytest.raises(SettingsError):
         parse_settings(data)
 
 
 def test_cli_model_requires_command() -> None:
-    data = {"models": {"m": {"access": "cli", "model": "x"}}}
+    data = {"models": {"m": {"access": "claude_cli", "model": "x"}}}
     with pytest.raises(SettingsError):
         parse_settings(data)
 
 
 def test_empty_model_name_rejected() -> None:
-    data = {"models": {"m": {"access": "cli", "command": "c", "model": ""}}}
+    data = {"models": {"m": {"access": "claude_cli", "command": "c", "model": ""}}}
     with pytest.raises(SettingsError):
         parse_settings(data)
 
@@ -139,7 +175,9 @@ def test_empty_model_name_rejected() -> None:
 def test_reserved_model_key_rejected(reserved: str) -> None:
     # A key equal to a header sentinel, bare or as a coverage fraction, would
     # hide the stage's outcome.
-    data = {"models": {reserved: {"access": "cli", "command": "c", "model": "x"}}}
+    data = {
+        "models": {reserved: {"access": "claude_cli", "command": "c", "model": "x"}}
+    }
     with pytest.raises(SettingsError):
         parse_settings(data)
 
@@ -147,7 +185,7 @@ def test_reserved_model_key_rejected(reserved: str) -> None:
 @pytest.mark.parametrize("engine", ["raw2md-engine", "marker", "pandoc", "djvu"])
 def test_reserved_engine_name_rejected_as_model_key(engine: str) -> None:
     # A key equal to an engine name would make --engine ambiguous.
-    data = {"models": {engine: {"access": "cli", "command": "c", "model": "x"}}}
+    data = {"models": {engine: {"access": "claude_cli", "command": "c", "model": "x"}}}
     with pytest.raises(SettingsError):
         parse_settings(data)
 
@@ -155,7 +193,7 @@ def test_reserved_engine_name_rejected_as_model_key(engine: str) -> None:
 @pytest.mark.parametrize("engine", ["raw2md-engine", "marker", "pandoc", "djvu"])
 def test_reserved_engine_name_rejected_in_operations_allowed(engine: str) -> None:
     data = {
-        "models": {"m": {"access": "cli", "command": "c", "model": "x"}},
+        "models": {"m": {"access": "claude_cli", "command": "c", "model": "x"}},
         "operations": {"post": {"allowed": ["m", engine]}},
     }
     with pytest.raises(SettingsError):
@@ -164,7 +202,9 @@ def test_reserved_engine_name_rejected_in_operations_allowed(engine: str) -> Non
 
 def test_boolean_limit_rejected() -> None:
     data = {
-        "models": {"m": {"access": "api", "key_env": "K", "model": "x", "rpm": True}}
+        "models": {
+            "m": {"access": "gemini_api", "key_env": "K", "model": "x", "rpm": True}
+        }
     }
     with pytest.raises(SettingsError):
         parse_settings(data)
@@ -174,7 +214,7 @@ def test_request_window_fields_are_read() -> None:
     data = {
         "models": {
             "m": {
-                "access": "api",
+                "access": "gemini_api",
                 "key_env": "K",
                 "model": "x",
                 "pages_per_request": 4,
@@ -191,7 +231,7 @@ def test_request_window_fields_are_read() -> None:
 def test_request_window_fields_are_optional() -> None:
     # Absent fields leave the built-in window in force.
     data = {
-        "models": {"m": {"access": "api", "key_env": "K", "model": "x"}},
+        "models": {"m": {"access": "gemini_api", "key_env": "K", "model": "x"}},
         "operations": {"inspection": {"allowed": ["m"]}},
     }
     model = parse_settings(data).models["m"]
@@ -204,7 +244,9 @@ def test_request_window_fields_are_optional() -> None:
 def test_non_positive_request_window_rejected(field: str, value: int) -> None:
     # A zero window is a typo, not a setting.
     data = {
-        "models": {"m": {"access": "api", "key_env": "K", "model": "x", field: value}}
+        "models": {
+            "m": {"access": "gemini_api", "key_env": "K", "model": "x", field: value}
+        }
     }
     with pytest.raises(SettingsError, match="must be positive"):
         parse_settings(data)
@@ -212,14 +254,18 @@ def test_non_positive_request_window_rejected(field: str, value: int) -> None:
 
 def _api_model_data(**fields: Any) -> dict[str, Any]:
     return {
-        "models": {"m": {"access": "api", "key_env": "K", "model": "x", **fields}},
+        "models": {
+            "m": {"access": "gemini_api", "key_env": "K", "model": "x", **fields}
+        },
         "operations": {"inspection": {"allowed": ["m"]}},
     }
 
 
 def _cli_post_model_data(**fields: Any) -> dict[str, Any]:
     return {
-        "models": {"m": {"access": "cli", "command": "c", "model": "x", **fields}},
+        "models": {
+            "m": {"access": "claude_cli", "command": "c", "model": "x", **fields}
+        },
         "operations": {"post": {"allowed": ["m"]}},
     }
 
@@ -258,7 +304,7 @@ def test_temperature_rejected_for_cli_access() -> None:
     data = {
         "models": {
             "m": {
-                "access": "cli",
+                "access": "claude_cli",
                 "command": "claude",
                 "model": "x",
                 "temperature": 0.2,
@@ -266,7 +312,7 @@ def test_temperature_rejected_for_cli_access() -> None:
         },
         "operations": {"post": {"allowed": ["m"]}},
     }
-    with pytest.raises(SettingsError, match="'api' access only"):
+    with pytest.raises(SettingsError, match="'gemini_api' access only"):
         parse_settings(data)
 
 
@@ -299,7 +345,7 @@ def test_non_integer_cli_timeout_rejected(value: object) -> None:
 
 def test_cli_timeout_rejected_for_api_access() -> None:
     # An `api` request has its own transport timeout, so the value is refused.
-    with pytest.raises(SettingsError, match="'cli' access only"):
+    with pytest.raises(SettingsError, match="CLI access only"):
         parse_settings(_api_model_data(cli_timeout_s=120))
 
 
@@ -341,7 +387,7 @@ def test_malformed_rpd_reset_zone_rejected(value: str) -> None:
 
 def _cli_model_data(**engine: Any) -> dict[str, Any]:
     data: dict[str, Any] = {
-        "models": {"m": {"access": "cli", "command": "c", "model": "x"}},
+        "models": {"m": {"access": "claude_cli", "command": "c", "model": "x"}},
         "operations": {},
     }
     if engine:
@@ -397,7 +443,7 @@ def test_engine_batch_size_invalid_value_rejected(value: object) -> None:
 
 def test_unknown_operation_rejected() -> None:
     data = {
-        "models": {"m": {"access": "cli", "command": "c", "model": "x"}},
+        "models": {"m": {"access": "claude_cli", "command": "c", "model": "x"}},
         "operations": {"translate": {"allowed": ["m"]}},
     }
     with pytest.raises(SettingsError):
@@ -406,7 +452,7 @@ def test_unknown_operation_rejected() -> None:
 
 def test_allowed_must_be_list_of_strings() -> None:
     data = {
-        "models": {"m": {"access": "cli", "command": "c", "model": "x"}},
+        "models": {"m": {"access": "claude_cli", "command": "c", "model": "x"}},
         "operations": {"post": {"allowed": "m"}},
     }
     with pytest.raises(SettingsError):
@@ -415,7 +461,7 @@ def test_allowed_must_be_list_of_strings() -> None:
 
 def test_log_file_must_be_bool() -> None:
     data = {
-        "models": {"m": {"access": "cli", "command": "c", "model": "x"}},
+        "models": {"m": {"access": "claude_cli", "command": "c", "model": "x"}},
         "log_file": "yes",
     }
     with pytest.raises(SettingsError):
@@ -443,7 +489,7 @@ def test_log_file_precedence(flag: bool, configured: bool, expected: bool) -> No
 
 def test_missing_log_file_field_defaults_to_on() -> None:
     data = {
-        "models": {"m": {"access": "cli", "command": "c", "model": "x"}},
+        "models": {"m": {"access": "claude_cli", "command": "c", "model": "x"}},
         "operations": {},
     }
     assert parse_settings(data).log_file is True
@@ -453,8 +499,8 @@ def _model(access: str) -> ModelConfig:
     return ModelConfig(
         access=access,
         model="x",
-        key_env="K" if access == "api" else None,
-        command="c" if access == "cli" else None,
+        key_env="K" if access == "gemini_api" else None,
+        command="c" if access in ("claude_cli", "codex_cli") else None,
         rpm=None,
         tpm=None,
         rpd=None,
@@ -462,14 +508,16 @@ def _model(access: str) -> ModelConfig:
 
 
 @pytest.mark.parametrize("operation", ["ocr", "inspection"])
-def test_cli_model_cannot_serve_vision(operation: str) -> None:
-    assert model_can_serve(_model("api"), operation) is True
-    assert model_can_serve(_model("cli"), operation) is False
+def test_vision_follows_the_access_type(operation: str) -> None:
+    assert model_can_serve(_model("gemini_api"), operation) is True
+    assert model_can_serve(_model("codex_cli"), operation) is True
+    assert model_can_serve(_model("claude_cli"), operation) is False
 
 
 def test_any_model_can_serve_post() -> None:
-    assert model_can_serve(_model("api"), "post") is True
-    assert model_can_serve(_model("cli"), "post") is True
+    assert model_can_serve(_model("gemini_api"), "post") is True
+    assert model_can_serve(_model("claude_cli"), "post") is True
+    assert model_can_serve(_model("codex_cli"), "post") is True
 
 
 # --- `settings` subcommand -------------------------------------------------
@@ -534,7 +582,7 @@ def test_check_unknown_model_reference_is_argument_error(
 ) -> None:
     # The schema parses the two sections apart; check catches the reference.
     data = {
-        "models": {"m": {"access": "cli", "command": "c", "model": "x"}},
+        "models": {"m": {"access": "claude_cli", "command": "c", "model": "x"}},
         "operations": {"post": {"allowed": ["m", "ghost"]}},
     }
     path = settings_file()
@@ -549,7 +597,9 @@ def test_check_unknown_model_reference_is_argument_error(
 def test_check_reserved_engine_name_is_argument_error(
     home: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    data = {"models": {"pandoc": {"access": "cli", "command": "c", "model": "x"}}}
+    data = {
+        "models": {"pandoc": {"access": "claude_cli", "command": "c", "model": "x"}}
+    }
     path = settings_file()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data), encoding="utf-8")
@@ -562,7 +612,7 @@ def test_check_reserved_engine_name_is_argument_error(
 
 def _cleaning_data(**cleaning: Any) -> dict[str, Any]:
     data: dict[str, Any] = {
-        "models": {"m": {"access": "cli", "command": "c", "model": "x"}},
+        "models": {"m": {"access": "claude_cli", "command": "c", "model": "x"}},
         "operations": {},
     }
     if cleaning:

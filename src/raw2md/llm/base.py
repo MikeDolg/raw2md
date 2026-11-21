@@ -1,10 +1,10 @@
 """LLM provider layer behind a common interface.
 
-A provider is one access route to a model: an HTTP API (`api`) or a local CLI
-(`cli`). This module holds the interface, the request parts, the reply, the
-typed runtime errors, and the shared throttle and retry. A runtime failure maps
-to exit code 5; a missing dependency, key, or command is a startup condition
-(exit code 3) that `available()` reports.
+A provider is one access route to a model: an HTTP API (`gemini_api`) or a
+local CLI (`claude_cli`, `codex_cli`). This module holds the interface, the
+request parts, the reply, the typed runtime errors, and the shared throttle and
+retry. A runtime failure maps to exit code 5; a missing dependency, key, or
+command is a startup condition (exit code 3) that `available()` reports.
 """
 
 from __future__ import annotations

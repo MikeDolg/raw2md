@@ -1,7 +1,7 @@
 {
   "models": {
     "test_api": {
-      "access": "api",
+      "access": "gemini_api",
       "key_env": "RAW2MD_TEST_KEY",
       "model": "test-vision-model",
       "rpm": 5,
@@ -9,7 +9,7 @@
       "rpd": 100
     },
     "test_cli": {
-      "access": "cli",
+      "access": "claude_cli",
       "command": "raw2md-test-cli",
       "model": "test-text-model"
     }

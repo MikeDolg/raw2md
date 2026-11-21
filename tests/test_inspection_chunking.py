@@ -37,7 +37,7 @@ from raw2md.llm.inspection.coordinator import inspect
 from raw2md.settings import ModelConfig
 
 _MODEL = ModelConfig(
-    access="api",
+    access="gemini_api",
     model="fake",
     key_env="FAKE_KEY",
     command=None,

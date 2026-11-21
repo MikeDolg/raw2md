@@ -20,7 +20,9 @@ from raw2md.paths import settings_file
 from raw2md.quality.evaluator import DEFAULT_OK_SCORE
 from raw2md.service import edit_file, parse_file_action, show_file
 
-ACCESS_TYPES = ("api", "cli")
+ACCESS_TYPES = ("gemini_api", "claude_cli", "codex_cli")
+CLI_ACCESS_TYPES = ("claude_cli", "codex_cli")
+VISION_ACCESS_TYPES = ("gemini_api", "codex_cli")
 OPERATIONS = ("ocr", "inspection", "post")
 
 # Built-in route names: a model key equal to one would make an --engine value
@@ -39,15 +41,18 @@ _ENGINE_BATCH_SIZE_DEFAULT = "default"
 # Below two occurrences a spelling is not the document's own.
 _WITNESS_MIN_FLOOR = 2
 
+# Access names before a type named its provider, with the type that replaces each.
+_RENAMED_ACCESS = {"api": "gemini_api", "cli": "claude_cli"}
+
 # Both the file template and the in-memory fallback derive from this mapping.
 # Values restate the code fallbacks so the template shows them:
 # `pages_per_request` (llm.chunking), `max_request_bytes` (llm.base),
-# `witness_min` (cleaning.ocr), `cli_timeout_s` (llm.claude). No temperature:
+# `witness_min` (cleaning.ocr), `cli_timeout_s` (the CLI providers). No temperature:
 # the provider default holds.
 DEFAULT_SETTINGS: dict[str, Any] = {
     "models": {
         "gemini_api": {
-            "access": "api",
+            "access": "gemini_api",
             "key_env": "GOOGLE_API_KEY",
             "model": "gemini-3.5-flash-lite",
             "rpm": 15,
@@ -58,9 +63,15 @@ DEFAULT_SETTINGS: dict[str, Any] = {
             "max_request_bytes": 20971520,
         },
         "claude_cli": {
-            "access": "cli",
+            "access": "claude_cli",
             "command": "claude",
             "model": "claude-sonnet-5-5",
+            "cli_timeout_s": 120,
+        },
+        "codex_cli": {
+            "access": "codex_cli",
+            "command": "codex",
+            "model": "gpt-6.1-terra",
             "cli_timeout_s": 120,
         },
     },
@@ -98,12 +109,13 @@ class UnknownZoneError(SettingsError):
 class ModelConfig:
     """One entry of the `models` block.
 
-    `key_env` and `temperature` are for `api` access; `command` and
-    `cli_timeout_s` for `cli`. Optional fields left as None fall back to the
-    defaults of the code that applies them: `rpd_reset_zone` (the IANA zone of
-    the daily quota boundary) to the provider's zone, `pages_per_request` and
-    `max_request_bytes` (the request window) to built-in limits,
-    `cli_timeout_s` to a default timeout. An absent `temperature` is not sent.
+    `key_env` and `temperature` are for `gemini_api` access; `command` and
+    `cli_timeout_s` for the CLI access types. Optional fields left as None fall
+    back to the defaults of the code that applies them: `rpd_reset_zone` (the
+    IANA zone of the daily quota boundary) to the provider's zone,
+    `pages_per_request` and `max_request_bytes` (the request window) to
+    built-in limits, `cli_timeout_s` to a default timeout. An absent
+    `temperature` is not sent.
     """
 
     access: str
@@ -138,8 +150,8 @@ class Settings:
 
 
 def access_has_vision(access: str) -> bool:
-    """Whether an access type can read images; a `cli` model has no vision."""
-    return access == "api"
+    """Whether an access type can read images; a `claude_cli` model cannot."""
+    return access in VISION_ACCESS_TYPES
 
 
 def model_can_serve(model: ModelConfig, operation: str) -> bool:
@@ -230,6 +242,10 @@ def _parse_model(name: str, spec: Any) -> ModelConfig:
     if not isinstance(spec, dict):
         raise SettingsError(f"model '{name}' must be an object")
     access = spec.get("access")
+    if isinstance(access, str) and access in _RENAMED_ACCESS:
+        raise SettingsError(
+            f"model '{name}': '{access}' is renamed to '{_RENAMED_ACCESS[access]}'"
+        )
     if access not in ACCESS_TYPES:
         raise SettingsError(
             f"model '{name}': 'access' must be one of {list(ACCESS_TYPES)}"
@@ -237,8 +253,10 @@ def _parse_model(name: str, spec: Any) -> ModelConfig:
     return ModelConfig(
         access=access,
         model=_require_str(name, spec, "model"),
-        key_env=_require_str(name, spec, "key_env") if access == "api" else None,
-        command=_require_str(name, spec, "command") if access == "cli" else None,
+        key_env=_require_str(name, spec, "key_env") if access == "gemini_api" else None,
+        command=(
+            _require_str(name, spec, "command") if access in CLI_ACCESS_TYPES else None
+        ),
         rpm=_optional_int(name, spec, "rpm"),
         tpm=_optional_int(name, spec, "tpm"),
         rpd=_optional_int(name, spec, "rpd"),
@@ -304,18 +322,18 @@ def _optional_zone(model_name: str, spec: dict[str, Any], field: str) -> str | N
 def _optional_temperature(
     model_name: str, spec: dict[str, Any], access: str
 ) -> float | None:
-    """An optional sampling temperature, accepted for `api` access only.
+    """An optional sampling temperature, accepted for `gemini_api` access only.
 
-    The CLI route cannot carry one, so a value there is refused rather than
+    The CLI routes cannot carry one, so a value there is refused rather than
     silently dropped. The range is the widest the supported API accepts. The
     template states none: the provider advises keeping its default.
     """
     value = spec.get("temperature")
     if value is None:
         return None
-    if access != "api":
+    if access != "gemini_api":
         raise SettingsError(
-            f"model '{model_name}': 'temperature' applies to 'api' access only"
+            f"model '{model_name}': 'temperature' applies to 'gemini_api' access only"
         )
     # bool is an int subclass; an int temperature is fine.
     if isinstance(value, bool) or not isinstance(value, int | float):
@@ -331,17 +349,17 @@ def _optional_temperature(
 def _optional_cli_timeout(
     model_name: str, spec: dict[str, Any], access: str
 ) -> int | None:
-    """An optional CLI subprocess timeout in seconds, accepted for `cli` access only.
+    """An optional CLI subprocess timeout in seconds, accepted for CLI access only.
 
-    An `api` request has its own transport timeout, so a value there would go
+    A `gemini_api` request has its own transport timeout, so a value there would go
     unused.
     """
     value = spec.get("cli_timeout_s")
     if value is None:
         return None
-    if access != "cli":
+    if access not in CLI_ACCESS_TYPES:
         raise SettingsError(
-            f"model '{model_name}': 'cli_timeout_s' applies to 'cli' access only"
+            f"model '{model_name}': 'cli_timeout_s' applies to CLI access only"
         )
     return _optional_positive_int(model_name, spec, "cli_timeout_s")
 

@@ -26,7 +26,7 @@ from raw2md.prompts import default_prompts
 from raw2md.settings import ModelConfig
 
 _FAKE_MODEL = ModelConfig(
-    access="api",
+    access="gemini_api",
     model="fake",
     key_env="FAKE_KEY",
     command=None,

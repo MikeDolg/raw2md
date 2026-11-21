@@ -32,7 +32,7 @@ def gemini_only(allowed: str = "gemini_api") -> dict[str, Any]:
     return {
         "models": {
             "gemini_api": {
-                "access": "api",
+                "access": "gemini_api",
                 "key_env": "GOOGLE_API_KEY",
                 "model": "gemini-2.5-flash",
             }
@@ -80,7 +80,7 @@ def test_malformed_settings_is_argument_error(home: Path) -> None:
 
 def test_reserved_engine_name_is_argument_error(home: Path) -> None:
     # doctor parses settings like a run does.
-    data = {"models": {"djvu": {"access": "cli", "command": "c", "model": "x"}}}
+    data = {"models": {"djvu": {"access": "claude_cli", "command": "c", "model": "x"}}}
     write_settings(data)
     assert run_doctor() == int(ExitCode.ARGUMENT_ERROR)
 
@@ -97,7 +97,9 @@ def test_unknown_model_is_argument_error(
 
 def test_cli_model_in_vision_role_is_argument_error(home: Path) -> None:
     data = {
-        "models": {"local_cli": {"access": "cli", "command": "echo", "model": "m"}},
+        "models": {
+            "local_cli": {"access": "claude_cli", "command": "echo", "model": "m"}
+        },
         "operations": {
             "ocr": {"allowed": ["local_cli"]},
             "inspection": {"allowed": []},
@@ -119,7 +121,7 @@ def test_missing_api_key_is_missing_dependency(
 def test_missing_cli_command_is_missing_dependency(home: Path) -> None:
     data = {
         "models": {
-            "local_cli": {"access": "cli", "command": _MISSING_CMD, "model": "m"}
+            "local_cli": {"access": "claude_cli", "command": _MISSING_CMD, "model": "m"}
         },
         "operations": {
             "ocr": {"allowed": []},

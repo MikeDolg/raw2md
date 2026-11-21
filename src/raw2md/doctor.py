@@ -10,7 +10,7 @@ The exit code sums up four reports:
 - `zoneinfo`: required, because the daily quota boundary needs an IANA zone
   and Windows has no system zone database;
 - settings.json: a schema error, an unknown model, or a vision operation on
-  a cli model is exit 2; an unusable configured model is exit 3.
+  a claude_cli model is exit 2; an unusable configured model is exit 3.
 
 Model readiness comes from the provider `available()`, the same check a run
 does.
@@ -233,7 +233,7 @@ def _report_settings(settings: Settings) -> tuple[int, int]:
             if not model_can_serve(model, operation):
                 print(
                     f"  {operation}: model '{model_key}' has no vision "
-                    "(cli access cannot serve ocr/inspection)"
+                    "(claude_cli access cannot serve ocr/inspection)"
                 )
                 config_problems += 1
                 continue
