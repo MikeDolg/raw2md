@@ -116,6 +116,8 @@ def test_init_accepts_the_codex_key(home: Path) -> None:
     assert run_init_command(["codex_cli"]) == 0
     written = json.loads(settings_file().read_text(encoding="utf-8"))
     assert set(written["models"]) == {"codex_cli"}
+    for operation in ("ocr", "inspection", "post"):
+        assert written["operations"][operation]["allowed"] == ["codex_cli"]
 
 
 def test_no_arguments_keeps_every_shipped_model(home: Path) -> None:

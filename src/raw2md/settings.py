@@ -76,9 +76,9 @@ DEFAULT_SETTINGS: dict[str, Any] = {
         },
     },
     "operations": {
-        "ocr": {"allowed": ["gemini_api"]},
-        "inspection": {"allowed": ["gemini_api"]},
-        "post": {"allowed": ["claude_cli", "gemini_api"]},
+        "ocr": {"allowed": ["gemini_api", "codex_cli"]},
+        "inspection": {"allowed": ["gemini_api", "codex_cli"]},
+        "post": {"allowed": ["claude_cli", "gemini_api", "codex_cli"]},
     },
     DEFAULT_ENGINE: {
         "recognition_batch_size": _ENGINE_BATCH_SIZE_DEFAULT,
