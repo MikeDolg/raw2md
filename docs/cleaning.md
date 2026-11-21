@@ -21,7 +21,7 @@ of rules lists them. The module paths start at `src/raw2md/`.
 
 | Defect | Before | After |
 |---|---|---|
-| Bold or italics over the whole heading | `## **2.3 Load Tables**` | `## 2.3 Load Tables` |
+| Bold anywhere in a heading, and italics over the whole heading; italics over a part stay, because they can mark a variable | `## 2.3 **Load** Tables`, `## *2.3 Load Tables*` | `## 2.3 Load Tables` |
 | A symbol before the number; `№` and `§` stay | `## ● 4 Maintenance` | `## 4 Maintenance` |
 | A letter-spaced heading; repaired only when the word also occurs in the document without spaces | `## I n t r o d u c t i o n` | `## Introduction` |
 | A numbered heading merged with a paragraph; the title is 60 characters at most, and each word starts with a capital letter | `### 3.1 Problem Statement. The pump runs…` | `### 3.1 Problem Statement`, with the paragraph on its own |
@@ -159,6 +159,8 @@ continues the last item of the list.
 | Rows with `\|` and no delimiter row; at least 2 rows and 2 columns; a block where a row opens with a list marker (`-`, `1.`) stays a list | `\| Size \| Weight \|`, `\| M6 \| 10 \|` | `\|---\|---\|` under the first row |
 | The delimiter row as the first line of the block | `\|---\|---\|` above the rows | the delimiter row under the first row |
 | An empty column | `\| Size \| \| Weight \|` | `\| Size \| Weight \|` |
+| A column of `$` signs: the table has 2 rows or more, the column is not the last, and each `$` stands beside a value | `\| Pump \| \$ \| 120 \|` | `\| Pump \| \$120 \|` |
+| Dot leaders in a cell of a pipe table; the conditions are below the table | `\| Pumps ........ \| 12 \|` | `\| Pumps \| 12 \|` |
 | The values of two adjacent cells written into one cell, and the other cell is empty; a number with group spaces, such as `17 440` or `1 250 000`, stays whole | `\| 1,000.0 1,027.3 \| \|` | `\| 1,000.0 \| 1,027.3 \|` |
 | The values of a row shifted across the columns; repaired only when the kinds of values allow exactly one layout | a part number and the sizes in one cell | each value in its own column |
 | A table of contents in one column | `\| 1 Pumps ........ 5 \|` | `1 Pumps 5` |
@@ -170,7 +172,16 @@ The rules for a table of contents work only between the heading `Contents` and
 the next heading. A table of contents that runs over several pages counts as
 one part: cleaning deletes the repeated heading `Contents` first, so the rules
 reach the rows of every page. Another heading between the pages still ends the
-part. The table rules do not change the values in the cells.
+part. The table rules do not change the values in the cells, except for the
+dot leaders and the `$` signs.
+
+A dot leader is a run of one mark: `.`, `-`, `_`, or `…`. The run holds 4
+marks or more, or 2 or 3 marks with spaces between them. Two `…` are enough,
+and so are two `_` after a space. A run stays between digits (`1...10`), at the
+start of a value (`-.25`), and when it mixes marks (`Brig.-Gen.`). The short
+runs `Gen..`, `etc...`, and `0 ... 90` also stay. A line of a cell that holds
+only marks, 3 or more, goes with its `<br>`. Code, formulas, and addresses
+keep their marks.
 
 The width of a column for a row of wrapped lines is the longest line in the
 column, in characters. A column of short codes stacks its values as grouped
@@ -227,7 +238,8 @@ the other routes and the parts that the engine keeps apart.
 | Navigation markup of `marker` | `See Table [2,](#page-49-0)` | `See Table 2,` |
 | A file path instead of the image caption | `![C:\Users\me\pump.png](media/image1.png)` | `![](media/image1.png)` |
 | A line of punctuation marks only; `---` and a single mark stay | `.,;:` | deleted |
-| Invisible characters: the soft hyphen (U+00AD), the zero-width characters (U+200B to U+200D), and the byte order mark (U+FEFF) | `pre` + U+00AD + `ssure`, which looks like `pressure` on screen | `pressure` |
+| A soft hyphen (U+00AD) between two letters, which `raw2md-engine` writes in place of a hyphen at a line end; the conditions are below the table | `cross` + U+00AD + `linked`, with `cross-linked` elsewhere in the text | `cross-linked` |
+| Invisible characters: the zero-width characters (U+200B to U+200D), the byte order mark (U+FEFF), and a soft hyphen that does not stand between two letters | `pres` + U+200B + `sure`, which looks like `pressure` on screen | `pressure` |
 | Bold over a whole paragraph longer than 120 characters, with two sentences or more | `**The pump must be stopped… housing.**` | no `**` |
 | A bold letter attached to a word | `**I**nterface` | `Interface` |
 | A letter of another alphabet in a word; a word whose letters all exist in both alphabets does not change | `Cоntrol` (a Cyrillic `о`) | `Control` |
@@ -242,6 +254,7 @@ the other routes and the parts that the engine keeps apart.
 | A letter-spaced word; repaired when the spelling without spaces occurs in the text 2 times or more | `i m p o r t a n t` | `important` |
 | A paragraph broken into lines: 6 short paragraphs or more in a row, where a phrase breaks off and continues with a lowercase letter | `The pump is started`, `only after the tank`, and so on | `The pump is started only after the tank …` |
 | A paragraph cut in two by a page, an image, or a caption; LLM-OCR and `md` input only | `The pump feeds the tank while the`, `![Pump](pump.png)`, `Figure 2. The pump.`, `valve stays closed.` | `The pump feeds the tank while the valve stays closed.`, then the image and the caption |
+| A paragraph in a script without letter case, such as Chinese, cut in two by a page; LLM-OCR only | `泵启动前，必须检查油位，确认阀门关闭，然后`, a page break, `打开电源。` | `泵启动前，必须检查油位，确认阀门关闭，然后打开电源。` |
 | Consecutive blank lines and spaces at the end of a line | | one blank line; the spaces deleted |
 
 The join of a cut paragraph reads the text at the cut. The first half has 4
@@ -251,37 +264,57 @@ with a lowercase letter and does not open an item (`b)`) or a symbol legend
 (`k =`). In LLM-OCR mode, the second half starts on the next page. In an `md`
 input, any paragraph break counts. Only blank lines, images, and captions can
 stand between the halves. A caption starts with a word from the
-`caption_labels` list of `keywords.yaml` and a number. A heading, a list item,
-a table, a formula, or a protected zone stops the join.
+`caption_labels` list of `keywords.yaml` and a number, arabic or roman
+(`Fig. IV.2`). A heading, a list item, a table, a formula, or a protected zone
+stops the join.
 
-The rule does not join three cases:
+A script without letter case, such as Chinese or Japanese, has no lowercase
+letter. In such a script, the text shows a continuation when all of these
+conditions are true:
 
-- a hyphen at the cut: the word break rule above joins it when it can
-  confirm the joined word;
-- CJK text: it has no lowercase letters, so the text does not show that the
-  sentence continues;
-- the `raw2md-engine` and `docx` routes: the engine joins such a paragraph by
-  the page layout, and a `docx` has no pages.
-
-On the `raw2md-engine` route, the engine reads the page layout and the text at
-the cut. In a script without letter case, such as Chinese or Japanese, the
-text shows a continuation when all of these conditions are true:
-
-- the cut is a page break or a column break;
+- the cut is a page break, or a column break on the `raw2md-engine` route;
 - the first half ends without a sentence mark, on a letter or a comma of any
   width (`,`, `，`, `、`);
 - the first half holds 20 characters or more, spaces not counted;
 - the second half starts with a letter without case, and not with an item
   number (`1、`, `三.`).
 
-The engine does not join two blocks of one page by this text alone, because
-the text cannot tell a cut paragraph from two paragraphs there. A text block
-on 3 pages or more is a running head or a watermark, and the engine joins it
-to nothing. Such a block holds 3 words or more, or 11 letters or more, so a
-running head without spaces between the words also counts. The engine also
-joins the lines of one paragraph without a space where Han characters, kana,
-or fullwidth punctuation meet at the end of a line. Hangul, Latin, and
-fullwidth letters and digits keep the space.
+The halves join without a space where Han characters, kana, or fullwidth
+punctuation meet, and with a space otherwise. Cleaning and `raw2md-engine`
+apply the same text tests at the cut.
+
+The rule does not join two cases:
+
+- a hyphen at the cut: the word break rule above joins it when it can
+  confirm the joined word;
+- the `raw2md-engine` and `docx` routes: the engine joins such a paragraph by
+  the page layout, and a `docx` has no pages.
+
+On the `raw2md-engine` route, the engine reads the page layout and the text at
+the cut. It does not join two blocks of one page by the text of a script
+without letter case alone, because the text cannot tell a cut paragraph from
+two paragraphs there. A text block on 3 pages or more is a running head or a
+watermark, and the engine joins it to nothing. Such a block holds 3 words or
+more, or 11 letters or more, so a running head without spaces between the
+words also counts. The engine also joins the lines of one paragraph without a
+space where Han characters, kana, or fullwidth punctuation meet at the end of
+a line. Hangul, Latin, and fullwidth letters and digits keep the space.
+
+On the `raw2md-engine` route, a soft hyphen between two letters stands for a
+hyphen at a line end that the engine does not judge. Cleaning decides each
+such mark on every route by the spellings in the text, in this order:
+
+1. The hyphen stays when the text spells the word with a hyphen 3 times or
+   more.
+2. The mark goes when the PDF text layer holds the joined word, or the text
+   holds it 2 times or more.
+3. The hyphen stays when the text or the PDF text layer spells the word with
+   a hyphen at least once.
+4. Otherwise, the mark goes.
+
+A word with two soft hyphens or more loses all of them. The rule also reads
+the cells of an HTML table. A word in a formula, in code, or in an address
+does not count as a spelling.
 
 The repair of a split number needs a witness, because a space after `.` alone
 proves nothing: `2. 4 bolts` is a list item, and `1969. 744 pages` is a year
@@ -308,11 +341,13 @@ change.
 | 120 characters: a bold paragraph | `_WHOLE_PARAGRAPH_EMPHASIS_MIN_CHARS` | `cleaning/prose.py` |
 | 2 sentences: a bold paragraph | `_WHOLE_PARAGRAPH_EMPHASIS_MIN_SENTENCES` | `cleaning/prose.py` |
 | 4 repeats: a running head | `_FURNITURE_MIN_PAIRS` | `cleaning/prose.py` |
-| 2 times: the joined word of a word break in the text | `_MERGED_FORM_MIN_COUNT` | `cleaning/prose.py` |
+| 2 times: the joined word of a word break or of a soft hyphen in the text | `_MERGED_FORM_MIN_COUNT` | `cleaning/prose.py` |
+| 3 times: the spelling with a hyphen that keeps a soft hyphen as `-` | `_HYPHEN_FORM_BLOCK_THRESHOLD` | `cleaning/prose.py` |
 | 3 times more often: the spelling of a compound word | `_COMPOUND_MAJORITY_RATIO` | `cleaning/prose.py` |
 | 2 times: a letter-spaced word without spaces in the text | `_SPACED_WITNESS_MIN` | `cleaning/prose.py` |
 | 6 paragraphs: a paragraph broken into lines | `FLATTENED_PARAGRAPH_MIN_RUN` | `cleaning/segments.py` |
 | 4 words: the first half of a cut paragraph | `_CUT_FIRST_HALF_MIN_WORDS` | `cleaning/prose.py` |
+| 20 characters: the first half of a cut paragraph without letter case | `_CASELESS_MIN_CHARS` | `mdtext/seams.py` |
 
 ### 6. Repeats
 
@@ -383,10 +418,11 @@ Cleaning edits the whole document, except for:
 - the YAML header;
 - code blocks;
 - HTML tables. Cleaning does not change the markup of the table. In the cells,
-  it makes three repairs only. It deletes a file path from `alt`. In LLM-OCR
+  it makes four repairs only. It deletes a file path from `alt`. In LLM-OCR
   mode (for example, `-e gemini_api`), it deletes the images and links that the
-  model invented. It also puts blank lines around the content of a cell with a
-  formula, so that the formula renders.
+  model invented. It decides a soft hyphen between two letters, as in the
+  text. It also puts blank lines around the content of a cell with a formula,
+  so that the formula renders.
 
 ## When a repair does not apply
 

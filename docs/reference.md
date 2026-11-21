@@ -142,6 +142,11 @@ that ran:
 | `post.md` | with `-p` | the text after post-processing |
 | `llm/inspection.txt`, `llm/post.txt`, `llm/ocr.txt` | if the stage sent at least one request | the requests and the replies of the model as they are, without images |
 
+In the `conversion.md` of `raw2md-engine`, a soft hyphen (U+00AD) stands
+where the engine met a hyphen at a line end and left the decision to cleaning.
+In `cleaning.md`, the word keeps the hyphen or loses it, as
+[cleaning](cleaning.md#5-text) describes.
+
 The `.debug` folder of an earlier run is replaced together with the result, so
 the snapshots of different runs do not mix. Without `-d`, the tool does not
 touch the folder. If LLM-OCR ends with an error, `llm/ocr.txt` stays: it holds

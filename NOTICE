@@ -284,8 +284,10 @@ of the repository holds each change with its diff.
   (U+00AD): at the end of a line of a block, at a hyphenated break inside
   a span, at the cut of a paragraph that continues, and at a wrapped line
   of a table cell. The cleaning of raw2md keeps or drops the hyphen by the
-  spellings of the text. A hyphen that the copy keeps before a capital or
-  a digit stays (2026-11-20). Changed files, under src/raw2md_engine/:
+  spellings of the text. At the end of a line of a block, the soft hyphen
+  follows a letter only, and a hyphen after a digit or a space goes as
+  before. A hyphen that the copy keeps before a capital or a digit stays
+  (2026-11-20). Changed files, under src/raw2md_engine/:
   `marker/util.py`, `marker/schema/text/line.py`,
   `marker/schema/text/span.py`, `marker/renderers/markdown.py`, and
   `marker/processors/table.py`.
