@@ -12,23 +12,31 @@
       "access": "claude_cli",
       "command": "claude",
       "model": "claude-sonnet-5-5"
+    },
+    "codex_cli": {
+      "access": "codex_cli",
+      "command": "codex",
+      "model": "gpt-6.1-terra"
     }
   },
   "operations": {
     "ocr": {
       "allowed": [
-        "gemini_api"
+        "gemini_api",
+        "codex_cli"
       ]
     },
     "inspection": {
       "allowed": [
-        "gemini_api"
+        "gemini_api",
+        "codex_cli"
       ]
     },
     "post": {
       "allowed": [
         "claude_cli",
-        "gemini_api"
+        "gemini_api",
+        "codex_cli"
       ]
     }
   },
