@@ -247,7 +247,7 @@ def _open_raster(raster: bytes) -> Image.Image | None:
     try:
         image = Image.open(io.BytesIO(raster))
         image.load()
-    except (OSError, ValueError) as exc:
+    except (OSError, ValueError, Image.DecompressionBombError) as exc:
         _logger.warning("OCR: page raster could not be read (%s)", exc)
         return None
     return image
@@ -285,7 +285,7 @@ def _has_ink(raster: bytes) -> bool:
         with Image.open(io.BytesIO(raster)) as img:
             # Pillow's histogram is untyped: 256 counts in level order.
             histogram: list[int] = img.convert("L").histogram()
-    except (OSError, ValueError) as exc:
+    except (OSError, ValueError, Image.DecompressionBombError) as exc:
         _logger.warning("OCR: page raster could not be read (%s); assuming ink", exc)
         return True
     total = sum(histogram)

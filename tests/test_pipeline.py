@@ -2227,6 +2227,25 @@ def test_ocr_crops_a_marked_figure_into_the_media_folder(
     assert "fig:" not in text
 
 
+def test_ocr_crops_skip_source_object_deduplication(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("raw2md.engines.pdfium.render_pages", _figure_render_pages)
+
+    def refuse(*_args: object) -> None:
+        raise AssertionError("crops must not be deduplicated by source object")
+
+    monkeypatch.setattr("raw2md.pipeline.dedupe_repeated_images", refuse)
+    src = tmp_path / "a.pdf"
+    src.write_bytes(b"%PDF-1.4 stub")
+    marked_reply = f"{OCR_REPLIES[0]}\n\n![](fig:100,100,600,900)"
+    provider = FakeProvider([marked_reply, OCR_REPLIES[1]])
+
+    result = run_with_ocr(src, EngineRegistry([]), provider)
+
+    assert result.outcome is Outcome.OK
+
+
 def test_ocr_drops_figure_marks_under_disable_image_extraction(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

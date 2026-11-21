@@ -429,11 +429,21 @@ def _process_engine(
 
 
 def _settle_media(
-    source: Path, target: OutputTarget, body: str, media: tuple[str, ...]
+    source: Path,
+    target: OutputTarget,
+    body: str,
+    media: tuple[str, ...],
+    *,
+    dedupe: bool = True,
 ) -> str:
-    """Run the `raw2md.media` steps in their order; return the linked body."""
+    """Run the `raw2md.media` steps in their order; return the linked body.
+
+    `dedupe` is off for OCR crops: the source image objects say nothing about
+    which crop shows what.
+    """
     body, media = drop_furniture_images(target.media_dir, media, body)
-    body, media = dedupe_repeated_images(source, target.media_dir, media, body)
+    if dedupe:
+        body, media = dedupe_repeated_images(source, target.media_dir, media, body)
     media = flatten_pandoc_media(target.media_dir, media)
     body, media = convert_emf_media(target.media_dir, media, body)
     return rewrite_media_links(body, target, media)
@@ -563,7 +573,9 @@ def _process_ocr(
         return FileResult(Outcome.NO_RESULT, None)
 
     conversion = _Conversion(
-        body=_settle_media(source, target, ocr_result.body, ocr_result.media),
+        body=_settle_media(
+            source, target, ocr_result.body, ocr_result.media, dedupe=False
+        ),
         method=method,
         ocr_model=op.model_key,
         source_hash=source_hash,

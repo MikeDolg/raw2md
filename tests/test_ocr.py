@@ -439,6 +439,18 @@ def test_recognize_drops_marks_over_an_unreadable_raster(
     assert "raster unreadable" in caplog.text
 
 
+def test_recognize_drops_marks_over_a_raster_beyond_the_pixel_limit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 10)
+    provider = RecordingProvider(["Text.\n\n![](fig:100,200,500,600)"])
+
+    result = recognize([_figure_page()], _op(provider), media_dir=tmp_path)
+
+    assert result.body == "Text.\n"
+    assert result.media == ()
+
+
 def test_recognize_under_a_prompt_without_marks_extracts_nothing(
     tmp_path: Path,
 ) -> None:
