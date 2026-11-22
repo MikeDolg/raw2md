@@ -131,8 +131,10 @@ _AUTH_ERROR_MARKERS = (
 # minutes covers an ordinary request, and `cli_timeout_s` overrides it.
 DEFAULT_CODEX_TIMEOUT_S: int = 120
 
-# The CLI itself scales an image to this side before it reaches the model.
-DEFAULT_IMAGE_LONG_SIDE: int = 2048
+# The CLI itself scales an image to 2048 px before it reaches the model, and
+# the input cost grows with the area. At 1400 px a page costs about a third
+# fewer input tokens, and the transcription of print and scans holds.
+DEFAULT_IMAGE_LONG_SIDE: int = 1400
 
 _PDF_MIME = "application/pdf"
 _PNG_MIME = "image/png"

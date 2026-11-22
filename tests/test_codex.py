@@ -259,7 +259,7 @@ def test_pdf_pages_are_drawn_to_the_long_side_setting(
     assert all(max(size) == 600 for size in sizes)
 
 
-def test_pdf_pages_default_to_the_cli_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_pdf_pages_default_to_the_shipped_side(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = _FakeCodex()
     _install(monkeypatch, fake)
     pdf = MediaPart(pdf_bytes(text_pages(["a"])), "application/pdf")
@@ -274,7 +274,7 @@ def test_oversized_image_shrinks_and_keeps_its_ratio(
     _install(monkeypatch, fake)
     part = MediaPart(_png(3000, 1500), "image/png")
     CodexCliProvider(codex_model()).generate("prompt", [part])
-    assert _sent_images(fake) == [(2048, 1024)]
+    assert _sent_images(fake) == [(1400, 700)]
 
 
 def test_small_image_goes_unchanged(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -74,7 +74,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
             "command": "codex",
             "model": "gpt-6.1-terra",
             "cli_timeout_s": 120,
-            "image_long_side": 2048,
+            "image_long_side": 1400,
         },
     },
     "operations": {

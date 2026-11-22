@@ -47,7 +47,7 @@ def test_default_settings_ships_the_codex_model() -> None:
     assert model.command == "codex"
     assert model.model == "gpt-6.1-terra"
     assert model.cli_timeout_s == 120
-    assert model.image_long_side == 2048
+    assert model.image_long_side == 1400
 
 
 def _codex_data(**extra: object) -> dict[str, object]:
