@@ -58,6 +58,9 @@ dependencies = [
     # Imported by raw2md.llm.gemini. 2.0 breaks only the Interactions API,
     # which raw2md does not call, so both major releases work.
     "google-genai>=1.0,<3",
+    # Imported by raw2md.llm.openrouter. The range is the checked major
+    # release of the typed chat client.
+    "openrouter>=1.3,<2",
     # Downloads the engine weights. The range is the one transformers 5
     # declares.
     "huggingface-hub>=1.31,<3",

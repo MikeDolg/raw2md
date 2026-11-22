@@ -20,9 +20,10 @@ from raw2md.paths import settings_file
 from raw2md.quality.evaluator import DEFAULT_OK_SCORE
 from raw2md.service import edit_file, parse_file_action, show_file
 
-ACCESS_TYPES = ("gemini_api", "claude_cli", "codex_cli")
+ACCESS_TYPES = ("gemini_api", "claude_cli", "codex_cli", "openrouter_api")
 CLI_ACCESS_TYPES = ("claude_cli", "codex_cli")
-VISION_ACCESS_TYPES = ("gemini_api", "codex_cli")
+KEY_ACCESS_TYPES = ("gemini_api", "openrouter_api")
+VISION_ACCESS_TYPES = ("gemini_api", "codex_cli", "openrouter_api")
 OPERATIONS = ("ocr", "inspection", "post")
 
 # Built-in route names: a model key equal to one would make an --engine value
@@ -76,6 +77,13 @@ DEFAULT_SETTINGS: dict[str, Any] = {
             "cli_timeout_s": 120,
             "image_long_side": 1400,
         },
+        "openrouter_api": {
+            "access": "openrouter_api",
+            "key_env": "OPENROUTER_API_KEY",
+            "model": "anthropic/claude-haiku-5.5",
+            "pages_per_request": 8,
+            "max_request_bytes": 20971520,
+        },
     },
     "operations": {
         "ocr": {"allowed": ["gemini_api", "codex_cli"]},
@@ -111,14 +119,14 @@ class UnknownZoneError(SettingsError):
 class ModelConfig:
     """One entry of the `models` block.
 
-    `key_env` and `temperature` are for `gemini_api` access; `command` and
+    `key_env` and `temperature` are for the key access types; `command` and
     `cli_timeout_s` for the CLI access types; `image_long_side` (the longest
-    side of a page image, in pixels) for `codex_cli` only. Optional fields left as None
-    fall back to the defaults of the code that applies them: `rpd_reset_zone` (the
-    IANA zone of the daily quota boundary) to the provider's zone,
-    `pages_per_request` and `max_request_bytes` (the request window) to
-    built-in limits, `cli_timeout_s` to a default timeout. An absent
-    `temperature` is not sent.
+    side of a page image, in pixels) for `codex_cli` only. Optional fields left
+    as None fall back to the defaults of the code that applies them:
+    `rpd_reset_zone` (the IANA zone of the daily quota boundary) to the
+    provider's zone, `pages_per_request` and `max_request_bytes` (the request
+    window) to built-in limits, `cli_timeout_s` to a default timeout. An
+    absent `temperature` is not sent.
     """
 
     access: str
@@ -257,7 +265,9 @@ def _parse_model(name: str, spec: Any) -> ModelConfig:
     return ModelConfig(
         access=access,
         model=_require_str(name, spec, "model"),
-        key_env=_require_str(name, spec, "key_env") if access == "gemini_api" else None,
+        key_env=(
+            _require_str(name, spec, "key_env") if access in KEY_ACCESS_TYPES else None
+        ),
         command=(
             _require_str(name, spec, "command") if access in CLI_ACCESS_TYPES else None
         ),
@@ -327,7 +337,7 @@ def _optional_zone(model_name: str, spec: dict[str, Any], field: str) -> str | N
 def _optional_temperature(
     model_name: str, spec: dict[str, Any], access: str
 ) -> float | None:
-    """An optional sampling temperature, accepted for `gemini_api` access only.
+    """An optional sampling temperature, accepted for key access only.
 
     The CLI routes cannot carry one, so a value there is refused rather than
     silently dropped. The range is the widest the supported API accepts. The
@@ -336,9 +346,10 @@ def _optional_temperature(
     value = spec.get("temperature")
     if value is None:
         return None
-    if access != "gemini_api":
+    if access not in KEY_ACCESS_TYPES:
         raise SettingsError(
-            f"model '{model_name}': 'temperature' applies to 'gemini_api' access only"
+            f"model '{model_name}': 'temperature' applies to key access only "
+            f"({', '.join(KEY_ACCESS_TYPES)})"
         )
     # bool is an int subclass; an int temperature is fine.
     if isinstance(value, bool) or not isinstance(value, int | float):
@@ -356,7 +367,7 @@ def _optional_cli_timeout(
 ) -> int | None:
     """An optional CLI subprocess timeout in seconds, accepted for CLI access only.
 
-    A `gemini_api` request has its own transport timeout, so a value there would go
+    A key-access request has its own transport timeout, so a value there would go
     unused.
     """
     value = spec.get("cli_timeout_s")

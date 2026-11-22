@@ -345,8 +345,47 @@ def test_temperature_rejected_for_cli_access() -> None:
         },
         "operations": {"post": {"allowed": ["m"]}},
     }
-    with pytest.raises(SettingsError, match="'gemini_api' access only"):
+    with pytest.raises(SettingsError, match="key access only"):
         parse_settings(data)
+
+
+def test_default_settings_ships_the_openrouter_model() -> None:
+    model = default_settings().models["openrouter_api"]
+    assert model.access == "openrouter_api"
+    assert model.key_env == "OPENROUTER_API_KEY"
+    assert model.model == "anthropic/claude-haiku-5.5"
+    assert model.pages_per_request == 8
+    assert model.max_request_bytes == 20971520
+    assert (model.rpm, model.tpm, model.rpd) == (None, None, None)
+    assert model.temperature is None
+
+
+def _openrouter_data(**fields: Any) -> dict[str, Any]:
+    return {
+        "models": {
+            "m": {"access": "openrouter_api", "key_env": "K", "model": "x", **fields}
+        },
+        "operations": {"post": {"allowed": ["m"]}},
+    }
+
+
+def test_openrouter_model_requires_key_env() -> None:
+    data = {"models": {"m": {"access": "openrouter_api", "model": "x"}}}
+    with pytest.raises(SettingsError, match="key_env"):
+        parse_settings(data)
+
+
+def test_openrouter_temperature_is_optional() -> None:
+    assert parse_settings(_openrouter_data()).models["m"].temperature is None
+    model = parse_settings(_openrouter_data(temperature=0.5)).models["m"]
+    assert model.temperature == 0.5
+
+
+def test_openrouter_model_refuses_cli_fields() -> None:
+    with pytest.raises(SettingsError, match="CLI access only"):
+        parse_settings(_openrouter_data(cli_timeout_s=5))
+    with pytest.raises(SettingsError, match="codex_cli access only"):
+        parse_settings(_openrouter_data(image_long_side=1400))
 
 
 # --- CLI timeout -------------------------------------------------------------
@@ -532,7 +571,7 @@ def _model(access: str) -> ModelConfig:
     return ModelConfig(
         access=access,
         model="x",
-        key_env="K" if access == "gemini_api" else None,
+        key_env="K" if access in ("gemini_api", "openrouter_api") else None,
         command="c" if access in ("claude_cli", "codex_cli") else None,
         rpm=None,
         tpm=None,
@@ -544,6 +583,7 @@ def _model(access: str) -> ModelConfig:
 def test_vision_follows_the_access_type(operation: str) -> None:
     assert model_can_serve(_model("gemini_api"), operation) is True
     assert model_can_serve(_model("codex_cli"), operation) is True
+    assert model_can_serve(_model("openrouter_api"), operation) is True
     assert model_can_serve(_model("claude_cli"), operation) is False
 
 
