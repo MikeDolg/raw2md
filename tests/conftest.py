@@ -8,8 +8,10 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
+import httpx
 import pytest
 
 from raw2md.config import RunConfig
@@ -84,6 +86,7 @@ class _OfflineOpenRouter:
 
     def __init__(self, **kwargs: Any) -> None:
         self.api_keys = _OfflineApiKeys()
+        self.sdk_configuration = SimpleNamespace(client=httpx.Client())
 
 
 @pytest.fixture(autouse=True)

@@ -15,6 +15,7 @@ import datetime as dt
 import json
 import logging
 import os
+import threading
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from email.utils import parsedate_to_datetime
@@ -111,6 +112,9 @@ class OpenRouterApiProvider(Provider):
         # One client for the run: building one loads two TLS contexts, close
         # to a second each, and a kept client reuses its connections.
         self._client: Any = None
+        # The SDK drops the `error` of a choice, so a response hook keeps it
+        # for the request that the same thread has in flight.
+        self._seen = threading.local()
 
     def available(self) -> Availability:
         if not _sdk_installed():
@@ -208,6 +212,7 @@ class OpenRouterApiProvider(Provider):
     ) -> Reply:
         self._reserve_rpd()
         client = self._sdk_client()
+        self._seen.choice_error = None
         try:
             result = client.chat.send(messages=messages, **options)
         except _sdk_failures() as exc:
@@ -227,7 +232,7 @@ class OpenRouterApiProvider(Provider):
         choice = choices[0]
         finish = str(getattr(choice, "finish_reason", None) or "")
         if finish == _ERROR_FINISH_REASON:
-            raise TransientError(f"{served} failed while it generated the reply")
+            return self._failed_generation(served)
         message = getattr(choice, "message", None)
         text = _message_text(getattr(message, "content", None))
         if text.strip():
@@ -247,6 +252,32 @@ class OpenRouterApiProvider(Provider):
             EmptyReason.NO_TEXT, f"finish_reason {finish or 'unreported'}"
         )
 
+    def _failed_generation(self, served: str) -> Reply:
+        """Map the error a choice carried, or retry a failure that names none."""
+        seen = getattr(self._seen, "choice_error", None)
+        if seen is None:
+            raise TransientError(f"{served} failed while it generated the reply")
+        error, headers = seen
+        outcome = _from_status(_OK, json.dumps({"error": error}), headers, served)
+        if isinstance(outcome, _Refusal):
+            return self._empty(EmptyReason.BLOCKED, outcome.detail)
+        raise outcome
+
+    def _keep_choice_error(self, response: Any) -> None:
+        """Response hook: note the `error` of the first choice of a 200 reply."""
+        if response.status_code != _OK:
+            return
+        response.read()
+        try:
+            decoded = json.loads(response.content)
+        except json.JSONDecodeError:
+            return
+        choices = decoded.get("choices") if isinstance(decoded, Mapping) else None
+        first = choices[0] if isinstance(choices, list) and choices else None
+        error = first.get("error") if isinstance(first, Mapping) else None
+        if isinstance(error, Mapping):
+            self._seen.choice_error = (error, response.headers)
+
     def _empty(self, reason: EmptyReason, detail: str) -> Reply:
         _logger.warning(
             "llm: %s returned an empty reply (%s)", self._model.model, detail
@@ -255,7 +286,11 @@ class OpenRouterApiProvider(Provider):
 
     def _sdk_client(self) -> Any:
         if self._client is None:
-            self._client = self._create_client()
+            client = self._create_client()
+            client.sdk_configuration.client.event_hooks["response"].append(
+                self._keep_choice_error
+            )
+            self._client = client
         return self._client
 
     def _create_client(self) -> Any:

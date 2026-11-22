@@ -301,6 +301,49 @@ def test_a_generation_failed_after_the_200_is_retried(
     assert len(wire.requests) == 2
 
 
+def _choice_error(status: int, metadata: dict[str, Any]) -> Handler:
+    payload = _result("", finish="error")
+    payload["choices"][0]["error"] = {
+        "code": status,
+        "message": "declined",
+        "metadata": metadata,
+    }
+    return _ok(payload)
+
+
+def test_a_choice_error_for_policy_is_a_blocked_reply(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    handler = _choice_error(403, {"error_type": "content_policy_violation"})
+    wire = _Wire(monkeypatch, handler)
+    reply = wire.provider.generate_reply("prompt")
+    assert reply.empty_reason is EmptyReason.BLOCKED
+    assert len(wire.requests) == 1
+
+
+def test_a_choice_error_for_rate_limit_is_a_rate_limit_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wire = _Wire(monkeypatch, _choice_error(429, {}))
+    with pytest.raises(RateLimitError):
+        wire.provider.generate("prompt")
+
+
+def test_a_choice_error_does_not_leak_into_the_next_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wire = _Wire(
+        monkeypatch,
+        _sequence(
+            httpx.Response(200, json=_result("", finish="error")),
+            httpx.Response(200, json=_result()),
+        ),
+    )
+    assert wire.provider.generate("prompt") == "reply text"
+    wire.provider._seen.choice_error = ("stale", {})
+    assert wire.provider.generate("prompt") == "reply text"
+
+
 def test_a_generation_that_keeps_failing_raises_transient(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
