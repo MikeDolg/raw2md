@@ -45,12 +45,17 @@ _MAX_ATTEMPTS = 3
 _INK_LEVEL = 128
 _MIN_INK_SHARE = 0.0002
 
-# The figure mark the OCR prompt asks for, `![](fig:ymin,xmin,ymax,xmax)`.
-# Group 1 is the box text; any alt text goes, since the prompt forbids a
+# The figure mark the OCR prompts ask for: bare, `![](fig:ymin,xmin,ymax,xmax)`,
+# or with each edge named, `![](fig:top=..,left=..,bottom=..,right=..)` in any
+# order. Group 1 is the box text; any alt text goes, since the prompt forbids a
 # description of the picture.
 _FIGURE_MARK_RE = re.compile(r"!\[[^\]]*\]\(\s*fig:([^)]*)\)")
 _NUMBER = r"\s*(\d+(?:\.\d+)?)\s*"
 _BOX_RE = re.compile(rf"^{_NUMBER},{_NUMBER},{_NUMBER},{_NUMBER}$")
+_NAMED_EDGE_RE = re.compile(
+    rf"^\s*(top|left|bottom|right)\s*={_NUMBER}$", re.IGNORECASE
+)
+_EDGE_COUNT = 4
 # Box coordinates are thousandths of the page height (y) and width (x).
 _BOX_SCALE = 1000
 
@@ -256,14 +261,14 @@ def _open_raster(raster: bytes) -> Image.Image | None:
 def _pixel_box(text: str, size: tuple[int, int]) -> tuple[int, int, int, int] | None:
     """The crop box `(left, top, right, bottom)` in pixels, or None if invalid.
 
-    `text` reads `ymin,xmin,ymax,xmax` on the 0 to `_BOX_SCALE` scale. A box
-    outside the page, with a minimum not below its maximum, or narrower than a
-    pixel is invalid.
+    `text` holds the edges on the 0 to `_BOX_SCALE` scale. A box outside the
+    page, with a minimum not below its maximum, or narrower than a pixel is
+    invalid.
     """
-    match = _BOX_RE.match(text)
-    if match is None:
+    edges = _box_edges(text)
+    if edges is None:
         return None
-    ymin, xmin, ymax, xmax = (float(group) for group in match.groups())
+    ymin, xmin, ymax, xmax = edges
     if not (0 <= ymin < ymax <= _BOX_SCALE and 0 <= xmin < xmax <= _BOX_SCALE):
         return None
     width, height = size
@@ -272,6 +277,30 @@ def _pixel_box(text: str, size: tuple[int, int]) -> tuple[int, int, int, int] | 
     if left >= right or top >= bottom:
         return None
     return left, top, right, bottom
+
+
+def _box_edges(text: str) -> tuple[float, float, float, float] | None:
+    """`(top, left, bottom, right)` of a box text, or None when it is malformed.
+
+    A bare box reads `ymin,xmin,ymax,xmax`. A named box gives each of the four
+    edges once, in any order; a bare number among names is malformed.
+    """
+    bare = _BOX_RE.match(text)
+    if bare is not None:
+        top, left, bottom, right = (float(group) for group in bare.groups())
+        return top, left, bottom, right
+    edges: dict[str, float] = {}
+    for field in text.split(","):
+        named = _NAMED_EDGE_RE.match(field)
+        if named is None:
+            return None
+        edge = named.group(1).lower()
+        if edge in edges:
+            return None
+        edges[edge] = float(named.group(2))
+    if len(edges) != _EDGE_COUNT:
+        return None
+    return edges["top"], edges["left"], edges["bottom"], edges["right"]
 
 
 def _has_ink(raster: bytes) -> bool:

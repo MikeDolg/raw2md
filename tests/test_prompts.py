@@ -180,19 +180,22 @@ def test_ocr_codex_override_keeps_the_rest_of_the_default() -> None:
     assert "Transcribe the printed caption as ordinary page text" in codex
 
 
-def test_ocr_codex_override_names_each_number_by_its_edge() -> None:
+def test_ocr_codex_override_names_each_edge_in_the_mark() -> None:
     codex = default_prompts().ocr.overrides["codex_cli"]
-    assert "![](fig:top,left,bottom,right)" in codex
-    assert "always in this order" in codex
-    assert "bottom is always greater than top" in codex
-    assert "right is always greater than\nleft" in codex
-    assert "share their\ntop and bottom" in codex
+    assert "![](fig:top=T,left=L,bottom=B,right=R)" in codex
+    assert "![](fig:ymin,xmin,ymax,xmax)" not in codex
+    assert "bottom is\nalways greater than top" in codex
+    assert "share their top and bottom" in codex
 
 
 def test_ocr_codex_example_mark_is_a_valid_box() -> None:
     codex = default_prompts().ocr.overrides["codex_cli"]
-    boxes = [box for box in _FIGURE_MARK_RE.findall(codex) if box[0].isdigit()]
-    assert boxes == ["80,540,420,920"]
+    boxes = [
+        box
+        for box in _FIGURE_MARK_RE.findall(codex)
+        if _pixel_box(box, (1000, 1000)) is not None
+    ]
+    assert boxes == ["top=80,left=540,bottom=420,right=920"]
     assert _pixel_box(boxes[0], (1000, 1000)) == (540, 80, 920, 420)
 
 

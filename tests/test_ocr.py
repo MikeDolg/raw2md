@@ -366,6 +366,25 @@ def test_recognize_drops_the_alt_text_of_a_mark(tmp_path: Path) -> None:
     assert result.body == "![](_page_0_Figure_0.png)\n"
 
 
+@pytest.mark.parametrize(
+    "box",
+    [
+        "top=100,left=200,bottom=500,right=600",
+        "top=100,left=200,right=600,bottom=500",
+        "right=600,bottom=500,left=200,top=100",
+        " Top = 100 , LEFT=200, bottom=500.0 ,right= 600 ",
+    ],
+)
+def test_recognize_reads_named_edges_in_any_order(box: str, tmp_path: Path) -> None:
+    provider = RecordingProvider([f"![](fig:{box})"])
+
+    result = recognize([_figure_page()], _op(provider), media_dir=tmp_path)
+
+    assert result.media == ("_page_0_Figure_0.png",)
+    with Image.open(tmp_path / "_page_0_Figure_0.png") as crop:
+        assert crop.size == (40, 56)
+
+
 def test_recognize_accepts_decimal_box_coordinates(tmp_path: Path) -> None:
     provider = RecordingProvider(["![](fig:100.5,200,500,600.25)"])
 
@@ -385,6 +404,12 @@ def test_recognize_accepts_decimal_box_coordinates(tmp_path: Path) -> None:
         "a,b,c,d",
         "-10,200,500,600",
         "0,0,1,1",  # under one pixel
+        "top=500,left=200,bottom=100,right=600",  # named top below bottom
+        "top=100,left=200,bottom=500",  # an edge missing
+        "top=100,top=150,left=200,bottom=500",  # an edge twice
+        "top=100,left=200,bottom=500,width=400",  # an unknown name
+        "top=100,200,bottom=500,right=600",  # a bare number among names
+        "top:100,left:200,bottom:500,right:600",
     ],
 )
 def test_recognize_drops_a_mark_with_an_invalid_box(

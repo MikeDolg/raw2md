@@ -396,9 +396,11 @@ post:
 The template holds a separate `ocr` prompt for `codex_cli`. It differs from
 the base prompt in two places:
 
-- The figure mark names each number of the box by its edge,
-  `![](fig:top,left,bottom,right)`, and gives an example. Under the base
-  prompt, Codex mixes up the order of the numbers.
+- The figure mark writes the name of each edge before its number,
+  `![](fig:top=...,left=...,bottom=...,right=...)`, and gives an example. Under the
+  base prompt, Codex mixes up the order of the numbers. The tool reads the
+  named edges in any order, and it also reads the four bare numbers of the
+  base prompt.
 - The prompt asks for formulas between dollar signs: `$...$` inside a line of
   text, and `$$...$$` on one line for a display formula. Under the base prompt,
   Codex writes `\(...\)` and `\[...\]`, which the cleaning rules do not read.

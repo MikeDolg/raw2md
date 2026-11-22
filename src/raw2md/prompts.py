@@ -61,13 +61,14 @@ picture alone, not its caption. The picture is cut from the page at that box,
 so give one mark for each separate picture.
 """
 
-# Codex mixes the order of the default mark: in one reply a row of pictures
-# comes as ymin,xmin,xmax,ymax and the rest as asked. Naming each number by
-# its edge, with a worked example, keeps the order in most replies.
+# Codex mixes the order of four bare numbers even when the prompt names each
+# one: a row of pictures comes as top,left,right,bottom beside marks in order.
+# A name before each number leaves no order to mix up; the parser reads both.
 _OCR_FIGURE_CODEX = """\
 When the page shows a figure, chart, diagram, or photograph, write the mark
-![](fig:top,left,bottom,right) on a line of its own where the picture stands.
-The four numbers are the picture's bounding box, always in this order:
+![](fig:top=T,left=L,bottom=B,right=R) on a line of its own where the picture
+stands. T, L, B, and R give the picture's bounding box. Write each edge name,
+an equals sign, and the number of that edge:
 - top: the distance from the top edge of the page down to the top edge of the
   picture;
 - left: the distance from the left edge of the page to the left edge of the
@@ -77,14 +78,13 @@ The four numbers are the picture's bounding box, always in this order:
 - right: the distance from the left edge of the page to the right edge of the
   picture.
 Each is a whole number from 0 to 1000: top and bottom in thousandths of the
-page height, left and right in thousandths of the page width. The first and
-the third number are both vertical, so bottom is always greater than top; the
-second and the fourth are both horizontal, so right is always greater than
-left. A picture in the upper right quarter of the page, with a margin around
-it, reads ![](fig:80,540,420,920). Pictures side by side in one row share their
-top and bottom and differ in left and right. The box encloses the picture
-alone, not its caption. The picture is cut from the page at that box, so give
-one mark for each separate picture.
+page height, left and right in thousandths of the page width, so bottom is
+always greater than top and right is always greater than left. A picture in
+the upper right quarter of the page, with a margin around it, reads
+![](fig:top=80,left=540,bottom=420,right=920). Pictures side by side in one
+row share their top and bottom and differ in left and right. The box encloses
+the picture alone, not its caption. The picture is cut from the page at that
+box, so give one mark for each separate picture.
 """
 
 _OCR_CLOSING = """\
