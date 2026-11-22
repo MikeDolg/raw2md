@@ -377,6 +377,16 @@ findings as `broken-formula`.
 
 ### 7. Recognition errors
 
+Cleaning repairs recognition errors only when `raw2md-engine` converts a `pdf`
+or a `djvu`. The engine recognizes the text of a page image, and a recognition
+error often changes one letter into a similar one. The `pandoc` converter
+copies the text of a `docx`, and the model of LLM-OCR mode writes whole words.
+In such a text, a word that occurs once near a frequent word is usually a real
+word, for example another grammatical form of the frequent word. Therefore
+cleaning does not apply these repairs to a `docx`, in LLM-OCR mode, or to an
+`md` input. When `raw2md-engine` converts a `pdf`, the repairs also apply to
+the pages that the engine reads from the text layer of the file.
+
 Both repairs rely on a correct spelling that occurs in the text at least as
 often as the threshold. The `cleaning.witness_min` field in `settings.json`
 sets the threshold: 20 by default, and 2 at least. A lower threshold repairs
@@ -459,7 +469,8 @@ file holds the word list. To add the words of your language, run
 `raw2md keywords edit`.
 
 The `cleaning.witness_min` threshold in `settings.json` controls the repair of
-recognition errors. Section 7, [Recognition errors](#7-recognition-errors),
+recognition errors. The threshold has an effect only when `raw2md-engine`
+converts a `pdf` or a `djvu`. Section 7, [Recognition errors](#7-recognition-errors),
 describes it.
 
 ## How to see the result

@@ -417,7 +417,7 @@ request several times with a growing pause.
 | Section | Field | What it sets | Default |
 |---|---|---|---|
 | `raw2md-engine` | `recognition_batch_size` | the recognition batch size of the engine; a smaller number uses less video memory | `"default"`: the engine value for the video memory |
-| `cleaning` | `witness_min` | how many times a spelling must occur in the document before cleaning repairs a damaged word with it; 2 at least | 20 |
+| `cleaning` | `witness_min` | how many times a spelling must occur in the document before cleaning repairs a damaged word with it; only when `raw2md-engine` converts a `pdf` or a `djvu`; 2 at least | 20 |
 | `quality` | `ok_score` | the total score that a result needs for `status: ok`, an integer from 0 to 100; a [veto](quality.md#how-the-evaluation-works) gives `bad` at any value | 50 |
 | – | `log_file` | whether to write the detailed log; `--no-log-file` turns the log off, but it cannot turn the log on | `true` |
 
