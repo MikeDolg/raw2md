@@ -292,12 +292,20 @@ priority over a built-in value. This is the template that `init` writes:
       "model": "gpt-6.1-terra",
       "cli_timeout_s": 120,
       "image_long_side": 1400
+    },
+    "openrouter_api": {
+      "access": "openrouter_api",
+      "key_env": "OPENROUTER_API_KEY",
+      "model": "anthropic/claude-haiku-5.5",
+      "pages_per_request": 8,
+      "max_request_bytes": 20971520,
+      "image_long_side": 2000
     }
   },
   "operations": {
-    "ocr": {"allowed": ["gemini_api", "codex_cli"]},
-    "inspection": {"allowed": ["gemini_api", "codex_cli"]},
-    "post": {"allowed": ["claude_cli", "gemini_api", "codex_cli"]}
+    "ocr": {"allowed": ["gemini_api", "codex_cli", "openrouter_api"]},
+    "inspection": {"allowed": ["gemini_api", "codex_cli", "openrouter_api"]},
+    "post": {"allowed": ["claude_cli", "gemini_api", "codex_cli", "openrouter_api"]}
   },
   "raw2md-engine": {"recognition_batch_size": "default"},
   "cleaning": {"witness_min": 20},
@@ -312,12 +320,12 @@ model key can be any name except `none`, `failed`, `partial`, `raw2md-engine`,
 `marker`, `pandoc`, and `djvu`. The header fields and the `-e` flag use these
 values.
 
-The `access` field names the provider. A `gemini_api` model and a `codex_cli`
-model see images, so they fit every operation. A `claude_cli` model does not
-see images. Therefore it does not fit `ocr` and `inspection`. The access names
-of raw2md 0.3.0, `api` and `cli`, give a settings error with the code `2`. The
-message names the new value: `gemini_api` for `api`, and `claude_cli` for
-`cli`.
+The `access` field names the provider. A `gemini_api`, a `codex_cli`, and an
+`openrouter_api` model see images, so they fit every operation. A `claude_cli`
+model does not see images. Therefore it does not fit `ocr` and `inspection`.
+The access names of raw2md 0.3.0, `api` and `cli`, give a settings error with
+the code `2`. The message names the new value: `gemini_api` for `api`, and
+`claude_cli` for `cli`.
 
 A `claude_cli` model runs as
 `COMMAND -p --model MODEL --tools "" --safe-mode --strict-mcp-config --no-session-persistence`.
@@ -338,27 +346,69 @@ path of the temporary folder, and on Windows that path holds the name of the
 user account. The `command` must accept the flags, as the `codex` command of
 Codex CLI 0.171.0 does.
 
+An `openrouter_api` model sends each request to the OpenRouter Chat
+Completions API through the `openrouter` package, with the key from the
+`key_env` variable. The media goes in the body of the request as base64: a
+page image as an `image_url` part, and a PDF as a `file` part that the model
+reads itself. Every request also sends three fixed preferences, and the
+settings have no field for them:
+
+- the `file-parser` plugin with the `native` engine: the model reads the PDF
+  itself, with the images of its pages, and OpenRouter does not turn the PDF
+  into text;
+- `provider.data_collection: "deny"`: no provider that stores data gets the
+  document;
+- `provider.require_parameters: true`: only the endpoints that accept every
+  sent parameter, the JSON schema of the reply included, get the request.
+
+A request over `max_request_bytes` fails before the tool sends it, because
+OpenRouter has no upload route for a model request. Before a run and in
+`doctor`, the tool checks the key with the free `GET /api/v1/key`. For each
+request, the log gets one `INFO` line with the input, output, and reasoning
+tokens, the cost in USD, and the model that served the request. The header
+holds the model key, as for the other providers.
+
+An `openrouter_api` model has these limits:
+
+- A model that does not read files itself does not fit inspection, which
+  sends the source PDF: the `native` engine makes OpenRouter refuse such a
+  request.
+- A model that only one provider serves on OpenRouter shares the rate limits
+  of that provider with all OpenRouter users. Under load, every request gets a
+  `429`, and the repeats do not help. Such a model needs the key of that
+  provider in the OpenRouter account.
+- The content filter at the provider refuses some pages, ordinary technical
+  pages included, with `403` and the type `refusal`. The tool does not repeat
+  the request: the same page gets the same refusal. Under OCR, the result
+  holds the marker `[page N not recognized]` in place of the page, and its
+  status is `bad`.
+
 | Model field | Access | What it sets | If not set |
 |---|---|---|---|
-| `access` | all | `gemini_api`: requests through the Gemini API; `claude_cli`: a call to Claude Code; `codex_cli`: a call to Codex CLI | required |
+| `access` | all | `gemini_api`: requests through the Gemini API; `claude_cli`: a call to Claude Code; `codex_cli`: a call to Codex CLI; `openrouter_api`: requests through the OpenRouter API | required |
 | `model` | all | the model name at the provider | required |
-| `key_env` | `gemini_api` | the environment variable with the API key | required |
+| `key_env` | `gemini_api`, `openrouter_api` | the environment variable with the API key | required |
 | `command` | `claude_cli`, `codex_cli` | the command that the tool calls | required |
 | `rpm` | all | requests per minute; the pause between requests is `60/rpm` seconds at least | no pause |
 | `tpm` | all | tokens per minute; inspection uses it to divide the document into chunks and to pause between requests | chunks of up to 100,000 tokens, no pauses |
 | `rpd` | all | requests per day; the tool does not send a request over the limit, and the run ends with an LLM error | no limit |
-| `rpd_reset_zone` | all | the IANA time zone in which `rpd` resets | `America/Los_Angeles` |
+| `rpd_reset_zone` | all | the IANA time zone in which `rpd` resets | `America/Los_Angeles` for `gemini_api`, `UTC` for the others |
 | `pages_per_request` | all | pages of the source in one request | 8 |
 | `max_request_bytes` | all | the size of one request | 20 MB |
-| `temperature` | `gemini_api` | the temperature of the model, from 0.0 to 2.0 | the provider value |
+| `temperature` | `gemini_api`, `openrouter_api` | the temperature of the model, from 0.0 to 2.0; the model of the `openrouter_api` template does not accept it | the provider value |
 | `cli_timeout_s` | `claude_cli`, `codex_cli` | how many seconds to wait for the reply of the program | 120 |
-| `image_long_side` | `codex_cli` | the longest side of a page image in pixels; the tool scales a larger image down before the request | 1400 |
+| `image_long_side` | `codex_cli`, `openrouter_api` | the longest side of a page image in pixels; the tool scales a larger image down before the request | 1400 for `codex_cli`, 2000 for `openrouter_api` |
 
 Codex CLI itself scales an image down to 2048 pixels, so a larger
 `image_long_side` changes nothing. The input tokens of a page grow with the
 area of its image: at 1400 pixels, a page costs about a third less than at
 2048. The limits of a ChatGPT plan count in time windows of their own, and
 `rpm` and `rpd` do not model them.
+
+Some endpoints of the `openrouter_api` model refuse an image over 5 MB of
+base64, and a page with many photographs, drawn at 200 dpi, can weigh twice
+that. At 2000 pixels, such a page passes. With a larger `image_long_side`, the
+refusal fails the whole file.
 
 The `rpd` counter is in `~/.raw2md/state/rpd.json`, by model name, and it
 survives a restart. After a provider error `429` or `5xx`, the tool repeats the
@@ -393,8 +443,9 @@ post:
     ...
 ```
 
-The template holds a separate `ocr` prompt for `codex_cli`. It differs from
-the base prompt in two places:
+The template holds separate `ocr` prompts for `codex_cli` and
+`openrouter_api`. The `codex_cli` prompt differs from the base prompt in two
+places:
 
 - The figure mark writes the name of each edge before its number,
   `![](fig:top=...,left=...,bottom=...,right=...)`, and gives an example. Under the
@@ -404,6 +455,21 @@ the base prompt in two places:
 - The prompt asks for formulas between dollar signs: `$...$` inside a line of
   text, and `$$...$$` on one line for a display formula. Under the base prompt,
   Codex writes `\(...\)` and `\[...\]`, which the cleaning rules do not read.
+
+The `openrouter_api` prompt takes the figure mark with named edges from the
+`codex_cli` prompt and adds three rules:
+
+- The four numbers of the mark are thousandths of the page, not pixels and not
+  percent. Under the base prompt, the model writes some boxes in pixels or in
+  percent. A box in percent is valid, so the tool cuts a blank strip from a
+  corner of the page. On some pages, the model still writes a box in pixels.
+  Such a box goes past 1000, and the tool drops its mark with a warning.
+- Every table is a Markdown pipe table, never HTML. Under the base prompt, the
+  model writes a dense table as HTML in some runs.
+- A function name that LaTeX has no command for goes through
+  `\operatorname`, such as `\operatorname{sen}`. Under the base prompt, the
+  model writes a command of its own, such as `\sen`, and KaTeX does not render
+  it.
 
 While the file exists, the tool does not read the prompts of a new raw2md
 version, and `init` does not update an existing file. After you update raw2md,
@@ -558,7 +624,7 @@ change its exit code, because the first conversion downloads them.
 
 | Variable | What it sets |
 |---|---|
-| the `key_env` of the model, `GOOGLE_API_KEY` in the template | the API key of the model |
+| the `key_env` of the model, `GOOGLE_API_KEY` or `OPENROUTER_API_KEY` in the template | the API key of the model |
 | `RAW2MD_TMP` | the temporary folder of the conversion |
 | `NO_COLOR` | turns off the colors in the console |
 
