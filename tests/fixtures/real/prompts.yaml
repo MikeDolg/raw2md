@@ -76,6 +76,59 @@ ocr:
     a block of text is not a picture: transcribe it as Markdown.
     Output only the Markdown content of the page, with no commentary and no
     surrounding code fence.
+  openrouter_api: |
+    Transcribe the document page shown in the image into Markdown.
+    Preserve all text exactly as it appears. Use Markdown headings, lists, tables,
+    and code blocks where clearly present in the source.
+    Write every table as a Markdown pipe table, with a header row and a separator
+    row. Never write a table as HTML: no <table>, <tr>, <td>, or other HTML tag. A
+    cell that spans several columns or rows is written once, in its first column
+    and row, and the cells it covers stay empty.
+    Write a function name that LaTeX has no command for, such as a sine that the
+    page writes as sen, with \operatorname: \operatorname{sen} x. Never make up a
+    command such as \sen.
+    Leave out the page's own running header or footer -- a line at the top or
+    bottom edge that repeats from page to page, such as the book or chapter title
+    or the page number, set off from the body text, often by a rule or a blank
+    margin. Leave out that rule as well: none of it is the page's content.
+    A heading that opens a chapter or a section on this page is not a running
+    header, even at the top of the page: it is the page's content. Keep it whole,
+    with its label and number (such as "Chapter 3") and its title.
+    A line of body text is not a running header either, however short: a running
+    header never continues a sentence. Keep the first line of the page even when it
+    is a single word that ends a sentence from the previous page or stands alone
+    above a formula.
+    For text you cannot read, insert the marker [unreadable]; for a single
+    uncertain character or word, append [?] right after it. Do not guess or invent
+    text that is not on the page.
+    When the page shows a figure, chart, diagram, or photograph, write the mark
+    ![](fig:top=T,left=L,bottom=B,right=R) on a line of its own where the picture
+    stands. T, L, B, and R give the picture's bounding box. Write each edge name,
+    an equals sign, and the number of that edge:
+    - top: the distance from the top edge of the page down to the top edge of the
+      picture;
+    - left: the distance from the left edge of the page to the left edge of the
+      picture;
+    - bottom: the distance from the top edge of the page down to the bottom edge
+      of the picture;
+    - right: the distance from the left edge of the page to the right edge of the
+      picture.
+    Each is a whole number from 0 to 1000: top and bottom in thousandths of the
+    page height, left and right in thousandths of the page width, so bottom is
+    always greater than top and right is always greater than left. A picture in
+    the upper right quarter of the page, with a margin around it, reads
+    ![](fig:top=80,left=540,bottom=420,right=920). Pictures side by side in one
+    row share their top and bottom and differ in left and right. The box encloses
+    the picture alone, not its caption. The picture is cut from the page at that
+    box, so give one mark for each separate picture.
+    The four numbers are thousandths of the page, never pixels of the image and
+    never percent: a picture that reaches the bottom edge of the page has a bottom
+    near 1000, and a picture that reaches the right edge has a right near 1000.
+    Transcribe the printed caption as ordinary page text. Do not describe the
+    picture, and write no other link or placeholder for it. A table, a formula, or
+    a block of text is not a picture: transcribe it as Markdown.
+    Output only the Markdown content of the page, with no commentary and no
+    surrounding code fence.
 inspection:
   default: |
     You are reviewing a Markdown conversion against its source document (a PDF).

@@ -159,12 +159,47 @@ def test_ocr_default_names_no_math_dialect() -> None:
     assert "\\(" not in default
 
 
-def test_ocr_ships_an_override_for_codex_only() -> None:
+def test_ocr_ships_overrides_for_codex_and_openrouter_only() -> None:
     prompts = default_prompts()
-    assert set(prompts.ocr.overrides) == {"codex_cli"}
+    assert set(prompts.ocr.overrides) == {"codex_cli", "openrouter_api"}
     assert resolve_prompt(prompts, "ocr", "codex_cli") != prompts.ocr.default
+    assert resolve_prompt(prompts, "ocr", "openrouter_api") != prompts.ocr.default
     assert resolve_prompt(prompts, "ocr", "gemini_api") == prompts.ocr.default
     assert prompts.inspection.overrides == {}
+    assert prompts.post.overrides == {}
+
+
+def test_ocr_openrouter_override_adds_its_rules_to_the_named_mark() -> None:
+    # The default with the named mark of Codex and three rules of its own.
+    openrouter = default_prompts().ocr.overrides["openrouter_api"]
+    codex = default_prompts().ocr.overrides["codex_cli"]
+    default = default_prompts().ocr.default
+    figure = codex[codex.index("When the page shows") :]
+    figure = figure[: figure.index("Transcribe the printed caption")]
+    assert figure in openrouter
+    assert "![](fig:ymin,xmin,ymax,xmax)" not in openrouter
+    page = default[default.index("Leave out the page's own") :]
+    page = page[: page.index("When the page shows")]
+    assert page in openrouter
+    assert openrouter.startswith(default.split("Leave out the page's own")[0])
+    assert openrouter.endswith("no commentary and no\nsurrounding code fence.\n")
+    assert "Write every formula" not in openrouter
+
+
+def test_ocr_openrouter_override_states_the_box_scale() -> None:
+    openrouter = default_prompts().ocr.overrides["openrouter_api"]
+    assert "never pixels of the image and\nnever percent" in openrouter
+
+
+def test_ocr_openrouter_override_bans_html_tables() -> None:
+    openrouter = default_prompts().ocr.overrides["openrouter_api"]
+    assert "Markdown pipe table" in openrouter
+    assert "Never write a table as HTML" in openrouter
+
+
+def test_ocr_openrouter_override_names_functions_with_operatorname() -> None:
+    openrouter = default_prompts().ocr.overrides["openrouter_api"]
+    assert "with \\operatorname: \\operatorname{sen} x" in openrouter
 
 
 def test_ocr_codex_override_keeps_the_rest_of_the_default() -> None:

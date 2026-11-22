@@ -64,7 +64,7 @@ so give one mark for each separate picture.
 # Codex mixes the order of four bare numbers even when the prompt names each
 # one: a row of pictures comes as top,left,right,bottom beside marks in order.
 # A name before each number leaves no order to mix up; the parser reads both.
-_OCR_FIGURE_CODEX = """\
+_OCR_FIGURE_NAMED = """\
 When the page shows a figure, chart, diagram, or photograph, write the mark
 ![](fig:top=T,left=L,bottom=B,right=R) on a line of its own where the picture
 stands. T, L, B, and R give the picture's bounding box. Write each edge name,
@@ -95,8 +95,39 @@ Output only the Markdown content of the page, with no commentary and no
 surrounding code fence.
 """
 
+# Haiku, shipped for openrouter_api, mixes pixel and percent boxes with
+# thousandths (a percent box crops a blank corner), writes a dense table as HTML,
+# and invents a command for a function name, such as \sen, that KaTeX refuses.
+_OCR_TABLE_MARKDOWN = """\
+Write every table as a Markdown pipe table, with a header row and a separator
+row. Never write a table as HTML: no <table>, <tr>, <td>, or other HTML tag. A
+cell that spans several columns or rows is written once, in its first column
+and row, and the cells it covers stay empty.
+"""
+
+_OCR_MATH_NAMES = """\
+Write a function name that LaTeX has no command for, such as a sine that the
+page writes as sen, with \\operatorname: \\operatorname{sen} x. Never make up a
+command such as \\sen.
+"""
+
+_OCR_FIGURE_SCALE = """\
+The four numbers are thousandths of the page, never pixels of the image and
+never percent: a picture that reaches the bottom edge of the page has a bottom
+near 1000, and a picture that reaches the right edge has a right near 1000.
+"""
+
 _DEFAULT_OCR = _OCR_INTRO + _OCR_PAGE + _OCR_FIGURE + _OCR_CLOSING
-_CODEX_OCR = _OCR_INTRO + _OCR_MATH_CODEX + _OCR_PAGE + _OCR_FIGURE_CODEX + _OCR_CLOSING
+_CODEX_OCR = _OCR_INTRO + _OCR_MATH_CODEX + _OCR_PAGE + _OCR_FIGURE_NAMED + _OCR_CLOSING
+_OPENROUTER_OCR = (
+    _OCR_INTRO
+    + _OCR_TABLE_MARKDOWN
+    + _OCR_MATH_NAMES
+    + _OCR_PAGE
+    + _OCR_FIGURE_NAMED
+    + _OCR_FIGURE_SCALE
+    + _OCR_CLOSING
+)
 
 _DEFAULT_INSPECTION = """\
 You are reviewing a Markdown conversion against its source document (a PDF).
@@ -225,7 +256,11 @@ letter-spacing zone with Markdown.
 # Both the file template and the in-memory fallback derive from this mapping.
 # An override key names the model key that `raw2md init` writes.
 DEFAULT_PROMPTS: dict[str, Any] = {
-    "ocr": {"default": _DEFAULT_OCR, "codex_cli": _CODEX_OCR},
+    "ocr": {
+        "default": _DEFAULT_OCR,
+        "codex_cli": _CODEX_OCR,
+        "openrouter_api": _OPENROUTER_OCR,
+    },
     "inspection": {"default": _DEFAULT_INSPECTION},
     "post": {"default": _DEFAULT_POST},
 }
