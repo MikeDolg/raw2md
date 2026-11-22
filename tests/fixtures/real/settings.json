@@ -17,26 +17,36 @@
       "access": "codex_cli",
       "command": "codex",
       "model": "gpt-6.1-terra"
+    },
+    "openrouter_api": {
+      "access": "openrouter_api",
+      "key_env": "OPENROUTER_API_KEY",
+      "model": "anthropic/claude-haiku-5.5",
+      "pages_per_request": 8,
+      "max_request_bytes": 20971520
     }
   },
   "operations": {
     "ocr": {
       "allowed": [
         "gemini_api",
-        "codex_cli"
+        "codex_cli",
+        "openrouter_api"
       ]
     },
     "inspection": {
       "allowed": [
         "gemini_api",
-        "codex_cli"
+        "codex_cli",
+        "openrouter_api"
       ]
     },
     "post": {
       "allowed": [
         "claude_cli",
         "gemini_api",
-        "codex_cli"
+        "codex_cli",
+        "openrouter_api"
       ]
     }
   },

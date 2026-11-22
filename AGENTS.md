@@ -86,9 +86,10 @@ the task needs it:
   the source. It uses `pandoc`, `xelatex`, DjVuLibre, and `raw2md-engine`,
   which downloads its weights into `~/.raw2md/models` on the first run.
   Without a GPU, the engine is very slow.
-- `uv run pytest -m llm_live` sends real requests to Gemini, Claude Code, and
-  Codex CLI. It spends the API quota and the plan limits. It needs
-  `GOOGLE_API_KEY`, and `claude` and `codex` on `PATH`.
+- `uv run pytest -m llm_live` sends real requests to Gemini, OpenRouter,
+  Claude Code, and Codex CLI. It spends the API quota and the plan limits. It
+  needs `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`, and `claude` and `codex` on
+  `PATH`.
 
 Both layers skip a test when its tool or its key is absent.
 

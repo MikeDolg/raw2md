@@ -26,9 +26,17 @@ def test_offline_fixture_loads(raw2md_home: Path) -> None:
 
 def test_real_fixture_loads(raw2md_home_real: Path) -> None:
     settings = load_settings(settings_file())
-    assert set(settings.models) == {"gemini_api", "claude_cli", "codex_cli"}
+    assert set(settings.models) == {
+        "gemini_api",
+        "claude_cli",
+        "codex_cli",
+        "openrouter_api",
+    }
     assert settings.models["gemini_api"].key_env == "GOOGLE_API_KEY"
-    assert settings.operations["inspection"] == frozenset({"gemini_api", "codex_cli"})
+    assert settings.models["openrouter_api"].key_env == "OPENROUTER_API_KEY"
+    assert settings.operations["inspection"] == frozenset(
+        {"gemini_api", "codex_cli", "openrouter_api"}
+    )
     assert settings.engine_recognition_batch_size == 8
 
     # The real profile drives live models, so it carries the shipped prompts.

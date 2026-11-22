@@ -1,7 +1,8 @@
 """End-to-end round-trip tests with real LLM providers.
 
-Behind the ``llm_live`` marker; they need ``GOOGLE_API_KEY`` and/or the
-``claude`` or ``codex`` CLI, and some need ``raw2md-engine``. Run explicitly::
+Behind the ``llm_live`` marker; they need ``GOOGLE_API_KEY``,
+``OPENROUTER_API_KEY``, and/or the ``claude`` or ``codex`` CLI, and some need
+``raw2md-engine``. Run explicitly::
 
     uv run pytest -m llm_live                   # full real-LLM suite
     uv run pytest -m llm_live -k smoke          # infrastructure smoke test only
@@ -46,12 +47,15 @@ pytestmark = pytest.mark.llm_live
 # ---------------------------------------------------------------------------
 
 
+_KEY_VARIABLES = ("GOOGLE_API_KEY", "OPENROUTER_API_KEY")
+
+
 def _skip_without(*requirements: str) -> None:
-    """Skip when a tool or credential (``GOOGLE_API_KEY``) is absent."""
+    """Skip when a tool or an API key variable is absent."""
     for req in requirements:
-        if req == "GOOGLE_API_KEY":
-            if not os.environ.get("GOOGLE_API_KEY"):
-                pytest.skip("GOOGLE_API_KEY not set in environment")
+        if req in _KEY_VARIABLES:
+            if not os.environ.get(req):
+                pytest.skip(f"{req} not set in environment")
         elif req == "raw2md-engine":
             if importlib.util.find_spec("raw2md_engine") is None:
                 pytest.skip("the engine copy raw2md_engine is not installed")
@@ -234,6 +238,7 @@ def _assert_post_result(
         pytest.param("claude_cli", ("claude",), id="claude_cli"),
         pytest.param("gemini_api", ("GOOGLE_API_KEY",), id="gemini_api"),
         pytest.param("codex_cli", ("codex",), id="codex_cli"),
+        pytest.param("openrouter_api", ("OPENROUTER_API_KEY",), id="openrouter_api"),
     ],
 )
 def test_post_damaged_zone(
@@ -276,6 +281,12 @@ def test_post_damaged_zone(
             id="claude_post",
         ),
         pytest.param("codex_cli", "codex_cli", ("codex",), id="codex_cli"),
+        pytest.param(
+            "openrouter_api",
+            "openrouter_api",
+            ("OPENROUTER_API_KEY",),
+            id="openrouter_api",
+        ),
     ],
 )
 def test_inspection_and_post(
@@ -338,6 +349,7 @@ def test_ocr_non_vision_model_refused(raw2md_home_real: Path) -> None:
     [
         pytest.param("gemini_api", ("GOOGLE_API_KEY",), id="gemini_api"),
         pytest.param("codex_cli", ("codex",), id="codex_cli"),
+        pytest.param("openrouter_api", ("OPENROUTER_API_KEY",), id="openrouter_api"),
     ],
 )
 def test_ocr_replaces_page(
@@ -373,6 +385,7 @@ _IMAGE_LINK = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
     [
         pytest.param("gemini_api", ("GOOGLE_API_KEY",), id="gemini_api"),
         pytest.param("codex_cli", ("codex",), id="codex_cli"),
+        pytest.param("openrouter_api", ("OPENROUTER_API_KEY",), id="openrouter_api"),
     ],
 )
 def test_ocr_crops_figures(
