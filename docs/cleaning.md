@@ -404,7 +404,8 @@ mode, the model invents images and links that the source does not have.
 | Mode | Before | After |
 |---|---|---|
 | `--disable-image-extraction` | `![Pump housing](missing.png)`, `<img src="missing.png" alt="Pump">` | the caption as a separate paragraph; the link deleted |
-| LLM-OCR: an image | `![Pump](img.png)` | deleted with its caption |
+| LLM-OCR: an image that the tool did not cut out of the page | `![Pump](img.png)` | deleted with its caption |
+| LLM-OCR: a figure that the tool cut out of the page | `![](book/_page_0_Figure_0.png)` | unchanged |
 | LLM-OCR: an external link | `[site](https://example.com)` | `site` |
 | LLM-OCR: a model placeholder in place of an image | `[Image of a pump]` | deleted; if it repeats the caption, the caption stays without the brackets |
 
@@ -420,7 +421,7 @@ Cleaning edits the whole document, except for:
 - HTML tables. Cleaning does not change the markup of the table. In the cells,
   it makes four repairs only. It deletes a file path from `alt`. In LLM-OCR
   mode (for example, `-e gemini_api`), it deletes the images and links that the
-  model invented. It decides a soft hyphen between two letters, as in the
+  model invented, and it keeps the figures that the tool cut out of the page. It decides a soft hyphen between two letters, as in the
   text. It also puts blank lines around the content of a cell with a formula,
   so that the formula renders.
 

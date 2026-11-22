@@ -67,8 +67,11 @@ each stage without the others.
 `-e marker`, the engine name of raw2md 0.1.x, ends with an argument error that
 names `raw2md-engine`.
 
-In LLM-OCR mode, the model recognizes the whole page and does not extract
-images. Therefore `--disable-image-extraction` changes nothing in this mode.
+In LLM-OCR mode, the model recognizes the whole page and marks each figure with
+its box on the page. The tool cuts the figure out of the page image into the
+image folder and puts a link to it in place of the mark. A mark with an
+invalid box, such as a box outside the page, is deleted with a log entry. With
+`--disable-image-extraction`, the tool deletes every mark and cuts nothing.
 
 The `-e` and `-i` flags have no effect on `docx` and `md`. A `docx` file always
 goes through `pandoc`, and an `md` file skips conversion. Inspection
@@ -267,7 +270,7 @@ priority over a built-in value. This is the template that `init` writes:
 {
   "models": {
     "gemini_api": {
-      "access": "api",
+      "access": "gemini_api",
       "key_env": "GOOGLE_API_KEY",
       "model": "gemini-3.5-flash-lite",
       "rpm": 15,
@@ -278,16 +281,23 @@ priority over a built-in value. This is the template that `init` writes:
       "max_request_bytes": 20971520
     },
     "claude_cli": {
-      "access": "cli",
+      "access": "claude_cli",
       "command": "claude",
       "model": "claude-sonnet-5-5",
       "cli_timeout_s": 120
+    },
+    "codex_cli": {
+      "access": "codex_cli",
+      "command": "codex",
+      "model": "gpt-6.1-terra",
+      "cli_timeout_s": 120,
+      "image_long_side": 1400
     }
   },
   "operations": {
-    "ocr": {"allowed": ["gemini_api"]},
-    "inspection": {"allowed": ["gemini_api"]},
-    "post": {"allowed": ["claude_cli", "gemini_api"]}
+    "ocr": {"allowed": ["gemini_api", "codex_cli"]},
+    "inspection": {"allowed": ["gemini_api", "codex_cli"]},
+    "post": {"allowed": ["claude_cli", "gemini_api", "codex_cli"]}
   },
   "raw2md-engine": {"recognition_batch_size": "default"},
   "cleaning": {"witness_min": 20},
@@ -300,31 +310,55 @@ The `models` section describes the models. The `operations` section sets which
 models each operation permits: `ocr` (LLM-OCR), `inspection`, and `post`. A
 model key can be any name except `none`, `failed`, `partial`, `raw2md-engine`,
 `marker`, `pandoc`, and `djvu`. The header fields and the `-e` flag use these
-values. A
-model with `cli` access does not see images. Therefore it does not fit `ocr`
-and `inspection`.
+values.
 
-A model with `cli` access, such as `claude_cli`, runs as
+The `access` field names the provider. A `gemini_api` model and a `codex_cli`
+model see images, so they fit every operation. A `claude_cli` model does not
+see images. Therefore it does not fit `ocr` and `inspection`. The access names
+of raw2md 0.3.0, `api` and `cli`, give a settings error with the code `2`. The
+message names the new value: `gemini_api` for `api`, and `claude_cli` for
+`cli`.
+
+A `claude_cli` model runs as
 `COMMAND -p --model MODEL --tools "" --safe-mode --strict-mcp-config --no-session-persistence`.
 The request goes to the standard input. These flags isolate the program: it
 gets no tools, no MCP servers, no hooks, and no user settings or `CLAUDE.md`,
 and it keeps no session file with the document. The `command` must accept these
 flags, as the `claude` command of Claude Code does.
 
+A `codex_cli` model runs as `COMMAND exec --json --model MODEL` with the
+isolation flags of `ISOLATION_FLAGS` in `src/raw2md/llm/codex.py`. The request
+goes to the standard input, and each page goes as a PNG file through
+`--image`. Each request runs in its own empty temporary folder with a
+read-only sandbox. The flags turn off the user configuration, the rules,
+`AGENTS.md`, the skills, the shell, the web search, and the other tools of the
+agent. If the event stream of `--json` reports a tool call, the tool discards
+the reply, and the request fails with a provider error. The model sees the
+path of the temporary folder, and on Windows that path holds the name of the
+user account. The `command` must accept the flags, as the `codex` command of
+Codex CLI 0.171.0 does.
+
 | Model field | Access | What it sets | If not set |
 |---|---|---|---|
-| `access` | all | `api`: requests through an API; `cli`: a call to a program | required |
+| `access` | all | `gemini_api`: requests through the Gemini API; `claude_cli`: a call to Claude Code; `codex_cli`: a call to Codex CLI | required |
 | `model` | all | the model name at the provider | required |
-| `key_env` | `api` | the environment variable with the API key | required |
-| `command` | `cli` | the command that the tool calls | required |
+| `key_env` | `gemini_api` | the environment variable with the API key | required |
+| `command` | `claude_cli`, `codex_cli` | the command that the tool calls | required |
 | `rpm` | all | requests per minute; the pause between requests is `60/rpm` seconds at least | no pause |
 | `tpm` | all | tokens per minute; inspection uses it to divide the document into chunks and to pause between requests | chunks of up to 100,000 tokens, no pauses |
 | `rpd` | all | requests per day; the tool does not send a request over the limit, and the run ends with an LLM error | no limit |
 | `rpd_reset_zone` | all | the IANA time zone in which `rpd` resets | `America/Los_Angeles` |
 | `pages_per_request` | all | pages of the source in one request | 8 |
 | `max_request_bytes` | all | the size of one request | 20 MB |
-| `temperature` | `api` | the temperature of the model, from 0.0 to 2.0 | the provider value |
-| `cli_timeout_s` | `cli` | how many seconds to wait for the reply of the program | 120 |
+| `temperature` | `gemini_api` | the temperature of the model, from 0.0 to 2.0 | the provider value |
+| `cli_timeout_s` | `claude_cli`, `codex_cli` | how many seconds to wait for the reply of the program | 120 |
+| `image_long_side` | `codex_cli` | the longest side of a page image in pixels; the tool scales a larger image down before the request | 1400 |
+
+Codex CLI itself scales an image down to 2048 pixels, so a larger
+`image_long_side` changes nothing. The input tokens of a page grow with the
+area of its image: at 1400 pixels, a page costs about a third less than at
+2048. The limits of a ChatGPT plan count in time windows of their own, and
+`rpm` and `rpd` do not model them.
 
 The `rpd` counter is in `~/.raw2md/state/rpd.json`, by model name, and it
 survives a restart. After a provider error `429` or `5xx`, the tool repeats the
@@ -349,15 +383,20 @@ option, a separate prompt for one model.
 ocr:
   default: |
     ...
+  codex_cli: |      # a prompt for this model only
+    ...
 inspection:
   default: |
     ...
 post:
   default: |
     ...
-  claude_cli: |     # a prompt for this model only
-    ...
 ```
+
+The template holds a separate `ocr` prompt for `codex_cli`. It differs from
+the base prompt in the figure mark only: it names each number of the box by
+its edge, `![](fig:top,left,bottom,right)`, and gives an example. Under the
+base prompt, Codex mixes up the order of the numbers.
 
 While the file exists, the tool does not read the prompts of a new raw2md
 version, and `init` does not update an existing file. After you update raw2md,

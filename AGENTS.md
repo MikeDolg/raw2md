@@ -14,7 +14,7 @@ one file at a time, in these stages:
 
 | Stage | When it runs | What it does |
 |---|---|---|
-| Conversion | always, except for a Markdown source | converts the source with `raw2md-engine` (PDF), `pandoc` (DOCX), DjVuLibre and `raw2md-engine` (DjVu), or Gemini (`-e`) |
+| Conversion | always, except for a Markdown source | converts the source with `raw2md-engine` (PDF), `pandoc` (DOCX), DjVuLibre and `raw2md-engine` (DjVu), or a vision model, Gemini or Codex (`-e`) |
 | Cleaning | always | repairs defects with deterministic rules |
 | Inspection | with `-i`, for PDF and DjVu | compares the text with the source pages through a large language model (LLM) |
 | Post-processing | with `-p` | repairs damaged markup through an LLM |
@@ -86,8 +86,9 @@ the task needs it:
   the source. It uses `pandoc`, `xelatex`, DjVuLibre, and `raw2md-engine`,
   which downloads its weights into `~/.raw2md/models` on the first run.
   Without a GPU, the engine is very slow.
-- `uv run pytest -m llm_live` sends real requests to Gemini and Claude Code.
-  It spends the API quota. It needs `GOOGLE_API_KEY` and `claude` on `PATH`.
+- `uv run pytest -m llm_live` sends real requests to Gemini, Claude Code, and
+  Codex CLI. It spends the API quota and the plan limits. It needs
+  `GOOGLE_API_KEY`, and `claude` and `codex` on `PATH`.
 
 Both layers skip a test when its tool or its key is absent.
 

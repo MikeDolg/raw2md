@@ -56,7 +56,7 @@ The first step, the conversion itself, runs on one of these engines:
 
 - `raw2md-engine` for PDF: an improved copy of `marker` 1.10.2, `surya-ocr` 0.17.1, and `pdftext` 0.6.3 by Datalab, bundled with raw2md
 - `pandoc` for DOCX
-- Gemini for OCR of PDF and DjVu files (the `-e` flag)
+- Gemini or Codex for OCR of PDF and DjVu files, with the figures cut out of the page (the `-e` flag)
 - DjVuLibre to turn a DjVu file into a PDF before recognition
 
 The cleaning of a file then goes through three stages, and two of them are optional:
@@ -80,7 +80,7 @@ The engines leave typical defects in Markdown. In a RAG pipeline, these defects 
 
 After cleaning, and again after each LLM stage, a deterministic [quality evaluation](https://github.com/MikeDolg/raw2md/blob/main/docs/quality.md) grades the text with a score from 0 to 100. The score, the verdict `ok` or `bad`, and the checks that lowered the score most go into the header of the result.
 
-For now, inspection runs on Gemini only, while post-processing can use either Gemini or Claude Code through `claude -p`.
+Inspection and OCR run on Gemini or Codex. Post-processing runs on Gemini, Codex, or Claude Code.
 
 ## What languages are supported?
 
@@ -222,20 +222,28 @@ The model in `-e`, `-i`, and `-p` is a key from `settings.json`, such as `gemini
 
 ## Settings
 
-Without a settings file, raw2md falls back on its built-in settings, which know two models:
+Without a settings file, raw2md falls back on its built-in settings, which know three models:
 
 | Key | Model | Stages | What you need |
 |---|---|---|---|
 | `gemini_api` | Gemini through the API | `-e`, `-i`, `-p` | an API key in the `GOOGLE_API_KEY` variable |
+| `codex_cli` | Codex CLI through `codex exec` | `-e`, `-i`, `-p` | `codex` installed, signed in, and on `PATH` |
 | `claude_cli` | Claude Code through `claude -p` | `-p` | `claude` installed, signed in, and on `PATH` |
 
-To turn on the LLM stages, put your key into `GOOGLE_API_KEY` and name the model in the flag:
+To turn on the LLM stages, name the model in the flag:
 
 ```bash
 raw2md book.pdf -i gemini_api -p gemini_api
+raw2md book.pdf -i codex_cli -p codex_cli
+raw2md homework.pdf -e codex_cli   # OCR of a handwritten scan
 ```
 
-The built-in `gemini_api` model and its limits, 15 requests per minute and 500 per day, target the free tier of Google AI Studio, so a free API key is enough to start. Google sets the actual quotas for each project and can change them. With a paid key, you can pick a larger model and raise the limits.
+`gemini_api` and `codex_cli` serve all three stages, and you can pick either:
+
+- The built-in `gemini_api` model and its limits, 15 requests per minute and 500 per day, target the free tier of Google AI Studio, so a free API key is enough to start. Google sets the actual quotas for each project and can change them. With a paid key, you can pick a larger model and raise the limits.
+- `codex_cli` works with a ChatGPT plan and needs no API key. On a scan, its inspection repairs more recognition errors than the built-in Gemini model, such as `Tlie` for `The`. The plan limits Codex in time windows of its own, and a page costs several thousand input tokens, so a long book spends a large part of a window.
+
+OCR with `-e` suits handwriting and hard scans, which `raw2md-engine` reads poorly.
 
 To change a model or its limits, create the settings file and open it:
 
@@ -251,6 +259,7 @@ These are the fields you are most likely to change:
 | `models.<key>.model` | the model name at the provider |
 | `models.<key>.rpm`, `rpd` | the request limits per minute and per day |
 | `models.<key>.pages_per_request` | how many source pages go into one request |
+| `models.codex_cli.image_long_side` | the longest side of a page image in pixels; a smaller number spends fewer tokens |
 | `raw2md-engine.recognition_batch_size` | the batch size of the engine recognition; a smaller number uses less video memory |
 
 The [reference](https://github.com/MikeDolg/raw2md/blob/main/docs/reference.md#service-files) describes every field, as well as `prompts.yaml` and `keywords.yaml`.
@@ -262,6 +271,8 @@ uv tool upgrade raw2md
 ```
 
 If you have not edited `prompts.yaml` and `keywords.yaml`, delete them from `~/.raw2md` after the upgrade and run `raw2md init` to get the new versions: the old files replace the built-in ones, and `init` does not overwrite them.
+
+After an upgrade from 0.3.x, the `access` field of `settings.json` names the provider: write `gemini_api` instead of `api`, and `claude_cli` instead of `cli`. An old value stops the run with a message that names the new one. To add the `codex_cli` model and its OCR prompt, move your changes into fresh `settings.json` and `prompts.yaml` files from `raw2md init`.
 
 After an upgrade from 0.1.x:
 
