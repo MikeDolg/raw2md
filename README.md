@@ -272,7 +272,7 @@ uv tool upgrade raw2md
 
 If you have not edited `prompts.yaml` and `keywords.yaml`, delete them from `~/.raw2md` after the upgrade and run `raw2md init` to get the new versions: the old files replace the built-in ones, and `init` does not overwrite them.
 
-After an upgrade from 0.3.x, the `access` field of `settings.json` names the provider: write `gemini_api` instead of `api`, and `claude_cli` instead of `cli`. An old value stops the run with a message that names the new one. To add the `codex_cli` model and its OCR prompt, move your changes into fresh `settings.json` and `prompts.yaml` files from `raw2md init`.
+After an upgrade from 0.3.x, the `access` field of `settings.json` names the provider: write `gemini_api` instead of `api`, and `claude_cli` instead of `cli`. An old value stops the run with a message that names the new one. To add the `codex_cli` model and the new OCR prompts, move your changes into fresh `settings.json` and `prompts.yaml` files from `raw2md init`.
 
 After an upgrade from 0.1.x:
 

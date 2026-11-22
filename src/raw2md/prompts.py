@@ -18,10 +18,23 @@ from raw2md.service import edit_file, parse_file_action, show_file
 
 OPERATIONS = ("ocr", "inspection", "post")
 
-_OCR_TEXT = """\
+_OCR_INTRO = """\
 Transcribe the document page shown in the image into Markdown.
 Preserve all text exactly as it appears. Use Markdown headings, lists, tables,
 and code blocks where clearly present in the source.
+"""
+
+# Codex writes \(...\) and \[...\] untold; the rule pushes Gemini's own-line
+# formulas into broken $$ blocks. One line per display formula: cleaning reads
+# an absolute-value pipe inside a multi-line block as a table row.
+_OCR_MATH_CODEX = """\
+Write every formula in LaTeX between dollar signs: $...$ for a formula inside a
+line of text, and $$...$$ for a formula set apart from the text, with the whole
+formula and both delimiters on one line of its own. Do not use \\(...\\) or
+\\[...\\], and leave no LaTeX outside the dollar signs.
+"""
+
+_OCR_PAGE = """\
 Leave out the page's own running header or footer -- a line at the top or
 bottom edge that repeats from page to page, such as the book or chapter title
 or the page number, set off from the body text, often by a rule or a blank
@@ -82,8 +95,8 @@ Output only the Markdown content of the page, with no commentary and no
 surrounding code fence.
 """
 
-_DEFAULT_OCR = _OCR_TEXT + _OCR_FIGURE + _OCR_CLOSING
-_CODEX_OCR = _OCR_TEXT + _OCR_FIGURE_CODEX + _OCR_CLOSING
+_DEFAULT_OCR = _OCR_INTRO + _OCR_PAGE + _OCR_FIGURE + _OCR_CLOSING
+_CODEX_OCR = _OCR_INTRO + _OCR_MATH_CODEX + _OCR_PAGE + _OCR_FIGURE_CODEX + _OCR_CLOSING
 
 _DEFAULT_INSPECTION = """\
 You are reviewing a Markdown conversion against its source document (a PDF).

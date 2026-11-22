@@ -394,9 +394,14 @@ post:
 ```
 
 The template holds a separate `ocr` prompt for `codex_cli`. It differs from
-the base prompt in the figure mark only: it names each number of the box by
-its edge, `![](fig:top,left,bottom,right)`, and gives an example. Under the
-base prompt, Codex mixes up the order of the numbers.
+the base prompt in two places:
+
+- The figure mark names each number of the box by its edge,
+  `![](fig:top,left,bottom,right)`, and gives an example. Under the base
+  prompt, Codex mixes up the order of the numbers.
+- The prompt asks for formulas between dollar signs: `$...$` inside a line of
+  text, and `$$...$$` on one line for a display formula. Under the base prompt,
+  Codex writes `\(...\)` and `\[...\]`, which the cleaning rules do not read.
 
 While the file exists, the tool does not read the prompts of a new raw2md
 version, and `init` does not update an existing file. After you update raw2md,

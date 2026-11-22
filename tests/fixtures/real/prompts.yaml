@@ -33,6 +33,10 @@ ocr:
     Transcribe the document page shown in the image into Markdown.
     Preserve all text exactly as it appears. Use Markdown headings, lists, tables,
     and code blocks where clearly present in the source.
+    Write every formula in LaTeX between dollar signs: $...$ for a formula inside a
+    line of text, and $$...$$ for a formula set apart from the text, with the whole
+    formula and both delimiters on one line of its own. Do not use \(...\) or
+    \[...\], and leave no LaTeX outside the dollar signs.
     Leave out the page's own running header or footer -- a line at the top or
     bottom edge that repeats from page to page, such as the book or chapter title
     or the page number, set off from the body text, often by a rule or a blank

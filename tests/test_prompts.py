@@ -144,6 +144,21 @@ def test_ocr_default_keeps_short_first_body_line() -> None:
     assert "Keep the first line of the page" in prompt
 
 
+def test_ocr_codex_override_asks_for_dollar_math_delimiters() -> None:
+    codex = default_prompts().ocr.overrides["codex_cli"]
+    assert "$...$ for a formula inside a\nline of text" in codex
+    assert "both delimiters on one line of its own" in codex
+    assert "Do not use \\(...\\) or\n\\[...\\]" in codex
+    assert "leave no LaTeX outside the dollar signs" in codex
+
+
+def test_ocr_default_names_no_math_dialect() -> None:
+    # Gemini writes $ untold; the rule pushes its formulas into $$ blocks.
+    default = default_prompts().ocr.default
+    assert "dollar signs" not in default
+    assert "\\(" not in default
+
+
 def test_ocr_ships_an_override_for_codex_only() -> None:
     prompts = default_prompts()
     assert set(prompts.ocr.overrides) == {"codex_cli"}
@@ -153,12 +168,14 @@ def test_ocr_ships_an_override_for_codex_only() -> None:
 
 
 def test_ocr_codex_override_keeps_the_rest_of_the_default() -> None:
-    # Only the figure paragraph differs; the transcription rules stay shared.
+    # Only the math rule and the figure paragraph differ.
     codex = default_prompts().ocr.overrides["codex_cli"]
     default = default_prompts().ocr.default
     head = default.split("When the page shows")[0]
     assert "running header or footer" in head
-    assert codex.startswith(head)
+    math_start = codex.index("Write every formula")
+    math_end = codex.index("Leave out the page's own")
+    assert (codex[:math_start] + codex[math_end:]).startswith(head)
     assert codex.endswith("no commentary and no\nsurrounding code fence.\n")
     assert "Transcribe the printed caption as ordinary page text" in codex
 
