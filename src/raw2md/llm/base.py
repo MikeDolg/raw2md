@@ -170,6 +170,10 @@ class MediaPart:
 Part = TextPart | MediaPart
 
 
+# Pillow writes only these modes as PNG; a CMYK JPEG needs an RGB copy first.
+_PNG_MODES = frozenset({"1", "L", "LA", "P", "RGB", "RGBA", "I", "I;16"})
+
+
 def shrink_image(part: MediaPart, long_side: int) -> MediaPart:
     """Return `part`, re-encoded as PNG when its longer side exceeds `long_side`."""
     try:
@@ -180,7 +184,8 @@ def shrink_image(part: MediaPart, long_side: int) -> MediaPart:
             scale = long_side / max(width, height)
             size = (max(1, round(width * scale)), max(1, round(height * scale)))
             buffer = BytesIO()
-            image.resize(size, Image.Resampling.LANCZOS).save(buffer, format="PNG")
+            source = image if image.mode in _PNG_MODES else image.convert("RGB")
+            source.resize(size, Image.Resampling.LANCZOS).save(buffer, format="PNG")
     except (OSError, Image.DecompressionBombError) as exc:
         raise ProviderError(f"cannot read the image: {exc}") from exc
     return MediaPart(buffer.getvalue(), "image/png")

@@ -251,6 +251,16 @@ def test_an_image_over_the_long_side_shrinks_and_keeps_its_ratio(
     assert _size(_sent_image(wire.body(), 1)) == (300, 600)
 
 
+def test_a_cmyk_jpeg_over_the_long_side_shrinks_to_png(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    buffer = io.BytesIO()
+    Image.new("CMYK", (1200, 600), (0, 0, 0, 0)).save(buffer, format="JPEG")
+    wire = _Wire(monkeypatch, _ok(_result()), or_model(image_long_side=600))
+    wire.provider.generate("prompt", [MediaPart(buffer.getvalue(), "image/jpeg")])
+    assert _size(_sent_image(wire.body(), 1)) == (600, 300)
+
+
 def test_the_long_side_defaults_to_the_shipped_value(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
