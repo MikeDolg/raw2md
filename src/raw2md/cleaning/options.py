@@ -23,7 +23,7 @@ class CleanOptions:
     a body that LLM-OCR recognized, whose only real image links are its crops.
     `source_text` and `outline` are the source's own text layer and outline;
     their empty defaults confirm nothing, so a rule stays conservative.
-    `witness_min` is the attestation threshold of `repair_attested_tokens`.
+    `witness_min` is the threshold of `repair_attested_tokens` (engine routes).
     """
 
     base_dir: Path | None = None

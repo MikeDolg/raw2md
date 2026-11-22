@@ -17,6 +17,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 from raw2md.cleaning.segments import WORD_RUN_RE, body_word_counts, prose_reading
+from raw2md.header import ConversionMethod
 from raw2md.keywords import Keywords
 from raw2md.mdtext.links import IMAGE_RE, local_image_path
 from raw2md.mdtext.pages import is_lost_page_marker
@@ -214,18 +215,33 @@ _MIN_CODE_LETTERS = 2
 _BLUR = "\ufffe"
 
 
+# The assumption "a rare word next to a frequent one is a recognition error"
+# holds for the noise of an OCR engine. A body from a text converter or a
+# language model spells a rare word on purpose, often another case form of a
+# frequent one.
+_ATTESTED_REPAIR_METHODS = frozenset(
+    {ConversionMethod.BUNDLED, ConversionMethod.DJVU_BUNDLED}
+)
+
+
 def repair_attested_tokens(
-    seg_list: list[Segment], witness_min: int = DEFAULT_WITNESS_MIN
+    seg_list: list[Segment],
+    method: ConversionMethod | None,
+    witness_min: int = DEFAULT_WITNESS_MIN,
 ) -> list[Segment]:
     """Repair a corrupt token that the body's own frequency profile identifies.
 
-    A code (a digit and at least `_MIN_CODE_LETTERS` letters) becomes the
+    Only on the routes of the bundled engine, `raw2md-engine` and
+    `djvu+raw2md-engine`; any other route, and no route, leaves the body as
+    it is. A code (a digit and at least `_MIN_CODE_LETTERS` letters) becomes the
     capitalised form the body spells `witness_min` times and more often. A word
     of at least `_MIN_REPAIRABLE_WORD` letters standing once becomes its only
     neighbour one substitution away that the body spells `witness_min` times.
     An inflection has two frequent neighbours, so it stays. Price: a real word
     used once next to a frequent one is rewritten. Reads `prose_reading` only.
     """
+    if method not in _ATTESTED_REPAIR_METHODS:
+        return seg_list
     prose = prose_reading(seg_list)
     literal = _literal_counts(prose)
     folded = body_word_counts(prose)

@@ -8,8 +8,11 @@ spelling.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import replace
 from pathlib import Path
+
+import pytest
 
 from raw2md.cleaner import CleanOptions, clean, clean_in_place
 from raw2md.cleaning import DEFAULT_WITNESS_MIN
@@ -196,7 +199,7 @@ def test_ocr_fabrication_removal_is_idempotent() -> None:
 # ---- the token the body attests ----------------------------------------------
 
 # Every body prints its own witness, so a low bar keeps the bodies short.
-_ATTESTED = CleanOptions(witness_min=5)
+_ATTESTED = CleanOptions(witness_min=5, method=ConversionMethod.BUNDLED)
 
 
 def _body(*paragraphs: str) -> str:
@@ -311,8 +314,8 @@ def test_the_witness_bar_comes_from_the_options() -> None:
         "Values of " + _repeated("velocity", 5) + " are listed below.",
         "Here veloclty is misspelled.",
     )
-    assert "veloclty" not in clean_in_place(text, CleanOptions(witness_min=5))
-    assert clean_in_place(text, CleanOptions(witness_min=6)) == text
+    assert "veloclty" not in clean_in_place(text, _ATTESTED)
+    assert clean_in_place(text, replace(_ATTESTED, witness_min=6)) == text
 
 
 def test_the_default_bar_is_the_rules_own() -> None:
@@ -320,8 +323,34 @@ def test_the_default_bar_is_the_rules_own() -> None:
         "Values of " + _repeated("velocity", 5) + " are listed below.",
         "Here veloclty is misspelled.",
     )
-    assert CleanOptions().witness_min == DEFAULT_WITNESS_MIN
-    assert clean_in_place(text, CleanOptions()) == text
+    options = CleanOptions(method=ConversionMethod.BUNDLED)
+    assert options.witness_min == DEFAULT_WITNESS_MIN
+    assert clean_in_place(text, options) == text
+
+
+_ENGINE_ROUTES = {ConversionMethod.BUNDLED, ConversionMethod.DJVU_BUNDLED}
+
+
+@pytest.mark.parametrize("method", [*ConversionMethod, None])
+def test_attested_repair_runs_on_the_engine_routes_only(
+    method: ConversionMethod | None, caplog: pytest.LogCaptureFixture
+) -> None:
+    text = _body(
+        "Catalogue: " + _repeated("KX4702300", 5) + ".",
+        "Item kx4702300 is listed in the inventory.",
+        "Values of " + _repeated("velocity", 5) + " are listed below.",
+        "Here veloclty is misspelled.",
+    )
+    with caplog.at_level(logging.INFO, logger="raw2md"):
+        fixed = clean_in_place(text, replace(_ATTESTED, method=method))
+    logged = "tokens repaired by the body's own witness" in caplog.text
+    if method in _ENGINE_ROUTES:
+        assert "veloclty" not in fixed
+        assert "kx4702300" not in fixed
+        assert logged
+    else:
+        assert fixed == text
+        assert not logged
 
 
 def test_attested_repair_is_idempotent() -> None:

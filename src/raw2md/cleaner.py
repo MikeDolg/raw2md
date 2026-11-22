@@ -244,7 +244,7 @@ def clean_in_place(text: str, options: CleanOptions | None = None) -> str:
     # After the rejoin, whose joined spellings the counts must weigh.
     seg_list = settle_compound_hyphens(seg_list)
     # Last of the body-count rules: every join above spells words it weighs.
-    seg_list = repair_attested_tokens(seg_list, options.witness_min)
+    seg_list = repair_attested_tokens(seg_list, options.method, options.witness_min)
     # Postcondition on every table block: several passes drop a junk header
     # row and leave the separator first, where GFM reads no table. Before the
     # missing-delimiter mend, which would misread the rows under it.
