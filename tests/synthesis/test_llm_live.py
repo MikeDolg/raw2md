@@ -1,8 +1,7 @@
 """End-to-end round-trip tests with real LLM providers.
 
-Behind the ``llm_live`` marker; they need ``GOOGLE_API_KEY``,
-``OPENROUTER_API_KEY``, and/or the ``claude`` or ``codex`` CLI, and some need
-``raw2md-engine``. Run explicitly::
+Behind the ``llm_live`` marker. They need an API key (``GOOGLE_API_KEY``,
+``OPENROUTER_API_KEY``) or a CLI, and some need ``raw2md-engine``::
 
     uv run pytest -m llm_live                   # full real-LLM suite
     uv run pytest -m llm_live -k smoke          # infrastructure smoke test only
