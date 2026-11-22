@@ -1,4 +1,4 @@
-"""Pytest configuration for the test tree: opt-in markers, offline genai, fixtures."""
+"""Pytest configuration for the test tree: opt-in markers, offline SDKs, fixtures."""
 
 from __future__ import annotations
 
@@ -74,14 +74,27 @@ class _OfflineGenaiClient:
         self.models = _OfflineModels()
 
 
+class _OfflineApiKeys:
+    def get_current_key_metadata(self, **kwargs: Any) -> None:
+        return None
+
+
+class _OfflineOpenRouter:
+    """Answers the key probe as a valid key; a chat request fails loudly."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        self.api_keys = _OfflineApiKeys()
+
+
 @pytest.fixture(autouse=True)
-def _offline_genai_client(
+def _offline_sdk_clients(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Keep the fast layer off the network: the Gemini key probe is real code."""
+    """Keep the fast layer off the network: the key probes are real code."""
     if any(request.node.get_closest_marker(m) for m in _OPT_IN_MARKERS):
         return
     monkeypatch.setattr("google.genai.Client", _OfflineGenaiClient)
+    monkeypatch.setattr("openrouter.OpenRouter", _OfflineOpenRouter)
 
 
 def pytest_collection_modifyitems(

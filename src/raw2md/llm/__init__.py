@@ -1,8 +1,9 @@
 """LLM provider layer and operations.
 
 `base` defines the provider interface, the request parts, and the typed
-runtime errors; concrete providers live in `gemini`, `claude`, and `codex`, and
-`factory` builds one. Operations resolve a provider through settings, never by name.
+runtime errors; concrete providers live in `gemini`, `claude`, `codex`, and
+`openrouter`, and `factory` builds one. Operations resolve a provider through
+settings, never by name.
 `post`, `inspection`, and `ocr` are the operations built on this layer;
 `edit_guard` bounds what an applied inspection edit may change.
 """
@@ -28,6 +29,7 @@ from raw2md.llm.gemini import GeminiApiProvider
 from raw2md.llm.inspection.common import InspectOperation, InspectResult
 from raw2md.llm.inspection.coordinator import inspect
 from raw2md.llm.ocr import OcrOperation, OcrResult, recognize
+from raw2md.llm.openrouter import OpenRouterApiProvider
 from raw2md.llm.post.common import PostOperation
 from raw2md.llm.post.coordinator import PostResult, post_process
 
@@ -45,6 +47,7 @@ __all__ = [
     "MediaPart",
     "OcrOperation",
     "OcrResult",
+    "OpenRouterApiProvider",
     "Part",
     "PostOperation",
     "PostResult",

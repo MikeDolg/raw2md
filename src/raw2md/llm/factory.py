@@ -10,6 +10,7 @@ from raw2md.llm.base import Provider
 from raw2md.llm.claude import ClaudeCliProvider
 from raw2md.llm.codex import CodexCliProvider
 from raw2md.llm.gemini import GeminiApiProvider
+from raw2md.llm.openrouter import OpenRouterApiProvider
 from raw2md.settings import ModelConfig
 
 
@@ -24,5 +25,7 @@ def build_provider(model: ModelConfig) -> Provider:
         return ClaudeCliProvider(model)
     if model.access == "codex_cli":
         return CodexCliProvider(model)
+    if model.access == "openrouter_api":
+        return OpenRouterApiProvider(model)
     # Guards an access type added to settings without a provider.
     raise ValueError(f"unknown access type '{model.access}'")

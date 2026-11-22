@@ -125,6 +125,8 @@ def test_init_accepts_the_openrouter_key(home: Path) -> None:
     written = json.loads(settings_file().read_text(encoding="utf-8"))
     assert set(written["models"]) == {"openrouter_api"}
     assert written["models"]["openrouter_api"]["key_env"] == "OPENROUTER_API_KEY"
+    for operation in ("ocr", "inspection", "post"):
+        assert written["operations"][operation]["allowed"] == ["openrouter_api"]
 
 
 def test_no_arguments_keeps_every_shipped_model(home: Path) -> None:

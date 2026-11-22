@@ -35,9 +35,11 @@ def test_default_settings_parses() -> None:
     assert settings.models["claude_cli"].command == "claude"
     assert settings.models["claude_cli"].model == "claude-sonnet-5-5"
     assert settings.operations["post"] == frozenset(
-        {"claude_cli", "gemini_api", "codex_cli"}
+        {"claude_cli", "gemini_api", "codex_cli", "openrouter_api"}
     )
-    assert settings.operations["inspection"] == frozenset({"gemini_api", "codex_cli"})
+    vision = frozenset({"gemini_api", "codex_cli", "openrouter_api"})
+    assert settings.operations["inspection"] == vision
+    assert settings.operations["ocr"] == vision
     assert settings.log_file is True
 
 
@@ -123,7 +125,7 @@ def test_valid_file_is_loaded(tmp_path: Path) -> None:
     path = tmp_path / "settings.json"
     path.write_text(default_settings_text(), encoding="utf-8")
     assert load_settings(path).operations["ocr"] == frozenset(
-        {"gemini_api", "codex_cli"}
+        {"gemini_api", "codex_cli", "openrouter_api"}
     )
 
 
