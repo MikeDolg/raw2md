@@ -18,7 +18,7 @@ from raw2md.service import edit_file, parse_file_action, show_file
 
 OPERATIONS = ("ocr", "inspection", "post")
 
-_DEFAULT_OCR = """\
+_OCR_TEXT = """\
 Transcribe the document page shown in the image into Markdown.
 Preserve all text exactly as it appears. Use Markdown headings, lists, tables,
 and code blocks where clearly present in the source.
@@ -36,19 +36,54 @@ above a formula.
 For text you cannot read, insert the marker [unreadable]; for a single
 uncertain character or word, append [?] right after it. Do not guess or invent
 text that is not on the page.
+"""
+
+_OCR_FIGURE = """\
 When the page shows a figure, chart, diagram, or photograph, write the mark
 ![](fig:ymin,xmin,ymax,xmax) on a line of its own where the picture stands.
 The four numbers are the picture's bounding box, each a whole number from 0 to
 1000: ymin and ymax measure from the top edge of the page to the bottom edge,
 xmin and xmax from the left edge to the right edge. The box encloses the
 picture alone, not its caption. The picture is cut from the page at that box,
-so give one mark for each separate picture. Transcribe the printed caption as
-ordinary page text. Do not describe the picture, and write no other link or
-placeholder for it. A table, a formula, or a block of text is not a picture:
-transcribe it as Markdown.
+so give one mark for each separate picture.
+"""
+
+# Codex mixes the order of the default mark: in one reply a row of pictures
+# comes as ymin,xmin,xmax,ymax and the rest as asked. Naming each number by
+# its edge, with a worked example, keeps the order in most replies.
+_OCR_FIGURE_CODEX = """\
+When the page shows a figure, chart, diagram, or photograph, write the mark
+![](fig:top,left,bottom,right) on a line of its own where the picture stands.
+The four numbers are the picture's bounding box, always in this order:
+- top: the distance from the top edge of the page down to the top edge of the
+  picture;
+- left: the distance from the left edge of the page to the left edge of the
+  picture;
+- bottom: the distance from the top edge of the page down to the bottom edge
+  of the picture;
+- right: the distance from the left edge of the page to the right edge of the
+  picture.
+Each is a whole number from 0 to 1000: top and bottom in thousandths of the
+page height, left and right in thousandths of the page width. The first and
+the third number are both vertical, so bottom is always greater than top; the
+second and the fourth are both horizontal, so right is always greater than
+left. A picture in the upper right quarter of the page, with a margin around
+it, reads ![](fig:80,540,420,920). Pictures side by side in one row share their
+top and bottom and differ in left and right. The box encloses the picture
+alone, not its caption. The picture is cut from the page at that box, so give
+one mark for each separate picture.
+"""
+
+_OCR_CLOSING = """\
+Transcribe the printed caption as ordinary page text. Do not describe the
+picture, and write no other link or placeholder for it. A table, a formula, or
+a block of text is not a picture: transcribe it as Markdown.
 Output only the Markdown content of the page, with no commentary and no
 surrounding code fence.
 """
+
+_DEFAULT_OCR = _OCR_TEXT + _OCR_FIGURE + _OCR_CLOSING
+_CODEX_OCR = _OCR_TEXT + _OCR_FIGURE_CODEX + _OCR_CLOSING
 
 _DEFAULT_INSPECTION = """\
 You are reviewing a Markdown conversion against its source document (a PDF).
@@ -175,8 +210,9 @@ letter-spacing zone with Markdown.
 """
 
 # Both the file template and the in-memory fallback derive from this mapping.
+# An override key names the model key that `raw2md init` writes.
 DEFAULT_PROMPTS: dict[str, Any] = {
-    "ocr": {"default": _DEFAULT_OCR},
+    "ocr": {"default": _DEFAULT_OCR, "codex_cli": _CODEX_OCR},
     "inspection": {"default": _DEFAULT_INSPECTION},
     "post": {"default": _DEFAULT_POST},
 }

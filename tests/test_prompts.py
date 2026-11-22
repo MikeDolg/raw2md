@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from raw2md.llm.ocr import _FIGURE_MARK_RE, _pixel_box
 from raw2md.paths import prompts_file
 from raw2md.prompts import (
     DEFAULT_PROMPTS,
@@ -141,6 +142,41 @@ def test_ocr_default_keeps_short_first_body_line() -> None:
     prompt = default_prompts().ocr.default
     assert "a running\nheader never continues a sentence" in prompt
     assert "Keep the first line of the page" in prompt
+
+
+def test_ocr_ships_an_override_for_codex_only() -> None:
+    prompts = default_prompts()
+    assert set(prompts.ocr.overrides) == {"codex_cli"}
+    assert resolve_prompt(prompts, "ocr", "codex_cli") != prompts.ocr.default
+    assert resolve_prompt(prompts, "ocr", "gemini_api") == prompts.ocr.default
+    assert prompts.inspection.overrides == {}
+
+
+def test_ocr_codex_override_keeps_the_rest_of_the_default() -> None:
+    # Only the figure paragraph differs; the transcription rules stay shared.
+    codex = default_prompts().ocr.overrides["codex_cli"]
+    default = default_prompts().ocr.default
+    head = default.split("When the page shows")[0]
+    assert "running header or footer" in head
+    assert codex.startswith(head)
+    assert codex.endswith("no commentary and no\nsurrounding code fence.\n")
+    assert "Transcribe the printed caption as ordinary page text" in codex
+
+
+def test_ocr_codex_override_names_each_number_by_its_edge() -> None:
+    codex = default_prompts().ocr.overrides["codex_cli"]
+    assert "![](fig:top,left,bottom,right)" in codex
+    assert "always in this order" in codex
+    assert "bottom is always greater than top" in codex
+    assert "right is always greater than\nleft" in codex
+    assert "share their\ntop and bottom" in codex
+
+
+def test_ocr_codex_example_mark_is_a_valid_box() -> None:
+    codex = default_prompts().ocr.overrides["codex_cli"]
+    boxes = [box for box in _FIGURE_MARK_RE.findall(codex) if box[0].isdigit()]
+    assert boxes == ["80,540,420,920"]
+    assert _pixel_box(boxes[0], (1000, 1000)) == (540, 80, 920, 420)
 
 
 def test_default_text_round_trips() -> None:
