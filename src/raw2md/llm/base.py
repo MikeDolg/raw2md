@@ -17,7 +17,10 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
+from io import BytesIO
 from typing import Any, ClassVar, TypeVar
+
+from PIL import Image
 
 from raw2md.llm.rpd import has_room, reserve_request
 from raw2md.settings import ModelConfig, access_has_vision
@@ -165,6 +168,22 @@ class MediaPart:
 
 
 Part = TextPart | MediaPart
+
+
+def shrink_image(part: MediaPart, long_side: int) -> MediaPart:
+    """Return `part`, re-encoded as PNG when its longer side exceeds `long_side`."""
+    try:
+        with Image.open(BytesIO(part.data)) as image:
+            width, height = image.size
+            if max(width, height) <= long_side:
+                return part
+            scale = long_side / max(width, height)
+            size = (max(1, round(width * scale)), max(1, round(height * scale)))
+            buffer = BytesIO()
+            image.resize(size, Image.Resampling.LANCZOS).save(buffer, format="PNG")
+    except (OSError, Image.DecompressionBombError) as exc:
+        raise ProviderError(f"cannot read the image: {exc}") from exc
+    return MediaPart(buffer.getvalue(), "image/png")
 
 
 class EmptyReason(Enum):

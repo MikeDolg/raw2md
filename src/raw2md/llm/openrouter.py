@@ -2,10 +2,11 @@
 
 Every request goes through `chat.send` with its media inline as base64 data
 URLs: an image as an `image_url` part, a PDF as a `file` part that the model
-reads itself. OpenRouter has no upload route for a model request, so a request
-over the byte limit is refused before it is sent. Three request preferences
-are fixed and have no settings key: the native PDF engine, no provider that
-stores data, and only the endpoints that take every sent parameter.
+reads itself. An image longer than `image_long_side` pixels shrinks first.
+OpenRouter has no upload route for a model request, so a request over the byte
+limit is refused before it is sent. Three request preferences are fixed and
+have no settings key: the native PDF engine, no provider that stores data, and
+only the endpoints that take every sent parameter.
 """
 
 from __future__ import annotations
@@ -37,6 +38,7 @@ from raw2md.llm.base import (
     TextPart,
     TransientError,
     inline_media_bytes,
+    shrink_image,
 )
 from raw2md.settings import ModelConfig
 
@@ -47,6 +49,11 @@ _SDK_MODULE = "openrouter"
 _PDF_MIME = "application/pdf"
 _IMAGE_MIMES = frozenset({"image/png", "image/jpeg", "image/gif", "image/webp"})
 _PDF_FILENAME = "document.pdf"
+
+# Some endpoints of one model refuse an image over 5 MB of base64, and a page
+# rich in photographs, drawn at 200 dpi, weighs up to twice that as PNG. At
+# 2000 px such a page passes every endpoint, and print stays legible.
+DEFAULT_IMAGE_LONG_SIDE: int = 2000
 
 # Without the plugin, OpenRouter parses a PDF to text for a model that reads no
 # files, and the page image is lost; with `native`, such a model refuses.
@@ -161,18 +168,25 @@ class OpenRouterApiProvider(Provider):
     ) -> list[dict[str, Any]]:
         """One user message: the prompt, then the parts in order.
 
-        Refuses a media type the API has no part for, and a request over the
-        byte limit: no route makes an inline request smaller.
+        Shrinks an image longer than `image_long_side`. Refuses a media type
+        the API has no part for, and a request still over the byte limit: no
+        upload route takes it instead.
         """
+        long_side = self._model.image_long_side or DEFAULT_IMAGE_LONG_SIDE
         content: list[dict[str, Any]] = [{"type": "text", "text": prompt}]
         size = len(prompt.encode("utf-8"))
         for part in parts:
             if isinstance(part, TextPart):
                 content.append({"type": "text", "text": part.text})
                 size += len(part.text.encode("utf-8"))
-            else:
-                content.append(_media_content(part))
-                size += inline_media_bytes(len(part.data))
+                continue
+            sent = (
+                shrink_image(part, long_side)
+                if part.mime_type in _IMAGE_MIMES
+                else part
+            )
+            content.append(_media_content(sent))
+            size += inline_media_bytes(len(sent.data))
         limit = self.request_byte_limit
         if size > limit:
             raise DocumentTooLargeError(

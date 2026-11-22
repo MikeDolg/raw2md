@@ -16,11 +16,8 @@ import subprocess
 import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from io import BytesIO
 from pathlib import Path
 from typing import Any
-
-from PIL import Image
 
 from raw2md.llm.base import (
     AuthError,
@@ -33,6 +30,7 @@ from raw2md.llm.base import (
     RateLimitError,
     Reply,
     TextPart,
+    shrink_image,
 )
 from raw2md.llm.process import resolve_command, run_with_timeout
 
@@ -254,7 +252,7 @@ def fit_images(parts: Sequence[Part], long_side: int) -> list[Part]:
         elif part.mime_type == _PDF_MIME:
             fitted.extend(_draw_pdf(part.data, long_side))
         elif part.mime_type in _IMAGE_SUFFIXES:
-            fitted.append(_shrink(part, long_side))
+            fitted.append(shrink_image(part, long_side))
         else:
             raise ProviderError(
                 f"codex cli reads PDF, PNG, JPEG, GIF, and WebP, not {part.mime_type}"
@@ -271,22 +269,6 @@ def _draw_pdf(data: bytes, long_side: int) -> list[MediaPart]:
     except (RuntimeError, ValueError, OSError) as exc:
         raise ProviderError(f"cannot draw the pdf pages: {exc}") from exc
     return [MediaPart(page, _PNG_MIME) for page in pages]
-
-
-def _shrink(part: MediaPart, long_side: int) -> MediaPart:
-    """Return `part`, re-encoded as PNG when its longer side exceeds the limit."""
-    try:
-        with Image.open(BytesIO(part.data)) as image:
-            width, height = image.size
-            if max(width, height) <= long_side:
-                return part
-            scale = long_side / max(width, height)
-            size = (max(1, round(width * scale)), max(1, round(height * scale)))
-            buffer = BytesIO()
-            image.resize(size, Image.Resampling.LANCZOS).save(buffer, format="PNG")
-    except (OSError, Image.DecompressionBombError) as exc:
-        raise ProviderError(f"cannot read the image: {exc}") from exc
-    return MediaPart(buffer.getvalue(), _PNG_MIME)
 
 
 def write_request_files(

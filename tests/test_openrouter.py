@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import datetime as dt
+import io
 import json
 import logging
 from collections.abc import Callable
@@ -13,6 +14,7 @@ from typing import Any
 import httpx
 import pytest
 from openrouter import OpenRouter
+from PIL import Image
 
 from raw2md.llm import (
     AuthError,
@@ -27,7 +29,7 @@ from raw2md.llm import (
     build_provider,
 )
 from raw2md.llm.base import EmptyReason
-from raw2md.llm.openrouter import _retry_after
+from raw2md.llm.openrouter import DEFAULT_IMAGE_LONG_SIDE, _retry_after
 from raw2md.settings import ModelConfig
 
 _MODEL = "vendor/model-small"
@@ -36,7 +38,9 @@ Handler = Callable[[httpx.Request], httpx.Response]
 
 
 def or_model(
-    max_request_bytes: int | None = None, temperature: float | None = None
+    max_request_bytes: int | None = None,
+    temperature: float | None = None,
+    image_long_side: int | None = None,
 ) -> ModelConfig:
     return ModelConfig(
         access="openrouter_api",
@@ -48,7 +52,25 @@ def or_model(
         rpd=None,
         max_request_bytes=max_request_bytes,
         temperature=temperature,
+        image_long_side=image_long_side,
     )
+
+
+def _png(width: int, height: int) -> bytes:
+    buffer = io.BytesIO()
+    Image.new("RGB", (width, height), "white").save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def _sent_image(body: dict[str, Any], index: int) -> bytes:
+    url = body["messages"][0]["content"][index]["image_url"]["url"]
+    return base64.b64decode(url.split(",", 1)[1])
+
+
+def _size(data: bytes) -> tuple[int, int]:
+    with Image.open(io.BytesIO(data)) as image:
+        width, height = image.size
+    return width, height
 
 
 class _Wire:
@@ -148,7 +170,7 @@ def test_request_carries_the_parts_in_order_as_data_urls(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     wire = _Wire(monkeypatch, _ok(_result()))
-    png, pdf = b"\x89PNG fake", b"%PDF-1.7 fake"
+    png, pdf = _png(40, 30), b"%PDF-1.7 fake"
     reply = wire.provider.generate_reply(
         "the prompt",
         [
@@ -217,8 +239,57 @@ def test_the_byte_limit_counts_the_media_as_base64(
 ) -> None:
     # 600 raw bytes weigh 800 once encoded; the prompt adds 6.
     wire = _Wire(monkeypatch, _ok(_result()), or_model(max_request_bytes=806))
-    wire.provider.generate("prompt", [MediaPart(b"x" * 600, "image/png")])
+    wire.provider.generate("prompt", [MediaPart(b"x" * 600, "application/pdf")])
     assert len(wire.requests) == 1
+
+
+def test_an_image_over_the_long_side_shrinks_and_keeps_its_ratio(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wire = _Wire(monkeypatch, _ok(_result()), or_model(image_long_side=600))
+    wire.provider.generate("prompt", [MediaPart(_png(1500, 3000), "image/png")])
+    assert _size(_sent_image(wire.body(), 1)) == (300, 600)
+
+
+def test_the_long_side_defaults_to_the_shipped_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wire = _Wire(monkeypatch, _ok(_result()))
+    long = DEFAULT_IMAGE_LONG_SIDE * 2
+    wire.provider.generate("prompt", [MediaPart(_png(long, 100), "image/png")])
+    assert _size(_sent_image(wire.body(), 1)) == (DEFAULT_IMAGE_LONG_SIDE, 50)
+
+
+def test_an_image_within_the_long_side_goes_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wire = _Wire(monkeypatch, _ok(_result()), or_model(image_long_side=600))
+    small = _png(300, 200)
+    wire.provider.generate("prompt", [MediaPart(small, "image/jpeg")])
+    assert _sent_image(wire.body(), 1) == small
+
+
+def test_the_byte_limit_counts_the_shrunk_image(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The page as given is over the limit; the shrunk page is under it.
+    page = _png(4000, 4000)
+    wire = _Wire(
+        monkeypatch,
+        _ok(_result()),
+        or_model(max_request_bytes=len(page), image_long_side=100),
+    )
+    wire.provider.generate("prompt", [MediaPart(page, "image/png")])
+    assert len(wire.requests) == 1
+
+
+def test_an_unreadable_image_is_refused_before_it_is_sent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wire = _Wire(monkeypatch, _ok(_result()))
+    with pytest.raises(ProviderError, match="cannot read the image"):
+        wire.provider.generate("prompt", [MediaPart(b"not a png", "image/png")])
+    assert wire.requests == []
 
 
 def test_an_unknown_media_type_is_refused_before_it_is_sent(

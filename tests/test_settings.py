@@ -73,9 +73,9 @@ def test_image_long_side_must_be_a_positive_integer(value: object) -> None:
 
 
 def test_image_long_side_rejected_for_other_access() -> None:
-    with pytest.raises(SettingsError, match="codex_cli access only"):
+    with pytest.raises(SettingsError, match="openrouter_api access only"):
         parse_settings(_api_model_data(image_long_side=1400))
-    with pytest.raises(SettingsError, match="codex_cli access only"):
+    with pytest.raises(SettingsError, match="openrouter_api access only"):
         parse_settings(_cli_post_model_data(image_long_side=1400))
 
 
@@ -358,6 +358,7 @@ def test_default_settings_ships_the_openrouter_model() -> None:
     assert model.model == "anthropic/claude-haiku-5.5"
     assert model.pages_per_request == 8
     assert model.max_request_bytes == 20971520
+    assert model.image_long_side == 2000
     assert (model.rpm, model.tpm, model.rpd) == (None, None, None)
     assert model.temperature is None
 
@@ -386,8 +387,11 @@ def test_openrouter_temperature_is_optional() -> None:
 def test_openrouter_model_refuses_cli_fields() -> None:
     with pytest.raises(SettingsError, match="CLI access only"):
         parse_settings(_openrouter_data(cli_timeout_s=5))
-    with pytest.raises(SettingsError, match="codex_cli access only"):
-        parse_settings(_openrouter_data(image_long_side=1400))
+
+
+def test_openrouter_model_accepts_the_image_long_side() -> None:
+    model = parse_settings(_openrouter_data(image_long_side=1600)).models["m"]
+    assert model.image_long_side == 1600
 
 
 # --- CLI timeout -------------------------------------------------------------

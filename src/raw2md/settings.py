@@ -24,6 +24,8 @@ ACCESS_TYPES = ("gemini_api", "claude_cli", "codex_cli", "openrouter_api")
 CLI_ACCESS_TYPES = ("claude_cli", "codex_cli")
 KEY_ACCESS_TYPES = ("gemini_api", "openrouter_api")
 VISION_ACCESS_TYPES = ("gemini_api", "codex_cli", "openrouter_api")
+# The access types that send a page image as an image, not as the source PDF.
+IMAGE_SIZE_ACCESS_TYPES = ("codex_cli", "openrouter_api")
 OPERATIONS = ("ocr", "inspection", "post")
 
 # Built-in route names: a model key equal to one would make an --engine value
@@ -49,7 +51,7 @@ _RENAMED_ACCESS = {"api": "gemini_api", "cli": "claude_cli"}
 # Values restate the code fallbacks so the template shows them:
 # `pages_per_request` (llm.chunking), `max_request_bytes` (llm.base),
 # `witness_min` (cleaning.ocr), `cli_timeout_s` (the CLI providers),
-# `image_long_side` (llm.codex). No temperature:
+# `image_long_side` (llm.codex, llm.openrouter). No temperature:
 # the provider default holds.
 DEFAULT_SETTINGS: dict[str, Any] = {
     "models": {
@@ -83,6 +85,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
             "model": "anthropic/claude-haiku-5.5",
             "pages_per_request": 8,
             "max_request_bytes": 20971520,
+            "image_long_side": 2000,
         },
     },
     "operations": {
@@ -123,8 +126,8 @@ class ModelConfig:
 
     `key_env` and `temperature` are for the key access types; `command` and
     `cli_timeout_s` for the CLI access types; `image_long_side` (the longest
-    side of a page image, in pixels) for `codex_cli` only. Optional fields left
-    as None fall back to the defaults of the code that applies them:
+    side of a page image, in pixels) for the image-size access types. Optional
+    fields left as None fall back to the defaults of the code that applies them:
     `rpd_reset_zone` (the IANA zone of the daily quota boundary) to the
     provider's zone, `pages_per_request` and `max_request_bytes` (the request
     window) to built-in limits, `cli_timeout_s` to a default timeout. An
@@ -385,12 +388,13 @@ def _optional_cli_timeout(
 def _optional_image_long_side(
     model_name: str, spec: dict[str, Any], access: str
 ) -> int | None:
-    """An optional page-image size in pixels, accepted for `codex_cli` only."""
+    """An optional page-image size in pixels, for the image-size access types."""
     if spec.get("image_long_side") is None:
         return None
-    if access != "codex_cli":
+    if access not in IMAGE_SIZE_ACCESS_TYPES:
         raise SettingsError(
-            f"model '{model_name}': 'image_long_side' applies to codex_cli access only"
+            f"model '{model_name}': 'image_long_side' applies to "
+            f"{' and '.join(IMAGE_SIZE_ACCESS_TYPES)} access only"
         )
     return _optional_positive_int(model_name, spec, "image_long_side")
 
