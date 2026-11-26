@@ -85,6 +85,56 @@ def test_two_half_page_images_are_not_a_scan(engine: Loader, tmp_path: Path) -> 
     assert _scan_pages(engine, path) == set()
 
 
+def _form_pdf(path: Path) -> Path:
+    """A page-sized image inside a form that the page scales down to 10%."""
+    page_content = (
+        b"q 0.1 0 0 0.1 0 0 cm /Fm0 Do Q\nBT /F1 14 Tf 40 400 Td "
+        b"(An invented line of the text layer above a small picture) Tj ET"
+    )
+    form_content = b"q 600 0 0 800 0 0 cm /Im0 Do Q"
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 600 800] "
+            b"/Contents 4 0 R /Resources << /Font << /F1 5 0 R >> "
+            b"/XObject << /Fm0 6 0 R >> >> >>"
+        ),
+        b"<< /Length %d >>\nstream\n%s\nendstream" % (len(page_content), page_content),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Type /XObject /Subtype /Form /BBox [0 0 600 800] "
+        b"/Resources << /XObject << /Im0 7 0 R >> >> /Length %d >>\n"
+        b"stream\n%s\nendstream" % (len(form_content), form_content),
+        (
+            b"<< /Type /XObject /Subtype /Image /Width 1 /Height 1 "
+            b"/ColorSpace /DeviceGray /BitsPerComponent 8 /Length 1 >>\n"
+            b"stream\n\xff\nendstream"
+        ),
+    ]
+    body = b"%PDF-1.4\n"
+    offsets = []
+    for number, content in enumerate(objects, start=1):
+        offsets.append(len(body))
+        body += b"%d 0 obj\n%s\nendobj\n" % (number, content)
+    xref = len(body)
+    body += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1)
+    for offset in offsets:
+        body += b"%010d 00000 n \n" % offset
+    body += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (
+        len(objects) + 1,
+        xref,
+    )
+    path.write_bytes(body)
+    return path
+
+
+def test_scaled_down_image_in_a_form_is_not_a_scan(
+    engine: Loader, tmp_path: Path
+) -> None:
+    path = _form_pdf(tmp_path / "form.pdf")
+    assert _scan_pages(engine, path) == set()
+
+
 def test_page_without_image_is_not_a_scan(engine: Loader, tmp_path: Path) -> None:
     path = _pdf(tmp_path / "plain.pdf", [])
     assert _scan_pages(engine, path) == set()

@@ -312,7 +312,11 @@ class PdfProvider(BaseProvider):
         page = doc.get_page(page_id)
         page_bbox = PolygonBox.from_bbox(page.get_bbox())
         try:
-            images = list(page.get_objects(filter=[pdfium_c.FPDF_PAGEOBJ_IMAGE]))
+            # Depth 1 keeps page-level images: the bounds of an image inside a
+            # form are in the form's own coordinates, not the page's.
+            images = list(
+                page.get_objects(filter=[pdfium_c.FPDF_PAGEOBJ_IMAGE], max_depth=1)
+            )
         except PdfiumError:
             return False
         return any(

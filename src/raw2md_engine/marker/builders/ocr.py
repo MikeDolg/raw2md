@@ -174,9 +174,15 @@ class OcrBuilder(BaseBuilder):
         return [
             line
             for line in page.contained_blocks(document, [BlockTypes.Line])
-            if has_layer_mark(line.raw_text(document))
+            if has_layer_mark(self.layer_line_text(document, line))
             and not bbox_center_in_blocks(line.polygon.bbox, excluded)
         ]
+
+    def layer_line_text(self, document: Document, line: Line) -> str:
+        # With keep_chars a span holds Char children that carry no text,
+        # so the span text is read directly.
+        blocks = [document.get_block(block_id) for block_id in line.structure or []]
+        return "".join(block.text for block in blocks if isinstance(block, Span))
 
     def reread_layer_lines(self, document: Document, provider: PdfProvider):
         """Re-read the marked layer lines of scan pages, one polygon per line.
@@ -191,7 +197,7 @@ class OcrBuilder(BaseBuilder):
             if page.page_id not in provider.scan_pages:
                 continue
             for line in self.layer_reread_candidates(document, page):
-                limit = reread_token_limit(line.raw_text(document).strip())
+                limit = reread_token_limit(self.layer_line_text(document, line).strip())
                 groups.setdefault(limit, {}).setdefault(page.page_id, []).append(line)
 
         self.recognition_model.disable_tqdm = self.disable_tqdm
@@ -250,8 +256,9 @@ class OcrBuilder(BaseBuilder):
             for line_spans in self.spans_from_html_chars(line_result.chars, page, image)
             for span in line_spans
         ]
-        # A reading of format tags alone gives no span; the layer line stays.
-        if not spans:
+        # A reading of format tags alone, or of blanks inside them, leaves
+        # no text; the layer line stays.
+        if not any(span.text.strip() for span in spans):
             return
         self.replace_line_spans(document, page, line, spans)
         line.text_extraction_method = "surya"

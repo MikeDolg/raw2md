@@ -289,6 +289,39 @@ def test_reading_of_tags_alone_keeps_the_layer(engine: Loader) -> None:
     assert line.text_extraction_method == "pdftext"
 
 
+def test_reading_of_blanks_in_tags_keeps_the_layer(engine: Loader) -> None:
+    builder = _Builder(engine)
+    page = builder.text_page({120: _MARKED})
+
+    builder.run({120: "<b> </b>"}, {0})
+
+    line = _first_line(page, builder)
+    assert builder.text(line) == _MARKED
+    assert line.text_extraction_method == "pdftext"
+
+
+def test_line_with_character_blocks_is_read(engine: Loader) -> None:
+    builder = _Builder(engine)
+    page = builder.text_page({120: _MARKED})
+    span = page.contained_blocks(
+        builder.engine("marker.schema.document").Document(
+            filepath="invented.pdf", pages=builder.pages
+        ),
+        [builder.schema.BlockTypes.Span],
+    )[0]
+    char = page.add_full_block(
+        builder.engine("marker.schema.text.char").Char(
+            polygon=span.polygon, page_id=page.page_id, text="#", idx=0
+        )
+    )
+    span.add_structure(char)
+
+    model = builder.run({120: "## Installation Guide"}, {0})
+
+    assert len(model.calls) == 1
+    assert builder.text(_first_line(page, builder)) == "## Installation Guide\n"
+
+
 def test_only_marked_lines_go_to_the_model(engine: Loader) -> None:
     builder = _Builder(engine)
     builder.text_page({120: "A clean invented line", 160: _MARKED})
