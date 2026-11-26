@@ -313,7 +313,17 @@ of the repository holds each change with its diff.
   (2026-11-21). Changed files, under src/raw2md_engine/surya/:
   `common/adetr/decoder.py`, `common/surya/__init__.py`, and
   `common/surya/processor/__init__.py`.
+- The OCR builder re-reads a line of the text layer on a scan page, a page
+  that one image covers by 90 % or more. The line holds `^` or U+FFFD and
+  its center lies outside a picture, a figure, a table, a form, and a table
+  of contents. The recognition model reads the line inside its frame, with
+  a token limit by the length of the line. A reading replaces the line
+  when it is not empty and holds no `^` or U+FFFD outside math, no group of
+  three characters or more five times in a row, and no empty group `{}` in
+  math. The page keeps its text layer for the other lines (2026-11-26).
+  Changed files, under src/raw2md_engine/: `marker/providers/pdf.py` and
+  `marker/builders/ocr.py`.
 
 Each changed file of `pdftext/` carries a notice at its top.
 
-Last change: 2026-11-21.
+Last change: 2026-11-26.

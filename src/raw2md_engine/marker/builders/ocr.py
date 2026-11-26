@@ -24,7 +24,12 @@ from raw2md_engine.marker.util import (
     get_opening_tag_type,
 )
 from raw2md_engine.surya.common.surya.schema import TaskNames
-from raw2md_engine.surya.recognition import OCRResult, RecognitionPredictor, TextChar
+from raw2md_engine.surya.recognition import (
+    OCRResult,
+    RecognitionPredictor,
+    TextChar,
+    TextLine,
+)
 
 LAYER_BAD_MARKS = ("^", chr(0xFFFD))
 REREAD_EXCLUDED_BLOCKS = (
@@ -156,6 +161,100 @@ class OcrBuilder(BaseBuilder):
             block_ids,
             block_original_texts,
         )
+        self.reread_layer_lines(document, provider)
+
+    def layer_reread_candidates(
+        self, document: Document, page: PageGroup
+    ) -> list[Line]:
+        excluded = [
+            block.polygon.bbox
+            for block in page.structure_blocks(document)
+            if block.block_type in REREAD_EXCLUDED_BLOCKS
+        ]
+        return [
+            line
+            for line in page.contained_blocks(document, [BlockTypes.Line])
+            if has_layer_mark(line.raw_text(document))
+            and not bbox_center_in_blocks(line.polygon.bbox, excluded)
+        ]
+
+    def reread_layer_lines(self, document: Document, provider: PdfProvider):
+        """Re-read the marked layer lines of scan pages, one polygon per line.
+
+        The model runs once per token limit, on every page that holds a line
+        of that limit. A clean reading replaces the spans of its line.
+        """
+        groups: dict[int, dict[int, list[Line]]] = {}
+        for page in document.pages:
+            if page.text_extraction_method != "pdftext":
+                continue
+            if page.page_id not in provider.scan_pages:
+                continue
+            for line in self.layer_reread_candidates(document, page):
+                limit = reread_token_limit(line.raw_text(document).strip())
+                groups.setdefault(limit, {}).setdefault(page.page_id, []).append(line)
+
+        self.recognition_model.disable_tqdm = self.disable_tqdm
+        for max_tokens in sorted(groups):
+            page_lines = groups[max_tokens]
+            pages = [document.get_page(page_id) for page_id in page_lines]
+            images = [page.get_image(highres=True) for page in pages]
+            polygons = [
+                [
+                    self.layer_line_polygon(line, provider, page, image)
+                    for line in page_lines[page.page_id]
+                ]
+                for page, image in zip(pages, images, strict=True)
+            ]
+            results: list[OCRResult] = self.recognition_model(
+                images=images,
+                task_names=[self.ocr_task_name] * len(images),
+                polygons=polygons,
+                input_text=[["" for _ in page_polygons] for page_polygons in polygons],
+                recognition_batch_size=int(self.get_recognition_batch_size()),
+                sort_lines=False,
+                math_mode=not self.disable_ocr_math,
+                drop_repeated_text=self.drop_repeated_text,
+                max_sliding_window=2148,
+                max_tokens=max_tokens,
+            )
+            for page, image, page_result in zip(pages, images, results, strict=True):
+                for line, line_result in zip(
+                    page_lines[page.page_id], page_result.text_lines, strict=True
+                ):
+                    self.replace_layer_line(document, page, line, line_result, image)
+
+    def layer_line_polygon(
+        self, line: Line, provider: PdfProvider, page: PageGroup, image: Image.Image
+    ) -> list[list[int]]:
+        page_size = provider.get_page_bbox(page.page_id).size
+        polygon = (
+            copy.deepcopy(line.polygon)
+            .rescale(page_size, image.size)
+            .fit_to_bounds((0, 0, *image.size))
+        )
+        return [[int(x) for x in point] for point in polygon.polygon]
+
+    def replace_layer_line(
+        self,
+        document: Document,
+        page: PageGroup,
+        line: Line,
+        line_result: TextLine,
+        image: Image.Image,
+    ):
+        if not accept_reread(line_result.text):
+            return
+        spans = [
+            span
+            for line_spans in self.spans_from_html_chars(line_result.chars, page, image)
+            for span in line_spans
+        ]
+        # A reading of format tags alone gives no span; the layer line stays.
+        if not spans:
+            return
+        self.replace_line_spans(document, page, line, spans)
+        line.text_extraction_method = "surya"
 
     def get_recognition_batch_size(self):
         if self.recognition_batch_size is not None:
