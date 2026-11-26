@@ -71,6 +71,10 @@ class PdfProvider(BaseProvider):
         float,
         "The minimum coverage ratio of the image to the page to consider skipping the page.",
     ] = 0.65
+    scan_page_threshold: Annotated[
+        float,
+        "The minimum coverage ratio of one image to the page to mark a text layer page as a scan.",
+    ] = 0.9
     strip_existing_ocr: Annotated[
         bool,
         "Whether to strip existing OCR text from the PDF.",
@@ -88,6 +92,7 @@ class PdfProvider(BaseProvider):
         super().__init__(filepath, config)
 
         self.filepath = filepath
+        self.scan_pages: set[int] = set()
 
         with self.get_doc() as doc:
             self.page_count = len(doc)
@@ -298,8 +303,23 @@ class PdfProvider(BaseProvider):
                     )
             if self.check_line_spans(lines):
                 page_lines[page_id] = lines
+                if self.is_scan_page(page_id, doc):
+                    self.scan_pages.add(page_id)
 
         return page_lines
+
+    def is_scan_page(self, page_id: int, doc: PdfDocument) -> bool:
+        page = doc.get_page(page_id)
+        page_bbox = PolygonBox.from_bbox(page.get_bbox())
+        try:
+            images = list(page.get_objects(filter=[pdfium_c.FPDF_PAGEOBJ_IMAGE]))
+        except PdfiumError:
+            return False
+        return any(
+            page_bbox.intersection_pct(PolygonBox.from_bbox(img.get_pos()))
+            >= self.scan_page_threshold
+            for img in images
+        )
 
     def check_line_spans(self, page_lines: list[ProviderOutput]) -> bool:
         page_spans = [span for line in page_lines for span in line.spans]
