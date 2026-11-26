@@ -1,4 +1,5 @@
 import copy
+import re
 from typing import Annotated
 
 from ftfy import fix_text
@@ -24,6 +25,56 @@ from raw2md_engine.marker.util import (
 )
 from raw2md_engine.surya.common.surya.schema import TaskNames
 from raw2md_engine.surya.recognition import OCRResult, RecognitionPredictor, TextChar
+
+LAYER_BAD_MARKS = ("^", chr(0xFFFD))
+REREAD_EXCLUDED_BLOCKS = (
+    BlockTypes.Picture,
+    BlockTypes.Figure,
+    BlockTypes.Table,
+    BlockTypes.Form,
+    BlockTypes.TableOfContents,
+)
+REREAD_TOKEN_STEPS = (64, 128, 256, 512)
+_MATH_SPAN = re.compile(r"<math[^>]*>.*?</math>", re.DOTALL)
+_REPEATED_GROUP = re.compile(r"(.{3,}?)\1{4,}", re.DOTALL)
+
+
+def has_layer_mark(text: str) -> bool:
+    """A scan page marks an unread glyph in its text layer with `^` or U+FFFD."""
+    return any(mark in text for mark in LAYER_BAD_MARKS)
+
+
+def bbox_center_in_blocks(
+    line_bbox: list[float], block_bboxes: list[list[float]]
+) -> bool:
+    center_x = (line_bbox[0] + line_bbox[2]) / 2
+    center_y = (line_bbox[1] + line_bbox[3]) / 2
+    return any(
+        bbox[0] <= center_x <= bbox[2] and bbox[1] <= center_y <= bbox[3]
+        for bbox in block_bboxes
+    )
+
+
+def reread_token_limit(layer_text: str) -> int:
+    """The token budget for a line, rounded up to a step; 512 is the ceiling."""
+    wanted = 3 * len(layer_text) + 48
+    for step in REREAD_TOKEN_STEPS:
+        if wanted <= step:
+            return step
+    return REREAD_TOKEN_STEPS[-1]
+
+
+def accept_reread(text: str) -> bool:
+    """A re-read replaces the layer line only when it is clean."""
+    if not fix_text(text).strip():
+        return False
+    if _REPEATED_GROUP.search(text):
+        return False
+    math_spans = _MATH_SPAN.findall(text)
+    if any("{}" in span for span in math_spans):
+        return False
+    outside_math = _MATH_SPAN.sub("", text)
+    return not has_layer_mark(outside_math)
 
 
 class OcrBuilder(BaseBuilder):
